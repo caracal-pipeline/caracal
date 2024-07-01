@@ -1098,9 +1098,25 @@ def worker(pipeline, recipe, config):
                                 cdeltm = hdul[0].header['CDELT3'] * femit / (-C)
                                 crvale = C * (femit - (firstchanfreq[0] + chanwidth[0] * firstchan + nchans * binchans * chanwidth[0])) / femit
 
+
+
                             cdelt = chanwidth[0] * binchans  # in Hz
+
+
                             hdr = hdul[0].header
                             ax3 = np.arange(hdr['CRVAL3'] - hdr['CDELT3'] * (hdr['CRPIX3'] - 1), hdr['CRVAL3'] + hdr['CDELT3'] * (hdr['NAXIS3'] - hdr['CRPIX3'] + 1), hdr['CDELT3'])
+
+                            caracal.log.info('CDELT = {}'.format(cdelt))
+                            caracal.log.info('ChWidth = {}'.format(chanwidth[0]))
+                            
+                            caracal.log.info('CRVAL = {}'.format(crval))
+                            caracal.log.info('CRVALE = {}'.format(crvale))
+
+                            caracal.log.info('ax3[0] = {}'.format(ax3[0]))
+                            caracal.log.info('ax3[-1] = {}'.format(ax3[-1]))
+
+
+
                             if (np.max([crval, crvale]) <= np.max([ax3[0], ax3[-1]])) & (np.min([crval, crvale]) >= np.min([ax3[0], ax3[-1]])):
                                 caracal.log.info("Requested channels are contained in mask {}.".format(gridMask))
 

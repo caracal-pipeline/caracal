@@ -837,13 +837,15 @@ def worker(pipeline, recipe, config):
 
         preGridMask = config[key]['inputmask']
         
-        print(preGridMask)
+        caracal.log.info(preGridMask)
         postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
 
 
 
-        if num==0 and preGridMask is not None:
-            print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2')            
+        if num==0 and preGridMask:
+            caracal.log.info('+++++++++++++++++++++++++++++++')
+
+            caracal.log.info('I DID WELL')
             doProj=False
 
 
@@ -1198,6 +1200,11 @@ def worker(pipeline, recipe, config):
                 sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMaskSof)})
             else:
                 sofia_opts.update({"import.maskFile": 'masking/{}'.format(preGridMask)})
+
+
+        caracal.log.info('+++++++++++++++++++++++++++++++')
+
+        caracal.log.info('I DID WELL')
 
 
         recipe.add('cab/sofia', step,

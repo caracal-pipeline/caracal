@@ -837,11 +837,13 @@ def worker(pipeline, recipe, config):
 
         preGridMask = config[key]['inputmask']
         
-
+        print(preGridMask)
         postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
 
+
+
         if num==0 and preGridMask is not None:
-            
+            print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2')            
             doProj=False
 
 

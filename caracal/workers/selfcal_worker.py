@@ -1218,31 +1218,31 @@ def worker(pipeline, recipe, config):
        # print(postGridMask)
 
         caracal.log.info('++++++++++++++LOADING MASKS+++++++++++++++++')
+        if preGridMask:
+            caracal.log.info(outmaskName)
+            datMask = fits.getdata('{}/{}'.format(pipeline.masking,outmaskName))
+            # datMask = np.around(datMask.astype(np.float32)).astype(np.int16)
 
-        caracal.log.info(outmaskName)
-        datMask = fits.getdata('{}/{}'.format(pipeline.masking,outmaskName))
-        # datMask = np.around(datMask.astype(np.float32)).astype(np.int16)
+            datHead = fits.getheader('{}/{}'.format(pipeline.masking,outmaskName))
+            datForn = fits.getdata('{}/{}'.format(pipeline.masking,postGridMaskSof))
+            caracal.log.info(postGridMaskSof)
+            datForn = np.expand_dims(datForn,axis=0)
+            datForn = np.expand_dims(datForn,axis=0)
 
-        datHead = fits.getheader('{}/{}'.format(pipeline.masking,outmaskName))
-        datForn = fits.getdata('{}/{}'.format(pipeline.masking,postGridMaskSof))
-        caracal.log.info(postGridMaskSof)
-        datForn = np.expand_dims(datForn,axis=0)
-        datForn = np.expand_dims(datForn,axis=0)
+            idxNan = np.isnan(datForn)
+            datForn[idxNan] = 0
+            caracal.log.info(np.nansum(datForn))
 
-        idxNan = np.isnan(datForn)
-        datForn[idxNan] = 0
-        caracal.log.info(np.nansum(datForn))
+            datTot = np.add(datMask,datForn)
+            caracal.log.info(np.nansum(datTot))
 
-        datTot = np.add(datMask,datForn)
-        caracal.log.info(np.nansum(datTot))
+            indexMask = np.where(datTot > 0)
+            datTot[indexMask] = 1
+                            
+            # outmaskName = outmaskName.replace('mask.fits','mask_mask.fits')
 
-        indexMask = np.where(datTot > 0)
-        datTot[indexMask] = 1
-                        
-        # outmaskName = outmaskName.replace('mask.fits','mask_mask.fits')
-
-        fits.writeto(pipeline.output+'/masking/'+outmaskName,datTot,datHead,overwrite=True)
-        caracal.log.info(pipeline.output+'/masking/'+outmaskName)
+            fits.writeto(pipeline.output+'/masking/'+outmaskName,datTot,datHead,overwrite=True)
+            caracal.log.info(pipeline.output+'/masking/'+outmaskName)
         caracal.log.info('++++++++++++++SAVING MASK MASKS+++++++++++++++++')
 
     def breizorro_mask(trg, num, img_dir, field):

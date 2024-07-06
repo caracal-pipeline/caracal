@@ -1,0 +1,148 @@
+# General pipeline information, including data IDs, and prefixes for output files.
+ms-base:
+  info: Location where CARACal will write and expect to find .MS files.
+  default: msdir
+  dtype: str
+dir-out-base:
+  info: Location where CARACal writes output products.
+  default: caracal-output
+  dtype: str
+ncpu:
+  default: 16
+  dtype: int
+worker-id:
+  default: 0
+  dtype: int
+ms-concat:
+  dtype: List[MS]
+ms-pointings:
+  dtype: List[MS]
+
+# Flagging of the data.
+flag-enable:
+  default: true
+  dtype: bool
+flag-fields:
+  default: [0]
+  dtype: List[int]
+flag-save-enable:
+  default: false
+  dtype: bool
+flag-restore-enable:
+  default: false
+  dtype: bool
+flag-summary-enable:
+  default: false
+  dtype: bool
+flag-rfinder-stats-enable:
+  default: false
+  dtype: bool
+flag-tricolour-enable:
+  default: false
+  dtype: bool
+
+# Imaging the data
+image-enable:
+  default: true
+  dtype: bool
+image-prefix:
+        #default: "Deep2"
+  default: "PicA-hi"
+  dtype: str
+image-niter:
+  default: 100000
+  dtype: int
+image-threshold:
+  default: 3.0e-5
+  dtype: float
+image-auto-threshold:
+        #default: 5
+  dtype: float
+image-auto-mask:
+        #default: 10
+  dtype: float
+image-nchan:
+  default: 4
+  dtype: int
+image-deconv-chan:
+        #default: 4
+  dtype: int
+image-size:
+  default: 4096
+  dtype: int
+image-scale:
+  default: 1.3asec
+  dtype: str
+image-fits-mask:
+  dtype: File
+image-breizorro-enable:
+  default: true
+  dtype: bool
+image-aimfast-enable:
+  default: false
+  dtype: bool
+image-spifit-enable:
+  default: false
+  dtype: bool
+image-no-update-model-required:
+  default: false
+  dtype: bool
+image-temp:
+  dtype: Directory
+  default: tmp
+
+# Self-calibrating the data
+selfcal-enable:
+  default: false
+  dtype: bool
+selfcal-pa-rotate:
+  default: false
+  dtype: bool
+selfcal-pa-enable:
+  default: false
+  dtype: bool
+selfcal-jones:
+  default: ['k', 'k-g']
+  dtype: List[str]
+  element_choices: ['k', 'g', 'k-g']
+selfcal-jones-time:
+  default: [1, 1, 1]
+  dtype: List[int]
+selfcal-jones-freq:
+  default: [0, 0, 32]
+  dtype: List[int]
+selfcal-subtract-model:
+  default: false
+  dtype: bool
+mad-flag:
+  default: false
+  dtype: bool
+pa-rotate:
+  default: false
+  dtype: bool
+
+# Direction-dependant calibration
+ddcal-enable:
+  default: false
+  dtype: bool
+ddcal-mask-region:
+        #default: 'mask/PictorA_1-MFS-hotspot-mask.image.out.fits'
+        #  default: mask/PictorA_1-MFS-hotspot-6144-mask.image.fits
+  dtype: File
+ddcal-jones:
+  default: ['k-g-de']
+  dtype: List[str]
+  element_choices: ['k-de', 'k-g-de']
+ddcal-jones-time:
+  default: [1, 1, 32]
+  dtype: List[int]
+ddcal-jones-freq:
+  default: [0, 64, 64]
+  dtype: List[int]
+
+# Model
+upsample-model-channels:
+  dtype: int
+copy-model-column:
+  default: false
+  dtype: bool

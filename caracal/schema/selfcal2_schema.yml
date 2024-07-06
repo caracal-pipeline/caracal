@@ -1,0 +1,784 @@
+type: map
+mapping:
+  selfcal2:
+    type: map
+    desc: Perform self-calibration on the data.
+    mapping:
+      enable:
+        type: bool
+        desc: Execute the selfcal2 worker.
+        required: true
+        example: 'False'
+      label_in:
+        type: str
+        desc: Label of the .MS files to process.
+        required: false
+        example: 'corr'
+      rewind_flags:
+        desc: Rewind flags of the input .MS file(s) to specified version. Note that this is not applied to .MS file(s) you might be running "transfer_apply_gains" on.
+        type: map
+        mapping:
+          enable:
+            desc: Enable segment rewind_flags.
+            type: bool
+            required: false
+            example: 'True'
+          mode:
+            desc: If mode = 'reset_worker' rewind to the flag version before this worker if it exists, or continue if it does not exist; if mode = 'rewind_to_version' rewind to the flag version given by 'version' and 'transfer_apply_gains_version' below.
+            type: str
+            enum: ['reset_worker', 'rewind_to_version']
+            required: false
+            example: 'reset_worker'
+          version:
+            type: str
+            desc: Flag version to restore. This is applied to the .MS file(s) identified by "label" above. Set to "null" to skip this rewinding step. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__X' if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.
+            example: 'auto'
+            required: false
+          transfer_apply_gains_version:
+            type: str
+            desc: Flag version to restore. This is applied to the .MS file(s) identified by "transfer_to_label" in the "transfer_apply_gains" section below. Set to "null" to skip this rewind step. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__X' if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.
+            example: 'auto'
+            required: false
+      overwrite_flagvers:
+        desc: Allow CARACal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
+        type: bool
+        example: 'False'
+        required: false
+      calibrate_with:
+        type: str
+        enum: ["meqtrees", "cubical"]
+        desc: Tool to use for calibration. Options are meqtrees and cubical.
+        required: false
+        example: 'cubical'
+      spwid:
+        type: int
+        desc: Provide spectral window ID.
+        required: false
+        example: '0'
+      ncpu:
+        type: int
+        desc: Number of CPUs to use for distributed processing. If set to 0 all available CPUs are used. This parameter is passed on to the following software in the selfcal worker, WSClean for imaging, Cubical and MeqTrees for calibration, PyBDSF for source finding.
+        required: false
+        example: '0'
+      minuvw_m:
+        type: int
+        desc: Exclude baselines shorter than this value (given in metres) from the imaging and self-calibration loop.
+        required: false
+        example: '0'
+      img_npix:
+        type: int
+        desc: Number of pixels in output image.
+        required: false
+        example: '1800'
+      img_padding:
+        type: float
+        desc: Padding in WSClean.
+        required: false
+        example: '1.3'
+      img_gain:
+        type: float
+        desc: Fraction of the peak that is cleaned in each minor iteration.
+        required: false
+        example: '0.10'
+      img_mgain:
+        type: float
+        desc: Gain for major iterations in WSClean. I.e., maximum fraction of the image peak that is cleaned in each major iteration. A value of 1 means that all cleaning happens in the image plane and no major cycle is performed.
+        required: false
+        example: '0.90'
+      img_cell:
+        type: float
+        desc: Image pixel size (in units of arcsec).
+        required: false
+        example: '2.'
+      img_weight:
+        type: str
+        enum: ["briggs", "uniform", "natural"]
+        desc: Type of image weighting, where the options are 'briggs', 'uniform', and 'natural'. If 'briggs', set the 'img_robust' parameter.
+        required: false
+        example: 'briggs'
+      img_robust:
+        type: float
+        desc: Briggs robust value.
+        required: false
+        example: '0.'
+      img_mfs_weighting:
+        type: bool
+        desc: Enables MF weighting. Default is enabled.
+        required: false
+        example: 'false'
+      img_taper:
+        type: str
+        desc: Gaussian taper for imaging (in units of arcsec).
+        required: false
+        example: '0.'
+      img_maxuv_l:
+        type: float
+        desc: Taper for imaging (in units of lambda).
+        required: false
+        example: '0.'
+      img_transuv_l:
+        type: float
+        desc: Transition length of tukey taper (taper-tukey in WSClean, in % of maxuv).
+        required: false
+        example: '10.'
+      img_niter:
+        type: int
+        desc: Number of cleaning iterations.
+        required: false
+        example: '1000000'
+      img_nmiter:
+        type: int
+        desc: Number of major cycles.
+        required: False
+        example: '0'
+      img_cleanborder:
+        type: float
+        desc: Clean border.
+        required: false
+        example: '1.3'
+      img_nchans:
+        type: int
+        desc: Number of channels in output image.
+        required: false
+        example: '3'
+      img_channelrange:
+        seq:
+          - type: int
+        desc: Only image the given channel range. Indices specify channel indices, end index is exclusive. .e.g. 0, 1023. Default '-1' means all channels.
+        required: false
+        example: '-1'
+      img_joinchans:
+        type: bool
+        desc: Join channels to create MFS image.
+        required: false
+        example: 'True'
+      img_specfit_nrcoeff:
+        type: int
+        desc: Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1. Use 0 to disable spectral fitting. Note that spectral fitting is required if you want to do subsequent continumm subtraction using crystalball. 
+        required: false
+        example: '2'
+      img_stokes:
+        type: str
+        enum: ["I"]
+        desc: Stokes image to create.
+        required: false
+        example: 'I'
+      img_multiscale:
+        type: bool
+        desc: Switch on multiscale cleaning.
+        required: false
+        example: 'False'
+      img_multiscale_scales:
+        type: str
+        desc: Comma-separated integer scales for multiscale cleaning in pixels. If set to an empty string WSClean selects the scales automatically. These include the 0 scale, a scale calculated based on the beam size, and all scales obtained increasing the scale by a factor of 2 until the image size is reached.
+        required: false
+        example: ''
+      img_nrdeconvsubimg:
+        desc: Speed-up deconvolution by splitting the image into a number of subimages, which are deconvolved in parallel. This parameter sets the number of subimages as follows. If set to 1 no parallel deconvolution is performed. If set to 0 the number of subimages is the same as the number of CPUs used by the selfcal worker (see "ncpu" parameter above). If set to a number > 1 , the number of subimages is greater than or equal to the one requested by the user.
+        type: int
+        required: false
+        example: '1'
+      img_nwlayers_factor:
+        type: int
+        desc: Use automatic calculation of the number of w-layers, but multiple that number by the given factor. This can e.g. be useful for increasing w-accuracy. In practice, if there are more cores available than the number of w-layers asked for then the number of w-layers used will equal the number of cores available.
+        required: false
+        example: '3'
+      img_sofia_settings:
+        desc: SoFiA source finder settings used for the imaging iterations whose entry in 'image/cleanmask_method' below is 'sofia'. The resulting clean mask is located in <output>/masking.
+        type: map
+        mapping:
+          kernels:
+            seq:
+              - type: float
+            desc: FWHM of spatial Gaussian kernels in pixels.
+            required: false
+            example: '0., 3., 6., 9.'
+          pospix:
+            type: bool
+            desc: Merges only positive pixels of sources in mask.
+            required: false
+            example: 'True'
+          flag:
+            desc: Set whether flag regions are to be used (True) or not (False).
+            type: bool
+            required: false
+            example: 'False'
+          flagregion:
+            desc: Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...].
+            seq:
+              - type: str
+            required: false
+            example: ''
+          inputmask:
+            type: str
+            desc: User-provided input-mask that will be supplemented by the SoFiA mask, created through SoFiA source-finding.
+            required: false
+            example: ''
+          fornax_special:
+            desc: Activate masking of Fornax A using SoFiA.
+            type: bool
+            required: false
+            example: 'False'
+          fornax_thr:
+            desc: SoFiA source-finding threshold, in terms of the number of sigma_rms to go down to (i.e. the minimum signal-to-noise ratio).
+            seq:
+              - type: float
+            required: false
+            example: '4.0'
+          fornax_sofia:
+            type: bool
+            desc: Use SoFiA for the mask of Fornax A, instead of that by Fomalont.
+            required: false
+            example: 'False'
+      img_breizorro_settings:
+        desc: Breizorro settings used for the imaging iterations whose entry in 'image/cleanmask_method' below is 'breizorro'. The resulting clean mask is located in <output>/masking.
+        type: map
+        mapping:
+          boxsize:
+            type: int
+            desc: Box size over which to compute stats (default = 50)
+            required: false
+            example: '50'
+          dilate:
+            type: int
+            desc: Apply dilation with a radius of R pixels
+            required: false
+            example: '0'
+          fill_holes:
+            type: bool
+            desc: Fill holes (i.e. entirely closed regions) in mask
+            required: false
+            example: 'false'
+      cal_niter:
+        type: int
+        desc: Number of self-calibration iterations to perform.
+        required: false
+        example: '2'
+      start_iter:
+        type: int
+        desc: Start selfcal iteration loop at this start value (1-indexed).
+        required: false
+        example: '1'
+      cal_gain_cliplow:
+        type: float
+        desc: Lower threshold for clipping on gain amplitude.
+        required: false
+        example: '0.5'
+      cal_gain_cliphigh:
+        type: float
+        desc: Upper threshold for clipping on gain amplitude.
+        required: false
+        example: '2.'
+      cal_timeslots_chunk:
+        desc: Chunk data up by this number of timeslots. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the time solution intervals that may be employed. 0 means 'use the full time-axis' but does not cross scan boundaries. -1 means 'use the largest solution interval'.
+        type: int
+        required: false
+        example: '-1'
+      cal_model_mode:
+        type: str
+        enum: ["vis_only", "pybdsm_only", "pybdsm_vis"]
+        desc: Mode for using a calibration model, based on visibilities and/or PyBDSM source-finding. Options are vis_only, pybdsm_only, and pybdsm_vis. 'vis_only' means that only MODEL_DATA will be used to to calibrate. 'pybdsm_only' means that PyBDSM-generated, tigger-format local sky models will be used. 'pybdsm_vis' is the same as the 'pybdsm_only' mode except for the last iteration of selfcal, where the PyBDSM-based model is complemented by MODEL_DATA. This third mode is only to be used with output_data set to 'CORR_RES' (below) and is very tricky. Therefore, user discretion is advised. 
+        required: false
+        example: 'vis_only'
+      cal_bjones:
+        type: bool
+        desc: Enable calculation of the B-Jones matrix, for bandpass calibration.
+        required: false
+        example: 'False'
+      cal_cubical:
+        desc: Parameters that only apply when using CubiCal for the calibration.
+        type: map
+        mapping:
+          max_prior_error:
+            type: float
+            desc: Flag solution intervals where the prior variance estimate is above this value.
+            required: false
+            example: '0.3'
+          max_post_error:
+            type: float
+            desc: Flag solution intervals where the posterior variance estimate is above this value.
+            required: false
+            example: '0.3'
+          chan_chunk:
+            desc: Chunk data up by this number of channels. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the frequency solution intervals that may be employed. 0 means 'use the full frequency-axis' but does not cross SPW boundaries. -1 means 'use the largest solution interval'.
+            type: int
+            required: false
+            example: '-1'
+          weight_col:
+            desc: Column with weights for use in CubiCal.
+            type: str
+            required: false
+            example: 'WEIGHT'
+          shared_mem:
+            type: str
+            desc: Set the amount of shared memory for CubiCal.
+            required: false
+            example: '100Gb'
+          flag_madmax:
+            desc: Flags based on maximum of mad in CubiCal.
+            type: bool
+            required: false
+            example: 'True'
+          madmax_flag_thr:
+            desc: Threshold for madmax flagging in CubiCal, where the provided list works exactly as described in CubiCal readthedocs for the parameter --madmax-threshold.
+            seq:
+              - type: int
+            required: false
+            example: '0, 10'
+          solterm_niter:
+            desc: Number of iterations per Jones term for CubiCal. Always a 3 digit array with iterations for 'G,B,GA' even when B or GA are not used.
+            seq:
+              - type: int
+            required: false
+            example: '50, 50, 50'
+          overwrite:
+            desc: Allow CubiCal to overwrite the existing gain_tables and other CubiCal output for self-calibration that were produced in a previous run of the selfcal worker with the same prefix.
+            type: bool
+            required: false
+            example: 'True'
+          dist_max_chunks:
+            desc: Maximum number of time/freq data-chunks to load into memory simultaneously. If set to 0, then as many data-chunks as possible will be loaded.
+            type: int
+            required: false
+            example: '4'
+          out_derotate:
+            desc: Explicitly enables or disables derotation of output visibilities. Default (None) is to use the –model-pa-rotate and –model-feed-rotate settings.
+            type: bool
+            required: false
+            example: 'False'
+          model_pa_rotate:
+            desc: Apply parallactic angle rotation to model visibilities. Enable this for alt-azmounts, unless your model visibilities are already rotated.
+            type: bool
+            required: false
+            example: 'False'
+          model_feed_rotate:
+            desc: Apply a feed angle rotation to the model visibilities. Use 'auto' to read angles from FEED subtable, or give an explicit value in degrees.
+            type: str
+            required: false
+            example: ''
+          ragavi_plot:
+            type: map
+            desc: Use ragavi to plot diagnostic plots for self-calibration.
+            mapping:
+              enable:
+                type: bool
+                desc: Enable the plotting of diagnostics, using ragavi.
+                required: false
+                example: 'False'
+              gaintype:
+                seq:
+                - type: str
+                desc: List of gain solution types. Options are 'F' (flux-calibration solutions), 'B' (bandpass-calibration solutions), 'K' (delay-calibration solutions), 'G' (gain-calibration solutions), and 'D' (D-Jones leakage-calibration solutions).
+                required: false
+                example: 'G'
+              field:
+                seq:
+                - type: int
+                desc: Fields to plot. Specify by field ID.
+                required: false
+                example: '0'
+      cal_meqtrees:
+        desc: Parameters that only apply when using MeqTrees for the calibration.
+        type: map
+        mapping:
+          two_step:
+            type: bool
+            desc: Trigger a two-step calibration process in MeqTrees where the phase-only calibration is applied before continuing with amplitude + phase-calibration. Aimfast is turned on to determine the solution sizes automatically.
+            required: false
+            example: 'False'
+      aimfast:
+        type: map
+        desc: Quality assessment parameter.
+        mapping:
+          enable:
+            type: bool
+            desc: Enable the 'aimfast' segment.
+            required: false
+            example: 'False'
+          tol:
+            type: float
+            desc: Relative change in weighted mean of metrics (specified via convergence_criteria below) from aimfast.
+            required: false
+            example: '0.02'
+          convergence_criteria:
+            seq:
+              - type: str
+            required: false
+            desc: The residual statistic to check convergence against. Every metric/criterion listed will be combined into a weighted mean. Options are 'DR' (dynamic range), 'MEAN' (mean of the residual flux), 'STDDev' (standard deviation), 'SKEW' (skewness, 3rd-moment), and 'KURT' (kurtosis, 4th-moment). However, note that when cal_model_mode = 'vis_only', 'DR' is no longer an option. Default is '', which means no convergence is checked.
+            example: ''
+          area_factor:
+            type: int
+            desc: A multiplicative factor that sets the total area over which the metrics are calculated, where total_area = psf_size*area_factor. This area is centred on the position of peak flux-density in the image.
+            required: false
+            example: '6'
+          radius:
+            type: float
+            desc: Cross-matching radius (in units of arcsec), for comparing source properties in a catalogue before and after an iteration of self-calibration. 
+            required: false
+            example: '0.6'
+          normality_model:
+            type: str
+            enum: ["normaltest", "shapiro"]
+            desc: The type of normality test, to use for testing how well the residual image is modelled by a normal distribution. Options are 'normaltest' (i.e. D'Agostino) and 'shapiro'.
+            required: false
+            example: 'normaltest'
+          plot:
+            type: bool
+            desc: Generate html plots for comparing catalogues and residuals.
+            required: false
+            example: 'False'
+          online_catalog:
+            type: map
+            desc: Perform an online catalog comparison
+            mapping:
+              enable:
+                type: bool
+                desc: Enable online comparison
+                required: false
+                example: 'False'
+              catalog_type:
+                type: str
+                enum: ["nvss", "sumss"]
+                desc: Online catalog type to compare local models
+                required: false
+                example: 'nvss'
+      image:
+        type: map
+        desc: Imaging parameters.
+        mapping:
+          enable:
+            type: bool
+            desc: Enable the 'image' segment.
+            required: false
+            example: 'False'
+          col:
+            seq:
+              - type: str
+            desc: Column(s) to image.
+            required: false
+            example: 'DATA, CORRECTED_DATA'
+          clean_cutoff:
+            seq:
+              - type: float
+            desc: Cleaning threshold to be used by WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the noise level estimated by WSClean from the residual image before the start of every major deconvolution iteration.
+            required: false
+            example: '0.5, 0.5'
+          cleanmask_method:
+            seq:
+              - type: str
+            desc: Method used to create the clean mask. The possible values are 1) 'wsclean' to use WSClean's auto-masking (threshold set by clean_mask_threshold below); 2) 'sofia' to create a clean mask using SoFiA (threshold set by clean_mask_threshold below, and additional settings in sofia_settings, do not use if output_data = CORR_RES ); 3) 'breizorro'  to create a clean mask using Breizorro (threshold set by clean_mask_threshold below, and additional settings in breizorro_settings; 4) a prefix string to use an existing .FITS mask located in output/masking and called prefix_target.fits, where the name of the target is set automatically by the pipeline. The latter .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this third  maskingm ethod can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output/masking.
+            required: false
+            example: 'wsclean, wsclean'
+          cleanmask_thr:
+            seq:
+              - type: float
+            desc: Threshold used to create the clean mask when clean_mask_method = 'wsclean', 'sofia' or 'breizorro'. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the (local) noise level.
+            required: false
+            example: '10.0, 6.0'
+          cleanmask_localrms:
+            seq:
+              - type: bool
+            desc: Use a local-rms measurement when creating a clean mask with clean_mask_method = 'wsclean' or 'sofia'. If clean_mask_method = 'wsclean', this local-rms setting is also used for the clean_threshold above. Otherwise it is only used to define the clean mask, and clean_threshold is in terms of the global noise (rather than the local noise).
+            required: false
+            example: 'False, False'
+          cleanmask_localrms_window:
+            desc: Width of the window used to measure the local rms when creating the clean mask. The window width is in pixels for clean_mask_method = 'sofia', and in PSFs for clean_mask_method = 'wsclean'.
+            seq:
+              - type: int
+            required: false
+            example: '31, 31'
+          ncpu_img: 
+            type: int
+            example: '0'
+            required: false
+            desc: Number of threads used by wsclean; has a default value of '0'. If specified in the configuration file, will overrule the value set by ncpu, which is the global default for both cubical and wsclean
+          absmem:   
+            type: float
+            example: '100.0'
+            required: false
+            desc: "Specifies a fixed amount of memory in gigabytes."
+          nr_parallel_grid:
+            type: int
+            example: '1'
+            required: false
+            desc: Will execute multiple gridders simultaneously when using w-stacking. When parallel gridding is not possible, or when image sizes are reasonably large (say 5k-10k), the w-gridder might be a better choice.
+          use_wgridder:
+            type: bool
+            example: 'False'
+            required: false
+            desc: Use the w-gridding gridder developed by Martin Reinecke. Otherwise, the default will be w-stacking.
+
+      extract_sources:
+        type: map
+        desc: Source-finding parameters.
+        mapping:
+          enable:
+            type: bool
+            desc: Enable the 'extract_sources' segment.
+            required: false
+            example: 'False'
+          sourcefinder:
+            type: str
+            enum: ["pybdsm", "sofia"]
+            desc: Set the source finder to be used. Options are 'pybdsm' (i.e. pybdsf) and 'sofia'.
+            required: false
+            example: 'pybdsm'
+          local_rms:
+            type: bool
+            desc: Use a local-rms estimate when applying the source-finding detection threshold.
+            required: false
+            example: 'False'
+          spi:
+            type: bool
+            desc: Extract the spectral index for the fitted sources.
+            required: false
+            example: 'False'           # if not specified no spi will be determined
+          thr_pix:
+            seq:
+              - type: int
+            desc: Pixel threshold to be used for the source finder. I.e. the minimum number of contiguous pixels for emission to be classed as a 'source'.
+            required: false
+            example: '5'
+          thr_isl:
+            seq:
+              - type: int
+            desc: Threshold to be used by the source finder to set the island boundary, given in the number of sigma above the mean. This determines the extent of the island used for fitting.
+            required: false
+            example: '3'
+          detection_image:
+            type: bool
+            desc: Constrain the PyBDSM source-finding to only find sources included in the clean model.
+            required: false
+            example: 'False'
+          breizorro_image:
+            type: map
+            desc: Use breizorro image.
+            mapping:
+              enable:
+                type: bool
+                desc: Use a breizorro product image to perform source finding in order to do source comparison.
+                required: false
+                example: 'False'
+              sum_to_peak:
+                type: float
+                desc: Sum to peak ratio of flux islands to mask in original image. Default = 500, will mask everything with a ratio above 500.
+                required: false
+                example: '500'
+
+
+      calibrate:
+        type: map
+        desc: Calibration parameters.
+        mapping:
+          enable:
+            type: bool
+            desc: Enable the 'calibrate' segment.
+            required: false
+            example: 'False'
+          model:
+            seq:
+              - type: str
+            desc: Model number to use, or a combination of models. E.g. '1+2' to use the first and second models for calibration.
+            required: false
+            example: '1,2'
+          output_data:
+            seq:
+              - type: str
+            desc: Data to output after calibration. Options are 'PA_DATA', 'CORR_RES', 'CORR_DATA' or 'CORRECTED_DATA', where CORR_DATA and CORRECTED_DATA are synonyms. Note that for 'PA_DATA' only parallactic angle corrections will be applied to the data to produce 'CORRECTED_DATA' column. 
+            required: false
+            example: 'CORR_DATA'
+          gain_matrix_type:
+            seq:
+              - type: str
+            desc: Gain matrix type. 'GainDiagPhase' = phase-only calibration, 'GainDiagAmp' = amplitude only, 'GainDiag' = Amplitude + Phase, 'Gain2x2' = Amplitude + Phase taking non-diagonal terms into account, 'Fslope' = delay selfcal (for which solution intervals should be set to at least twice the values you would use for GainDiagPhase). Note that Fslope does not work with MeqTrees.
+            required: false
+            example: 'GainDiagPhase, GainDiag'
+          gsols_timeslots:
+            seq:
+              - type: int
+            desc: G-Jones time solution interval. The parameter cal_timeslots_chunk above should be a multiple of Gsols_time. 0 entails using a single solution for the full time of the observations.
+            required: false
+            example: '1'
+          gsols_chan:
+            seq:
+              - type: int
+            desc: G-Jones frequency solution interval. The parameter chan_chunk in calibrate section should a multiple of Gsols_channel. 0 entails using a single solution for the full bandwidth.
+            required: false
+            example: '0'
+          bsols_timeslots:
+            seq:
+              - type: int
+            desc: B-Jones solutions for individual calibration steps in time.
+            required: false
+            example: '0'
+          bsols_chan:
+            seq:
+              - type: int
+            desc: B-Jones solutions for individual calibration steps in frequency.
+            required: false
+            example: '2'
+          gasols_timeslots:
+            desc: Time intervals for amplitude calibration in CubiCal. 0 indicates average all. -1 defaults to Gsols_timeslots. If different from Gsols_timeslots, a second matrix is used and applied.
+            seq:
+              - type: int
+            required: false
+            example: '-1'
+          gasols_chan:
+            desc: Channel intervals for amplitude calibration in CubiCal. 0 indicates average all. -1 defaults to Gsols_channel. If different from Gsols_channels, a second matrix is used and applied.
+            seq:
+              - type: int
+            required: false
+            example: '-1'
+
+      restore_model:
+        type: map
+        desc: Take the modelled source(s) and restore it(/them) to the final, calibrated residual image.
+        mapping:
+          enable:
+            type: bool
+            desc: Enable the 'restore_model' segment.
+            required: false
+            example: 'False'
+          model:
+            type: str
+            desc: Model number to use, or a combination of models. E.g. '1+2' to use the first and second models.
+            required: false
+            example: '1+2'
+          clean_model:
+            type: str
+            desc: Clean model number to use, or combination of clean models. E.g. '1+2' to use the first and second clean models.
+            required: false
+            example: '3'
+
+      flagging_summary:
+        type: map
+        desc: Output the flagging summary.
+        mapping:
+          enable:
+            type: bool
+            desc: Enable the 'flagging_summary' segment.
+            required: false
+            example: 'False'
+
+      transfer_apply_gains:
+        type: map
+        desc: Interpolate gains over the high frequency-resolution data.
+        mapping:
+          enable:
+            type: bool
+            desc: Enable the 'transfer_apply_gains' segment.
+            required: false
+            example: 'False'
+          transfer_to_label:
+            type: str
+            desc: Label of cross-calibrated .MS file to which to transfer and apply the selfcal gains.
+            required: false
+            example: 'corr'
+          interpolate:
+            type: map
+            desc: To interpolate the gains or not to interpolate the gains. That is indeed the question.
+            mapping:
+              enable:
+                 type: bool
+                 desc: Enable gain interpolation.
+                 required: false
+                 example: 'True'
+              timeslots_int:
+                 type: int
+                 desc: Solution interval in time (units of timeslots/integration time) for transferring gains. -1 means use the solution interval from the calibration that is applied.
+                 required: false
+                 example: '-1'
+              chan_int:
+                 type: int
+                 desc: Solution interval in frequency (units of channels) for transferring gains. -1 means use the solution interval from the calibration that is applied.
+                 required: false
+                 example: '-1'
+              timeslots_chunk:
+                 type: int
+                 desc: Time chunk in units of timeslots for transferring gains with CubiCal. -1 means use the solution interval from the calibration that is applied.
+                 required: false
+                 example: '-1'
+              chan_chunk:
+                 type: int
+                 desc: Frequency chunk in units of channels for transferring gains with CubiCal. '0' means the whole spw. -1 means use the solution interval from the calibration that is applied.
+                 required: false
+                 example: '-1'
+
+      transfer_model:
+        type: map
+        desc: Transfer the model from the last WSClean imaging run to the MODEL_DATA column of another .MS .
+        mapping:
+          enable:
+            type: bool
+            desc: Enable the 'transfer_model' segment.
+            required: false
+            example: 'False'
+          transfer_to_label:
+            type: str
+            desc: Label of the .MS file to which to transfer the model.
+            required: false
+            example: 'corr'
+          model:
+            type: str
+            desc: Name of the sky model file. (Currently the only supported format is that of WSClean component lists.) When 'auto', the pipeline builds the file name from the input parameters of the selfcal loop. The file is assumed to be in the 'output' directory.
+            required: false
+            example: 'auto'
+          row_chunks:
+            type: int
+            desc: Number of rows of the input .MS that are processed in a single chunk.
+            required: false
+            example: '0'
+          model_chunks:
+            type: int
+            desc: Number of sky model components that are processed in a single chunk.
+            required: false
+            example: '0'
+          within:
+            type: str
+            desc: Give the JS9 region file. Only sources within those regions will be included.
+            required: false
+            example: ''
+          points_only:
+            type: bool
+            desc: Select only 'point' sources.
+            required: false
+            example: 'False'
+          num_sources:
+            type: int
+            desc: Select only N brightest sources.
+            required: false
+            example: "0"
+          num_workers:
+            type: int
+            desc: Explicitly set the number of worker threads. Default is 0, meaning it uses all threads.
+            required: false
+            example: '0'
+          mem_frac:
+            type: float
+            desc: Fraction of system RAM that can be used. Used when setting automatically the chunk size.
+            required: false
+            example: '0.05'
+      report:
+        type: bool
+        required: false
+        desc: (Re)generate a full HTML report at the end of this worker.
+        example: 'False'
+      cabs:
+        desc: 'Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.'
+        required: false
+        seq:
+          - type: map
+            mapping:
+              name:
+                type: str
+                required: true
+                example: 'cabname'
+              version:
+                type: str
+                required: false
+                example: ''
+              tag:
+                type: str
+                required: false
+                example: ''
+        example: ''

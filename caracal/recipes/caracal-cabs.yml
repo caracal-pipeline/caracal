@@ -1,0 +1,71 @@
+_include:
+  (cultcargo):
+    - aimfast.yml
+    - breizorro.yml
+    - bdsf.yml
+    - casa-flag.yml
+    - crystalball.yml
+    - cubical.yml
+    - fitstool.yml
+    - mosaic-queen.yml
+    - msutils.yml
+    - quartical.yml
+    - rfinder.yml
+    - smops.yml
+    - spimple-spifit.yml
+    - tigger.yml
+    - tricolour.yml
+    - wsclean.yml
+
+cabs:
+  cubical:
+    info: More params
+    inputs:
+      out:
+        dir:
+          dtype: Directory
+          writable: true
+  wsclean:
+    info: More params
+    inputs:
+      dd-psf-grid:
+        dtype: List[int]
+        policies:
+          repeat: list
+      pol: 
+        choices: [I, IQ, IV, IQU, IQUV]
+        default: I
+  generate_mauch_beam:
+    info: This gets a Mauchian beam (Mauch et al. 2020).
+    flavour:
+      kind: python-code
+      input_vars: false
+      input_dict: args
+    command: |
+      import numpy as np
+      from astropy.io import fits
+      outfile = ''
+      filename = args.pop("image")
+      with fits.open(filename) as image:
+          headimage = image[0].header
+          for i in range(1, headimage['NAXIS']+1):
+              if headimage['CTYPE{0:d}'.format(i)].startswith('FREQ'):
+                  freq = headimage['CRVAL{0:d}'.format(i)]
+          ang_offset = np.indices((headimage['NAXIS2'], headimage['NAXIS1']), dtype=np.float32)
+          ang_offset[0] -= (headimage['CRPIX2'] - 1)
+          ang_offset[1] -= (headimage['CRPIX1'] - 1)
+          ang_offset = np.sqrt((ang_offset**2).sum(axis=0))  # Using offset in x and y direction to calculate the total offset from the pointing centre
+          ang_offset = ang_offset * np.abs(headimage['CDELT1'])  # Now offset is in units of deg
+          FWHM_pb = (57.5 / 60) * (freq / 1.5e9)**-1  # Eqn 4 of Mauch et al. (2020), but in deg   # freq is just a float for the 2D case
+          pb_image = (np.cos(1.189 * np.pi * (ang_offset / FWHM_pb)) / (
+                  1 - 4 * (1.189 * ang_offset / FWHM_pb)**2))**2  # Eqn 3 of Mauch et al. (2020)
+          name = filename.replace('image.fits', 'pb.fits')
+          fits.writeto(name, pb_image, header=headimage, overwrite=True)
+          outfile = name
+    inputs:
+      image:
+        dtype: File
+        required: true
+    outputs:
+      outfile:
+        dtype: File

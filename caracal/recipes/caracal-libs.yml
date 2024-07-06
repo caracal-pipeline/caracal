@@ -1,0 +1,261 @@
+_include:
+  - caracal-cabs.yml
+
+## this augments the standard 'opts' config section to tweak logging settings
+opts:
+  log:
+    dir: logs/log-{config.run.datetime}
+    name: log-{info.taskname}
+    nest: 5
+    symlink: log
+  backend:
+    native:
+      enable: true
+    singularity:
+      enable: false
+    rlimits:
+      NOFILE: 10000  # set high limit on number of open files
+
+lib:
+  recipes:
+    image_products:
+      name: Multiplier
+      info: make product of mask and list of images
+      for_loop:
+        var: image
+        over: images
+        scatter: 36
+      inputs:
+        mask:
+          dtype: File
+        images:
+          dtype: List[File]
+        output-prefix:
+          dtype: str
+      steps:
+        make-image-products-0:
+          info: make product of mask and image
+          cab: fitstool
+          params:
+            images: =LIST(recipe.mask, recipe.image)
+            prod: true
+            output: =DIRNAME(recipe.image) + '/{recipe.output-prefix}' + STRIPEXT(BASENAME(recipe.image)) + '.fits'
+    DD_source:
+      name: DDModels
+      info: make product of corrected model with de-region to get de only model
+      for_loop:
+        var: region
+        over: regions
+        #scatter: 4
+      inputs:
+        regions:
+          dtype: List[File]
+        image:
+          dtype: File
+        output-prefix:
+          dtype: str
+      steps:
+        make-region-mask-0:
+          info: make breizorro mask
+          cab: breizorro
+          params:
+            merge: recipe.region
+            restored-image: recipe.image
+            mask: recipe.output-prefix
+        make-image-products-0:
+          info: make product of mask and image
+          cab: fitstool
+          params:
+            images: =LIST(recipe.mask, recipe.image)
+            prod: true
+            output: =DIRNAME(recipe.image) + '/{recipe.output-prefix}' + STRIPEXT(BASENAME(recipe.image)) + '.fits'
+
+ 
+  steps:
+    cubical:
+      pa-corr:
+        info: "derotate data using cubical"
+        cab: cubical
+        params:
+          data.ms: =recipe.ms
+          #parset: cc-parsets/solve-pa.parset
+          out.dir: '{recipe.dir-out-base}/corr-{recipe.suffix}-pa'
+          out.name: cc
+          out.mode: ac
+          out.column: PA_CORRECTED_DATA
+          madmax.enable: 0
+          madmax.residuals: 0
+          #model.list: MODEL_DATA
+          out.derotate: =recipe.pa-rotate
+          model.pa-rotate: =recipe.pa-rotate
+          model.feed-rotate: =IF(recipe.pa-rotate, "auto", 0)
+          sol.jones: [K]
+          k.type: f-slope
+          sol.term-iters: 0
+          k.max-iter: 0
+
+    quartical:
+      k:
+        cab: quartical
+        params:
+          input_ms:
+            path: =recipe.ms
+            select_corr: [0,1,2,3]
+            select_uv_range: =LIST(400*0.33, 0)
+          input_model:
+            recipe: MODEL_DATA
+            apply_p_jones: =recipe.pa-rotate
+          solver:
+            terms: [K]
+            iter_recipe: [50,50,50]
+            propagate_flags: true
+            robust: false
+          output:
+            gain_directory: "{recipe.dir-out-base}/K-{info.suffix}"
+            log_directory: "{recipe.dir-out-base}/K-{info.suffix}"
+            overwrite: true
+            products: [corrected_data]
+            columns: =LIST("CORRECTED{info.suffix}_DATA")
+            flags: true
+            apply_p_jones_inv: =recipe.pa-rotate
+          mad_flags:
+            enable: =root.mad-flag 
+            threshold_bl: 6
+            threshold_global: 8
+            max_deviation: 1000
+          K:
+            time_interval: 1
+            freq_interval: 0
+            type: delay_and_offset
+            initial_estimate: false
+      k-g:
+        _use: lib.steps.quartical.k
+        params:
+          solver:
+            terms: [K,G]
+            iter_recipe: [50,50,50,50,50]
+          output:
+            products: [corrected_data]
+          G:
+            time_interval: 1
+            freq_interval: 64
+            type: complex
+            initial_estimate: false
+
+      k-g-diag:
+        _use: lib.steps.quartical.k-g
+        params:
+          G:
+            type: complex-diag
+
+      k-de:
+        _use: lib.steps.quartical.k
+        params:
+          input_model:
+            recipe: MODEL{info.suffix}_DATA~DIR1_DATA:DIR1_DATA
+          solver:
+            terms: [K,dE]
+            iter_recipe: [25,25,25,25,25]
+          output:
+            products: [corrected_residual]
+            subtract_directions: [1]
+          dE:
+            direction_dependent: true
+            time_interval: 1
+            freq_interval: 32
+            type: complex
+
+      k-g-de:
+        _use: lib.steps.quartical.k-g
+        params:
+          input_model:
+            recipe: MODEL{info.suffix}_DATA~DIR1_DATA:DIR1_DATA
+          solver:
+            terms: [K,G,dE]
+            iter_recipe: [50,50,50,25,25,25,25]
+          output:
+            products: [corrected_residual]
+            subtract_directions: [1]
+          dE:
+            direction_dependent: true
+            time_interval: 1
+            freq_interval: 32
+            type: complex
+
+    wsclean:
+      base:
+        info: "base wsclean settings"
+        cab: wsclean
+        params:
+          ms: =recipe.ms
+          prefix: =recipe.image-prefix
+          padding: 1.3
+          nwlayers-factor: 3
+          size: =recipe.image-size
+          scale: =recipe.image-scale
+          nchan: =recipe.image-nchan
+          deconvolution-channels: =IFSET(recipe.image-deconv-chan)
+          multiscale: true
+          #multiscale-scales: [0,6,12,18,24,28,32,64,128,256,300,340,454,512]
+          multiscale-scales: [0,6,12,18,24,28,32,64,72,80,100,150]
+          multiscale-scale-bias: 0.5
+          temp-dir: =recipe.image-temp
+          use-wgridder: true
+          log-time: true
+          #minuv-l: =IF(recipe.inner-taper.enable, recipe.inner-taper.cut, UNSET)
+          #taper-inner-tukey: =IF(recipe.inner-taper.enable, recipe.inner-taper.taper, UNSET)
+
+      dirty:
+        _use: lib.steps.wsclean.base
+        info: "wsclean step for dirty-only image"
+        params:
+          weight: 'briggs 0'
+          niter: 0
+          parallel-gridding: 64
+
+      dirty_pol:
+        _use: lib.steps.wsclean.dirty
+        info: "wsclean step for dirty-only IQUV image"
+        params:
+          pol: IQUV
+
+      image:
+        _use: lib.steps.wsclean.dirty
+        info: "wsclean step for imaging"
+        params:
+          mgain: 0.9
+          weight: 'briggs -0.1'
+          fit-beam: true
+          elliptical-beam: true
+          #parallel-deconvolution: 1500
+          niter: 100000
+          nmiter: 8
+          join-channels: true
+          #fit-spectral-pol: 4
+          auto-threshold: 3
+
+      image-pol:
+        _use: lib.steps.wsclean.image
+        info: "wsclean step for IQUV imaging"
+        params:
+          join-polarizations: true
+          fit-spectral-pol: =UNSET 
+          pol: IQUV
+
+      predict:
+        _use: lib.steps.wsclean.base
+        info: "wsclean step for predicting a model"
+        params:
+          predict: true
+          size: =recipe.image-size
+          scale: =recipe.image-scale
+          nchan: =recipe.image-nchan
+          deconvolution-channels: =recipe.image-deconv-chan
+
+      predict-pol:
+        _use: lib.steps.wsclean.predict
+        info: "wsclean step for predicting an IQUV model"
+        params:
+          predict: true
+          pol: IQUV
+          fit-spectral-pol: =UNSET 

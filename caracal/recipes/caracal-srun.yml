@@ -1,0 +1,24 @@
+opts:
+  backend:
+    singularity:
+      auto_build: false
+    slurm:
+      enable: false
+      srun_opts:
+        time: 1-12
+        mem: 100GB
+        cpus-per-task: 4  # make default conservative -- give more to specific cabs below
+
+cabs:
+  quartical:
+    backend:
+      slurm:
+        srun_opts:
+          mem: 200GB
+          cpus-per-task: 32
+  wsclean:
+    backend:
+      slurm:
+        srun_opts:
+          mem: 200GB
+          cpus-per-task: 32

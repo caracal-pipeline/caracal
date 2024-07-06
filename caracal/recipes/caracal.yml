@@ -1,0 +1,78 @@
+#!/usr/bin/env -S stimela run
+_include:
+  - caracal-flag.yml
+  - caracal-selfcal.yml
+  - caracal-ddcal.yml
+_include_post:
+  - caracal-srun.yml
+
+concat-pointings:
+  name: "CARACAL concatenate pointings"
+  info: "Concatenate ms with similar dirations and field names"
+  inputs:
+    _include: caracal-schema.yml
+    ms-concat:
+      dtype: List[MS]
+      default: [
+                "msdir/1543664600_sdp_l0-T16R02C02-corr.ms",
+                "msdir/1543635069_sdp_l0-T16R02C02-corr.ms",
+               ]
+  steps:
+    concat-0:
+      cab: casa.concat
+      info: 'Concatenate multiple measurement sets into a single output.'
+      params:
+        timesort: true
+        vis: =recipe.ms
+        concatvis: "msdir/T16R02C02-corr_concat.ms"
+
+caracal-pointings:
+  name: "CARACAL pointing loop"
+  info: "Process each pointing of the observation separately"
+
+  for_loop:
+    var: ms
+    over: ms-pointings
+    display_status: "{var}={value} {index1}/{total}"
+
+  inputs:
+    _include: caracal-schema.yml
+    ms-pointings:
+      dtype: List[MS]
+      default: [
+                #"msdir/1543664600_sdp_l0-T16R02C02-hii-mgps.ms",
+                #"msdir/1543664600_sdp_l0-T16R02C04-hii-mgps.ms"
+                "msdir/PicA-PictorA-corr.ms"
+                ]
+
+  steps:
+    flagging:
+      recipe: caracal-flag
+      params:
+        dir-out-base: =recipe.dir-out-base
+        ms: =recipe.ms
+    2gc-reductions:
+      recipe: caracal-selfcal
+      params:
+        dir-out-base: =recipe.dir-out-base
+        ms: =recipe.ms
+    3gc-reductions:
+      recipe: caracal-ddcal
+      params:
+        dir-out-base: =recipe.dir-out-base
+        ms: =recipe.ms
+
+mosaic-pointings:
+  name: "CARACAL mosaicking"
+  info: "Create a mosaic for the looped pointings"
+  inputs:
+    _include: caracal-schema.yml
+  steps:
+    mosaic-image:
+      cab: mosaic-queen
+      params:
+        target_images: ['*MFS-image*']
+        input: "{recipe.dir-out-base}/caracal-imaging-{recipe.worker-id}"
+        output: "{recipe.dir-out-base}/caracal-imaging-{recipe.worker-id}"
+        regrid: True
+        name: CARACAL

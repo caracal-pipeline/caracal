@@ -1,0 +1,58 @@
+#!/usr/bin/env -S stimela run --last-recipe
+_include:
+  - caracal-libs.yml
+
+caracal-flag:
+  name: CaraCal flag recipe
+  info: "Flagging and flag analysis recipe developed for CaraCal"
+ 
+  inputs:
+    _include: caracal-schema.yml
+
+  steps:
+    save-flags:
+      info: back-up initial flags
+      cab: casa.flagman
+      skip: =IF(recipe.flag-enable, IF(recipe.flag-save-enable, false, true), true)
+      params:
+        ms: =recipe.ms
+        versionname: "caracal_{recipe.worker-id}_flagging"
+        mode: save
+
+    restore-flags:
+      info: restore flags to a specific version
+      cab: casa.flagman
+      skip: =IF(recipe.flag-enable, IF(recipe.flag-restore-enable, false, true), true)
+      params:
+        ms: =recipe.ms
+        versionname: =recipe.initial-flags
+        mode: restore
+
+    flagsummary-stats:
+      info: report initial % of flagged data
+      cab: casa.flagsummary
+      skip: =IF(recipe.flag-enable, IF(recipe.flag-summary-enable, false, true), true)
+      params:
+        ms: =recipe.ms
+
+    rfinder-summary-stats:
+      info: report initial flagging statistics from rfinder which includes plots
+      cab: rfinder
+      skip: =IF(recipe.flag-enable, IF(recipe.flag-rfinder-stats-enable, false, true), true)
+      params:
+        ms: =recipe.ms
+        output_dir: "{recipe.dir-out-base}/"
+        label: =STRIPEXT(BASENAME(recipe.ms)) + "-{recipe.worker-id}"
+        summary_options: [scan,corr,ant] #also [freq]
+        ncpu: =recipe.ncpu
+
+    flag-rfi:
+      info: flag target RFI using tricolour
+      cab: tricolour
+      skip: =IF(recipe.flag-enable, IF(recipe.flag-rfinder-stats-enable, false, true), true)
+      params:
+        ms: =recipe.ms
+        config: caracal/caracal/ancillary/gorbachev.yml
+        data-column: DATA
+        flagging-strategy: standard
+      #window-backend: 'zarr-disk'

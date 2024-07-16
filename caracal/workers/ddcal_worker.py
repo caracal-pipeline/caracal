@@ -8,6 +8,7 @@ import stimela.dismissable as sdm
 from caracal.dispatch_crew import utils
 from stimela.pathformatter import pathformatter as spf
 from caracal.utils.requires import extras
+from caracal.workers.utils import manage_flagsets as manflags
 
 NAME = 'Direction-dependent Calibration'
 LABEL = "ddcal"
@@ -18,7 +19,7 @@ def worker(pipeline, recipe, config):
     from astropy.coordinates import SkyCoord
     from astropy import units as u
     from astropy.wcs import WCS
-    from regions import PixCoord, write_ds9, PolygonPixelRegion
+    from regions import PixCoord, Regions, PolygonPixelRegion
     npix = config['image_dd']['npix']
     cell = config['image_dd']['cell']
     use_mask = config['image_dd']['use_mask']
@@ -35,8 +36,14 @@ def worker(pipeline, recipe, config):
     DDF_LSM = "DDF_lsm.lsm.html"
     shared_mem = str(config['shared_mem']) + 'gb'
     all_targets, all_msfile, ms_dict = pipeline.get_target_mss(label)
-    caracal.log.info("All_targets", all_targets)
-    caracal.log.info("All_msfiles", all_msfile)
+    caracal.log.info(f"All_targets: {all_targets}")
+    caracal.log.info(f"All_msfiles: {all_msfile}")
+
+    wname = pipeline.CURRENT_WORKER
+    flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
+    flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
+    flag_main_ms = pipeline.enable_task(config, 'calibrate')
+    rewind_main_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["version"] != 'null')
 
     if not os.path.exists(OUTPUT):
         os.mkdir(OUTPUT)
@@ -80,6 +87,49 @@ def worker(pipeline, recipe, config):
         "Log-Memory": config['image_dd']["log_memory"],
         "Cache-Reset": config['image_dd']["cache_reset"],
         "Log-Boring": config["image_dd"]["log_boring"], }
+
+    # Write/rewind flag versions only if flagging tasks are being
+    # executed on these .MS files, or if the user asks to rewind flags
+    for i, m in enumerate(all_msfile):
+        if flag_main_ms or rewind_main_ms:
+            available_flagversions = manflags.get_flags(pipeline, m)
+            if rewind_main_ms:
+                if config['rewind_flags']['mode'] == 'reset_worker':
+                    version = flags_before_worker
+                    stop_if_missing = False
+                elif config['rewind_flags']['mode'] == 'rewind_to_version':
+                    version = config['rewind_flags']['version']
+                    if version == 'auto':
+                        version = flags_before_worker
+                    stop_if_missing = True
+                if version in available_flagversions:
+                    if flags_before_worker in available_flagversions and available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
+                        manflags.conflict('rewind_too_little', pipeline, wname, m, config, flags_before_worker, flags_after_worker)
+                    substep = 'version-{0:s}-ms{1:d}'.format(version, i)
+                    manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
+                    if version != available_flagversions[-1]:
+                        substep = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, i)
+                        manflags.delete_cflags(pipeline, recipe,
+                                               available_flagversions[available_flagversions.index(version) + 1],
+                                               m, cab_name=substep)
+                    if version != flags_before_worker:
+                        substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
+                        manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                                            m, cab_name=substep, overwrite=config['overwrite_flagvers'])
+                elif stop_if_missing:
+                    manflags.conflict('rewind_to_non_existing', pipeline, wname, m, config, flags_before_worker, flags_after_worker)
+                elif flag_main_ms:
+                    substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                                        m, cab_name=substep, overwrite=config['overwrite_flagvers'])
+            else:
+                if flags_before_worker in available_flagversions and not config['overwrite_flagvers']:
+                    manflags.conflict('would_overwrite_bw', pipeline, wname, m, config, flags_before_worker, flags_after_worker)
+                else:
+                    substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                                        m, cab_name=substep, overwrite=config['overwrite_flagvers'])
+
 
     def make_primary_beam():
         eidos_opts = {
@@ -143,7 +193,7 @@ def worker(pipeline, recipe, config):
         image_prefix_postcal = "/" + outdir + "/" + prefix + "_" + field
         dd_ms_list = {"Data-MS": ms_list}
         dd_image_opts_postcal.update(dd_ms_list)
-        caracal.log.info("Imaging", ms_list)
+        caracal.log.info(f"Imaging: {ms_list}")
         postcal_datacol = config['image_dd']['data_colname_postcal']
         dd_imagecol = {"Data-ColName": postcal_datacol}
         dd_image_opts_postcal.update(dd_imagecol)
@@ -269,8 +319,7 @@ def worker(pipeline, recipe, config):
                 reg.append(region_dd)
             regfile = "de-{0:s}.reg".format(field)
             ds9_file = os.path.join(OUTPUT, outdir, regfile)
-            # This needs to be rewritten. write_ds9 does not exist any more
-            write_ds9(reg, ds9_file, coordsys='physical')
+            Regions(reg).write(ds9_file, format='ds9', overwrite=True)
 
     def dd_calibrate(field, mslist):
         key = 'calibrate_dd'
@@ -422,7 +471,7 @@ def worker(pipeline, recipe, config):
     for target in de_targets:
         mslist = ms_dict[target]
         field = utils.filter_name(target)
-        caracal.log.info("Processing field", field, "for de calibration:")
+        caracal.log.info(f"Processing field {field} for de calibration:")
         if USEPB:
             make_primary_beam()
         if pipeline.enable_task(config, 'image_dd'):

@@ -1,4 +1,4 @@
-schema_version: 1.0.3
+schema_version: 1.1.4
 
 general:
   prefix: mypipelinerun
@@ -108,6 +108,14 @@ selfcal:
     enable: true
     gsols_timeslots: [120]
   report: true
+
+ddcal:
+  enable: true
+  calibrate_dd:
+    enable: true
+    madmax_enable: false
+    de_target_manual: ['circinus-p3']
+    de_sources_manual: ['14h13m00s,-65d20m00s,20']  
 
 line:
   enable: true

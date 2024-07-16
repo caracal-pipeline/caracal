@@ -1206,6 +1206,9 @@ def worker(pipeline, recipe, config):
 
         caracal.log.info('I DID WELL')
 
+        caracal.log.info(sofia_opts)
+
+        caracal.log.info('*******************************')
 
         recipe.add('cab/sofia', step,
                    sofia_opts,

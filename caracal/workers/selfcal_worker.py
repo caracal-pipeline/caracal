@@ -1193,7 +1193,7 @@ def worker(pipeline, recipe, config):
 
         #     sofia_opts.update({"import.maskFile": fornax_namemask_regr})
 
-        elif num>0 and preGridMask is not None:
+        elif num>0 and preGridMask:
             postGridMaskSof = preGridMask.replace('.fits','_{}_regridSof.fits'.format(pipeline.prefix))
 
             if os.path.exists('{}/{}'.format(pipeline.masking,postGridMaskSof)):

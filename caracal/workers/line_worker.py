@@ -63,9 +63,11 @@ def freq_to_vel(filename, reverse):
                 # https://fits.gsfc.nasa.gov/standard40/fits_standard40aa-le.pdf
 
                 headcube['ctype3'] = 'VRAD'
-                if 'cunit3' in headcube:
-                    # delete cunit3 because we adopt the default units = m/s
-                    del headcube['cunit3']
+                headcube['cunit3'] = 'm/s'
+                # 3 lines below commented out because of issue 1209
+                #if 'cunit3' in headcube:
+                #    # delete cunit3 because we adopt the default units = m/s
+                #    del headcube['cunit3']
 
             # convert from radio velocity to frequency
             elif (headcube['naxis'] > 2) and ('VRAD' in headcube['ctype3']) and (headcube['naxis'] > 2) and reverse:
@@ -73,9 +75,11 @@ def freq_to_vel(filename, reverse):
                 headcube['crval3'] = restfreq * \
                     (1 - float(headcube['crval3']) / C)
                 headcube['ctype3'] = 'FREQ'
-                if 'cunit3' in headcube:
-                    # delete cunit3 because we adopt the default units = Hz
-                    del headcube['cunit3']
+                headcube['cunit3'] = 'Hz'
+                # 3 lines below commented out because of issue 1209
+                #if 'cunit3' in headcube:
+                #    # delete cunit3 because we adopt the default units = Hz
+                #    del headcube['cunit3']
             else:
                 if not reverse:
                     caracal.log.warn(
@@ -918,7 +922,7 @@ def worker(pipeline, recipe, config):
                         C = 2.99792458e+8  # m/s
                         femit = [r.strip() for r in re.split('([-+]?\d+\.\d+)|([-+]?\d+)', restfreq.strip()) if r is not None and r.strip() != '']
                         femit = (eval(femit[0]) * units.Unit(femit[1])).to(units.Hz).value  # Hz
-                        t = summary_file if config['make_cube']['use_mstransform'] else summary_file.replace('_mst', '')
+                        t = mslist[0].replace('.ms', '-summary.json') # first file given to WSClean as input
                         with open('{}/{}'.format(pipeline.msdir, t)) as f:
                             obsDict = json.load(f)
                         raTarget = np.round(obsDict['FIELD']['REFERENCE_DIR'][0][0][0] / np.pi * 180, 5)
@@ -937,7 +941,7 @@ def worker(pipeline, recipe, config):
                         caracal.log.info('CubeHeight (px) = {}'.format(cubeHeight))
                         caracal.log.info('CubeWidht (px) = {}'.format(cubeWidth))
 
-                        postGridMask = preGridMask.replace('.fits', '_{}_regrid.fits'.format(pipeline.prefix))
+                        postGridMask = preGridMask.replace('.fits', '_{}_{}_regrid.fits'.format(pipeline.prefix, target))
 
                         with fits.open('{}/{}'.format(pipeline.masking, preGridMask)) as hdul:
 
@@ -1519,6 +1523,8 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='Make primary beam cube for {0:s}'.format(image_cube_list[uu]))
                 cube_list.append(image_cube_list[uu].replace('image.fits', 'pb.fits'))
+                if config['pb_cube']['apply_pb']:
+                    cube_list.append(image_cube_list[uu].replace('image.fits', 'pb_corr.fits'))
 
         if pipeline.enable_task(config, 'remove_stokes_axis'):
             caracal.log.info('Will remove Stokes axis of all cubes/images of target {0:d}'.format(tt))

@@ -18,7 +18,7 @@ def worker(pipeline, recipe, config):
     from astropy.coordinates import SkyCoord
     from astropy import units as u
     from astropy.wcs import WCS
-    from regions import PixCoord, write_ds9, PolygonPixelRegion
+    from regions import PixCoord, Regions, PolygonPixelRegion
     npix = config['image_dd']['npix']
     cell = config['image_dd']['cell']
     use_mask = config['image_dd']['use_mask']
@@ -269,8 +269,7 @@ def worker(pipeline, recipe, config):
                 reg.append(region_dd)
             regfile = "de-{0:s}.reg".format(field)
             ds9_file = os.path.join(OUTPUT, outdir, regfile)
-            # This needs to be rewritten. write_ds9 does not exist any more
-            write_ds9(reg, ds9_file, coordsys='physical')
+            Regions(reg).write(ds9_file, format='ds9', overwrite=True)
 
     def dd_calibrate(field, mslist):
         key = 'calibrate_dd'

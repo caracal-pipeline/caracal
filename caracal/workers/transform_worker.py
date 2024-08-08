@@ -359,7 +359,7 @@ def worker(pipeline, recipe, config):
                            {
                                "vis": 'tobedeleted-' + to_ms,
                                "outputvis": to_ms,
-                               "datacolumn": 'data',
+                               "datacolumn": config['concat']['col'],
                                "combinespws": True,
                            },
                            input=pipeline.input,

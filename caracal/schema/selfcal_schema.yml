@@ -210,25 +210,26 @@ mapping:
             example: ''
           inputmask:
             type: str
-            desc: User-provided input-mask that will be supplemented by the SoFiA mask.  
+            desc: User-provided input-mask that will be (regridded if needed) and added onto the SoFiA mask.  
             required: false
             example: ''
-          fornax_special:
-            desc: Activate masking of Fornax A using SoFiA.
-            type: bool
-            required: false
-            example: 'False'
-          fornax_thr:
-            desc: SoFiA source-finding threshold, in terms of the number of sigma_rms to go down to (i.e. the minimum signal-to-noise ratio).
-            seq:
-              - type: float
-            required: false
-            example: '4.0'
-          fornax_sofia:
-            type: bool
-            desc: Use SoFiA for the mask of Fornax A, instead of that by Fomalont.
-            required: false
-            example: 'False'
+          # these parameters are outdated and can be deleted
+          # fornax_special:
+          #   desc: Activate masking of Fornax A using SoFiA (outdated).
+          #   type: bool
+          #   required: false
+          #   example: 'False'
+          # fornax_thr:
+          #   desc: SoFiA source-finding threshold, in terms of the number of sigma_rms to go down to (i.e. the minimum signal-to-noise ratio).
+          #   seq:
+          #     - type: float
+          #   required: false
+          #   example: '4.0'
+          # fornax_sofia:
+          #   type: bool
+          #   desc: Use SoFiA for the mask of Fornax A, instead of that by Fomalont.
+          #   required: false
+          #   example: 'False'
       img_breizorro_settings:
         desc: Breizorro settings used for the imaging iterations whose entry in 'image/cleanmask_method' below is 'breizorro'. The resulting clean mask is located in <output>/masking.
         type: map

@@ -452,7 +452,6 @@ def worker(pipeline, recipe, config):
         ncpu_img = config[key]['ncpu_img'] if config[key]['ncpu_img'] else ncpu
         absmem = config[key]['absmem'] 
         step = 'image-field{0:d}-iter{1:d}'.format(trg, num)
-        # fits_mask = 'masking/track1_mfs84_2_clean_mask_track1_regridSof.fits'
 
         fake_image_opts = {
             "msname": mslist,
@@ -495,6 +494,8 @@ def worker(pipeline, recipe, config):
             })
         if min_uvw > 0:
             fake_image_opts.update({"minuvw-m": min_uvw})
+        
+        # should these be removed since not needed to create image_0?
         # if multiscale:
         #     fake_image_opts.update({"multiscale": multiscale})
         #     if multiscale_scales:
@@ -580,7 +581,8 @@ def worker(pipeline, recipe, config):
             image_opts.update({"multiscale": multiscale})
             if multiscale_scales: #this does not include the auto setting of scales.
                 image_opts.update({"multiscale-scales": list(map(int,multiscale_scales.split(',')))})
-            # if  multiscale_bias:
+            ## should we add this option?
+            #  if  multiscale_bias:
             #     image_opts.update({"multiscale-scale-bias": multiscale_bias}) 
         if nonegative:
             image_opts.update({"nonegative": nonegative})
@@ -644,6 +646,8 @@ def worker(pipeline, recipe, config):
 
             with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
 
+                caracal.log.info('An input mask for cleaning is provided checking if regridding is needed')
+
                 imgHeight=config['img_npix']
                 imgWidth=config['img_npix']
 
@@ -657,6 +661,8 @@ def worker(pipeline, recipe, config):
                 '''
                 MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
                 '''
+                caracal.log.info('Regridding the fitsmask for cleaning')
+
                 caracal.log.info('Write header for new mask {} to match the grid of the image'.format(postGridMask))
 
                 with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
@@ -693,9 +699,8 @@ def worker(pipeline, recipe, config):
 
 
                 caracal.log.info('Reprojecting mask {} to match the grid of the image.'.format(preGridMask))
-                '''
-                REPROJECT user supplied mask
-                '''
+                
+                # REPROJECT user supplied mask                
                 step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
                 recipe.add('cab/mProject', step,
                            {
@@ -709,21 +714,19 @@ def worker(pipeline, recipe, config):
                             label='{0:s}:: Reprojecting user input mask {1:s} to match the grid of the image'.format(step, preGridMask))
 
 
-                #In order to make sure that we actually find stuff in the images we execute the rec ipe here
                 recipe.run()
-                # Empty job que after execution
                 recipe.jobs = []                
 
                 if not os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
                     raise IOError(
                           "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask))
 
-                #convert floats of mask to integers
+                # convert floats of mask to integers
                 with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
                     hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
                     hdul.flush()
 
-
+                # update fitsmask keyword of wsclean
                 image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1]),
                     "local-rms": False,
                   })
@@ -748,44 +751,46 @@ def worker(pipeline, recipe, config):
             imagename = '{0:s}/{1:s}_{2:s}_{3:d}-image.fits'.format(
                 img_dir, prefix, field, num)
 
-        if config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == True:
-            forn_kernels = [[80, 80, 0, 'b']]
-            forn_thresh = config[key]['fornax_thr'][
-                num if len(config[key]['fornax_thr']) >= num+1 else -1]
+        # THIS is outdated and can be removed
+        # if config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == True:
+        #     forn_kernels = [[80, 80, 0, 'b']]
+        #     forn_thresh = config[key]['fornax_thr'][
+        #         num if len(config[key]['fornax_thr']) >= num+1 else -1]
 
-            sofia_opts_forn = {
-                "import.inFile": imagename,
-                "steps.doFlag": True,
-                "steps.doScaleNoise": False,
-                "steps.doSCfind": True,
-                "steps.doMerge": True,
-                "steps.doReliability": False,
-                "steps.doParameterise": False,
-                "steps.doWriteMask": True,
-                "steps.doMom0": False,
-                "steps.doMom1": False,
-                "steps.doWriteCat": False,
-                "parameters.dilateMask": False,
-                "parameters.fitBusyFunction": False,
-                "parameters.optimiseMask": False,
-                "SCfind.kernelUnit": 'pixel',
-                "SCfind.kernels": forn_kernels,
-                "SCfind.threshold": forn_thresh,
-                "SCfind.rmsMode": 'mad',
-                "SCfind.edgeMode": 'constant',
-                "SCfind.fluxRange": 'all',
-                "scaleNoise.method": 'local',
-                "scaleNoise.windowSpatial": 51,
-                "scaleNoise.windowSpectral": 1,
-                "writeCat.basename": 'FornaxA_sofia',
-                "merge.radiusX": 3,
-                "merge.radiusY": 3,
-                "merge.radiusZ": 1,
-                "merge.minSizeX": 100,
-                "merge.minSizeY": 100,
-                "merge.minSizeZ": 1,
-            }
+        #     sofia_opts_forn = {
+        #         "import.inFile": imagename,
+        #         "steps.doFlag": True,
+        #         "steps.doScaleNoise": False,
+        #         "steps.doSCfind": True,
+        #         "steps.doMerge": True,
+        #         "steps.doReliability": False,
+        #         "steps.doParameterise": False,
+        #         "steps.doWriteMask": True,
+        #         "steps.doMom0": False,
+        #         "steps.doMom1": False,
+        #         "steps.doWriteCat": False,
+        #         "parameters.dilateMask": False,
+        #         "parameters.fitBusyFunction": False,
+        #         "parameters.optimiseMask": False,
+        #         "SCfind.kernelUnit": 'pixel',
+        #         "SCfind.kernels": forn_kernels,
+        #         "SCfind.threshold": forn_thresh,
+        #         "SCfind.rmsMode": 'mad',
+        #         "SCfind.edgeMode": 'constant',
+        #         "SCfind.fluxRange": 'all',
+        #         "scaleNoise.method": 'local',
+        #         "scaleNoise.windowSpatial": 51,
+        #         "scaleNoise.windowSpectral": 1,
+        #         "writeCat.basename": 'FornaxA_sofia',
+        #         "merge.radiusX": 3,
+        #         "merge.radiusY": 3,
+        #         "merge.radiusZ": 1,
+        #         "merge.minSizeX": 100,
+        #         "merge.minSizeY": 100,
+        #         "merge.minSizeZ": 1,
+        #     }
 
+        #define name ouf outputmask of SoFiA
         outmask = pipeline.prefix+'_'+field+'_'+str(num+1)+'_clean'
         outmaskName = outmask+'_mask.fits'
 
@@ -835,19 +840,14 @@ def worker(pipeline, recipe, config):
             flags_sof = config[key]['flagregion']
             sofia_opts.update({"flag.regions": flags_sof})
 
-        preGridMask = config[key]['inputmask']
-        
-        caracal.log.info(preGridMask)
+        #check if inputmask is provided by input
+        preGridMask = config[key]['inputmask']   
         postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
 
-
-
         if num==0 and preGridMask:
-            caracal.log.info('+++++++++++++++++++++++++++++++')
+            caracal.log.info('Inputmask {} found in Cycle-0. Checking if regridding is needed, and proceed if true'.format(preGridMask))
 
-            caracal.log.info('I DID WELL')
             doProj=False
-
 
             msname_base = os.path.splitext(mslist[0])[0]
 
@@ -872,19 +872,15 @@ def worker(pipeline, recipe, config):
                     doProj = True if (hdul[0].header['CRVAL1'] != raTarget) | (hdul[0].header['CRVAL2'] != decTarget) else None
 
             if doProj:
-                '''
-                MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
-                '''
+
+                # MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
+                
+                caracal.log.info('Regridding input {} mask'.format(preGridMask))
                 caracal.log.info('Write header for new mask {} to match the grid of the image'.format(postGridMask))
                 hduImage=fits.getheader('{}/{}'.format(pipeline.output,imagename))
                 
                 with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
                     file.write('SIMPLE  =   T\n')
-                    # file.write('BITPIX  =   -64\n')
-
-                    # for keys in hduImage:
-                    #     if keys != 'HISTORY' and keys !='COMMENT' and keys != 'SIMPLE' and keys != 'BITPIX':
-                    #         file.write('{}  =   {}\n'.format(keys, hduImage[keys]))
                     file.write('BITPIX  =   -64\n')
                     file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))
                     file.write('NAXIS1  =   {}\n'.format(hduImage['NAXIS1']))
@@ -900,37 +896,12 @@ def worker(pipeline, recipe, config):
                     file.write('EXTEND  =   T\n')
                     file.write('EQUINOX =   2000.0\n')
                     file.write('SPECSYS =   TOPOCENT\n')
-                  
-
-
                     file.write('END\n')
-        
-
-
-                # with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
-                #     file.write('SIMPLE  =   T\n')
-                #     file.write('BITPIX  =   -64\n')
-                #     file.write('NAXIS   =   2\n')
-                #     file.write('NAXIS1  =   {}\n'.format(imgWidth))
-                #     file.write('CTYPE1  =   \'RA---SIN\'\n')
-                #     file.write('CRVAL1  =   {}\n'.format(raTarget))
-                #     file.write('CRPIX1  =   {}\n'.format(imgWidth/2))
-                #     file.write('CDELT1  =   {}\n'.format(-1*config['img_cell']/3600.))
-                #     file.write('NAXIS2  =   {}\n'.format(imgHeight))
-                #     file.write('CTYPE2  =   \'DEC--SIN\'\n')
-                #     file.write('CRVAL2  =   {}\n'.format(decTarget))
-                #     file.write('CRPIX2  =   {}\n'.format(imgHeight/2))
-                #     file.write('CDELT2  =   {}\n'.format(config['img_cell']/3600.))
-                #     file.write('EXTEND  =   T\n')
-                #     file.write('EQUINOX =   2000.0\n')
-                #     file.write('SPECSYS =   TOPOCENT\n')
-                #     file.write('END\n')
-
-
 
                 if os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
                     os.remove('{}/{}'.format(pipeline.masking,postGridMask))
 
+                # turn mask into zeros and ones
                 with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
                     if np.amax(hdul[0].data) > 1:
                         mask = np.where(hdul[0].data > 0)
@@ -942,9 +913,8 @@ def worker(pipeline, recipe, config):
 
 
                 caracal.log.info('Reprojecting mask {} to match the grid of the image.'.format(preGridMask))
-                '''
-                REPROJECT user supplied mask
-                '''
+
+                # REPROJECT user supplied mask
                 step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
                 recipe.add('cab/mProject', step,
                            {
@@ -957,13 +927,10 @@ def worker(pipeline, recipe, config):
                             output=pipeline.masking,
                             label='{0:s}:: Reprojecting user input mask {1:s} to match the grid of the image'.format(step, preGridMaskNew))
 
-
-                #In order to make sure that we actually find stuff in the images we execute the rec ipe here
                 recipe.run()
-                # Empty job que after execution
                 recipe.jobs = []       
 
-                # print(postGridMask)
+                # turn nans of regridded mask into zeros
                 datTmp = fits.getdata('{}/{}'.format(pipeline.masking,postGridMask))
                 headTmp = fits.getheader('{}/{}'.format(pipeline.masking,postGridMask))
 
@@ -971,244 +938,25 @@ def worker(pipeline, recipe, config):
                 datTmp[idxNan] = 0.0
 
                 datNew = np.around(datTmp.astype(np.float32)).astype(np.int16)
-                # datNew = np.expand_dims(datNew, axis=0)
-                # datNew = np.expand_dims(datNew, axis=0)
-                # headTmp['NAXIS'] = 4
-                # try:
-                #     del headTmp['EN']
-                # except KeyError:
-                #     pass
+
 
                 postGridMaskSof = preGridMask.replace('.fits','_{}_regridSof.fits'.format(pipeline.prefix))
 
                 fits.writeto('{}/{}'.format(pipeline.masking,postGridMaskSof),datNew,headTmp,overwrite=True) 
 
-                # with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
 
-                #     axDict = {'1' : [2,imgWidth],
-                #               '2' : [1,imgHeight]}
- 
-
-                #     hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
-                #     hdul[0].header['NAXIS'] =  4                    
-                #     hdul[0].header['NAXIS3'] =  1
-                #     hdul[0].header['CTYPE3'] =  'FREQ'
-                #     hdul[0].header['CRVAL3'] =  0
-                #     hdul[0].header['CRPIX3'] =  1
-                #     hdul[0].header['CUNIT3'] =  'Hz'
-                #     hdul[0].header['CDELT3'] =  1
-                #     hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
-                #     hdul[0].header['NAXIS4'] =  1
-                #     hdul[0].header['CTYPE4'] =  'STOKES'
-                #     hdul[0].header['CRVAL4'] =  1
-                #     hdul[0].header['CRPIX4'] =  1
-                #     hdul[0].header['CDELT4'] =  1
-                #     hdul[0].header['CUNIT4'] =  ' '
-            
-
-                #     for i in ['1','2']:
-                #         cent, nax = hdul[0].header['CRPIX'+i], hdul[0].header['NAXIS'+i]
-                #         if cent < axDict[i][1]/2+1:
-                #             delt = int(axDict[i][1]/2+1 - cent)
-                           
-                #             hdul[0].header['CRPIX'+i] = cent + delt
-
-                #         if hdul[0].data.shape[axDict[i][0]] > axDict[i][1]:
-                #             delt = int(hdul[0].data.shape[axDict[i][0]] - axDict[i][1])
-                #             if cent > axDict[i][1]/2+1:
-                #                 hdul[0].header['CRPIX'+i] = hdul[0].data.shape[axDict[i][0]]/2+1
-
-                #         hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
-                #         try:
-                #             del hdul[0].header['EN']
-                #         except KeyError:
-                #             pass
-                #         hdul.flush()
-
-
-                #dope header to make SoFiA happy
-
-                # with fits.open('{}/{}'.format(pipeline.masking,postGridMask)) as hdul:
-
-                #     hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
-                #     hdul[0].header['NAXIS'] =  4
-                    
-                #     hdul[0].header['NAXIS3'] =  1
-                #     hdul[0].header['CTYPE3'] =  'FREQ'
-                #     hdul[0].header['CRVAL3'] =  0
-                #     hdul[0].header['CRPIX3'] =  1
-                #     hdul[0].header['CUNIT3'] =  'Hz'
-                #     hdul[0].header['CDELT3'] =  1
-
-                #     hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
-                #     hdul[0].header['NAXIS4'] =  1
-                #     hdul[0].header['CTYPE4'] =  'STOKES'
-                #     hdul[0].header['CRVAL4'] =  1
-                #     hdul[0].header['CRPIX4'] =  1
-                #     hdul[0].header['CDELT4'] =  1
-                #     hdul[0].header['CUNIT4'] =  ' '
-            
-
-                #     hdul.writeto('{}/{}'.format(pipeline.masking,postGridMask), overwrite = True)
-
-
-
-            #     sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMaskSof)})
-            # else:
-            #     sofia_opts.update({"import.maskFile": 'masking/{}'.format(preGridMask)}) 
-        #     # mask_fits = 'masking/'+config[key]['inputmask']
-        #     # mask_casa = mask_fits.replace('.fits','.image')
-        #     # mask_regrid_casa = mask_fits.replace('.fits','_regrid.image')
-        #     # mask_regrid_fits = mask_fits.replace('.fits','_regrid.fits')
-        #     # imagename_casa = imagename.split('/')[-1].replace('.fits','.image')
-
-        #     # recipe.add('cab/casa_importfits', step+"-import-image",
-        #     #            {
-        #     #                "fitsimage": imagename,
-        #     #                "imagename": imagename_casa,
-        #     #                "overwrite": True,
-        #     #            },
-        #     #            input=pipeline.output,
-        #     #            output=pipeline.output,
-        #     #            label='Import image in casa format')
-
-        #     # recipe.add('cab/casa_importfits', step+"-import-mask",
-        #     #            {
-        #     #                "fitsimage": mask_fits+':output',
-        #     #                "imagename": mask_casa,
-        #     #                "overwrite": True,
-        #     #            },
-        #     #            input=pipeline.input,
-        #     #            output=pipeline.output,
-        #     #            label='Import mask in casa format')
-
-        #     # recipe.add('cab/casa_imregrid', step+"-regrid-mask",
-        #     #            {
-        #     #                "template": imagename_casa+':output',
-        #     #                "imagename": mask_casa+':output',
-        #     #                "output": mask_regrid_casa,
-        #     #                "overwrite": True,
-        #     #            },
-        #     #            input=pipeline.input,
-        #     #            output=pipeline.output,
-        #     #            label='Regrid mask to image')
-
-        #     # recipe.add('cab/casa_exportfits', step+"-export-mask",
-        #     #            {
-        #     #                "fitsimage": mask_regrid_fits+':output',
-        #     #                "imagename": mask_regrid_casa+':output',
-        #     #                "overwrite": True,
-        #     #            },
-        #     #            input=pipeline.input,
-        #     #            output=pipeline.output,
-        #     #            label='Export regridded mask to fits')
-
-        #     # recipe.add(change_header_and_type, step+"-copy-header",
-        #     #            {
-        #     #                "filename": pipeline.output+'/'+mask_regrid_fits,
-        #     #                "headfile": pipeline.output+'/'+imagename,
-        #     #                "copy_head": True,
-        #     #            },
-        #     #            input=pipeline.input,
-        #     #            output=pipeline.output,
-        #     #            label='Copy image header to mask')
-
-
-        # if config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == True:
-
-        #     recipe.add('cab/sofia', step+"-fornax_special",
-        #                sofia_opts_forn,
-        #                input=pipeline.output,
-        #                output=pipeline.output+'/masking/',
-        #                label='{0:s}:: Make SoFiA mask'.format(step))
-
-        #     fornax_namemask = 'masking/FornaxA_sofia_mask.fits'
-        #     sofia_opts.update({"import.maskFile": fornax_namemask})
-
-        # elif config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == False:
-
-        #     # this mask should be regridded to correct f.o.v.
-
-        #     fornax_namemask = 'masking/Fornaxa_vla_mask_doped.fits'
-        #     fornax_namemask_regr = 'masking/Fornaxa_vla_mask_doped_regr.fits'
-
-        #     mask_casa = fornax_namemask.split('.fits')[0]
-        #     mask_casa = fornax_namemask+'.image'
-
-        #     mask_regrid_casa = fornax_namemask+'_regrid.image'
-
-        #     imagename_casa = '{0:s}_{1:d}{2:s}-image.image'.format(
-        #         prefix, num, mfsprefix)
-
-        #     recipe.add('cab/casa_importfits', step+"-fornax_special-import-image",
-        #                {
-        #                    "fitsimage": imagename,
-        #                    "imagename": imagename_casa,
-        #                    "overwrite": True,
-        #                },
-        #                input=pipeline.output,
-        #                output=pipeline.output,
-        #                label='Image in casa format')
-
-        #     recipe.add('cab/casa_importfits', step+"-fornax_special-import-image",
-        #                {
-        #                    "fitsimage": fornax_namemask+':output',
-        #                    "imagename": mask_casa,
-        #                    "overwrite": True,
-        #                },
-        #                input=pipeline.input,
-        #                output=pipeline.output,
-        #                label='Mask in casa format')
-
-        #     recipe.add('cab/casa_imregrid', step+"-fornax_special-regrid",
-        #                {
-        #                    "template": imagename_casa+':output',
-        #                    "imagename": mask_casa+':output',
-        #                    "output": mask_regrid_casa,
-        #                    "overwrite": True,
-        #                },
-        #                input=pipeline.input,
-        #                output=pipeline.output,
-        #                label='Regridding mosaic to size and projection of dirty image')
-
-        #     recipe.add('cab/casa_exportfits',  step+"-fornax_special-export-mosaic",
-        #                {
-        #                    "fitsimage": fornax_namemask_regr+':output',
-        #                    "imagename": mask_regrid_casa+':output',
-        #                    "overwrite": True,
-        #                },
-        #                input=pipeline.input,
-        #                output=pipeline.output,
-        #                label='Extracted regridded mosaic')
-
-        #     recipe.add(change_header_and_type,  step+"-fornax_special-change_header",
-        #                {
-        #                    "filename": pipeline.output+'/'+fornax_namemask_regr,
-        #                    "headfile": pipeline.output+'/'+imagename,
-        #                    "copy_head": True,
-        #                },
-        #                input=pipeline.input,
-        #                output=pipeline.output,
-        #                label='Extracted regridded mosaic')
-
-        #     sofia_opts.update({"import.maskFile": fornax_namemask_regr})
-
+        caracal.log.info('Cycle > 0 and user provided inputmask: update name of SoFiA input-mask has been regridded')
         elif num>0 and preGridMask:
+            caracal.log.info('Updating mask inputmask name for sofia run ')
             postGridMaskSof = preGridMask.replace('.fits','_{}_regridSof.fits'.format(pipeline.prefix))
 
             if os.path.exists('{}/{}'.format(pipeline.masking,postGridMaskSof)):
+                caracal.log.info('Regridded mask {}'.format(postGridMaskSof))
                 sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMaskSof)})
             else:
+                caracal.log.info('User provided inputmask {}'.format(preGridMask))
                 sofia_opts.update({"import.maskFile": 'masking/{}'.format(preGridMask)})
 
-
-        caracal.log.info('+++++++++++++++++++++++++++++++')
-
-        caracal.log.info('I DID WELL')
-
-        caracal.log.info(sofia_opts)
-
-        caracal.log.info('*******************************')
 
         recipe.add('cab/sofia', step,
                    sofia_opts,
@@ -1218,13 +966,12 @@ def worker(pipeline, recipe, config):
 
         recipe.run()
         recipe.jobs = []
-       # print(postGridMask)
 
-        caracal.log.info('++++++++++++++LOADING MASKS+++++++++++++++++')
         if preGridMask:
-            caracal.log.info(outmaskName)
+
+            caracal.log.info('Adding user-supplied input mask onto SoFiA mask {}'.format(postGridMaskSof,outmaskName))
+                                    
             datMask = fits.getdata('{}/{}'.format(pipeline.masking,outmaskName))
-            # datMask = np.around(datMask.astype(np.float32)).astype(np.int16)
 
             datHead = fits.getheader('{}/{}'.format(pipeline.masking,outmaskName))
             datForn = fits.getdata('{}/{}'.format(pipeline.masking,postGridMaskSof))
@@ -1232,6 +979,7 @@ def worker(pipeline, recipe, config):
             datForn = np.expand_dims(datForn,axis=0)
             datForn = np.expand_dims(datForn,axis=0)
 
+            # turn nans of glued mask into zeros
             idxNan = np.isnan(datForn)
             datForn[idxNan] = 0
             caracal.log.info(np.nansum(datForn))
@@ -1242,11 +990,10 @@ def worker(pipeline, recipe, config):
             indexMask = np.where(datTot > 0)
             datTot[indexMask] = 1
                             
-            # outmaskName = outmaskName.replace('mask.fits','mask_mask.fits')
 
             fits.writeto(pipeline.output+'/masking/'+outmaskName,datTot,datHead,overwrite=True)
-            caracal.log.info(pipeline.output+'/masking/'+outmaskName)
-        caracal.log.info('++++++++++++++SAVING MASK MASKS+++++++++++++++++')
+            
+            caracal.log.info('Mask saved, ready for cleaning')
 
     def breizorro_mask(trg, num, img_dir, field):
         step = 'make-breizorro_mask-field{0:d}-iter{1:d}'.format(trg,num)
@@ -2607,8 +2354,6 @@ def worker(pipeline, recipe, config):
                 recipe.jobs = []
                 sofia_mask(target_iter, 0, get_dir_path(
                     image_path, pipeline), field)
-                # recipe.run()
-                # recipe.jobs = []
                 config['image']['cleanmask_method'].insert(1,config['image']['cleanmask_method'][self_cal_iter_counter if len(config['image']['cleanmask_method']) > self_cal_iter_counter else -1])
                 image_path = "{0:s}/image_{1:d}".format(
                     pipeline.continuum, self_cal_iter_counter)

@@ -1,7 +1,7 @@
-# -*- coding: future_fstrings -*-
 import os
 import sys
-from collections import Mapping, Sequence, OrderedDict, namedtuple
+from collections.abc import Mapping, Sequence
+from collections import OrderedDict, namedtuple
 import itertools
 import yaml
 from stimela.dismissable import dismissable as sdm
@@ -9,6 +9,7 @@ from caracal import log, ConfigurationError
 import caracal.dispatch_crew.utils as utils
 import numpy as np
 import json
+
 
 def check_config(config, name):
     shadems_cfg = config["shadems"]
@@ -66,7 +67,7 @@ def check_params(params):
     params = {k: v for k, v in params.items() if v not in (None, "", " ")}
 
     # if any values are python lists, convert them to comma separated list
-    params = {k:  (",".join(v) if isinstance(v, list) else v)
+    params = {k: (",".join(v) if isinstance(v, list) else v)
               for k, v in params.items()}
 
     return params
@@ -318,18 +319,19 @@ def plotms(pipeline, recipe, basic, extras=None):
                input=pipeline.input, output=output_dir,
                label=label, memory_limit=None, cpus=None)
 
+
 def _process_shadems_plot_list(plot_args, basesubst, plotlist, defaults, description, extras=None):
     """Processes a list of plots, recusing into dicts"""
     for entry in plotlist:
         if not entry:
             continue
-        # if plot is specified as a dict, its keys will override category defaults                
+        # if plot is specified as a dict, its keys will override category defaults
         if isinstance(entry, Mapping):
             entry = entry.copy()
             desc = entry.pop("desc", "")
             comment = entry.pop("comment", "")
             enable = entry.pop("enable", True)
-            plots  = entry.pop("plots", None)
+            plots = entry.pop("plots", None)
             if not isinstance(plots, Sequence):
                 raise ConfigurationError(f"{description}: expecting a 'plots' sequence")
             # skip enable=False entries
@@ -338,11 +340,11 @@ def _process_shadems_plot_list(plot_args, basesubst, plotlist, defaults, descrip
                 continue
             # all other keys go into new defaults (with substitutions done)
             new_defaults = defaults.copy()
-            new_defaults.update(**{"--" + key.replace("_", "-"): val.format(**basesubst) if type(val) is str else val
-                                    for key, val in entry.items()})
+            new_defaults.update(**{"--" + key.replace("_", "-"): val.format(**basesubst) if isinstance(val, str) else val
+                                   for key, val in entry.items()})
             # and ecurse into new plot list
             _process_shadems_plot_list(plot_args, basesubst, plots, new_defaults, f"{description}: {desc or comment}", extras=extras)
-        elif type(entry) is str:
+        elif isinstance(entry, str):
             # add user-defined substitutions
             plot = entry.format(**basesubst)
             # convert argument list to dictionary for easy update
@@ -378,9 +380,9 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
 
     # some user facing substitutions for fields, corrs, and base MS name
     basesubst = dict(
-        msbase = msbase,
-        all_fields = ",".join(fields.keys()),
-        all_corrs = shade_cfg["corrs"]
+        msbase=msbase,
+        all_fields=",".join(fields.keys()),
+        all_corrs=shade_cfg["corrs"]
     )
     for _f in fields.keys():
         for _ft in fields[_f]:
@@ -400,7 +402,7 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
 
     # # remove plot categories that have not been specified
     # bares = {k: v for k, v in bares.items() if len(v) > 1 or (v and v[0])}
-    ## I just skip them below as that's easier with the new logic
+    # I just skip them below as that's easier with the new logic
 
     plot_args = []
 
@@ -453,7 +455,7 @@ def shadems(pipeline, recipe, basic, extras=None):
     }
 
     # get a name conforming to those allowed in shadems
-    shade_cols = lambda _c, names: names.get(_c, _c.upper())
+    def shade_cols(_c, names): return names.get(_c, _c.upper())
 
     # get the correlation names for the args
     corrs = basic["corr"].split(",")
@@ -627,9 +629,8 @@ def worker(pipeline, recipe, config):
                             "field": fname,
                             "output": f"{label}-{ms_base}-{ftype[0]}-{fname}-{axes}",
                             "output_dir": output_dir,
-                            "step":  f"plot-{axes}-{iobs}-{ftype[0]}",
+                            "step": f"plot-{axes}-{iobs}-{ftype[0]}",
                             "label": label,
                             **plot_axes[axes]})
 
                         globals()[plotter](pipeline, recipe, plot_args, extras=None)
-

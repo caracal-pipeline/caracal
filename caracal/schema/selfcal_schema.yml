@@ -141,6 +141,12 @@ mapping:
         desc: Number of channels in output image.
         required: false
         example: '3'
+      img_channelrange:
+        seq:
+          - type: int
+        desc: Only image the given channel range. Indices specify channel indices, end index is exclusive. .e.g. 0, 1023. Default '-1' means all channels.
+        required: false
+        example: '-1'
       img_joinchans:
         type: bool
         desc: Join channels to create MFS image.
@@ -341,6 +347,21 @@ mapping:
             type: int
             required: false
             example: '4'
+          out_derotate:
+            desc: Explicitly enables or disables derotation of output visibilities. Default (None) is to use the –model-pa-rotate and –model-feed-rotate settings.
+            type: bool
+            required: false
+            example: 'False'
+          model_pa_rotate:
+            desc: Apply parallactic angle rotation to model visibilities. Enable this for alt-azmounts, unless your model visibilities are already rotated.
+            type: bool
+            required: false
+            example: 'False'
+          model_feed_rotate:
+            desc: Apply a feed angle rotation to the model visibilities. Use 'auto' to read angles from FEED subtable, or give an explicit value in degrees.
+            type: str
+            required: false
+            example: ''
           ragavi_plot:
             type: map
             desc: Use ragavi to plot diagnostic plots for self-calibration.
@@ -482,6 +503,16 @@ mapping:
             example: '100.0'
             required: false
             desc: "Specifies a fixed amount of memory in gigabytes."
+          nr_parallel_grid:
+            type: int
+            example: '1'
+            required: false
+            desc: Will execute multiple gridders simultaneously when using w-stacking. When parallel gridding is not possible, or when image sizes are reasonably large (say 5k-10k), the w-gridder might be a better choice.
+          use_wgridder:
+            type: bool
+            example: 'False'
+            required: false
+            desc: Use the w-gridding gridder developed by Martin Reinecke. Otherwise, the default will be w-stacking.
 
       extract_sources:
         type: map
@@ -559,7 +590,7 @@ mapping:
           output_data:
             seq:
               - type: str
-            desc: Data to output after calibration. Options are 'CORR_DATA', 'CORR_RES' or 'CORRECTED_DATA', where CORR_DATA and CORRECTED_DATA are synonyms.
+            desc: Data to output after calibration. Options are 'PA_DATA', 'CORR_RES', 'CORR_DATA' or 'CORRECTED_DATA', where CORR_DATA and CORRECTED_DATA are synonyms. Note that for 'PA_DATA' only parallactic angle corrections will be applied to the data to produce 'CORRECTED_DATA' column. 
             required: false
             example: 'CORR_DATA'
           gain_matrix_type:

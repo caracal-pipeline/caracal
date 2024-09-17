@@ -461,7 +461,7 @@ mapping:
             required: false
             example: '1.0'
           wscl_sofia_niter:
-            desc: Maximum number of WSClean + SoFiA iterations. The initial cleaning is done with WSClean automasking or with a user-provided clean mask. Subsequent iterations use a SoFiA clean mask. A value of 1 means that WSClean is only executed once and SoFiA is not used.
+            desc: Maximum number of WSClean + SoFiA iterations. The initial cleaning is done with WSClean automasking or with a user-provided clean mask. Subsequent iterations use a SoFiA clean mask. A value of 1 means that WSClean is only executed once and SoFiA is not used. The value of this parameter must be >= 1. Values < 1 will be ignored, and a value of 1 will be used instead.
             type: int
             required: false
             example: '2'
@@ -796,7 +796,7 @@ mapping:
         desc: (Re)generate a full HTML report at the end of this worker.
         example: 'False'
       cabs:
-        desc: 'Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.'
+        desc: 'Specifies non-default image versions and/or tags for Stimela cabs.  Running with scissors: use with extreme caution. Inline format is: Format is [{name: cabname, tag: stimela_cab_version}].'
         required: false
         seq:
           - type: map

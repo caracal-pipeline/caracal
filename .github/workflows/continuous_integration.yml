@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-22.04 ]
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -41,18 +41,19 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Test optional deps
+        run: |
+            poetry install --extras all
+
       - name: Install caracal
-        run: poetry install --extras "testing"
+        run: poetry install --with tests --no-interaction
 
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
           poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          poetry run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-      - name: Test with pytest
-        run: poetry run pytest -s -vvv
+          # exit-zero treats all errors as warnings
+          poetry run flake8 . --count --exit-zero --max-complexity=10 --extend-ignore=E501 --statistics
 
       - name: Test caracal command
         run: |

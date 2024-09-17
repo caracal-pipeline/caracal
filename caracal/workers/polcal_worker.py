@@ -1243,7 +1243,7 @@ def worker(pipeline, recipe, config):
                 None, ([],) * 5
 
         # Set -90 deg receptor angle rotation [if we are using MeerKAT data]
-        if float(config['feed_angle_rotation']) != '':
+        if config['feed_angle_rotation'] != '':
             with tb("%s::FEED" % os.path.join(pipeline.msdir, msname), readonly=False) as t:
                 ang = t.getcol("RECEPTOR_ANGLE")
                 ang[:, 0] = numpy.deg2rad(float(config['feed_angle_rotation']))

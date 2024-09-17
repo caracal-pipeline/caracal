@@ -214,7 +214,7 @@ def worker(pipeline, recipe, config):
     transuvl = maxuvl * config['img_transuv_l'] / 100.
     multiscale = config['img_multiscale']
     multiscale_scales = config['img_multiscale_scales']
-    # multiscale_bias = config['img_multiscale_bias']
+    multiscale_bias = config['img_multiscale_bias']
     nonegative = config['img_nonegative']
     if taper == '':
         taper = None
@@ -515,6 +515,7 @@ def worker(pipeline, recipe, config):
                 fake_image_opts.update({"multiscale-scales": list(map(int, multiscale_scales.split(',')))})
             if multiscale_bias:
                 fake_image_opts.update({"multiscale-scale-bias": multiscale_bias})           
+
         if len(config['img_channelrange']) == 2:
             fake_image_opts.update({"channelrange": config['img_channelrange']})
             
@@ -599,8 +600,7 @@ def worker(pipeline, recipe, config):
                 image_opts.update({"multiscale-scales": list(map(int,multiscale_scales.split(',')))})
             if  multiscale_bias:
                 image_opts.update({"multiscale-scale-bias": multiscale_bias}) 
-                
-         if nonegative:
+        if nonegative:
             image_opts.update({"nonegative": nonegative})
       
         if len(config['img_channelrange']) == 2:

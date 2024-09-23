@@ -66,8 +66,8 @@ mapping:
         required: false
         example: 'False'
       feed_angle_rotation:
-        desc: Set the rotation angle for feeds. For MeerKAT data it is suggested to rotate the feeds by -90 degrees to agree with the convention assumed in the CASA software which is used to do the polarization calibration. Leave it empty if you don't want to rotate the feeds.
-        type: float
+        desc: Set the rotation angle for feeds. For MeerKAT data it is suggested to rotate the feeds by -90 degrees to agree with the convention assumed in the CASA software which is used to do the polarization calibration. Leave it empty if you want to use the original value written in the MS (receptor_angle field). Otherwise set the number in degrees (i.e. '-90' stands for -90 degrees).
+        type: str
         required: false
         example: ''
       rewind_flags:

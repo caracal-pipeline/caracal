@@ -9,6 +9,7 @@ standards:
   6: Baars
   7: Scaife-Heald 2012
   8: Stevens-Reynolds 2016
+  9: Perley-Butler 2017
 
 models:
   sr1:
@@ -59,3 +60,9 @@ models:
     J2000: 1829+487
     ALT: J1829+4845
     standards: 7
+  src9:
+    3C: 3C468.1
+    B1950: ""
+    J2000: ""
+    ALT: ""
+    standards: 9

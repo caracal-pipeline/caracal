@@ -927,12 +927,11 @@ def worker(pipeline, recipe, config):
                             obsDict = json.load(f)
                         raTarget = np.round(obsDict['FIELD']['REFERENCE_DIR'][0][0][0] / np.pi * 180, 5)
                         decTarget = np.round(obsDict['FIELD']['REFERENCE_DIR'][0][0][1] / np.pi * 180, 5)
-
                         cubeHeight = config['make_cube']['npix'][0]
                         cubeWidth = config['make_cube']['npix'][1] if len(config['make_cube']['npix']) == 2 else cubeHeight
 
                         preGridMask = own_line_clean_mask
-
+                        
                         caracal.log.info('+++++++++++++++++++++++++++++')
                         caracal.log.info('Checking Mask dimensions')
                         caracal.log.info('doProj = {}'.format(doProj))
@@ -966,18 +965,23 @@ def worker(pipeline, recipe, config):
                                 doProj = True
                                 caracal.log.info('CRVAL2')
 
+                            caracal.log.info('MaskLength = {}'.format(hdul[0].header['NAXIS3']))
+                            caracal.log.info('#CHans= {}'.format(nchans))
                             if int(hdul[0].header['NAXIS3']) > int(nchans):
                                 doSpec = True
                             else:
-                                dpSpec = None  # this should work in both a request for a subset, and if the cube is to be binned.
+                                doSpec = None  # this should work in both a request for a subset, and if the cube is to be binned.
 
                             if 'FREQ' in hdul[0].header['CTYPE3']:
-                                cdelt = round(hdul[0].header['CDELT3'], 2)
+                                cdelt = np.round(hdul[0].header['CDELT3'], 5)
                             else:
-                                cdelt = round(hdul[0].header['CDELT3'] * femit / (-C), 2)
+                                cdelt = np.round(hdul[0].header['CDELT3'] * femit / (-C), 5)
 
-                            if np.round(cdelt,1) > np.round(chanwidth[0],1):
+                            caracal.log.info('CDELT = {}'.format(cdelt))
+                            caracal.log.info('ChWidth = {}'.format(chanwidth[0]))
 
+
+                            if np.round(cdelt) > np.round(chanwidth[0]*binchans,5):
                                 doSpec = True
                             elif doProj:
                                 pass
@@ -992,11 +996,9 @@ def worker(pipeline, recipe, config):
  
                         caracal.log.info('doSpecProj = {}'.format(doSpec))
                         caracal.log.info('+++++++++++++++++++++++++++++')
-
                         caracal.log.info('doSpaceProj = {}'.format(doProj))
-
                         caracal.log.info('+++++++++++++++++++++++++++++')
-
+                        
                         if doProj:
                             '''
                             MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK AND REPROJECT
@@ -1119,8 +1121,19 @@ def worker(pipeline, recipe, config):
                                 crvale = C * (femit - (firstchanfreq[0] + chanwidth[0] * firstchan + nchans * binchans * chanwidth[0])) / femit
 
                             cdelt = chanwidth[0] * binchans  # in Hz
+
                             hdr = hdul[0].header
                             ax3 = np.arange(hdr['CRVAL3'] - hdr['CDELT3'] * (hdr['CRPIX3'] - 1), hdr['CRVAL3'] + hdr['CDELT3'] * (hdr['NAXIS3'] - hdr['CRPIX3'] + 1), hdr['CDELT3'])
+
+                            caracal.log.info('CDELT = {}'.format(cdelt))
+                            caracal.log.info('ChWidth = {}'.format(chanwidth[0]))
+                            
+                            caracal.log.info('CRVAL = {}'.format(crval))
+                            caracal.log.info('CRVALE = {}'.format(crvale))
+
+                            caracal.log.info('ax3[0] = {}'.format(ax3[0]))
+                            caracal.log.info('ax3[-1] = {}'.format(ax3[-1]))
+
                             if (np.max([crval, crvale]) <= np.max([ax3[0], ax3[-1]])) & (np.min([crval, crvale]) >= np.min([ax3[0], ax3[-1]])):
                                 caracal.log.info("Requested channels are contained in mask {}.".format(gridMask))
 
@@ -1248,6 +1261,7 @@ def worker(pipeline, recipe, config):
                 for mfs in glob.glob('{0:s}/{1:s}/{2:s}_{3:s}_{4:s}_{5:d}-MFS*fits'.format(
                         pipeline.output, cube_dir, pipeline.prefix, field, line_name, j)):
                     os.remove(mfs)
+
 
                 # Stack channels together into cubes and fix spectral frame
                 if config['make_cube']['wscl_make_cube']:

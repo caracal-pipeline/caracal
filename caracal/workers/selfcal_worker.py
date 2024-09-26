@@ -922,8 +922,9 @@ def worker(pipeline, recipe, config):
                 fits.writeto('{}/{}'.format(pipeline.masking,postGridMaskSof),datNew,headTmp,overwrite=True) 
 
 
-        caracal.log.info('Cycle > 0 and user provided inputmask: update name of SoFiA input-mask has been regridded')
         elif num>0 and preGridMask:
+            caracal.log.info('Cycle > 0 and user provided inputmask')
+
             caracal.log.info('Updating mask inputmask name for sofia run ')
             postGridMaskSof = preGridMask.replace('.fits','_{}_regridSof.fits'.format(pipeline.prefix))
 

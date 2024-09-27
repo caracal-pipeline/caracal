@@ -1,0 +1,117 @@
+schema_version: 1.0.4
+
+
+## Generate MS for calibration
+# Compulsory worker to set up data/input/output directories.
+# The prefix used for the output data products (e.g., diagnostic plots, images, etc.).
+general:
+  prefix: 3C39
+  title: 3C39
+  # Location where CARACal will write and expect to find .MS files
+  msdir: msdir-bpoly
+  # This directory and the input .MS files within it can be read-only
+  rawdatadir: ms-orig
+  # Location where CARACal writes output products
+  output: output-3c39-32k-bpoly
+
+# Compulsory worker to specify the input .MS files.
+getdata:
+  dataid: [1627186165_sdp_l0]
+  extension: ms
+
+# Compulsory worker to set up target/calibrators names.
+obsconf:
+  refant: auto
+  obsinfo:
+    enable: True
+    plotelev:
+      enable: True
+      plotter: plotms
+
+
+## Processing calibrators
+# Narrow band zoom modes channelise the 32768 channels
+# For calibration average down to the wideband 4096 channels
+# Factor 8 averaging if all channels are available
+transform__calibrators:
+  enable: true
+  label_out: cal
+  field: calibrators
+  split_field:
+    enable: true
+    chan_avg: 8
+    col: data
+
+# Prepare the calibrators-only .MS files for processing.
+prep__calibrators:
+  enable: true
+  label_in: cal
+  field: calibrators
+  clearcal: true
+  specweights:
+    enable: true
+    mode: uniform
+
+
+## Initial inspection and flagging
+# Make an inital amplitude vs. channel plot of the bandpass calibrator averaging all the data
+# together in time.
+# Next plot phase vs. channel.
+# Now plot amplitude and phase as a function of time.
+# 0a. Flag out band edges
+# 0b. Automated flagging for shadowing, elevation and extreme outliers
+# 0c. Flagging of identified bad data
+# Check that bad data is gone
+flag__calibrators:
+  enable: true
+  label_in: cal
+  field: calibrators
+  flag_autocorr:
+    enable: true
+  flag_shadow:
+    enable: true
+  flag_spw:
+    enable: true
+    # for narrow band only flag out the band edges
+    chans: '*:1630MHz~1657MHz,*:1673MHz~1700MHz'
+
+# Derive the cross-calibration tables and apply them to the calibrators.
+# Carry out Cross calibration of the data (delay, bandpass and gain calibration).
+crosscal:
+  enable: true
+  label_in: cal
+  label_cal: 1gc
+  uvrange: '>150'
+  set_model:
+    enable: true
+    meerkat_skymodel: true
+  primary:
+    reuse_existing_gains: false
+    order: KGPAKGP
+    combine: ["scan", "spw", "scan,spw", null, "", "", "scan,spw"]
+    solint: [inf, inf, inf, null, int, int, inf]
+    calmode: [ap, ap, ap, null, ap, ap, ap]
+    b_fillgaps: 70
+    # degamp: 2
+    degamp: 3
+    degphase: 3
+    visnorm: false
+    plotgains: false
+  # the default rime is 'KGB', so if you are using the 'P' option
+  # you need to specify it for all the calibrators, else the pipeline
+  # will attempt to run 'B' which will cause and error, because it does not exist
+  secondary:
+    reuse_existing_gains: false
+    order: KGAKF
+    apply: P
+    combine: ["scan", "spw", null, "", ""]
+    solint: [inf, inf, null, 60s, 60s]
+    calmode: [ap, ap, null, ap, ap]
+#     plotgains: true
+    plotgains: false
+  apply_cal:
+    applyto:
+      - fcal
+      - gcal
+
+# -fin-

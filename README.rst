@@ -25,7 +25,7 @@ When using CARACal please be aware of and adhere to the `CARACal publication pol
 
 Requirements
 ------------
-* `Python <https://www.python.org>`_ 3.8 or higher.
+* `Python <https://www.python.org>`_ 3.8 - 3.11.
 * Container technology of your choice. It can be one of the following:
     * `Docker <https://www.docker.com>`_
     * `Podman <https://podman.io>`_

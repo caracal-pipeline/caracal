@@ -60,20 +60,8 @@ def check_config(config, name):
     its purpose is to log warnings, or raise exceptions on bad errors.
     """
     # First let' check that we are not using transfer gains with meqtrees or not starting at the start with meqtrees
-    if config['calibrate_with'].lower() == 'meqtrees':
-        if config['transfer_apply_gains']['enable']:
-            raise caracal.ConfigurationError(
-                'Gains cannot be interpolated with MeqTrees, please switch to CubiCal. Exiting.')
-        if int(config['start_iter']) != 1:
-            raise caracal.ConfigurationError(
-                "We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
-        if int(config['cal_cubical']['chan_chunk']) != -1:
-            caracal.log.info("The channel chunk has no effect on MeqTrees.")
-        if 'Fslope' in config['calibrate']['gain_matrix_type']:
-            caracal.log.info("Delay selfcal does not work with MeqTrees, please switch to Cubical. Exiting.")
-    else:
-        if int(config['start_iter']) != 1:
-            raise caracal.ConfigurationError(
+    if int(config['start_iter']) != 1:
+        raise caracal.ConfigurationError(
                 "We cannot reapply Cubical calibration at a given step. Hence you will need to do a full selfcal loop.")
     # First check we are actually running a calibrate
     if config['calibrate']['enable']:
@@ -83,10 +71,6 @@ def check_config(config, name):
                 raise caracal.ConfigurationError(
                     "You did not set a model to use for every iteration while using residuals. This is too dangerous for CARACal to execute.")
 
-        # Make sure we are not using two_step with CubiCal
-        if config['calibrate_with'].lower() == 'cubical' and config['cal_meqtrees']['two_step']:
-            raise caracal.ConfigurationError(
-                "Two_Step calibration is an experimental mode only available for meqtrees at the moment.")
         # Then let's check that the solutions are reasonable and fit in our time chunks
         #!!!!!! Remainder solutions are not checked to be a full solution block!!!!!!!!
         #  we check there are enough solution
@@ -142,7 +126,7 @@ def check_config(config, name):
                     raise caracal.ConfigurationError("Inconsistent selfcal chunking")
         # Then we repeat for the channels, as these arrays do not have to be the same length as the timeslots this can not be combined
         # This is not an option for meqtrees
-        if config['calibrate_with'].lower() == 'cubical':
+        if config['calibrate_with'].lower() == 'quartical':
             if len(config['calibrate']['gsols_chan']) < int(config['cal_niter']):
                 amount_sols = len(config['calibrate']['gsols_chan'])
             else:
@@ -167,13 +151,13 @@ def check_config(config, name):
                     if val >= 0:
                         solutions.append(val)
             # then we assign the timechunk
-            if config['cal_cubical']['chan_chunk'] == -1:
+            if config['cal_quartical']['chan_chunk'] == -1:
                 if np.min(solutions) != 0.:
                     chan_chunk = max(solutions)
                 else:
                     chan_chunk = 0
             else:
-                chan_chunk = config['cal_cubical']['chan_chunk']
+                chan_chunk = config['cal_quartical']['chan_chunk']
             # if chan_chunk is not 0 all solutions should fit in there.
             # if it is 0 then it does not matter as we are not checking remainder intervals
             if chan_chunk != 0:
@@ -250,7 +234,7 @@ def worker(pipeline, recipe, config):
         else:
             time_chunk = max(all_time_solution)
     # And for the frequencies
-    freq_chunk = config['cal_cubical']['chan_chunk']
+    freq_chunk = config['cal_quartical']['chan_chunk']
     # If user sets value that is not -1 then use that
     if int(freq_chunk) < 0 and pipeline.enable_task(config, 'calibrate'):
         # We're always doing gains
@@ -506,21 +490,23 @@ def worker(pipeline, recipe, config):
         if len(config['img_channelrange']) == 2:
             fake_image_opts.update({"channelrange": config['img_channelrange']})
 
-        #recipe.add('cab/wsclean', step,
-        #           fake_image_opts,
-        #           input=pipeline.input,
-        #           output=pipeline.output,
-        #           label='{:s}:: Make image after first round of calibration'.format(step))
+        import caracal
+        pckgdir = caracal.PCKGDIR
         recipe.add('cab/stimela2', step, {
-                   'support-files': ['ar-output-001', 'recipes/tmp'],
-                   'recipe': 'recipes/caracal.yml',
+                   #'support-files': ['ar-output-003:output', 'tmp:output'],
+                   'recipe': f'recipes/caracal.yml',
                    'recipe-name': 'caracal-selfcal',
                    'step': 'image-pol-0',
                    #'params': f'ms-pointings={mslist}'
-                   'params': [f'ms=/stimela_mount/msdir/{mslist[0]}']
-                   }, 
+                   'params': [f'ms=/stimela_mount/msdir/{mslist[0]}',
+                              f"image-temp=/stimela_mount/output/tmp",
+                              f"image-prefix=T16R02C02_T16R02C02",
+                              f"dir-out-base=/stimela_mount/output/continuum"]
+                   },
                    input=pipeline.input,
                    output=pipeline.output,
+                   #shared_memory='300Gb',
+                   #memory_limit='500gb',
                    label='{:s}:: Make image after first round of calibration'.format(step))
 
 
@@ -538,7 +524,7 @@ def worker(pipeline, recipe, config):
         else:
             matrix_type = 'null'
         # If we have a two_step selfcal and Gaindiag we want to use  CORRECTED_DATA
-        if config['calibrate_with'].lower() == 'meqtrees' and config['cal_meqtrees']['two_step'] and num > 1:
+        if config['calibrate_with'].lower() == 'quartical':# and config['cal_quartical']['two_step'] and num > 1:
             if trace_matrix[-1] == 'GainDiag':
                 imcolumn = "CORRECTED_DATA"
             # If we do not have gaindiag but do have two step selfcal check against stupidity and that we are actually ending with ampphase cal and written to a special phase column
@@ -640,11 +626,23 @@ def worker(pipeline, recipe, config):
                 "local-rms": False,
             })
 
-        recipe.add('cab/wsclean', step,
-                   image_opts,
+        recipe.add('cab/stimela2', step, {
+                   #'support-files': ['ar-output-003:output', 'tmp:output'],
+                   'recipe': f'recipes/caracal.yml',
+                   'recipe-name': 'caracal-selfcal',
+                   'step': 'image-1',
+                   #'params': f'ms-pointings={mslist}'
+                   'params': [f'ms=/stimela_mount/msdir/{mslist[0]}',
+                              f"image-temp=/stimela_mount/output/tmp",
+                              f"image-prefix=T16R02C02_T16R02C02",
+                              f"dir-out-base=/stimela_mount/output/continuum"]
+                   },
                    input=pipeline.input,
                    output=pipeline.output,
-                   label='{:s}:: Make wsclean image (selfcal iter {})'.format(step, num))
+                   #shared_memory='300Gb',
+                   #memory_limit='500gb',
+                   label='{:s}:: Make image after first round of calibration'.format(step))
+
         recipe.run()
         # Empty job que after execution
         recipe.jobs = []
@@ -1112,216 +1110,7 @@ def worker(pipeline, recipe, config):
 
         return calmodel, model_names_fits
 
-    def calibrate_meqtrees(trg, num, prod_path, img_dir, mslist, field):
-        key = 'calibrate'
-        global reset_cal, trace_SN, trace_matrix
-
-        # force to calibrate with model data column if specified by user
-
-        # If the mode is pybdsm_vis then we want to add the clean component model only at the last step,
-        # which is anyway achieved by the **above** statement; no need to further specify vismodel.
-
-        if config['cal_model_mode'] == 'pybdsm_vis':
-            if num == cal_niter:
-                vismodel = True
-            else:
-                vismodel = False
-
-            if len(config[key]['model']) >= num:
-                model = config[key]['model'][num - 1]
-            else:
-                model = str(num)
-
-            modelcolumn = 'MODEL_DATA'
-            if isinstance(model, str) and len(model.split('+')) > 1:
-                mm = model.split('+')
-                calmodel, fits_model = combine_models(mm, num, img_dir, field,
-                                                      enable=False if pipeline.enable_task(
-                                                          config, 'aimfast') else True)
-            else:
-                model = int(model)
-                calmodel = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.lsm.html:output'.format(
-                    img_dir, prefix, field, model)
-                fits_model = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.fits'.format(
-                    img_dir, prefix, field, model)
-        # If the mode is pybdsm_only, don't use any clean components. So, the same as above, but with
-        # vismodel =False
-        elif config['cal_model_mode'] == 'pybdsm_only':
-            vismodel = False
-            if len(config[key]['model']) >= num:
-                model = config[key]['model'][num - 1]
-            else:
-                model = str(num)
-
-            if isinstance(model, str) and len(model.split('+')) > 1:
-                mm = model.split('+')
-                calmodel, fits_model = combine_models(mm, num, img_dir, field,
-                                                      enable=False if pipeline.enable_task(
-                                                          config, 'aimfast') else True)
-            else:
-                model = int(model)
-                calmodel = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.lsm.html:output'.format(
-                    img_dir, prefix, field, model)
-                fits_model = '{0:s}/{1:s}_{2:s}_{2:s}-pybdsm.fits'.format(
-                    img_dir, prefix, field, model)
-
-            modelcolumn = ''
-        # If the mode is vis_only, then there is need for an empty sky model (since meqtrees needs one).
-        # In this case, vis_model is always true, the model_column is always MODEL_DATA.
-        elif config['cal_model_mode'] == 'vis_only':
-            vismodel = True
-            modelcolumn = 'MODEL_DATA'
-            calmodel = '{0:s}_{1:d}-nullmodel.txt'.format(prefix, num)
-            with open(os.path.join(pipeline.output, img_dir, calmodel), 'w') as stdw:
-                stdw.write('#format: ra_d dec_d i\n')
-                stdw.write('0.0 -30.0 1e-99')
-        # Let's see the matrix type we are dealing with
-        if not config['cal_meqtrees']['two_step']:
-            matrix_type = config[key]['gain_matrix_type'][
-                num - 1 if len(config[key]['gain_matrix_type']) >= num else -1]
-        # If we have a two_step selfcal and Gaindiag we want to use CORRECTED_DATA_PHASE as input and write to CORRECTED_DATA
-
-        outcolumn = "CORRECTED_DATA"
-        incolumn = "DATA"
-
-        for i, msname in enumerate(mslist):
-            # Let's see the matrix type we are dealing with
-
-            gsols_ = [config[key]['gsols_timeslots'][num - 1 if num <= len(config[key]['gsols_timeslots']) else -1],
-                      config[key]['gsols_chan'][num - 1 if num <= len(config[key]['gsols_chan']) else -1]]
-            # If we have a two_step selfcal  we will calculate the intervals
-            matrix_type = config[key]['gain_matrix_type'][
-                num - 1 if len(config[key]['gain_matrix_type']) >= num else -1]
-            if config['cal_meqtrees']['two_step'] and pipeline.enable_task(config, 'aimfast'):
-                if num == 1:
-                    matrix_type = 'GainDiagPhase'
-                    SN = 3
-                else:
-                    matrix_type = trace_matrix[num - 2]
-                    SN = trace_SN[num - 2]
-                fidelity_data = get_aimfast_data()
-                obs_data = get_obs_data(msname)
-                int_time = obs_data['EXPOSURE']
-                tot_time = 0.0
-
-                for scan_key in obs_data['SCAN']['0']:
-                    tot_time += obs_data['SCAN']['0'][scan_key]
-                no_ant = len(obs_data['ANT']['DISH_DIAMETER'])
-                DR = fidelity_data['{0}_{2}_{1}-residual'.format(
-                    prefix, num, field)]['{0}_{2}_{1}-model'.format(prefix, num, field)]['DR']
-                Noise = fidelity_data['{0}_{2}_{1}-residual'.format(
-                    prefix, num, field)]['STDDev']
-                flux = DR * Noise
-                solvetime = int(Noise**2 * SN**2 * tot_time *
-                                no_ant / (flux**2 * 2.) / int_time)
-
-                if num > 1:
-                    DR = fidelity_data['{0}_{2}_{1}-residual'.format(
-                        prefix, num - 1, field)]['{0}_{2}_{1}-model'.format(prefix, num - 1, field)]['DR']
-                    flux = DR * Noise
-                    prev_solvetime = int(
-                        Noise**2 * SN**2 * tot_time * no_ant / (flux**2 * 2.) / int_time)
-                else:
-                    prev_solvetime = solvetime + 1
-
-                if (solvetime >= prev_solvetime or reset_cal == 1) and matrix_type == 'GainDiagPhase':
-                    matrix_type = 'GainDiag'
-                    SN = 8
-                    solvetime = int(Noise**2 * SN**2 * tot_time *
-                                    no_ant / (flux**2 * 2.) / int_time)
-                    gsols_[0] = int(solvetime / num)
-                elif solvetime >= prev_solvetime and matrix_type == 'GainDiag':
-                    gsols_[0] = int(prev_solvetime / num - 1)
-                    reset_cal = 2
-                else:
-                    gsols_[0] = int(solvetime / num)
-                if matrix_type == 'GainDiagPhase':
-                    minsolvetime = int(30. / int_time)
-                else:
-                    minsolvetime = int(30. * 60. / int_time)
-                if minsolvetime > gsols_[0]:
-                    gsols_[0] = minsolvetime
-                    if matrix_type == 'GainDiag':
-                        reset_cal = 2
-                trace_SN.append(SN)
-                trace_matrix.append(matrix_type)
-                if matrix_type == 'GainDiagPhase' and config['cal_meqtrees']['two_step']:
-                    outcolumn = "CORRECTED_DATA_PHASE"
-                    incolumn = "DATA"
-                elif config['cal_meqtrees']['two_step']:
-                    outcolumn = "CORRECTED_DATA"
-                    incolumn = "CORRECTED_DATA_PHASE"
-
-            elif config['cal_meqtrees']['two_step']:
-                # This mode is actually not accesible for now as aimfast is swithed on automatically
-                gasols_ = [config[key]['gasols_timeslots'][
-                    num - 1 if num <= len(config[key]['gasols_timeslots']) else -1],
-                    config[key]['gasols_chan'][
-                    num - 1 if num <= len(config[key]['gasols_chan']) else -1]]
-                if gasols_[0] == -1:
-                    outcolumn = "CORRECTED_DATA_PHASE"
-                    incolumn = "DATA"
-                else:
-                    outcolumn = "CORRECTED_DATA"
-                    incolumn = "CORRECTED_DATA_PHASE"
-                    matrix_type = 'GainDiag'
-                    gsols_ = gasols_
-
-            bsols_ = [config[key]['bsols_timeslots'][num - 1 if num <= len(config[key]['bsols_timeslots']) else -1],
-                      config[key]['bsols_chan'][num - 1 if num <= len(config[key]['bsols_chan']) else -1]]
-            step = 'calibrate-field{0:d}-iter{1:d}-ms{2:d}'.format(trg, num, i)
-            outdata = config[key]['output_data'][num - 1 if len(config[key]['output_data']) >= num else -1]
-            if outdata == 'CORRECTED_DATA':
-                outdata = 'CORR_DATA'
-            model_cal = calmodel.split("/")[-1]
-            model_cal = model_cal.split(":output")[0]
-            inp_dir = pipeline.output + "/" + img_dir + "/"
-            op_dir = pipeline.continuum + "/selfcal2_products/"
-            msbase = os.path.splitext(msname)[0]
-            # Check if a model subtraction has already been done
-            with table('{0:s}/{1:s}'.format(pipeline.msdir, msname), readonly=False) as ms_table:
-                try:
-                    caracal.log.info(f"Re-doing the calibration on {msname}")
-                    nModelSub = 0
-                    ms_table.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub)
-                    caracal.log.info(f"Reseting the counter to {nModelSub}")
-                except RuntimeError:
-                    caracal.log.info(f"No subtraction found in {msname}")
-            recipe.add('cab/calibrator', step,
-                       {
-                           "skymodel": model_cal,
-                           "add-vis-model": vismodel,
-                           "model-column": modelcolumn,
-                           "msname": msname,
-                           "threads": ncpu,
-                           "column": incolumn,
-                           "output-data": outdata,
-                           "output-column": outcolumn,
-                           "prefix": '{0:s}_{1:s}_{2:d}_meqtrees'.format(prefix, msbase, num),
-                           "label": 'cal{0:d}'.format(num),
-                           "read-flags-from-ms": True,
-                           "read-flagsets": "-stefcal",
-                           "write-flagset": "stefcal",
-                           "write-flagset-policy": "replace",
-                           "Gjones": True,
-                           "Gjones-solution-intervals": sdm.dismissable(gsols_ or None),
-                           "Gjones-matrix-type": matrix_type,
-                           "Gjones-ampl-clipping": True,
-                           "Gjones-ampl-clipping-low": config['cal_gain_cliplow'],
-                           "Gjones-ampl-clipping-high": config['cal_gain_cliphigh'],
-                           "Bjones": config['cal_bjones'],
-                           "Bjones-solution-intervals": sdm.dismissable(bsols_ or None),
-                           "Bjones-ampl-clipping": config['cal_bjones'],
-                           "Bjones-ampl-clipping-low": config['cal_gain_cliplow'],
-                           "Bjones-ampl-clipping-high": config['cal_gain_cliphigh'],
-                           "make-plots": False,
-                           "tile-size": time_chunk,
-                       },
-                       input=inp_dir,
-                       output=op_dir,
-                       label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
-
-    def calibrate_cubical(trg, num, prod_path, img_dir, mslist, field):
+    def calibrate_quartical(trg, num, prod_path, img_dir, mslist, field):
         key = 'calibrate'
 
         modellist = []
@@ -1418,7 +1207,7 @@ def worker(pipeline, recipe, config):
         if len(jones_chain.split(",")) > 1:
             matrix_type = 'Gain2x2'
         # Need to ad the solution term iterations
-        solterm_niter = config['cal_cubical']['solterm_niter']
+        solterm_niter = config['cal_quartical']['solterm_niter']
         sol_terms_add = []
         for term in jones_chain.split(","):
             sol_terms_add.append(str(solterm_niter[SOL_TERMS_INDEX[term]]))
@@ -1463,7 +1252,7 @@ def worker(pipeline, recipe, config):
                 "data-ms": msname,
                 "data-column": 'DATA',
                 "model-list": modellist if config[key]['output_data'][num - 1 if len(config[key]['output_data']) >= num else -1] not in ['PA_DATA'] else '',
-                "model-pa-rotate": config['cal_cubical']['model_pa_rotate'],
+                "model-pa-rotate": config['cal_quartical']['model_pa_rotate'],
                 "sel-ddid": sdm.dismissable(spwid),
                 "dist-ncpu": ncpu,
                 "log-memory": True,
@@ -1474,10 +1263,10 @@ def worker(pipeline, recipe, config):
                                                                                   pipeline), prefix, msbase, num),
                 "out-mode": CUBICAL_OUT[config[key]['output_data'][num - 1 if len(config[key]['output_data']) >= num else -1]],
                 "out-plots": True,
-                "out-derotate": config['cal_cubical']['out_derotate'],
-                "dist-max-chunks": config['cal_cubical']['dist_max_chunks'],
+                "out-derotate": config['cal_quartical']['out_derotate'],
+                "dist-max-chunks": config['cal_quartical']['dist_max_chunks'],
                 "out-casa-gaintables": True,
-                "weight-column": config['cal_cubical']['weight_col'],
+                "weight-column": config['cal_quartical']['weight_col'],
                 "montblanc-dtype": 'float',
                 "bbc-save-to": "{0:s}/bbc-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                pipeline), num, msbase),
@@ -1486,22 +1275,22 @@ def worker(pipeline, recipe, config):
                 "g-update-type": gupdate,
                 "g-time-int": int(gsols_[0]),
                 "g-freq-int": int(gsols_[1]),
-                "out-overwrite": config['cal_cubical']['overwrite'],
+                "out-overwrite": config['cal_quartical']['overwrite'],
                 "g-save-to": g_table_name,
                 "g-clip-low": config['cal_gain_cliplow'],
                 "g-clip-high": config['cal_gain_cliphigh'],
-                "g-max-prior-error": config['cal_cubical']['max_prior_error'],
-                "g-max-post-error": config['cal_cubical']['max_post_error'],
-                "madmax-enable": config['cal_cubical']['flag_madmax'],
-                "madmax-plot": True if (config['cal_cubical']['flag_madmax']) else False,
-                "madmax-threshold": config['cal_cubical']['madmax_flag_thr'],
+                "g-max-prior-error": config['cal_quartical']['max_prior_error'],
+                "g-max-post-error": config['cal_quartical']['max_post_error'],
+                "madmax-enable": config['cal_quartical']['flag_madmax'],
+                "madmax-plot": True if (config['cal_quartical']['flag_madmax']) else False,
+                "madmax-threshold": config['cal_quartical']['madmax_flag_thr'],
                 "madmax-estimate": 'corr',
                 "log-boring": True,
                 "dd-dd-term": False,
                 "model-ddes": 'never',
             }
-            if config['cal_cubical']['model_feed_rotate']:
-                cubical_opts.update({"model-feed-rotate": config['cal_cubical']['model_feed_rotate']}),
+            if config['cal_quartical']['model_feed_rotate']:
+                cubical_opts.update({"model-feed-rotate": config['cal_quartical']['model_feed_rotate']}),
             if min_uvw > 0:
                 cubical_opts.update({"sol-min-bl": min_uvw})
             if flags != "":
@@ -1519,8 +1308,8 @@ def worker(pipeline, recipe, config):
                                                                                                           pipeline), num, os.path.splitext(msname)[0], prefix),
                     "dd-clip-low": config['cal_gain_cliplow'],
                     "dd-clip-high": config['cal_gain_cliphigh'],
-                    "dd-max-prior-error": config['cal_cubical']['max_prior_error'],
-                    "dd-max-post-error": config['cal_cubical']['max_post_error'],
+                    "dd-max-prior-error": config['cal_quartical']['max_prior_error'],
+                    "dd-max-post-error": config['cal_quartical']['max_post_error'],
                 })
             if config['cal_bjones']:
                 if bupdate == 'phase-diag':
@@ -1546,20 +1335,30 @@ def worker(pipeline, recipe, config):
                     "b-clip-low": config['cal_gain_cliplow'],
                     "b-save-to": b_table_name,
                     "b-clip-high": config['cal_gain_cliphigh'],
-                    "b-max-prior-error": config['cal_cubical']['max_prior_error'],
-                    "b-max-post-error": config['cal_cubical']['max_post_error'], }
+                    "b-max-prior-error": config['cal_quartical']['max_prior_error'],
+                    "b-max-post-error": config['cal_quartical']['max_post_error'], }
                 )
             # Time chunk and freq chunk have been checked and approved before so they are what they are
             cubical_opts.update({
                 "data-time-chunk": time_chunk,
                 "data-freq-chunk": freq_chunk, }
             )
-            recipe.add('cab/cubical', step, cubical_opts,
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       shared_memory=config['cal_cubical']['shared_mem'],
-                       label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
-
+            recipe.add('cab/stimela2', step, {
+                   #'support-files': ['ar-output-003:output', 'tmp:output'],
+                   'recipe': f'recipes/caracal.yml',
+                   'recipe-name': 'caracal-selfcal',
+                   'step': 'selfcal-1',
+                   #'params': f'ms-pointings={mslist}'
+                   'params': [f'ms=/stimela_mount/msdir/{mslist[0]}',
+                              f"image-temp=/stimela_mount/output/tmp",
+                              f"image-prefix=T16R02C02_T16R02C02",
+                              f"dir-out-base=/stimela_mount/output/continuum"]
+                   },
+                   input=pipeline.input,
+                   output=pipeline.output,
+                   #shared_memory='300Gb',
+                   #memory_limit='500gb',
+                   label='{:s}:: Make image after first round of calibration'.format(step))
     def restore(num, prod_path, mslist_out, enable_inter=True):
         key = 'calibrate'
         # to achieve accurate restauration we need to reset all parameters properly
@@ -1632,7 +1431,7 @@ def worker(pipeline, recipe, config):
         # Hence the following fix. This should be removed once the fix makes it into stimela.
         matrix_type = 'Gain2x2'
         # Does solterm_niter  matter for applying?????
-        solterm_niter = config['cal_cubical']['solterm_niter']
+        solterm_niter = config['cal_quartical']['solterm_niter']
         sol_terms_add = []
         for term in jones_chain.split(","):
             sol_terms_add.append(str(solterm_niter[SOL_TERMS_INDEX[term]]))
@@ -1720,7 +1519,7 @@ def worker(pipeline, recipe, config):
                 "sol-term-iters": ",".join(sol_terms_add),
                 "sel-diag": take_diag_terms,
                 "dist-ncpu": ncpu,
-                "dist-max-chunks": config['cal_cubical']['dist_max_chunks'],
+                "dist-max-chunks": config['cal_quartical']['dist_max_chunks'],
                 "log-memory": True,
                 "out-name": '{0:s}/{1:s}-{2:s}_{3:d}_restored_cubical'.format(get_dir_path(prod_path,
                                                                                            pipeline), prefix,
@@ -1728,16 +1527,16 @@ def worker(pipeline, recipe, config):
                 "out-mode": apmode,
                 # "out-overwrite": config[key]['overwrite'],
                 "out-overwrite": True,
-                "weight-column": config['cal_cubical']['weight_col'],
+                "weight-column": config['cal_quartical']['weight_col'],
                 "montblanc-dtype": 'float',
                 "g-solvable": True,
                 "g-update-type": gupdate,
                 "g-type": CUBICAL_MT[matrix_type],
                 "g-time-int": int(gsols_apply[0]),
                 "g-freq-int": int(gsols_apply[1]),
-                "madmax-enable": config['cal_cubical']['flag_madmax'],
+                "madmax-enable": config['cal_quartical']['flag_madmax'],
                 "madmax-plot": False,
-                "madmax-threshold": config['cal_cubical']['madmax_flag_thr'],
+                "madmax-threshold": config['cal_quartical']['madmax_flag_thr'],
                 "madmax-estimate": 'corr',
                 "madmax-offdiag": False,
                 "dd-dd-term": False,
@@ -1877,7 +1676,7 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/cubical', step, cubical_gain_interp_opts,
                        input=pipeline.input,
                        output=pipeline.output,
-                       shared_memory=config['cal_cubical']['shared_mem'],
+                       shared_memory=config['cal_quartical']['shared_mem'],
                        label=stim_label)
             recipe.run()
             # Empty job que after execution
@@ -1912,7 +1711,7 @@ def worker(pipeline, recipe, config):
             conv_crit = config[key]['convergence_criteria']
             # Ensure atleast one iteration is ran to compare previous and subsequent images
             # And atleast one convergence criteria is specified
-            if n >= 2 and not config['cal_meqtrees']['two_step'] and conv_crit:
+            if n >= 2 and conv_crit:
                 fidelity_data = get_aimfast_data()
                 conv_crit = [cc.upper() for cc in conv_crit]
                 # Ensure atleast one iteration is ran to compare previous and subsequent images
@@ -2183,8 +1982,8 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/ragavi', step,
                        {
                            "table": [tab + ":output" for tab in gain_table_name],
-                           "gaintype": config['cal_cubical']['ragavi_plot']['gaintype'],
-                           "field": config['cal_cubical']['ragavi_plot']['field'],
+                           "gaintype": config['cal_quartical']['ragavi_plot']['gaintype'],
+                           "field": config['cal_quartical']['ragavi_plot']['field'],
                            "htmlname": '{0:s}/{1:s}/{2:s}_self-cal_G_gain_plots'.format(get_dir_path(pipeline.diagnostic_plots,
                                                                                                      pipeline), 'selfcal2', prefix)
                        },
@@ -2201,8 +2000,8 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/ragavi', step,
                        {
                            "table": [tab + ":output" for tab in gain_table_name],
-                           "gaintype": config['cal_cubical']['ragavi_plot']['gaintype'],
-                           "field": config['cal_cubical']['ragavi_plot']['field'],
+                           "gaintype": config['cal_quartical']['ragavi_plot']['gaintype'],
+                           "field": config['cal_quartical']['ragavi_plot']['field'],
                            "htmlname": '{0:s}/{1:s}/{2:s}_self-cal_D_gain_plots'.format(get_dir_path(pipeline.diagnostic_plots,
                                                                                                      pipeline), 'selfcal2', prefix)
                        },
@@ -2212,14 +2011,11 @@ def worker(pipeline, recipe, config):
 
     # decide which tool to use for calibration
     calwith = config['calibrate_with'].lower()
-    if calwith == 'meqtrees':
-        calibrate = calibrate_meqtrees
-    elif calwith == 'cubical':
-        calibrate = calibrate_cubical
+    calibrate = calibrate_quartical
 
     # if we use the new two_step analysis aimfast has to be run
-    if config['cal_meqtrees']['two_step'] and calwith == 'meqtrees':
-        config['aimfast']['enable'] = True
+    #if config['cal_quartical']['two_step'] and calwith == 'quartical':
+    #    config['aimfast']['enable'] = True
 
     # if we do not run pybdsm we always need to output the corrected data column
     if not pipeline.enable_task(config, 'extract_sources'):
@@ -2387,7 +2183,7 @@ def worker(pipeline, recipe, config):
                 os.remove(plot)
 
         if pipeline.enable_task(config, 'calibrate'):
-            if config['cal_cubical']['ragavi_plot']['enable']:
+            if config['cal_quartical']['ragavi_plot']['enable']:
                 ragavi_plotting_cubical_tables()
 
         if pipeline.enable_task(config, 'restore_model'):

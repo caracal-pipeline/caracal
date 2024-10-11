@@ -46,10 +46,10 @@ mapping:
         required: false
       calibrate_with:
         type: str
-        enum: ["meqtrees", "cubical"]
+        enum: ["quartical"]
         desc: Tool to use for calibration. Options are meqtrees and cubical.
         required: false
-        example: 'cubical'
+        example: 'quartical'
       spwid:
         type: int
         desc: Provide spectral window ID.
@@ -285,7 +285,7 @@ mapping:
         desc: Enable calculation of the B-Jones matrix, for bandpass calibration.
         required: false
         example: 'False'
-      cal_cubical:
+      cal_quartical:
         desc: Parameters that only apply when using CubiCal for the calibration.
         type: map
         mapping:
@@ -377,15 +377,6 @@ mapping:
                 desc: Fields to plot. Specify by field ID.
                 required: false
                 example: '0'
-      cal_meqtrees:
-        desc: Parameters that only apply when using MeqTrees for the calibration.
-        type: map
-        mapping:
-          two_step:
-            type: bool
-            desc: Trigger a two-step calibration process in MeqTrees where the phase-only calibration is applied before continuing with amplitude + phase-calibration. Aimfast is turned on to determine the solution sizes automatically.
-            required: false
-            example: 'False'
       aimfast:
         type: map
         desc: Quality assessment parameter.

@@ -30,7 +30,10 @@ psutil = "^5.9.4"
 pykwalify = "^1.8.0"
 progressbar2 = "^4.2.0"
 "ruamel.yaml" = "^0.17.21"
-astropy = "^5.3.3"
+astropy = [
+    { version = "5.2.2", python = "3.8"},
+    { version = "^5.3.3", python = "^3.9"},
+]
 scipy = "*"
 regions = "*"
 astroquery = "*"

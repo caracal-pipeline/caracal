@@ -47,7 +47,7 @@ Choose the name of the virtual environment `${caracal-venv}`. Then:
 
 ..  code-block:: bash
 
-    $ python3 -m venv ${caracal-venv}
+    $ python3 -m venv ${caracal-venv}  # Ensure Python version is between 3.8 and 3.11.
 
 OR, if the command above does not work
 

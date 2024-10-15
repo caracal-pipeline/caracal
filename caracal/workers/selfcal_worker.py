@@ -16,6 +16,7 @@ from typing import Any
 from caracal.workers.utils import manage_flagsets as manflags
 from casacore.tables import table
 import psutil
+import astropy.io.fits as fits
 
 NAME = 'Continuum Imaging and Self-calibration Loop'
 LABEL = 'selfcal'
@@ -433,7 +434,6 @@ def worker(pipeline, recipe, config):
             shutil.rmtree(casafiles[i])
 
     def change_header_and_type(filename, headfile, copy_head):
-        import astropy.io.fits as fits
 
         pblist = fits.open(filename)
         dat = pblist[0].data
@@ -737,7 +737,7 @@ def worker(pipeline, recipe, config):
 
                 if not os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
                     raise IOError(
-                          "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask))
+                        "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask))
 
                 # convert floats of mask to integers
                 with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
@@ -747,13 +747,13 @@ def worker(pipeline, recipe, config):
                 # update fitsmask keyword of wsclean
                 image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1]),
                     "local-rms": False,
-                  })
+                    })
             
         recipe.add('cab/wsclean', step,
-                   image_opts,
-                   input=pipeline.input,
-                   output=pipeline.output,
-                   label='{:s}:: Make wsclean image (selfcal iter {})'.format(step, num))
+                    image_opts,
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{:s}:: Make wsclean image (selfcal iter {})'.format(step, num))
         recipe.run()
         # Empty job que after execution
         recipe.jobs = []

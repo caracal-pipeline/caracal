@@ -25,7 +25,7 @@ When using CARACal please be aware of and adhere to the `CARACal publication pol
 
 Requirements
 ------------
-* `Python <https://www.python.org>`_ 3.8 - 3.11.
+* `Python <https://www.python.org>`_ 3.8 - 3.11. (For Python version below 3.12 if working on Ubuntu> 22.04. Install the earlier Python version through this `link <https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa>`_)
 * Container technology of your choice. It can be one of the following:
     * `Docker <https://www.docker.com>`_
     * `Podman <https://podman.io>`_

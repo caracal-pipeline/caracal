@@ -5,13 +5,11 @@ import sys
 import caracal
 import numpy as np
 from caracal.dispatch_crew import utils
-from caracal.utils.requires import extras
 
 NAME = "Mosaic 2D-images or cubes"
 LABEL = 'mosaic'
 
 
-@extras(packages="astropy")
 def worker(pipeline, recipe, config):
 
     from astropy import units as u

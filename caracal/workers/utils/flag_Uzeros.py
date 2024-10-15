@@ -22,7 +22,6 @@ import sys
 import os
 import numpy as np
 import yaml
-from caracal.utils.requires import extras
 
 
 dm = measures.measures()
@@ -34,7 +33,6 @@ class UzeroFlagger:
     global optimize, scconstants, stats
 
     
-    @extras(packages=["astropy", "scipy"])
     def __init__(self, config):
         from astropy import units as u
         from astropy.coordinates import SkyCoord

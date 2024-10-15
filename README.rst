@@ -63,17 +63,11 @@ For a CARACal stable release run:
 
     pip install -U caracal
 
-CARACal has a few optional dependencies (*scipy, astropy, regions, astroquery*) which are not installed by default. But to get full functionality, you can install them by running:
-
-..  code-block:: bash
-
-    pip install -U caracal[all]
-
 And CARACal developer version which is not recommended for users:
 
 ..  code-block:: bash
 
-    pip install -U 'caracal[all] @ git+https://github.com/caracal-pipeline/caracal.git@master'
+    pip install -U 'caracal @ git+https://github.com/caracal-pipeline/caracal.git@master'
 
 
 
@@ -112,7 +106,7 @@ In the working directory where source is checked out run `poetry install` or to 
 
 ..  code-block:: bash
 
-    poetry install --extras all
+    poetry install
 
 =========================================
 Installation on (ILIFU) slurm environment

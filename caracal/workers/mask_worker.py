@@ -6,14 +6,12 @@ import glob
 import yaml
 import numpy as np
 from caracal.dispatch_crew import utils
-from caracal.utils.requires import extras
 
 
 NAME = 'Make Masks'
 LABEL = 'mask'
 
 
-@extras("astropy")
 def worker(pipeline, recipe, config):
 
     ################################################################################
@@ -101,7 +99,6 @@ def worker(pipeline, recipe, config):
 
         return new_flux, px, py
 
-    @extras("astroquery")
     def query_catalog_sumss(catalog_table, centre, width_im, cat_name):
         from astroquery.vizier import Vizier
 
@@ -113,7 +110,6 @@ def worker(pipeline, recipe, config):
 
         ascii.write(tab, catalog_table, overwrite=True)
 
-    @extras("astroquery")
     def query_catalog_nvss(catalog_table, centre, width_im, cell, imsize, obs_freq, cat_name, thresh):
         from astroquery.vizier import Vizier
         Vizier.ROW_LIMIT = -1

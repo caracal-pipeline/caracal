@@ -491,17 +491,16 @@ def worker(pipeline, recipe, config):
             fake_image_opts.update({"channelrange": config['img_channelrange']})
 
         import caracal
+        image_params = [f"image-{k}={v}" for k, v in fake_image_opts.items()]
         pckgdir = caracal.PCKGDIR
         recipe.add('cab/stimela2', step, {
-                   #'support-files': ['ar-output-003:output', 'tmp:output'],
                    'recipe': f'recipes/caracal.yml',
                    'recipe-name': 'caracal-selfcal',
-                   'step': 'image-pol-0',
+                   #'step': 'image-pol-0',
                    #'params': f'ms-pointings={mslist}'
-                   'params': [f'ms=/stimela_mount/msdir/{mslist[0]}',
-                              f"image-temp=/stimela_mount/output/tmp",
-                              f"image-prefix=T16R02C02_T16R02C02",
-                              f"dir-out-base=/stimela_mount/output/continuum"]
+                   'params': fake_image_params.update(
+                              [f'ms=/stimela_mount/msdir/{mslist[0]}',
+                               f"dir-out-base=/stimela_mount/output/continuum"])
                    },
                    input=pipeline.input,
                    output=pipeline.output,
@@ -2058,44 +2057,8 @@ def worker(pipeline, recipe, config):
 
         mask_key = config['image']['cleanmask_method'][self_cal_iter_counter - 1 if len(config['image']['cleanmask_method']) >= self_cal_iter_counter else -1]
         if pipeline.enable_task(config, 'image'):
-            if mask_key == 'sofia':
-                image_path = "{0:s}/image_0".format(
-                    pipeline.continuum, self_cal_iter_counter)
-                if not os.path.exists(image_path):
-                    os.mkdir(image_path)
-                fake_image(target_iter, 0, get_dir_path(
-                    image_path, pipeline), mslist, field)
-                sofia_mask(target_iter, 0, get_dir_path(
-                    image_path, pipeline), field)
-                recipe.run()
-                recipe.jobs = []
-                config['image']['cleanmask_method'].insert(1, config['image']['cleanmask_method'][self_cal_iter_counter if len(config['image']['cleanmask_method']) > self_cal_iter_counter else -1])
-                image_path = "{0:s}/image_{1:d}".format(
-                    pipeline.continuum, self_cal_iter_counter)
-                image(target_iter, self_cal_iter_counter, get_dir_path(
-                    image_path, pipeline), mslist, field)
-            elif mask_key == 'breizorro':
-                if self_cal_iter_counter == 1:
-                    image_path = "{0:s}/image_{1:d}".format(
-                        pipeline.continuum, 0)
-                    if not os.path.exists(image_path):
-                        os.mkdir(image_path)
-                    fake_image(target_iter, 0, get_dir_path(
-                        image_path, pipeline), mslist, field)
-                    breizorro_mask(target_iter, 0, get_dir_path(
-                        image_path, pipeline), field)
-                    recipe.run()
-                    recipe.jobs = []
-                    image(target_iter, self_cal_iter_counter, get_dir_path(
-                        image_path, pipeline), mslist, field)
-                else:
-                    image_path = "{0:s}/image_{1:d}".format(
-                        pipeline.continuum, self_cal_iter_counter)
-                    image(target_iter, self_cal_iter_counter, get_dir_path(
-                        image_path, pipeline), mslist, field)
-            else:
-                image(target_iter, self_cal_iter_counter, get_dir_path(
-                    image_path, pipeline), mslist, field)
+            image(target_iter, self_cal_iter_counter, get_dir_path(
+                  image_path, pipeline), mslist, field)
         if pipeline.enable_task(config, 'extract_sources'):
             extract_sources(target_iter, self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), field)

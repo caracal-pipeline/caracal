@@ -18,15 +18,18 @@ _include:
     - wsclean.yml
 
 cabs:
+  breizorro:
+    info: A tool for creating a binary mask and regions given a FITS image (https://github.com/ratt-ru/breizorro)
+    inputs:
+      fill-holes:
+        dtype: bool
   cubical:
-    info: More params
     inputs:
       out:
         dir:
           dtype: Directory
           writable: true
   wsclean:
-    info: More params
     inputs:
       dd-psf-grid:
         dtype: List[int]
@@ -35,6 +38,8 @@ cabs:
       pol: 
         choices: [I, IQ, IV, IQU, IQUV]
         default: I
+      absmem:
+        dtype: float
   generate_mauch_beam:
     info: This gets a Mauchian beam (Mauch et al. 2020).
     flavour:

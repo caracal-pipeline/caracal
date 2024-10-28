@@ -3,9 +3,12 @@ ms-base:
   info: Location where CARACal will write and expect to find .MS files.
   default: msdir
   dtype: str
+ms-pointings:
+  info: Basenames of MS(s).
+  dtype: List[MS]
 dir-out-base:
   info: Location where CARACal writes output products.
-  default: caracal-output
+  default: ar-output-003
   dtype: str
 ncpu:
   default: 16
@@ -14,8 +17,6 @@ worker-id:
   default: 0
   dtype: int
 ms-concat:
-  dtype: List[MS]
-ms-pointings:
   dtype: List[MS]
 
 # Flagging of the data.
@@ -46,11 +47,15 @@ image-enable:
   default: true
   dtype: bool
 image-prefix:
-        #default: "Deep2"
   default: "PicA-hi"
   dtype: str
 image-niter:
+  info: Number of cleaning iterations.
   default: 100000
+  dtype: int
+image-mniter:
+  info: Number of major cycles.
+  default: 0
   dtype: int
 image-threshold:
   default: 3.0e-5
@@ -61,23 +66,72 @@ image-auto-threshold:
 image-auto-mask:
         #default: 10
   dtype: float
-image-nchan:
+image-nchans:
+  info: Number of channels in output image.
   default: 4
   dtype: int
 image-deconv-chan:
-        #default: 4
   dtype: int
-image-size:
+image-npix:
   default: 4096
   dtype: int
-image-scale:
-  default: 1.3asec
-  dtype: str
-image-fits-mask:
-  dtype: File
-image-breizorro-enable:
+image-channelrange:
+  info: Only image the given channel range. Indices specify channel indices, end index is exclusive. .e.g. [0, 1023]. Default means all channels.
+  dtype: List[int]
+image-joinchas:
+  info: Join channels to create MFS image.
   default: true
   dtype: bool
+image-specfit-nrcoeff:
+  info:  Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1. Use 0 to disable spectral fitting. Note that spectral fitting is required if you want to do subsequent continumm subtraction using crystalball.
+  default: 2
+  dtype: int
+image-cell:
+  info: Image pixel size (in units of arcsec).
+  default: 1.3asec
+  dtype: str
+image-mfs-weighting:
+  info: Enables MF weighting.
+  default: false
+  dtype: bool
+image-weight:
+  info: Type of image weighting, where the options are 'briggs', 'uniform', and 'natural'. If 'briggs', set the 'image-robust' parameter.
+  default: briggs
+  dtype: str
+  choices: ["briggs", "uniform", "natural"]
+image-robust:
+  info: Briggs robust value.
+  default: 0.0
+  dtype: float
+image-padding:
+  info: Padding in WSClean.
+  default: 1.3
+  dtype: float
+image-gain:
+  info: Fraction of the peak that is cleaned in each minor iteration.
+  default: 0.1
+  dtype: float
+image-mgain:
+  info: Gain for major iterations in WSClean. I.e., maximum fraction of the image peak that is cleaned in each major iteration. A value of 1 means that all cleaning happens in the image plane and no major cycle is performed.
+  default: 0.9
+  dtype: float
+image-taper:
+  info: Gaussian taper for imaging (in units of arcsec) e.g. 5.5asec.
+  dtype: str
+image-maxuv-l:
+  info: Taper for imaging (in units of lambda).
+  default: float
+  dtype: 0.0
+image-transuv-l:
+  info: Transition length of tukey taper (taper-tukey in WSClean, in % of maxuv).
+  default: 10.0
+  dtype: float
+image-fits-mask:
+  dtype: File
+image-masking-enable:
+  default: breizorro
+  dtype: str
+  choices: [wsclean, sofia, breizorro]
 image-aimfast-enable:
   default: false
   dtype: bool
@@ -91,52 +145,112 @@ image-temp:
   dtype: Directory
   default: tmp
 
+aimfast.tol:
+  info: Relative change in weighted mean of metrics (specified via convergence_criteria below) from aimfast.
+  default: 0.0
+  dtype: float
+aimfast.convergence_criteria:
+  info: The residual statistic to check convergence against. Every metric/criterion listed will be combined into a weighted mean. Options are 'DR' (dynamic range), 'MEAN' (mean of the residual flux), 'STDDev' (standard deviation), 'SKEW' (skewness, 3rd-moment), and 'KURT' (kurtosis, 4th-moment). However, note that when cal_model_mode = 'vis_only', 'DR' is no longer an option. Default is '', which means no convergence is checked.
+  dtype: List[str]
+  choices: [MEAN, STDDev, DR, SKEW, KURT]
+aimfast.radius:
+  info: Cross-matching radius (in units of arcsec), for comparing source properties in a catalogue before and after an iteration of self-calibration. 
+  default: 0.6
+  dtype: float
+aimfast.plot:
+  info: Generate html plots for comparing catalogues and residuals.
+  default: false
+  dtype: bool
+
+#  SoFiA source finder settings used for the imaging iterations
+sofia.kernels:
+  info: FWHM of spatial Gaussian kernels in pixels.
+  default: ['0.', '3.', '6.', '9.']
+  dtype: List[float]
+sofia.pospix:
+  info: Merges only positive pixels of sources in mask.
+  default: true
+  dtype: bool
+sofia.inputmask:
+  info: User-provided input-mask that will be supplemented by the SoFiA mask, created through SoFiA source-finding.
+  dtype: File
+
+# Breizorro settings used for the imaging iterations
+breizorro.boxsize:
+  info: Box size over which to compute stats (default = 50)
+  default: 50
+  dtype: int
+breizorro.dilate:
+  info: Apply dilation with a radius of R pixels
+  default: 0
+  dtype: int
+breizorro.fill_holes:
+  info: Fill holes (i.e. entirely closed regions) in mask
+  dtype: bool
+  default: true
+
 # Self-calibrating the data
-selfcal-enable:
+selfcal.enable:
+  info: Perform self-calibration on the data.
   default: false
   dtype: bool
-selfcal-pa-rotate:
+selfcal.niter:
+  info: Number of self-calibration iterations to perform.
+  default: 2
+  dtype: int
+selfcal.start-iter:
+  info: Start selfcal iteration loop at this start value (1-indexed).
+  default: 1
+  dtype: int
+selfcal.rewind-flags-enable:
+  info: Rewind flags of the input .MS file(s) to specified version.
   default: false
   dtype: bool
-selfcal-pa-enable:
+selfcal.overwrite-flagvers:
+  info: Allow CARACal to overwrite existing flag versions.
   default: false
   dtype: bool
-selfcal-jones:
+selfcal.pa-rotate:
+  info: Perform parallactic angle rotation
+  default: false
+  dtype: bool
+selfcal.minuvw-m:
+  info: Exclude baselines shorter than this value (given in metres) from the self-calibration.
+  default: 0
+  dtype: int
+selfcal.jones:
   default: ['k', 'k-g']
   dtype: List[str]
   element_choices: ['k', 'g', 'k-g']
-selfcal-jones-time:
+selfcal.jones-time:
   default: [1, 1, 1]
   dtype: List[int]
-selfcal-jones-freq:
+selfcal.jones-freq:
   default: [0, 0, 32]
   dtype: List[int]
-selfcal-subtract-model:
+selfcal.subtract-model:
   default: false
   dtype: bool
-mad-flag:
-  default: false
-  dtype: bool
-pa-rotate:
+selfcal.mad-flag:
   default: false
   dtype: bool
 
 # Direction-dependant calibration
-ddcal-enable:
+ddcal.enable:
   default: false
   dtype: bool
-ddcal-mask-region:
+ddcal.mask-region:
         #default: 'mask/PictorA_1-MFS-hotspot-mask.image.out.fits'
         #  default: mask/PictorA_1-MFS-hotspot-6144-mask.image.fits
   dtype: File
-ddcal-jones:
+ddcal.jones:
   default: ['k-g-de']
   dtype: List[str]
   element_choices: ['k-de', 'k-g-de']
-ddcal-jones-time:
+ddcal.jones-time:
   default: [1, 1, 32]
   dtype: List[int]
-ddcal-jones-freq:
+ddcal.jones-freq:
   default: [0, 64, 64]
   dtype: List[int]
 

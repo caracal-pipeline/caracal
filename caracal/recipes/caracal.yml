@@ -3,28 +3,9 @@ _include:
   - caracal-flag.yml
   - caracal-selfcal.yml
   - caracal-ddcal.yml
+  - caracal-observation-sets.yml[optional,warn]
 _include_post:
   - caracal-srun.yml
-
-concat-pointings:
-  name: "CARACAL concatenate pointings"
-  info: "Concatenate ms with similar dirations and field names"
-  inputs:
-    _include: caracal-schema.yml
-    ms-concat:
-      dtype: List[MS]
-      default: [
-                "msdir/1543664600_sdp_l0-T16R02C02-corr.ms",
-                "msdir/1543635069_sdp_l0-T16R02C02-corr.ms",
-               ]
-  steps:
-    concat-0:
-      cab: casa.concat
-      info: 'Concatenate multiple measurement sets into a single output.'
-      params:
-        timesort: true
-        vis: =recipe.ms
-        concatvis: "msdir/T16R02C02-corr_concat.ms"
 
 caracal-pointings:
   name: "CARACAL pointing loop"
@@ -37,22 +18,19 @@ caracal-pointings:
 
   inputs:
     _include: caracal-schema.yml
-    ms-pointings:
-      dtype: List[MS]
-      default: [
-                #"msdir/1543664600_sdp_l0-T16R02C02-hii-mgps.ms",
-                #"msdir/1543664600_sdp_l0-T16R02C04-hii-mgps.ms"
-                "msdir/PicA-PictorA-corr.ms"
-                ]
-
+    obs:
+      info: "Selects observation by label -- edit caracal-observation-sets.yml"
+      required: true
   steps:
     flagging:
       recipe: caracal-flag
+      skip: =not recipe.flag-enable
       params:
         dir-out-base: =recipe.dir-out-base
         ms: =recipe.ms
     2gc-reductions:
       recipe: caracal-selfcal
+      skip: =not recipe.selfcal-enable
       params:
         dir-out-base: =recipe.dir-out-base
         ms: =recipe.ms
@@ -62,9 +40,9 @@ caracal-pointings:
         dir-out-base: =recipe.dir-out-base
         ms: =recipe.ms
 
-mosaic-pointings:
+join-pointings:
   name: "CARACAL mosaicking"
-  info: "Create a mosaic for the looped pointings"
+  info: "Create a mosaic for the pointings or image similar pointings together"
   inputs:
     _include: caracal-schema.yml
   steps:

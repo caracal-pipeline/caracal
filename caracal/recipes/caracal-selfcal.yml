@@ -8,18 +8,36 @@ caracal-selfcal:
  
   inputs:
     _include: caracal-schema.yml
+    obs:
+      info: "Selects observation by label -- edit caracal-observation-sets.yml"
+      required: true
     ms:
       dtype: MS
       aliases: ['*.ms']
       required: true
-    niter:
-      dtype: List[float]
-      default: [1]
+    image-prefix:
+      dtype: str
+      required: true
+    niters:
       info: list of iteration to process, must be selfcal.niter.
+      dtype: List[int]
+      default: [1]
+    image-mfs-image:
+      info: Restored mfs image
+      dtype: File
+    image-mfs-residual:
+      info: Residual mfs image
+      dtype: File
+    image-nchans:
+      dtype: int
+    image-niter:
+      dtype: int
+    image-col:
+      dtype: str
 
   for_loop:
     var: iter
-    over: niter
+    over: niters
     scatter: 1
 
   steps:
@@ -46,7 +64,7 @@ caracal-selfcal:
       info: image and construct initial image using the PA_CORRECTED_DATA column
       skip: =IF(recipe.selfcal-pa-rotate, IF(recipe.image-enable, false, true), true)
       params:
-        column: =IF(recipe.selfcal-pa-rotate, steps.pa-correction-0.out.column, "DATA")
+        column: =IF(recipe.selfcal.pa-rotate, steps.pa-correction-0.out.column, recipe.image-col)
         no-update-model-required: =recipe.image-no-update-model-required
 
     image-pol-0:
@@ -56,7 +74,7 @@ caracal-selfcal:
       _scrub:
         - deconvolution-channels
       params:
-        column: =IF(recipe.selfcal-pa-rotate, steps.pa-correction-0.out.column, "DATA")
+        column: =IF(recipe.selfcal.pa-rotate, steps.pa-correction-0.out.column, recipe.image-col)
         no-update-model-required: =recipe.image-no-update-model-required
 
     quality-assess-0:
@@ -72,10 +90,11 @@ caracal-selfcal:
       cab: breizorro
       skip: =IF(not recipe.image-enable, IF(recipe.image-breizorro-enable, false, true), true)
       params:
-        restored-image: =steps.image-0.restored.mfs
-        mask: '{steps.image-*.prefix}-mask.fits'
+        restored-image: =IF(recipe.image-mfs-image, recipe.image-mfs-image, steps.image-0.restored.i.mfs)
+        #mask: '{steps.image-0.prefix}-mask.fits'
+        mask: '{steps.image-0.prefix}-mask.fits'
         threshold: 10.0
-        dilate: 1
+        dilate: 2
         #boxsize: 60
 
     masking-pol-0:
@@ -83,22 +102,19 @@ caracal-selfcal:
       cab: breizorro
       skip: =IF(not recipe.image-enable, IF(recipe.image-breizorro-enable, false, true), true)
       params:
-        restored-image: =steps.image-pol-*.restored.i.mfs
-        mask: '{steps.image-*.prefix}-mask.fits'
-        #threshold: 10.0
-        threshold: 6.0
-        dilate: 5
+        restored-image: =IF(recipe.image-mfs-image, recipe.image-mfs-image, steps.image-pol-0.restored.i.mfs)
+        mask: '{steps.image-pol-0.prefix}-mask.fits'
+        threshold: 10.0
+        dilate: 2
         #boxsize: 60
 
     image-1:
       info: image and construct initial model image using the CORRECTED_DATA column using a mask
-      skip: true
       _use: caracal-selfcal.steps.image-0
       params:
         ms: =recipe.ms
-        threshold: 0.000035
-        #fits-mask: =IF(recipe.image-fits-mask, recipe.image-fits-mask, IF(recipe.image-breizorro-enable, steps.masking-0.mask, UNSET))
-        fits-mask: =IF(recipe.image-breizorro-enable, steps.masking-0.mask, UNSET)
+        fits-mask: =IF(recipe.image-fits-mask, recipe.image-fits-mask, IF(recipe.image-breizorro-enable, steps.masking-0.mask, UNSET))
+        #fits-mask: =IF(recipe.image-breizorro-enable, steps.masking-0.mask, UNSET)
         #fits-mask: =steps.masking-0.mask
 
     image-pol-1:
@@ -107,29 +123,40 @@ caracal-selfcal:
       _use: caracal-selfcal.steps.image-pol-0
       params:
         ms: =recipe.ms
-        threshold: 0.000035
-        #fits-mask: =IF(recipe.image-fits-mask, recipe.image-fits-mask, IF(recipe.image-breizorro-enable, steps.masking-0.mask, UNSET))
-        fits-mask: =IF(recipe.image-breizorro-enable, steps.masking-0.mask, UNSET)
+        fits-mask: =IF(recipe.image-fits-mask, recipe.image-fits-mask, IF(recipe.image-breizorro-enable, steps.masking-0.mask, UNSET))
+        #fits-mask: =IF(recipe.image-breizorro-enable, steps.masking-0.mask, UNSET)
 
     source-finder-1:
       info: automatic source finding
       _use: lib.steps.source-finder.bdsf
       params:
-        image: =steps.image-*.image.i.mfs
+        image: =IF(recipe.image-mfs-image, recipe.image-mfs-image, steps.image-*.restored.i.mfs)
+        advanced_opts: true
+        outfile_gaul: =STRIPEXT(recipe.image-prefix) + '.gaul'
+        outfile_srl: =STRIPEXT(recipe.image-prefix) + '.srl'
+
+    tigger-convert-1:
+      info: convert model to lsm format
+      cab: tigger-convert
+      params:
+        input-model: =steps.source-finder-*.outfile_gaul
+        output-type: Tigger
+        output-model: =STRIPEXT(steps.source-finder-*.outfile_gaul) + '.lsm.html'
 
     quality-assess-1:
       info: image quality assessment
       skip: true
       cab: aimfast
       params:
-        residual_image: =steps.image-*.residual.i.mfs
+        residual_image: =IF(recipe.image-mfs-residual, recipe.image-mfs-residual, steps.image-*.residual.i.mfs)
         outfile: '{steps.image-*.prefix}-im-{info.suffix}.json'
  
     selfcal-1:
       info: first round of delay selfcal
       _use: lib.steps.quartical.k
       params:
-        input_model.recipe: MODEL_DATA
+        #input_model.recipe: =IF(recipe.selfcal.cal-model-mode, steps.output-model, MODEL_DATA)
+        input_model.recipe: =steps.output-model
         output.columns: [FSLOPE_CORRECTED_DATA]
 
     flagsummary-stats-1:

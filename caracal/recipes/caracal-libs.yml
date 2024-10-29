@@ -10,9 +10,11 @@ opts:
     symlink: log
   backend:
     native:
-      enable: true
-    singularity:
       enable: false
+    singularity:
+      enable: true
+      image_dir: ~/.singularity
+      auto_build: false
     rlimits:
       NOFILE: 10000  # set high limit on number of open files
 
@@ -124,8 +126,8 @@ lib:
             threshold_global: 8
             max_deviation: 1000
           K:
-            time_interval: 1
-            freq_interval: 0
+            time_interval: 0
+            freq_interval: 1
             type: delay_and_offset
             initial_estimate: false
       k-g:
@@ -191,21 +193,22 @@ lib:
           prefix: =IF(recipe.image-prefix, recipe.image-prefix, "{recipe.dir-out-base}/image_{info.suffix}/{recipe.image-prefix}_{info.suffix}")
           size: =recipe.image-npix
           scale: =recipe.image-cell
+          nchan: =recipe.image-nchans
           threshold: =IFSET(recipe.image-threshold)
           auto-threshold: =IFSET(recipe.image-auto-threshold)
           fits-mask: =IFSET(recipe.image-fits-mask)
           auto-mask: =IFSET(recipe.image-auto-mask)
-          threads: =recipe.ncpu
+          threads: =IFSET(recipe.ncpu)
+          niter: 100000 #=IFSET(recipe.image-niter)
+          column: =IFSET(recipe.image-col)
           use-wgridder: true
           #absmem: 500
           padding: 1.3
           nwlayers-factor: 3
-          nchan: =recipe.image-nchan
           deconvolution-channels: =IFSET(recipe.image-deconv-chan)
-          #multiscale: true
-          #multiscale-scales: [0,6,12,18,24,28,32,64,128,256,300,340,454,512]
-          #multiscale-scales: [0,6,12,18,24,28,32,64,72,80,100,150]
-          #multiscale-scale-bias: 0.5
+          multiscale: =IFSET(recipe.image-multiscale)
+          multiscale-scales: =IFSET(recipe.image-multiscale-scales)
+          multiscale-scale-bias: =IFSET(recipe.image-multiscale-bais)
           temp-dir: =recipe.image-temp
           log-time: true
           no-update-model-required: =recipe.image-no-update-model-required
@@ -215,8 +218,7 @@ lib:
         info: "wsclean step for dirty-only image"
         params:
           weight: 'briggs 0'
-          niter: 0
-          #parallel-gridding: 64
+          parallel-gridding: 64
 
       dirty_pol:
         _use: lib.steps.wsclean.dirty
@@ -229,15 +231,15 @@ lib:
         info: "wsclean step for imaging"
         params:
           mgain: 0.9
-          weight: 'briggs -0.1'
+          weight: 'briggs 0.0'
           #fit-beam: true
           #elliptical-beam: true
           #parallel-deconvolution: 1500
-          niter: 100
-          #nmiter: 8
+          nmiter: =IFSET(recipe.image-nmiter)
           join-channels: true
           fit-spectral-pol: 4
-          auto-threshold: 3
+          auto-threshold: 10
+          save-source-list: true
 
       image-pol:
         _use: lib.steps.wsclean.image
@@ -252,8 +254,8 @@ lib:
         info: "wsclean step for predicting a model"
         params:
           predict: true
-          size: =recipe.image-size
-          scale: =recipe.image-scale
+          size: =recipe.image-npix
+          scale: =recipe.image-cell
           nchan: =recipe.image-nchan
           deconvolution-channels: =recipe.image-deconv-chan
 
@@ -270,12 +272,10 @@ lib:
         info: runs source finder on deep image to make gaul list
         cab: bdsf.catalog
         params:
-          thresh_pix: 4
-          thresh_isl: 3
-          rms_box: [100,20]
-          rms_map: false
+          thresh_pix: 10
+          thresh_isl: 7
+          rms_box: [50,50]
+          #rms_map: false
           #flagging_opts: true
           #flag_maxsize_bm: 10
           catalog_format: ascii
-          outfile_gaul: =STRIPEXT(current.image-prefix) + '.gaul'
-          outfile_srl: =STRIPEXT(current.image-prefix) + '.srl'

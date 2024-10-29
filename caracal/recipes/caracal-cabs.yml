@@ -14,6 +14,7 @@ _include:
     - smops.yml
     - spimple-spifit.yml
     - tigger.yml
+    - tigger-convert.yml
     - tricolour.yml
     - wsclean.yml
 

@@ -11,7 +11,6 @@ dir-out-base:
   default: ar-output-003
   dtype: str
 ncpu:
-  default: 16
   dtype: int
 worker-id:
   default: 0
@@ -47,7 +46,10 @@ image-enable:
   default: true
   dtype: bool
 image-prefix:
-  default: "PicA-hi"
+  default: "mypipeline"
+  dtype: str
+image-col:
+  info: Column(s) to image.
   dtype: str
 image-niter:
   info: Number of cleaning iterations.
@@ -55,20 +57,16 @@ image-niter:
   dtype: int
 image-mniter:
   info: Number of major cycles.
-  default: 0
   dtype: int
 image-threshold:
-  default: 3.0e-5
   dtype: float
 image-auto-threshold:
-        #default: 5
   dtype: float
 image-auto-mask:
-        #default: 10
   dtype: float
 image-nchans:
   info: Number of channels in output image.
-  default: 4
+  default: 6
   dtype: int
 image-deconv-chan:
   dtype: int
@@ -84,7 +82,7 @@ image-joinchas:
   dtype: bool
 image-specfit-nrcoeff:
   info:  Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1. Use 0 to disable spectral fitting. Note that spectral fitting is required if you want to do subsequent continumm subtraction using crystalball.
-  default: 2
+  default: 4
   dtype: int
 image-cell:
   info: Image pixel size (in units of arcsec).
@@ -120,11 +118,21 @@ image-taper:
   dtype: str
 image-maxuv-l:
   info: Taper for imaging (in units of lambda).
-  default: float
-  dtype: 0.0
+  default: 0.0
+  dtype: float
 image-transuv-l:
   info: Transition length of tukey taper (taper-tukey in WSClean, in % of maxuv).
   default: 10.0
+  dtype: float
+image-multiscale:
+  info: Switch on multiscale cleaning.
+  default: false
+  dtype: bool
+image-multiscale-scales:
+  info:  Comma-separated integer scales for multiscale cleaning in pixels. If set to an empty string WSClean selects the scales automatically. These include the 0 scale, a scale calculated based on the beam size, and all scales obtained increasing the scale by a factor of 2 until the image size is reached.
+  dtype: List[int]
+image-multiscale-bais:
+  info: Parameter to prevent cleaning small scales in the large-scale iterations. A higher bias will give more focus to larger scales.
   dtype: float
 image-fits-mask:
   dtype: File
@@ -194,6 +202,11 @@ selfcal.enable:
   info: Perform self-calibration on the data.
   default: false
   dtype: bool
+selfcal.cal-model-mode:
+  info: Mode for using a calibration model, based on visibilities and/or PyBDSM source-finding. Options are vis_only and pybdsm_only. 'vis_only' means that only MODEL_DATA will be used to to calibrate. 'pybdsm_only' means that PyBDSM-generated, tigger-format local sky models will be used. 
+  default: pybdsm_only
+  dtype: str
+  choices: [pybdsm_only, vis_only]
 selfcal.niter:
   info: Number of self-calibration iterations to perform.
   default: 2
@@ -234,6 +247,7 @@ selfcal.subtract-model:
 selfcal.mad-flag:
   default: false
   dtype: bool
+
 
 # Direction-dependant calibration
 ddcal.enable:

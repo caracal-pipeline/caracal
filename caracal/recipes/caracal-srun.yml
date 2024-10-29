@@ -2,7 +2,6 @@ opts:
   backend:
     singularity:
       enable: true
-      auto_build: false
     slurm:
       enable: false
       srun_opts:

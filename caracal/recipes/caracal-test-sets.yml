@@ -5,7 +5,7 @@ caracal-selfcal:
         ms: /home/ramaila/working/msdir/pica-s-band-cal_with_pcal.ms
         dir-out-base: /home/ramaila/working/ar1-output-001/calmodel
         image-prefix: /home/ramaila/working/ar1-output-001/calmodel/0408-6
-        image-mfs-image: /home/ramaila/working/ar1-output-001/calmodel/0408-3-MFS-image.fits
+        image-mfs-image: /home/ramaila/working/ar1-output-001/calmodel/0408-6-MFS-image.fits
         image-fits-mask: /home/ramaila/working/ar1-output-001/calmodel/0408-3-mask.fits
         image-no-update-model-required: false
         image-col: CORRECTED_DATA

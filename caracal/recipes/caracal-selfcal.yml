@@ -156,7 +156,7 @@ caracal-selfcal:
       _use: lib.steps.quartical.k
       params:
         #input_model.recipe: =IF(recipe.selfcal.cal-model-mode, steps.output-model, MODEL_DATA)
-        input_model.recipe: =steps.output-model
+        input_model.recipe: =steps.tigger-convert-*.output-model
         output.columns: [FSLOPE_CORRECTED_DATA]
 
     flagsummary-stats-1:

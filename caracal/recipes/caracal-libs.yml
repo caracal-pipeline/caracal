@@ -13,8 +13,8 @@ opts:
       enable: false
     singularity:
       enable: true
+      auto_build: true
       image_dir: ~/.singularity
-      auto_build: false
     rlimits:
       NOFILE: 10000  # set high limit on number of open files
 
@@ -88,9 +88,9 @@ lib:
           madmax.enable: 0
           madmax.residuals: 0
           #model.list: MODEL_DATA
-          out.derotate: =recipe.pa-rotate
-          model.pa-rotate: =recipe.pa-rotate
-          model.feed-rotate: =IF(recipe.pa-rotate, "auto", 0)
+          out.derotate: =recipe.selfcal.pa-rotate
+          model.pa-rotate: =recipe.selfcal.pa-rotate
+          model.feed-rotate: =IF(recipe.selfcal.pa-rotate, "auto", 0)
           sol.jones: [K]
           k.type: f-slope
           sol.term-iters: 0
@@ -104,9 +104,10 @@ lib:
             path: =recipe.ms
             select_corr: [0,1, 2, 3]
             select_uv_range: =LIST(400*0.33, 0)
+            select_fields: [0]
           input_model:
             recipe: MODEL_DATA
-            apply_p_jones: =recipe.pa-rotate
+            apply_p_jones: =recipe.selfcal.pa-rotate
           solver:
             terms: [K]
             iter_recipe: [50,50,50]
@@ -119,15 +120,15 @@ lib:
             products: [corrected_data]
             columns: =LIST("CORRECTED{info.suffix}_DATA")
             flags: true
-            apply_p_jones_inv: =recipe.pa-rotate
+            apply_p_jones_inv: =recipe.selfcal.pa-rotate
           mad_flags:
-            enable: =root.mad-flag 
+            enable: =recipe.selfcal.mad-flag
             threshold_bl: 6
             threshold_global: 8
             max_deviation: 1000
           K:
-            time_interval: 0
-            freq_interval: 1
+            time_interval: 128
+            freq_interval: 64
             type: delay_and_offset
             initial_estimate: false
       k-g:

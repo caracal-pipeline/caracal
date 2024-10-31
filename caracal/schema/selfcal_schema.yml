@@ -172,12 +172,12 @@ mapping:
         type: str
         desc: Comma-separated integer scales for multiscale cleaning in pixels. If set to an empty string WSClean selects the scales automatically. These include the 0 scale, a scale calculated based on the beam size, and all scales obtained increasing the scale by a factor of 2 until the image size is reached.
         required: false
-        example: '0.6'
+        example: ''
       img_multiscale_bias:
         type: float
         desc: Comma-separated set of baises for multiscale cleaning.  balances between how sensitive the algorithm is towards large scales compared to smaller scales. Lower values will clean larger scales earlier and deeper. Its default is 0.6, which means something like “if a peak is 0.6 times larger at a 2x larger scale, select the larger scale”
         required: false
-        example: ''
+        example: '0.6'
       img_nonegative:
         type: bool
         desc: Do not allow negative components during cleaning

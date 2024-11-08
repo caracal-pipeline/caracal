@@ -23,6 +23,18 @@ import os
 import numpy as np
 import yaml
 
+from astropy import units as u
+from astropy.coordinates import SkyCoord
+import astropy.visualization as astviz
+from astropy.wcs import WCS
+from astropy.table import Table, Column
+from astropy.io import fits
+import astropy.io.ascii as astasc
+import scipy.optimize as optimize
+import scipy.constants as scconstants
+from scipy import stats
+
+
 
 dm = measures.measures()
 
@@ -32,19 +44,7 @@ class UzeroFlagger:
     global u, SkyCoord, astviz, WCS, Table, Column, fits, astasc
     global optimize, scconstants, stats
 
-    
     def __init__(self, config):
-        from astropy import units as u
-        from astropy.coordinates import SkyCoord
-        import astropy.visualization as astviz
-        from astropy.wcs import WCS
-        from astropy.table import Table, Column
-        from astropy.io import fits
-        import astropy.io.ascii as astasc
-        import scipy.optimize as optimize
-        import scipy.constants as scconstants
-        from scipy import stats
-
         self.config = config
 
     def setDirs(self, output):

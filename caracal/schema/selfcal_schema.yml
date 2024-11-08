@@ -175,7 +175,7 @@ mapping:
         example: ''
       img_multiscale_bias:
         type: float
-        desc: Comma-separated set of baises for multiscale cleaning.  balances between how sensitive the algorithm is towards large scales compared to smaller scales. Lower values will clean larger scales earlier and deeper. Its default is 0.6, which means something like “if a peak is 0.6 times larger at a 2x larger scale, select the larger scale”
+        desc: Comma-separated set of biases for multiscale cleaning. This balances between how sensitive the algorithm is towards large scales compared to smaller scales. Lower values will clean larger scales earlier and deeper. Its default is 0.6, which means something like “if a peak is 0.6 times larger at a 2x larger scale, select the larger scale”
         required: false
         example: '0.6'
       img_nonegative:
@@ -221,7 +221,7 @@ mapping:
             example: ''
           inputmask:
             type: str
-            desc: User-provided input-mask that will be (regridded if needed) and added onto the SoFiA mask.  
+            desc: User-provided input-mask that will be (regridded if needed and) added onto the SoFiA mask.
             required: false
             example: ''
       img_breizorro_settings:

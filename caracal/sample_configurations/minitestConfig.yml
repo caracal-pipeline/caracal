@@ -87,8 +87,8 @@ selfcal:
   img_cell: 2
   cal_timeslots_chunk: 240
   cal_cubical:
-    ragavi_plot:
-      enable: false
+    gain_plot:
+      enable: true
   image:
     enable: true
     cleanmask_method: [wsclean,breizorro]

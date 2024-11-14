@@ -34,7 +34,7 @@ def getfield_coords(info, field, db, tol=2.9E-3, tol_diff=4.8481E-6):
     firade[0] = np.mod(firade[0], 2 * np.pi)
     dbcp = db.db
     caracal.log.info("Checking for crossmatch")
-    caracal.log.info("Database keys:", dbcp.keys())
+    caracal.log.info(f"Database keys: {dbcp.keys()}")
     for key in dbcp.keys():
         carade = [dbcp[key]['ra'], dbcp[key]['decl']]
         if closeby(carade, firade, tol=tol):

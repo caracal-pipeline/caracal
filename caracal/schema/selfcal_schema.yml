@@ -356,27 +356,37 @@ mapping:
             type: str
             required: false
             example: ''
-          ragavi_plot:
+          gain_plot:
             type: map
-            desc: Use ragavi to plot diagnostic plots for self-calibration.
+            desc: Use cubical gain-plotter to plot diagnostic plots for self-calibration.
             mapping:
               enable:
                 type: bool
-                desc: Enable the plotting of diagnostics, using ragavi.
+                desc: Enable the plotting of diagnostics, using gain-plotter.
                 required: false
                 example: 'False'
-              gaintype:
-                seq:
-                - type: str
-                desc: List of gain solution types. Options are 'F' (flux-calibration solutions), 'B' (bandpass-calibration solutions), 'K' (delay-calibration solutions), 'G' (gain-calibration solutions), and 'D' (D-Jones leakage-calibration solutions).
+              diag:
+                desc: Plot diagonal elements as real/imag or amp/phase.
+                type: str
                 required: false
-                example: 'G'
-              field:
-                seq:
-                - type: int
-                desc: Fields to plot. Specify by field ID.
+                example: 'ap'
+                enum: ["ri", "ap", "none"]
+              off_diag:
+                desc: Also plot off-diagonal elements as real/imag or amp/phase.
+                type: str
                 required: false
-                example: '0'
+                example: 'none'
+                enum: ["ri", "ap", "none"]
+              nrow:
+                desc: Number of plot rows.
+                type: int
+                required: false
+                example: '6'
+              ncol:
+                desc: Number of plot columns.
+                type: int
+                required: false
+                example: '12'
       cal_meqtrees:
         desc: Parameters that only apply when using MeqTrees for the calibration.
         type: map

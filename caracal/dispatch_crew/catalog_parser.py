@@ -73,7 +73,7 @@ class catalog_parser:
                     continue
                 cmd = None
                 # source ?
-                valset = re.match(r"^name=(?P<name>[0-9A-Za-z\-+_ ]+)[ ]+"
+                valset = re.match(r"^name=(?P<name>[0-9A-Za-z\-+_. ]+)[ ]+"  # Added '.' to allowed characters
                                   r"epoch=(?P<epoch>[0-9]+)[ ]+"
                                   r"ra=(?P<ra>[+\-]?[0-9]+h[0-9]+m[0-9]+(?:.[0-9]+)?s)[ ]+"
                                   r"dec=(?P<decl>[+\-]?[0-9]+d[0-9]+m[0-9]+(?:.[0-9]+)?s)[ ]+"

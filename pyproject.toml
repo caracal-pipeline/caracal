@@ -50,12 +50,12 @@ jinja2 = "*"
 requires = ["setuptools", "poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-#[tool.poetry.extras]
-#scipy = ["scipy"]
-#astropy = ["astropy"]
-#regions = ["regions"]
-#astroquery = ["astroquery"]
-#all = ["scipy", "astropy", "regions", "astroquery"]
+[tool.poetry.extras]
+scipy = ["scipy"]
+astropy = ["astropy"]
+regions = ["regions"]
+astroquery = ["astroquery"]
+all = ["scipy", "astropy", "regions", "astroquery"]
 
 
 [tool.poetry.group.tests]

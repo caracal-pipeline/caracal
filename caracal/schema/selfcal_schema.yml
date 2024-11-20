@@ -173,6 +173,16 @@ mapping:
         desc: Comma-separated integer scales for multiscale cleaning in pixels. If set to an empty string WSClean selects the scales automatically. These include the 0 scale, a scale calculated based on the beam size, and all scales obtained increasing the scale by a factor of 2 until the image size is reached.
         required: false
         example: ''
+      img_multiscale_bias:
+        type: float
+        desc: Comma-separated set of biases for multiscale cleaning. This balances between how sensitive the algorithm is towards large scales compared to smaller scales. Lower values will clean larger scales earlier and deeper. Its default is 0.6, which means something like “if a peak is 0.6 times larger at a 2x larger scale, select the larger scale”
+        required: false
+        example: '0.6'
+      img_nonegative:
+        type: bool
+        desc: Do not allow negative components during cleaning
+        required: false
+        example: ''
       img_nrdeconvsubimg:
         desc: Speed-up deconvolution by splitting the image into a number of subimages, which are deconvolved in parallel. This parameter sets the number of subimages as follows. If set to 1 no parallel deconvolution is performed. If set to 0 the number of subimages is the same as the number of CPUs used by the selfcal worker (see "ncpu" parameter above). If set to a number > 1 , the number of subimages is greater than or equal to the one requested by the user.
         type: int
@@ -211,25 +221,9 @@ mapping:
             example: ''
           inputmask:
             type: str
-            desc: User-provided input-mask that will be supplemented by the SoFiA mask, created through SoFiA source-finding.
+            desc: User-provided input-mask that will be (regridded if needed and) added onto the SoFiA mask.
             required: false
             example: ''
-          fornax_special:
-            desc: Activate masking of Fornax A using SoFiA.
-            type: bool
-            required: false
-            example: 'False'
-          fornax_thr:
-            desc: SoFiA source-finding threshold, in terms of the number of sigma_rms to go down to (i.e. the minimum signal-to-noise ratio).
-            seq:
-              - type: float
-            required: false
-            example: '4.0'
-          fornax_sofia:
-            type: bool
-            desc: Use SoFiA for the mask of Fornax A, instead of that by Fomalont.
-            required: false
-            example: 'False'
       img_breizorro_settings:
         desc: Breizorro settings used for the imaging iterations whose entry in 'image/cleanmask_method' below is 'breizorro'. The resulting clean mask is located in <output>/masking.
         type: map

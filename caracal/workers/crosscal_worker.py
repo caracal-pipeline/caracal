@@ -16,7 +16,6 @@ import glob
 import shutil
 import numpy as np
 from casacore.tables import table
-from caracal.utils.requires import extras
 
 NAME = "Cross-calibration"
 LABEL = 'crosscal'
@@ -456,11 +455,11 @@ def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipelin
     -----------------
 
     Parameters:
-      order: order in which to apply gains
+        order: order in which to apply gains
     """
 
     gaintables, interps, fields = get_caltab_final(order, gaintable, interp,
-                                                   gainfield, field)
+                                                    gainfield, field)
 
     step = "apply_gains-%s-%s-%d" % (field, label, i)
     recipe.add("cab/casa_applycal", step, {
@@ -478,7 +477,7 @@ def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipelin
         label="%s::Apply gain tables" % step)
 
 
-@extras("scipy")
+
 def smooth_bandpass(bptable, window, filter_type='mean'):
     from scipy import ndimage
 
@@ -522,21 +521,21 @@ def worker(pipeline, recipe, config):
                         flags_before_worker) < available_flagversions.index(version) and not config[
                             'overwrite_flagvers']:
                         manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker,
-                                          flags_after_worker)
+                                        flags_after_worker)
                     substep = 'version-{0:s}-ms{1:d}'.format(version, i)
                     manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
                     if version != available_flagversions[-1]:
                         substep = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, i)
                         manflags.delete_cflags(pipeline, recipe,
-                                               available_flagversions[available_flagversions.index(version) + 1],
-                                               msname, cab_name=substep)
+                                                available_flagversions[available_flagversions.index(version) + 1],
+                                                msname, cab_name=substep)
                     if version != flags_before_worker:
                         substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                         manflags.add_cflags(pipeline, recipe, flags_before_worker,
                                             msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
                 elif stop_if_missing:
                     manflags.conflict('rewind_to_non_existing', pipeline, wname, msname, config, flags_before_worker,
-                                      flags_after_worker)
+                                    flags_after_worker)
                 else:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
@@ -544,7 +543,7 @@ def worker(pipeline, recipe, config):
             else:
                 if flags_before_worker in available_flagversions and not config['overwrite_flagvers']:
                     manflags.conflict('would_overwrite_bw', pipeline, wname, msname, config, flags_before_worker,
-                                      flags_after_worker)
+                                    flags_after_worker)
                 else:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
@@ -554,7 +553,7 @@ def worker(pipeline, recipe, config):
             fluxscale_field = utils.observed_longest(msinfo, pipeline.fcal[i])
             fluxscale_field_id = utils.get_field_id(msinfo, fluxscale_field)[0]
             caracal.log.info("Found more than one flux calibrator."
-                             f"Will use the one observed the longest {fluxscale_field}.")
+                            f"Will use the one observed the longest {fluxscale_field}.")
         else:
             fluxscale_field = pipeline.fcal[i][0]
             fluxscale_field_id = utils.get_field_id(msinfo, fluxscale_field)[0]
@@ -618,7 +617,7 @@ def worker(pipeline, recipe, config):
                 else:
 
                     raise RuntimeError('The flux calibrator field "{}" could not be '
-                                       'found in our database or in the CASA NRAO database'.format(fluxscale_field))
+                                        'found in our database or in the CASA NRAO database'.format(fluxscale_field))
             step = 'set_model_cal-{0:d}'.format(i)
             if "skymodel" in opts:
                 cabtouse = 'cab/simulator'
@@ -627,10 +626,10 @@ def worker(pipeline, recipe, config):
             else:
                 cabtouse = 'cab/casa_setjy'
             recipe.add(cabtouse, step,
-                       opts,
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
+                        opts,
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
 
         gcal_set = set(pipeline.gcal[i])
         fcal_set = set(pipeline.fcal[i])
@@ -649,27 +648,27 @@ def worker(pipeline, recipe, config):
 
             if "bpcal" in config["apply_cal"]["applyto"] or "gcal" in config["apply_cal"]["applyto"]:
                 applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-                         "nearest", "bpcal", pipeline, i, calmode=calmode, label=label)
+                        "nearest", "bpcal", pipeline, i, calmode=calmode, label=label)
             if "xcal" in config["apply_cal"]["applyto"]:
                 applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-                         "nearest", "xcal", pipeline, i, calmode=calmode, label=label)
+                        "nearest", "xcal", pipeline, i, calmode=calmode, label=label)
             if "target" in config["apply_cal"]["applyto"]:
                 applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-                         "nearest", "target", pipeline, i, calmode=calmode, label=label)
+                        "nearest", "target", pipeline, i, calmode=calmode, label=label)
         else:
             primary = solve(msname, msinfo, recipe, config, pipeline, i,
                             prefix_msbase, label=label, ftype="primary")
 
             secondary = solve(msname, msinfo, recipe, config, pipeline, i,
-                              prefix_msbase, label=label, ftype="secondary",
-                              prev=primary, prev_name="primary", smodel=True)
+                            prefix_msbase, label=label, ftype="secondary",
+                            prev=primary, prev_name="primary", smodel=True)
 
             interps = primary["interps"]
             gaintables = primary["gaintables"]
 
             if "bpcal" in config["apply_cal"]["applyto"]:
                 applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-                         "nearest", "bpcal", pipeline, i, calmode=calmode, label=label)
+                        "nearest", "bpcal", pipeline, i, calmode=calmode, label=label)
 
             interps = secondary["interps"]
             gainfields = secondary["gainfield"]
@@ -677,13 +676,13 @@ def worker(pipeline, recipe, config):
 
             if "gcal" in config["apply_cal"]["applyto"]:
                 applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
-                         gainfields, "gcal", pipeline, i, calmode=calmode, label=label)
+                        gainfields, "gcal", pipeline, i, calmode=calmode, label=label)
             if "xcal" in config["apply_cal"]["applyto"]:
                 applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
-                         "nearest", "xcal", pipeline, i, calmode=calmode, label=label)
+                        "nearest", "xcal", pipeline, i, calmode=calmode, label=label)
             if "target" in config["apply_cal"]["applyto"]:
                 applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
-                         "nearest", "target", pipeline, i, calmode=calmode, label=label)
+                        "nearest", "target", pipeline, i, calmode=calmode, label=label)
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
             substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, i)
@@ -700,7 +699,7 @@ def worker(pipeline, recipe, config):
         else:
             # default recipes from secondary
             for gt, itp, fd in zip(*get_caltab_final(secondary_order, secondary["gaintables"], secondary["interps"],
-                                                     "nearest", "target")):
+                                                    "nearest", "target")):
                 # if the table is already applied with the primary in it, re-add it with an "all" (empty) field
                 # add_callib_recipe(applycal_recipes, gt, itp, fd, '' if gt in applycal_recipes else targets)
                 callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)
@@ -713,19 +712,19 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'summary'):
             step = 'summary-{0:s}-{1:d}'.format(label, i)
             recipe.add('cab/flagstats', step,
-                       {
-                           "msname": msname,
-                           "plot": True,
-                           "outfile": ('{0:s}-{1:s}-'
-                                       'crosscal-summary-{2:d}.json').format(
-                               prefix_msbase, wname, i),
-                           "htmlfile": ('{0:s}-{1:s}-'
+                        {
+                            "msname": msname,
+                            "plot": True,
+                            "outfile": ('{0:s}-{1:s}-'
+                                        'crosscal-summary-{2:d}.json').format(
+                                prefix_msbase, wname, i),
+                            "htmlfile": ('{0:s}-{1:s}-'
                                         'crosscal-summary-plots-{2:d}.html').format(
-                               prefix_msbase, wname, i)
-                       },
-                       input=pipeline.input,
-                       output=pipeline.diagnostic_plots,
-                       label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
+                                prefix_msbase, wname, i)
+                        },
+                        input=pipeline.input,
+                        output=pipeline.diagnostic_plots,
+                        label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
             recipe.run()
             # Empty job que after execution
             recipe.jobs = []

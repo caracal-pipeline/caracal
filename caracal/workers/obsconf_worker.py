@@ -232,6 +232,8 @@ def worker(pipeline, recipe, config):
             _ra = []
             _dec = []
             _fid = []
+            exposure = msdict["EXPOSURE"]
+            caracal.log.info(f'Exposure time: {exposure:.2f} seconds')
             for f in found_fields:
                 fid = utils.get_field_id(msdict, f)[0]
                 targetpos = targetinfo['REFERENCE_DIR'][fid][0]
@@ -240,9 +242,13 @@ def worker(pipeline, recipe, config):
                 _ra.append(ra)
                 _dec.append(dec)
                 _fid.append(fid)
-                tobs = utils.field_observation_length(msdict, f) / 60.0
-                caracal.log.info(
-                    '    {0:s} (ID={1:d}) : {2:.2f} minutes | RA={3:.2f} deg, Dec={4:.2f} deg'.format(f, fid, tobs, ra, dec))
+                tobs, scans = utils.field_observation_length(msdict, f, return_scans=True)
+                caracal.log.info(f'    {f:s} (ID={fid:d})')
+                caracal.log.info(f'  {tobs/60:.2f} minutes : {tobs//exposure} timeslots' )
+                scan_tslots = [str(sc//exposure) for sc in scans]
+                caracal.log.info(f'  Scan timeslots: {", ".join(scan_slots)}')
+                caracal.log.info(f'  RA={ra:.2f} deg, Dec={dec:.2f} deg')
+                caracal.log.info(f'---')
             getattr(pipeline, term + "_ra")[i] = _ra
             getattr(pipeline, term + "_dec")[i] = _dec
             getattr(pipeline, term + "_id")[i] = _fid

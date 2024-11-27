@@ -186,7 +186,7 @@ def worker(pipeline, recipe, config):
             ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
         
         exposure = msdict["EXPOSURE"]
-        caracal.log.info(f'  Exposure time: {exposure:.2} seconds')
+        caracal.log.info(f'  Exposure time: {exposure:.2g} seconds')
         caracal.log.info(" ")
         if i == pipeline.nobs - 1 and np.max(pipeline.chanwidth) > 0 and np.min(pipeline.chanwidth) < 0:
             caracal.log.err('Some datasets have a positive channel increment, some negative. This will lead to errors. Exiting')

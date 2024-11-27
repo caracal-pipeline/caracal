@@ -244,10 +244,10 @@ def worker(pipeline, recipe, config):
                 _fid.append(fid)
                 tobs, scans = utils.field_observation_length(msdict, f, return_scans=True)
                 caracal.log.info(f'    {f:s} (ID={fid:d})')
-                caracal.log.info(f'  {tobs/60:.2f} minutes : {tobs//exposure} timeslots' )
-                scan_tslots = [str(sc//exposure) for sc in scans]
-                caracal.log.info(f'  Scan timeslots: {", ".join(scan_slots)}')
-                caracal.log.info(f'  RA={ra:.2f} deg, Dec={dec:.2f} deg')
+                caracal.log.info(f'      {tobs/60:.2f} minutes : {int(tobs/exposure)} timeslots' )
+                scan_tslots = [str(int(sc/exposure)) for sc in scans]
+                caracal.log.info(f'      Scan timeslots: {", ".join(scan_tslots)}')
+                caracal.log.info(f'      RA={ra:.2f} deg, Dec={dec:.2f} deg')
                 caracal.log.info(f'---')
             getattr(pipeline, term + "_ra")[i] = _ra
             getattr(pipeline, term + "_dec")[i] = _dec

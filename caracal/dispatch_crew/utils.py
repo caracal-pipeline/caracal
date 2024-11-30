@@ -161,7 +161,7 @@ def observed_longest(info, bpcals):
     return field
 
 
-def field_observation_length(info, field):
+def field_observation_length(info, field, return_scans=False):
     if isinstance(info, str):
         with open(info, 'r') as f:
             info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
@@ -178,8 +178,12 @@ def field_observation_length(info, field):
             raise ValueError("Field cannot be a {0:s}".format(type(field)))
         return idx
     field = str(ids[index(field)])
-
-    return numpy.sum(list(info['SCAN'][field].values()))
+    scans = list(info['SCAN'][field].values())
+    tobs = numpy.sum(scans)
+    if return_scans:
+        return tobs, scans
+    else:
+        return tobs
 
 
 def closeby(radec_1, radec_2, tol=2.9E-3):

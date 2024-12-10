@@ -561,10 +561,11 @@ def worker(pipeline, recipe, config):
         pipeline.fluxscale_reference = fluxscale_field
 
         if pipeline.enable_task(config, 'set_model'):
-            if config['set_model']['no_verify']:
+            if config['set_model']['unity']:
                 opts = {
                     "vis": msname,
                     "field": fluxscale_field,
+                    "standard": "manual",
                     "scalebychan": True,
                     "usescratch": True,
                 }

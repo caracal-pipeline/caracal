@@ -75,10 +75,11 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
 
     if not docal:
         if pipeline.enable_task(config, 'set_model_leakage'):
-            if config['set_model_leakage']['no_verify']:
+            if config['set_model_leakage']['unity']:
                 opts = {
                     "vis": msname,
                     "field": leak_field,
+                    "standard": "manual",
                     "scalebychan": True,
                     "usescratch": True,
                 }
@@ -991,10 +992,11 @@ def calib_only_leakage(msname, msinfo, prefix_msbase, recipe, config, pipeline, 
 
     if not docal:
         if pipeline.enable_task(config, 'set_model_leakage'):
-            if config['set_model_leakage']['no_verify']:
+            if config['set_model_leakage']['unity']:
                 opts = {
                     "vis": msname,
                     "field": leak_field,
+                    "standard": "manual",
                     "scalebychan": True,
                     "usescratch": True,
                 }

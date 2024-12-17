@@ -1642,10 +1642,7 @@ def worker(pipeline, recipe, config):
         # to achieve accurate restauration we need to reset all parameters properly
         matrix_type = config[key]['gain_matrix_type'][
             num - 1 if len(config[key]['gain_matrix_type']) >= num else -1]
-        print('(#######################################)')
-        print(matrix_type)
-        print('\n\n')
-        print('(#######################################)')
+
         # Decide if take diagonal terms into account
         if matrix_type == 'Gain2x2':
             take_diag_terms = False
@@ -1850,7 +1847,10 @@ def worker(pipeline, recipe, config):
                 cubical_gain_interp_opts.update({
                     "g-load-from": g_table_name
                 })
-
+            print('(#######################################)')
+            print(g_table_name)
+            print('\n\n')
+            print('(#######################################)')
             # expand
             if config['cal_bjones']:
                 if enable_inter:

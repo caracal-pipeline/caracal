@@ -1826,7 +1826,11 @@ def worker(pipeline, recipe, config):
             print(matrix_type,gupdate)
             print('\n\n')
             print('(#######################################)')
-
+            matrix_type = config[key]['gain_matrix_type'][num - 1 if len(config[key]['gain_matrix_type']) >= num else -1]
+            print('(#######################################)')
+            print(matrix_type,gupdate)
+            print('\n\n')
+            print('(#######################################)')            
             if gupdate == 'phase-diag' and matrix_type == 'Fslope':
                 g_table_name = "{0:s}/{3:s}-g-delay-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                        pipeline), num, os.path.splitext(fromname)[0], prefix)

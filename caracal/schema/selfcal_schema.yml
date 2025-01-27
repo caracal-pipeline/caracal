@@ -141,6 +141,12 @@ mapping:
         desc: Number of channels in output image.
         required: false
         example: '3'
+      img_channelrange:
+        seq:
+          - type: int
+        desc: Only image the given channel range. Indices specify channel indices, end index is exclusive. .e.g. 0, 1023. Default '-1' means all channels.
+        required: false
+        example: '-1'
       img_joinchans:
         type: bool
         desc: Join channels to create MFS image.
@@ -165,6 +171,16 @@ mapping:
       img_multiscale_scales:
         type: str
         desc: Comma-separated integer scales for multiscale cleaning in pixels. If set to an empty string WSClean selects the scales automatically. These include the 0 scale, a scale calculated based on the beam size, and all scales obtained increasing the scale by a factor of 2 until the image size is reached.
+        required: false
+        example: ''
+      img_multiscale_bias:
+        type: float
+        desc: Comma-separated set of biases for multiscale cleaning. This balances between how sensitive the algorithm is towards large scales compared to smaller scales. Lower values will clean larger scales earlier and deeper. Its default is 0.6, which means something like “if a peak is 0.6 times larger at a 2x larger scale, select the larger scale”
+        required: false
+        example: '0.6'
+      img_nonegative:
+        type: bool
+        desc: Do not allow negative components during cleaning
         required: false
         example: ''
       img_nrdeconvsubimg:
@@ -205,25 +221,9 @@ mapping:
             example: ''
           inputmask:
             type: str
-            desc: User-provided input-mask that will be supplemented by the SoFiA mask, created through SoFiA source-finding.
+            desc: User-provided input-mask that will be (regridded if needed and) added onto the SoFiA mask.
             required: false
             example: ''
-          fornax_special:
-            desc: Activate masking of Fornax A using SoFiA.
-            type: bool
-            required: false
-            example: 'False'
-          fornax_thr:
-            desc: SoFiA source-finding threshold, in terms of the number of sigma_rms to go down to (i.e. the minimum signal-to-noise ratio).
-            seq:
-              - type: float
-            required: false
-            example: '4.0'
-          fornax_sofia:
-            type: bool
-            desc: Use SoFiA for the mask of Fornax A, instead of that by Fomalont.
-            required: false
-            example: 'False'
       img_breizorro_settings:
         desc: Breizorro settings used for the imaging iterations whose entry in 'image/cleanmask_method' below is 'breizorro'. The resulting clean mask is located in <output>/masking.
         type: map
@@ -335,27 +335,52 @@ mapping:
             type: int
             required: false
             example: '4'
-          ragavi_plot:
+          out_derotate:
+            desc: Explicitly enables or disables derotation of output visibilities. Default (None) is to use the –model-pa-rotate and –model-feed-rotate settings.
+            type: bool
+            required: false
+            example: 'False'
+          model_pa_rotate:
+            desc: Apply parallactic angle rotation to model visibilities. Enable this for alt-azmounts, unless your model visibilities are already rotated.
+            type: bool
+            required: false
+            example: 'False'
+          model_feed_rotate:
+            desc: Apply a feed angle rotation to the model visibilities. Use 'auto' to read angles from FEED subtable, or give an explicit value in degrees.
+            type: str
+            required: false
+            example: ''
+          gain_plot:
             type: map
-            desc: Use ragavi to plot diagnostic plots for self-calibration.
+            desc: Use cubical gain-plotter to plot diagnostic plots for self-calibration.
             mapping:
               enable:
                 type: bool
-                desc: Enable the plotting of diagnostics, using ragavi.
+                desc: Enable the plotting of diagnostics, using gain-plotter.
                 required: false
                 example: 'False'
-              gaintype:
-                seq:
-                - type: str
-                desc: List of gain solution types. Options are 'F' (flux-calibration solutions), 'B' (bandpass-calibration solutions), 'K' (delay-calibration solutions), 'G' (gain-calibration solutions), and 'D' (D-Jones leakage-calibration solutions).
+              diag:
+                desc: Plot diagonal elements as real/imag or amp/phase.
+                type: str
                 required: false
-                example: 'G'
-              field:
-                seq:
-                - type: int
-                desc: Fields to plot. Specify by field ID.
+                example: 'ap'
+                enum: ["ri", "ap", "none"]
+              off_diag:
+                desc: Also plot off-diagonal elements as real/imag or amp/phase.
+                type: str
                 required: false
-                example: '0'
+                example: 'none'
+                enum: ["ri", "ap", "none"]
+              nrow:
+                desc: Number of plot rows.
+                type: int
+                required: false
+                example: '6'
+              ncol:
+                desc: Number of plot columns.
+                type: int
+                required: false
+                example: '12'
       cal_meqtrees:
         desc: Parameters that only apply when using MeqTrees for the calibration.
         type: map
@@ -476,6 +501,16 @@ mapping:
             example: '100.0'
             required: false
             desc: "Specifies a fixed amount of memory in gigabytes."
+          nr_parallel_grid:
+            type: int
+            example: '1'
+            required: false
+            desc: Will execute multiple gridders simultaneously when using w-stacking. When parallel gridding is not possible, or when image sizes are reasonably large (say 5k-10k), the w-gridder might be a better choice.
+          use_wgridder:
+            type: bool
+            example: 'False'
+            required: false
+            desc: Use the w-gridding gridder developed by Martin Reinecke. Otherwise, the default will be w-stacking.
 
       extract_sources:
         type: map
@@ -553,7 +588,7 @@ mapping:
           output_data:
             seq:
               - type: str
-            desc: Data to output after calibration. Options are 'CORR_DATA', 'CORR_RES' or 'CORRECTED_DATA', where CORR_DATA and CORRECTED_DATA are synonyms.
+            desc: Data to output after calibration. Options are 'PA_DATA', 'CORR_RES', 'CORR_DATA' or 'CORRECTED_DATA', where CORR_DATA and CORRECTED_DATA are synonyms. Note that for 'PA_DATA' only parallactic angle corrections will be applied to the data to produce 'CORRECTED_DATA' column. 
             required: false
             example: 'CORR_DATA'
           gain_matrix_type:

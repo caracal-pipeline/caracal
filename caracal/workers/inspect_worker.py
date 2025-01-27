@@ -1,7 +1,7 @@
-# -*- coding: future_fstrings -*-
 import os
 import sys
-from collections import Mapping, Sequence, OrderedDict, namedtuple
+from collections.abc import Mapping, Sequence
+from collections import OrderedDict, namedtuple
 import itertools
 import yaml
 from stimela.dismissable import dismissable as sdm
@@ -316,8 +316,8 @@ def plotms(pipeline, recipe, basic, extras=None):
     plotms_keys = check_params(plotms_keys)
 
     recipe.add("cab/casa_plotms", step, plotms_keys,
-               input=pipeline.input, output=output_dir,
-               label=label, memory_limit=None, cpus=None)
+                input=pipeline.input, output=output_dir,
+                label=label, memory_limit=None, cpus=None)
 
 
 def _process_shadems_plot_list(plot_args, basesubst, plotlist, defaults, description, extras=None):
@@ -341,7 +341,7 @@ def _process_shadems_plot_list(plot_args, basesubst, plotlist, defaults, descrip
             # all other keys go into new defaults (with substitutions done)
             new_defaults = defaults.copy()
             new_defaults.update(**{"--" + key.replace("_", "-"): val.format(**basesubst) if isinstance(val, str) else val
-                                   for key, val in entry.items()})
+                                    for key, val in entry.items()})
             # and ecurse into new plot list
             _process_shadems_plot_list(plot_args, basesubst, plots, new_defaults, f"{description}: {desc or comment}", extras=extras)
         elif isinstance(entry, str):
@@ -391,14 +391,14 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
     # groups of plots available
     plot_cats = {
         "plots_by_field": {"--iter-field": "",
-                           "--field": basesubst["all_fields"]},
+                            "--field": basesubst["all_fields"]},
         "plots_by_corr": {"--iter-corr": ""},
         "plots": {}
     }
 
     # remove the keys enable and ignore_errors
     bares = {k: v for k, v in shade_cfg.items()
-             if k in ("plots_by_field", "plots_by_corr", "plots")}
+                if k in ("plots_by_field", "plots_by_corr", "plots")}
 
     # # remove plot categories that have not been specified
     # bares = {k: v for k, v in bares.items() if len(v) > 1 or (v and v[0])}
@@ -423,11 +423,11 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
             "The shadems section doesn't contain any enabled 'plot_by_field' or 'plot_by_corr' or 'plots' entries.")
     else:
         recipe.add("cab/shadems_direct", step,
-                   dict(ms=shade_cfg["ms"],
+                    dict(ms=shade_cfg["ms"],
                         args=plot_args,
                         ignore_errors=shade_cfg["ignore_errors"]),
-                   input=pipeline.input, output=shade_cfg["output_dir"],
-                   label=f"{step}:: Plotting", memory_limit=None, cpus=None)
+                    input=pipeline.input, output=shade_cfg["output_dir"],
+                    label=f"{step}:: Plotting", memory_limit=None, cpus=None)
 
 
 def shadems(pipeline, recipe, basic, extras=None):
@@ -441,10 +441,10 @@ def shadems(pipeline, recipe, basic, extras=None):
 
     # contains the var names to be used as the suffix in case of iteration
     iter_axes = {"field": "{_field}",
-                 "spw": "{_Spw}",
-                 "scan": "{_Scan}",
-                 "baseline": "{_Baseline}",
-                 "ant": "{_Ant}"}
+                "spw": "{_Spw}",
+                "scan": "{_Scan}",
+                "baseline": "{_Baseline}",
+                "ant": "{_Ant}"}
 
     col_names = {
         "antenna1": "ANTENNA1", "scan": "SCAN_NUMBER",
@@ -481,7 +481,7 @@ def shadems(pipeline, recipe, basic, extras=None):
         if iterate and (iterate in iter_axes):
             shadems_keys.update(
                 {f"iter-{iterate}": True,
-                 "png": f"{basic['output']}-corr-{_corr}{iter_axes[iterate]}.png"})
+                "png": f"{basic['output']}-corr-{_corr}{iter_axes[iterate]}.png"})
 
         if shadems_keys["colour-by"] == "baseline":
             shadems_keys["colour-by"] = "UV"
@@ -493,8 +493,8 @@ def shadems(pipeline, recipe, basic, extras=None):
         shadems_keys = check_params(shadems_keys)
 
         recipe.add("cab/shadems", step, shadems_keys,
-                   input=pipeline.input, output=output_dir,
-                   label=label, memory_limit=None, cpus=None)
+                    input=pipeline.input, output=output_dir,
+                    label=label, memory_limit=None, cpus=None)
 
 
 def ragavi_vis(pipeline, recipe, basic, extras=None):
@@ -531,8 +531,8 @@ def ragavi_vis(pipeline, recipe, basic, extras=None):
     ragavi_keys = check_params(ragavi_keys)
 
     recipe.add("cab/ragavi_vis", step, ragavi_keys,
-               input=pipeline.input, output=output_dir,
-               label=label, memory_limit=None, cpus=None)
+                input=pipeline.input, output=output_dir,
+                label=label, memory_limit=None, cpus=None)
 
 
 # main function
@@ -568,7 +568,7 @@ def worker(pipeline, recipe, config):
 
     for iobs in range(nobs):
         mslist = pipeline.get_mslist(iobs, label_in,
-                                     target=(config['field'] == 'target'))
+                                    target=(config['field'] == 'target'))
 
         for ms in mslist:
             if not ms_exists(pipeline.msdir, ms):

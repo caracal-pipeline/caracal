@@ -7,7 +7,6 @@ import caracal.dispatch_crew.caltables as mkct
 import numpy as np
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal.dispatch_crew import utils
-from caracal.utils.requires import extras
 
 NAME = "Prepare Data for Processing"
 LABEL = 'prep'
@@ -22,7 +21,7 @@ def getfield_coords(info, field, db, tol=2.9E-3, tol_diff=4.8481E-6):
     info (dict): dictionary of obsinfo as read by yaml
     field (str): field name
     db (dict):   calibrator data base as returned by
-                 calibrator_database()
+                calibrator_database()
     Go through all calibrators in db and return the first that matches
     the coordinates of field in msinfo. Return empty string if not
     found.
@@ -35,7 +34,7 @@ def getfield_coords(info, field, db, tol=2.9E-3, tol_diff=4.8481E-6):
     firade[0] = np.mod(firade[0], 2 * np.pi)
     dbcp = db.db
     caracal.log.info("Checking for crossmatch")
-    caracal.log.info("Database keys:", dbcp.keys())
+    caracal.log.info(f"Database keys: {dbcp.keys()}")
     for key in dbcp.keys():
         carade = [dbcp[key]['ra'], dbcp[key]['decl']]
         if closeby(carade, firade, tol=tol):
@@ -88,7 +87,6 @@ def worker(pipeline, recipe, config):
                             ra_corr = float(ra_corr * 180.0 / np.pi)
                             dec_corr = float(dec_corr * 180.0 / np.pi)
 
-                            @extras("astropy")
                             def needs_astropy():
                                 from astropy.coordinates import SkyCoord
                                 return SkyCoord(ra_corr, dec_corr, unit='deg')
@@ -98,16 +96,16 @@ def worker(pipeline, recipe, config):
                             coordstring = 'J2000 ' + c.to_string('hmsdms')
                             step = 'fixuvw-ms{0:d}-{1:s}'.format(i, f)
                             recipe.add('cab/casa_fixvis', step,
-                                       {
-                                           "vis": msname,
-                                           "field": f,
-                                           "phasecenter": coordstring,
-                                           "reuse": False,
-                                           "outputvis": msname,
-                                       },
-                                       input=pipeline.input,
-                                       output=pipeline.output,
-                                       label='{0:s}:: Fix bpcal coordinates ms={1:s}'.format(step, msname))
+                                        {
+                                            "vis": msname,
+                                            "field": f,
+                                            "phasecenter": coordstring,
+                                            "reuse": False,
+                                            "outputvis": msname,
+                                        },
+                                        input=pipeline.input,
+                                        output=pipeline.output,
+                                        label='{0:s}:: Fix bpcal coordinates ms={1:s}'.format(step, msname))
                         else:
                             caracal.log.error("###### WE RECOMMEND SWITCHING ON THE fixcalcoords OPTION #######")
 
@@ -115,14 +113,14 @@ def worker(pipeline, recipe, config):
                 # fielddb, ra_corr, dec_corr = getfield_coords(msdict, f, db)
                 step = 'fixuvw-ms{:d}'.format(i)
                 recipe.add('cab/casa_fixvis', step,
-                           {
-                               "vis": msname,
-                               "reuse": False,
-                               "outputvis": msname,
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Fix UVW coordinates ms={1:s}'.format(step, msname))
+                            {
+                                "vis": msname,
+                                "reuse": False,
+                                "outputvis": msname,
+                            },
+                            input=pipeline.input,
+                            output=pipeline.output,
+                            label='{0:s}:: Fix UVW coordinates ms={1:s}'.format(step, msname))
 
             if pipeline.enable_task(config, "manage_flags"):
                 mode = config["manage_flags"]["mode"]
@@ -143,8 +141,8 @@ def worker(pipeline, recipe, config):
                         if available_flagversions[-1] != version:
                             step = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, i)
                             manflags.delete_cflags(pipeline, recipe,
-                                                   available_flagversions[available_flagversions.index(version) + 1],
-                                                   msname, cab_name=step)
+                                                    available_flagversions[available_flagversions.index(version) + 1],
+                                                    msname, cab_name=step)
                 elif mode == "restore":
                     version = config["manage_flags"]["version"]
                     if version == 'auto':
@@ -156,8 +154,8 @@ def worker(pipeline, recipe, config):
                         if available_flagversions[-1] != version:
                             step = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, i)
                             manflags.delete_cflags(pipeline, recipe,
-                                                   available_flagversions[available_flagversions.index(version) + 1],
-                                                   msname, cab_name=step)
+                                                    available_flagversions[available_flagversions.index(version) + 1],
+                                                    msname, cab_name=step)
                     else:
                         caracal.log.error('The flag version {0:s} you asked to restore does not exist for {1:s}.'.format(version, msname))
                         if version == "caracal_legacy":
@@ -169,64 +167,64 @@ def worker(pipeline, recipe, config):
                 step = 'clearcal-ms{:d}'.format(i)
                 fields = set(pipeline.fcal[i] + pipeline.bpcal[i])
                 recipe.add('cab/casa_clearcal', step,
-                           {
-                               "vis": msname,
-                               "field": ",".join(fields),
-                               "addmodel": config['clearcal']['addmodel']
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Reset MODEL_DATA ms={1:s}'.format(step, msname))
+                            {
+                                "vis": msname,
+                                "field": ",".join(fields),
+                                "addmodel": config['clearcal']['addmodel']
+                            },
+                            input=pipeline.input,
+                            output=pipeline.output,
+                            label='{0:s}:: Reset MODEL_DATA ms={1:s}'.format(step, msname))
 
             if pipeline.enable_task(config, "specweights"):
                 specwts = config['specweights']["mode"]
                 if specwts == "uniform":
                     step = 'init_ws-ms{:d}'.format(i)
                     recipe.add('cab/casa_script', step,
-                               {
-                                   "vis": msname,
-                                   "script": "vis = os.path.join(os.environ['MSDIR'], '{:s}')\n"
-                                   "initweights(vis=vis, wtmode='weight', dowtsp=True)".format(msname),
-                               },
-                               input=pipeline.input,
-                               output=pipeline.output,
-                               label='{0:s}:: Adding Spectral weights using MeerKAT noise specs ms={1:s}'.format(step, msname))
+                                {
+                                    "vis": msname,
+                                    "script": "vis = os.path.join(os.environ['MSDIR'], '{:s}')\n"
+                                    "initweights(vis=vis, wtmode='weight', dowtsp=True)".format(msname),
+                                },
+                                input=pipeline.input,
+                                output=pipeline.output,
+                                label='{0:s}:: Adding Spectral weights using MeerKAT noise specs ms={1:s}'.format(step, msname))
 
                 elif specwts == "calculate":
                     _config = config["specweights"]
                     step = 'calculate_ws-ms{:d}'.format(i)
                     recipe.add('cab/msutils', step,
-                               {
-                                   "msname": msname,
-                                   "command": 'estimate_weights',
-                                   "stats_data": _config['calculate']['statsfile'],
-                                   "weight_columns": _config['calculate']['weightcols'],
-                                   "noise_columns": _config['calculate']['noisecols'],
-                                   "write_to_ms": _config['calculate']['apply'],
-                                   "plot_stats": prefix_msbase + '-noise_weights.png',
-                               },
-                               input=pipeline.input,
-                               output=pipeline.diagnostic_plots,
-                               label='{0:s}:: Adding Spectral weights using MeerKAT noise specs ms={1:s}'.format(step, msname))
+                                {
+                                    "msname": msname,
+                                    "command": 'estimate_weights',
+                                    "stats_data": _config['calculate']['statsfile'],
+                                    "weight_columns": _config['calculate']['weightcols'],
+                                    "noise_columns": _config['calculate']['noisecols'],
+                                    "write_to_ms": _config['calculate']['apply'],
+                                    "plot_stats": prefix_msbase + '-noise_weights.png',
+                                },
+                                input=pipeline.input,
+                                output=pipeline.diagnostic_plots,
+                                label='{0:s}:: Adding Spectral weights using MeerKAT noise specs ms={1:s}'.format(step, msname))
 
                 elif specwts == "delete":
                     step = 'delete_ws-ms{:d}'.format(i)
                     recipe.add('cab/casa_script', step,
-                               {
-                                   "vis": msname,
-                                   "script": "vis = os.path.join(os.environ['MSDIR'], '{msname:s}') \n"
-                                   "colname = '{colname:s}' \n"
-                                   "tb.open(vis, nomodify=False) \n"
-                                   "try: tb.colnames().index(colname) \n"
-                                   "except ValueError: pass \n"
-                                   "finally: tb.close(); quit \n"
-                                   "tb.open(vis, nomodify=False) \n"
-                                   "try: tb.removecols(colname) \n"
-                                   "except RuntimeError: pass \n"
-                                   "finally: tb.close()".format(msname=msname, colname="WEIGHT_SPECTRUM"),
-                               },
-                               input=pipeline.input,
-                               output=pipeline.output,
-                               label='{0:s}:: deleting WEIGHT_SPECTRUM if it exists ms={1:s}'.format(step, msname))
+                                {
+                                    "vis": msname,
+                                    "script": "vis = os.path.join(os.environ['MSDIR'], '{msname:s}') \n"
+                                    "colname = '{colname:s}' \n"
+                                    "tb.open(vis, nomodify=False) \n"
+                                    "try: tb.colnames().index(colname) \n"
+                                    "except ValueError: pass \n"
+                                    "finally: tb.close(); quit \n"
+                                    "tb.open(vis, nomodify=False) \n"
+                                    "try: tb.removecols(colname) \n"
+                                    "except RuntimeError: pass \n"
+                                    "finally: tb.close()".format(msname=msname, colname="WEIGHT_SPECTRUM"),
+                                },
+                                input=pipeline.input,
+                                output=pipeline.output,
+                                label='{0:s}:: deleting WEIGHT_SPECTRUM if it exists ms={1:s}'.format(step, msname))
                 else:
                     raise RuntimeError("Specified specweights [{0:s}] mode is unknown".format(specwts))

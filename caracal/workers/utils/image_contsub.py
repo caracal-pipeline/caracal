@@ -5,7 +5,6 @@ from datetime import datetime
 import numpy as np
 import argparse
 import textwrap
-from caracal.utils.requires import extras
 
 version = '1.0.2'
 
@@ -14,7 +13,6 @@ def printime(string):
     now = datetime.now().strftime("%H:%M:%S")
     print('{} {}'.format(now, string))
 
-@extras(packages=["scipy", "astropy"])
 def imcontsub(
     incubus, outcubus=None, fitmode='median', length=0,
     polyorder=None, mask=None, sgiters=0, kertyp='gauss', kersiz=0,

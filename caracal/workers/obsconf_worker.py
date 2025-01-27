@@ -37,14 +37,14 @@ def worker(pipeline, recipe, config):
                 else:
                     step = f'listobs-ms{i}'
                     recipe.add('cab/casa_listobs', step,
-                               {
-                                   "vis": msname,
-                                   "listfile": obsinfo,
-                                   "overwrite": True,
-                               },
-                               input=pipeline.input,
-                               output=pipeline.msdir,
-                               label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
+                                {
+                                    "vis": msname,
+                                    "listfile": obsinfo,
+                                    "overwrite": True,
+                                },
+                                input=pipeline.input,
+                                output=pipeline.msdir,
+                                label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
 
             if config['obsinfo']['summary_json']:
                 if os.path.exists(os.path.join(pipeline.msdir, summary)):
@@ -52,29 +52,29 @@ def worker(pipeline, recipe, config):
                 else:
                     step = f'summary_json-ms{i}'
                     recipe.add('cab/msutils', step,
-                               {
-                                   "msname": msname,
-                                   "command": 'summary',
-                                   "display": False,
-                                   "outfile": summary,
-                               },
-                               input=pipeline.input,
-                               output=pipeline.msdir,
-                               label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
+                                {
+                                    "msname": msname,
+                                    "command": 'summary',
+                                    "display": False,
+                                    "outfile": summary,
+                                },
+                                input=pipeline.input,
+                                output=pipeline.msdir,
+                                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
 
             if config['obsinfo']['vampirisms']:
                 step = 'vampirisms-ms{0:d}'.format(i)
                 recipe.add('cab/sunblocker', step,
-                           {
-                               "command": 'vampirisms',
-                               "inset": msname,
-                               "dryrun": True,
-                               "nononsoleil": True,
-                               "verb": True,
-                           },
-                           input=pipeline.input,
-                           output=pipeline.msdir,
-                           label='{0:s}:: Note sunrise and sunset'.format(step))
+                            {
+                                "command": 'vampirisms',
+                                "inset": msname,
+                                "dryrun": True,
+                                "nononsoleil": True,
+                                "verb": True,
+                            },
+                            input=pipeline.input,
+                            output=pipeline.msdir,
+                            label='{0:s}:: Note sunrise and sunset'.format(step))
 
             if pipeline.enable_task(config['obsinfo'], 'plotelev'):
                 if os.path.exists(os.path.join(pipeline.msdir, elevplot)):
@@ -83,24 +83,24 @@ def worker(pipeline, recipe, config):
                     step = "elevation-plots-ms{:d}".format(i)
                     if config['obsinfo']["plotelev"]["plotter"] in ["plotms"]:
                         recipe.add("cab/casa_plotms", step, {
-                                   "vis": msname,
-                                   "xaxis": "hourangle",
-                                   "yaxis": "elevation",
-                                   "coloraxis": "field",
-                                   "plotfile": elevplot,
-                                   "overwrite": True,
-                                   },
-                                   input=pipeline.input,
-                                   output=pipeline.msdir,
-                                   label="{:s}:: Plotting elevation tracks".format(step))
+                                    "vis": msname,
+                                    "xaxis": "hourangle",
+                                    "yaxis": "elevation",
+                                    "coloraxis": "field",
+                                    "plotfile": elevplot,
+                                    "overwrite": True,
+                                    },
+                                    input=pipeline.input,
+                                    output=pipeline.msdir,
+                                    label="{:s}:: Plotting elevation tracks".format(step))
                     elif config['obsinfo']["plotelev"]["plotter"] in ["owlcat"]:
                         recipe.add("cab/owlcat_plotelev", step, {
-                                   "msname": msname,
-                                   "output-name": elevplot
-                                   },
-                                   input=pipeline.input,
-                                   output=pipeline.msdir,
-                                   label="{:s}:: Plotting elevation tracks".format(step))
+                                    "msname": msname,
+                                    "output-name": elevplot
+                                    },
+                                    input=pipeline.input,
+                                    output=pipeline.msdir,
+                                    label="{:s}:: Plotting elevation tracks".format(step))
 
     # if any steps at all were inserted, run the recipe
     if step is not None:
@@ -149,7 +149,7 @@ def worker(pipeline, recipe, config):
             if len(info_on_line) > 2:
                 if info_on_line[0].lower() == 'observed' and info_on_line[1].lower() == 'from':
                     calender_month_abbr = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov',
-                                           'dec']
+                                        'dec']
                     startdate, starttime = info_on_line[2].split('/')
                     hr, minute, sec = starttime.split(':')
                     day, month_abbr, year = startdate.split('-')
@@ -184,6 +184,10 @@ def worker(pipeline, recipe, config):
         pipeline.chanwidth[i] = chanwidth
         caracal.log.info('  CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
             ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
+        
+        exposure = msdict["EXPOSURE"]
+        caracal.log.info(f'  Exposure time: {exposure:.2g} seconds')
+        caracal.log.info(" ")
         if i == pipeline.nobs - 1 and np.max(pipeline.chanwidth) > 0 and np.min(pipeline.chanwidth) < 0:
             caracal.log.err('Some datasets have a positive channel increment, some negative. This will lead to errors. Exiting')
             raise caracal.BadDataError("MSs with mixed channel ordering not supported")
@@ -222,8 +226,8 @@ def worker(pipeline, recipe, config):
                 # complain if not found, unless it's 'xcal', which is only for polcal, so let that worker complain
                 if term != "xcal":
                     raise RuntimeError(f"Can't find an appropriate FIELD for obsinfo: {term}: {conf_fields_str}. "
-                                       "Please check this config setting. It may also be that your MS scan intents "
-                                       f"are not pupulated correctly, in which case you must set {term} to a list of explicit field names.")
+                                        "Please check this config setting. It may also be that your MS scan intents "
+                                        f"are not pupulated correctly, in which case you must set {term} to a list of explicit field names.")
                 continue
 
 #            caracal.log.info("    ====================================")
@@ -240,9 +244,13 @@ def worker(pipeline, recipe, config):
                 _ra.append(ra)
                 _dec.append(dec)
                 _fid.append(fid)
-                tobs = utils.field_observation_length(msdict, f) / 60.0
-                caracal.log.info(
-                    '    {0:s} (ID={1:d}) : {2:.2f} minutes | RA={3:.2f} deg, Dec={4:.2f} deg'.format(f, fid, tobs, ra, dec))
+                tobs, scans = utils.field_observation_length(msdict, f, return_scans=True)
+                caracal.log.info(f'    {f:s} (ID={fid:d})')
+                caracal.log.info(f'      {tobs/60:.2f} minutes ({int(tobs/exposure)} timeslots)' )
+                scan_tslots = [str(int(sc/exposure)) for sc in scans]
+                caracal.log.info(f'      Scan timeslots: {", ".join(scan_tslots)}')
+                caracal.log.info(f'      RA={ra:.2f} deg, Dec={dec:.2f} deg')
+                caracal.log.info(f'---')
             getattr(pipeline, term + "_ra")[i] = _ra
             getattr(pipeline, term + "_dec")[i] = _dec
             getattr(pipeline, term + "_id")[i] = _fid

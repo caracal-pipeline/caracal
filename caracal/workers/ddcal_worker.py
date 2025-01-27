@@ -7,18 +7,16 @@ import caracal
 import stimela.dismissable as sdm
 from caracal.dispatch_crew import utils
 from stimela.pathformatter import pathformatter as spf
-from caracal.utils.requires import extras
 
 NAME = 'Direction-dependent Calibration'
 LABEL = "ddcal"
 
 
-@extras(packages=["astropy", "regions"])
 def worker(pipeline, recipe, config):
     from astropy.coordinates import SkyCoord
     from astropy import units as u
     from astropy.wcs import WCS
-    from regions import PixCoord, write_ds9, PolygonPixelRegion
+    from regions import PixCoord, Regions, PolygonPixelRegion
     npix = config['image_dd']['npix']
     cell = config['image_dd']['cell']
     use_mask = config['image_dd']['use_mask']
@@ -91,10 +89,10 @@ def worker(pipeline, recipe, config):
             "coefficients-file": "meerkat_beam_coeffs_em_zp_dct.npy", }
 
         recipe.add("cab/eidos", "make-pb", eidos_opts,
-                   input=INPUT,
-                   output=OUTPUT,
-                   label="make-pb:: Generate primary beams from Eidos",
-                   shared_memory=shared_mem)
+                    input=INPUT,
+                    output=OUTPUT,
+                    label="make-pb:: Generate primary beams from Eidos",
+                    shared_memory=shared_mem)
 
     def dd_precal_image(field, ms_list):
         dd_image_opts_precal = copy.deepcopy(dd_image_opts)
@@ -106,10 +104,10 @@ def worker(pipeline, recipe, config):
             dd_imagename = {"Output-Name": image_prefix_precal + "-DD-masking"}  # Add the mask image prefix
             dd_image_opts_precal.update(dd_imagename)
             recipe.add("cab/ddfacet", "ddf_image-for_mask-{0:s}".format(field), dd_image_opts_precal,
-                       input=INPUT,
-                       output=OUTPUT,
-                       label="ddf_image-for_mask-{0:s}:: DDFacet image for masking".format(field),
-                       shared_memory=shared_mem)
+                        input=INPUT,
+                        output=OUTPUT,
+                        label="ddf_image-for_mask-{0:s}:: DDFacet image for masking".format(field),
+                        shared_memory=shared_mem)
 
             imname = '{0:s}{1:s}.app.restored.fits'.format(image_prefix_precal, "-DD-masking")
             output_folder = "/" + outdir
@@ -131,9 +129,9 @@ def worker(pipeline, recipe, config):
             dd_maskopt = {"Mask-External": "{0:s}mask_ddf_precal_{1:s}.fits:output".format(output_folder, field)}
             dd_image_opts_precal.update(dd_maskopt)
         recipe.add("cab/ddfacet", "ddf_image-{0:s}".format(field), dd_image_opts_precal,
-                   input=INPUT,
-                   output=OUTPUT,
-                   label="ddf_image-{0:s}:: DDFacet initial image for DD calibration".format(field), shared_memory=shared_mem)
+                    input=INPUT,
+                    output=OUTPUT,
+                    label="ddf_image-{0:s}:: DDFacet initial image for DD calibration".format(field), shared_memory=shared_mem)
         recipe.run()
         recipe.jobs = []
 
@@ -151,10 +149,10 @@ def worker(pipeline, recipe, config):
             dd_imagename = {"Output-Name": image_prefix_postcal + "-DD-masking"}
             dd_image_opts_postcal.update(dd_imagename)
             recipe.add("cab/ddfacet", "ddf_image-postcal-{0:s}".format(field), dd_image_opts_postcal,
-                       input=INPUT,
-                       output=OUTPUT,
-                       label="ddf_image-postcal-{0:s}:: Primary beam corrected image".format(field),
-                       shared_memory=shared_mem)
+                        input=INPUT,
+                        output=OUTPUT,
+                        label="ddf_image-postcal-{0:s}:: Primary beam corrected image".format(field),
+                        shared_memory=shared_mem)
             imname = '{0:s}{1:s}.app.restored.fits'.format(image_prefix_postcal, "-DD-masking")
             output_folder = "/" + outdir
             recipe.add("cab/cleanmask", "mask_ddf-postcal-{0:s}".format(field), {
@@ -182,34 +180,10 @@ def worker(pipeline, recipe, config):
             dd_image_opts_postcal.update(dd_beamopts)
 
         recipe.add("cab/ddfacet", "ddf_image-postcal-{0:s}".format(field), dd_image_opts_postcal,
-                   input=INPUT,
-                   output=OUTPUT,
-                   label="ddf_image-postcal-{0:s}:: Primary beam corrected image".format(field),
-                   shared_memory=shared_mem)
-
-#    def sfind_intrinsic():
-#        DDF_INT_IMAGE = prefix+"-DD-precal.int.restored.fits:output"
-#        DDF_APP_IMAGE = prefix+"-DD-precal.app.restored.fits:output"
-#        if usepb:
-#           main_image = DDF_INT_IMAGE
-#        else:
-#           main_image = DDF_APP_IMAGE
-#
-#        recipe.add("cab/pybdsm", "intrinsic_sky_model",{
-#          "filename" : main_image,
-#          "outfile"  : "DDF_lsm",
-#          "detection_image" : DDF_APP_IMAGE,
-#          "thresh_pix"        : 100,
-#          "clobber"           : True,
-#          "thresh_isl"        : 30,
-#          "port2tigger"       : True,
-#          "clobber"           : True,
-#          "adaptive_rms_box"  : True,
-#          "spectralindex_do"  : False,
-#          },
-#          input=INPUT,
-#          output=OUTPUT,
-#          label="intrinsic_sky_model:: Find sources in the beam-corrected image")
+                    input=INPUT,
+                    output=OUTPUT,
+                    label="ddf_image-postcal-{0:s}:: Primary beam corrected image".format(field),
+                    shared_memory=shared_mem)
 
     def dagga(field):
         "function to tag sources for dd calibration, very smoky"
@@ -236,7 +210,7 @@ def worker(pipeline, recipe, config):
             }
 
             recipe.add('cab/catdagger', 'tag_sources-auto_mode', catdagger_opts, input=INPUT,
-                       output=OUTPUT + "/" + outdir, label='tag_sources-auto_mode::Tag dE sources with CatDagger', shared_memory=shared_mem)
+                        output=OUTPUT + "/" + outdir, label='tag_sources-auto_mode::Tag dE sources with CatDagger', shared_memory=shared_mem)
 
         if de_sources_mode == 'manual':
             img = prefix + "_" + field + "-DD-precal.app.restored.fits"
@@ -269,8 +243,7 @@ def worker(pipeline, recipe, config):
                 reg.append(region_dd)
             regfile = "de-{0:s}.reg".format(field)
             ds9_file = os.path.join(OUTPUT, outdir, regfile)
-            # This needs to be rewritten. write_ds9 does not exist any more
-            write_ds9(reg, ds9_file, coordsys='physical')
+            Regions(reg).write(ds9_file, format='ds9', overwrite=True)
 
     def dd_calibrate(field, mslist):
         key = 'calibrate_dd'

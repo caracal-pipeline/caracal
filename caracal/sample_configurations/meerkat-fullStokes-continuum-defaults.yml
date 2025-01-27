@@ -7,17 +7,8 @@ getdata:
   dataid: ['MS']
 
 obsconf:
-  target:
-    - all
-  fcal:
-    - longest
-  bpcal:
-    - longest
-  gcal:
-    - all
   xcal:
     - 'J0521+1638'
-  refant: 'm008'
 
 transform:
   enable: true

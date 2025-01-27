@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "caracal"
-version = "1.1.1"
+version = "1.1.5"
 description = "Containerized Automated Radio Astronomy Calibration"
 authors = ["The CaraCAL Team <caracal-info@googlegroups.com>"]
 readme = "README.rst"
@@ -8,12 +8,12 @@ homepage = "https://github.com/caracal-pipeline/caracal"
 repository = "https://github.com/caracal-pipeline/caracal"
 keywords = ["Astronomy", "Visualisation", "Pipelines"]
 classifiers = [
-          "Development Status :: 5 - Production/Stable",
-          "Intended Audience :: Science/Research",
-          "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
-          "Operating System :: POSIX :: Linux",
-          "Programming Language :: Python",
-          "Topic :: Scientific/Engineering :: Astronomy"
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+        "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python",
+        "Topic :: Scientific/Engineering :: Astronomy"
 ]
 license = "GNU GPL v2"
 packages = [
@@ -24,30 +24,27 @@ packages = [
 caracal = "caracal.main:driver"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = ">=3.8,<3.12"
 stimela = "^1.7.6"
 psutil = "^5.9.4"
 pykwalify = "^1.8.0"
 progressbar2 = "^4.2.0"
 "ruamel.yaml" = "^0.17.21"
-numpy = "*"
+astropy = [
+    { version = "5.2.2", python = "3.8"},
+    { version = "^5.3.3", python = "^3.9"},
+]
+scipy = "*"
+regions = "*"
+astroquery = "*"
+numpy = "<2.0"
 
 # These are not essentail for the pipeline to run, so better to not pin the versions.
-# TODO(sphe) these packages have to be moved to extras eventually
 nbconvert = "*"
 radiopadre-client = "*"
 python-casacore = "*"
 matplotlib = "*"
 jinja2 = "*"
-
-# Optional dependencies start here
-astropy = [
-    { version = "^5.2.2", python = "^3.8", optional = true},
-    {version = "4.3.1", python = "3.7", optional = true },
-    ]
-scipy = { version = "*", optional = true}
-regions = { version = "*", optional = true}
-astroquery = { version = "*", optional = true}
 
 [build-system]
 requires = ["setuptools", "poetry-core"]
@@ -65,12 +62,11 @@ all = ["scipy", "astropy", "regions", "astroquery"]
 optional = true
 [tool.poetry.group.tests.dependencies]
 pytest = "^7.1.3"
-flake8 = "*"
+flake8 = "^5.0.0"
 
 [tool.poetry.group.docs]
 optional = true
 [tool.poetry.group.docs.dependencies]
-Sphinx = "^5.3.0"
+Sphinx = "^4.0.1"
 sphinx-copybutton = "^0.5.0"
 furo = "^2022.9.15"
-

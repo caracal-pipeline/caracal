@@ -4,20 +4,14 @@ general:
   prefix: mypipelinerun
 
 getdata:
-  dataid: ['MS']
+  dataid: ['']
+  extension: ms
 
 obsconf:
-  target:
-    - all
-  fcal:
-    - longest
-  bpcal:
-    - longest
-  gcal:
-    - all
+  refant: '0'
   xcal:
     - 'J0521+1638'
-  refant: 'm008'
+
 
 transform:
   enable: true
@@ -31,52 +25,36 @@ prep:
   enable: true
   label_in: cal
   field: calibrators
-  specweights:
-    enable: true
-    mode: uniform
 
 flag:
   enable: true
-  field: calibrators
+  field: calibrators 
   label_in: cal
-  flag_shadow:
-    enable: true
-  flag_autocorr:
-    enable: true
   flag_rfi:
     enable: true
-    flagger: tfcrop
+    flagger: aoflagger
+  flag_autocorr:
+    enable: true
+  flag_shadow:
+    enable: true
+  report: true
 
 crosscal:
   enable: true
-  uvrange: '>150'
   label_in: cal
-  label_cal: 1kgb
-  set_model:
-    enable: true
-    meerkat_skymodel: true
-  primary:
-    reuse_existing_gains: false
-    order: KGBAKGBK
-    combine: ["","","",null,"", "", "scan","scan"]
-    solint: [inf, inf, inf, null, 60s, 60s, inf,inf]
-    calmode: [a, ap, ap, null, a, ap, ap, a]
-    b_fillgaps: 70
-    plotgains: true
-  secondary:
-    reuse_existing_gains: false
-    order: GAF
-    apply: KB
-    combine: ["",null,""]
-    solint: [inf,null,inf]
-    calmode: [ap,null,ap]
-    plotgains: true
   apply_cal:
     applyto:
       - gcal
       - bpcal
       - xcal
+  report: true
 
+inspect:
+  label_in: cal
+  label_plot: 1gc
+  dirname: crosscal
+  enable: true
+  
 # regardless the polcal strategy, the set_model_leakage section is necessary if the input MS has been splitted after crosscal (MODEL COL. MUST BE FILLED) otherwise you can remove it and save time
 #
 # first polcal strategy is when you have a good unpolarized calibrator and 3C138 or 3C286 for the phase and delay
@@ -86,16 +64,13 @@ polcal:
   label_cal: 1pcal
   otfcal:
     enable: true
-    label_cal: 1kgb
+    label_cal: 1gc
   extendflags: True
   feed_angle_rotation: '-90'
   uvrange: '>150'
   reuse_existing_tables: false
   pol_calib: xcal
   leakage_calib: fcal
-  set_model_leakage:
-    enable: true
-    meerkat_skymodel: true
   set_model_pol: true
   gain_solint: '60s'
   time_solint: 'inf'
@@ -113,7 +88,7 @@ polcal__2:
   label_cal: 2pcal
   otfcal:
     enable: true
-    label_cal: 1kgb
+    label_cal: 1gc
   extendflags: True
   feed_angle_rotation: '-90'
   uvrange: '>150'
@@ -137,7 +112,7 @@ polcal__3:
   label_cal: 3pcal
   otfcal:
     enable: true
-    label_cal: 1kgb
+    label_cal: 1gc
   extendflags: True
   feed_angle_rotation: '-90'
   uvrange: '>150'
@@ -154,3 +129,8 @@ polcal__3:
     - bpcal
     - xcal
 
+inspect:
+  label_in: cal
+  label_plot: 1pcal
+  dirname: polcal
+  enable: true

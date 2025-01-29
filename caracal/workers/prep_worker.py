@@ -163,7 +163,7 @@ def worker(pipeline, recipe, config):
                             caracal.log.error('    prepare_data: manage_flags: mode: save_legacy_flags')
                         raise RuntimeError('Flag version conflicts')
 
-            if config["clearcal"]:
+            if pipeline.enable_task(config, "clearcal"):
                 step = 'clearcal-ms{:d}'.format(i)
                 fields = set(pipeline.fcal[i] + pipeline.bpcal[i])
                 recipe.add('cab/casa_clearcal', step,

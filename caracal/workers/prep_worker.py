@@ -184,7 +184,7 @@ def worker(pipeline, recipe, config):
                                 {
                                     "vis": msname,
                                     "script": "vis = os.path.join(os.environ['MSDIR'], '{:s}')\n"
-                                    "initweights(vis=vis, wtmode='weight', dowtsp=True)".format(msname),
+                                    "initweights(vis=vis, wtmode='ones', dowtsp=True)".format(msname),
                                 },
                                 input=pipeline.input,
                                 output=pipeline.output,

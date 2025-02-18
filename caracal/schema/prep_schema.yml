@@ -95,7 +95,7 @@ mapping:
           mode:
             desc: Mode for spectral weights. Options are 'uniform' (set all weights to unity), 'estimate' (estimate spectral weights from frequency-dependent SEFD/Tsys/Noise values, and see 'estimate' segment of this section), and 'delete' (delete WEIGHT_SPECTRUM column if it exists).
             type: str
-            enum: ["uniform", "estimate", "delete"]
+            enum: ["uniform", "calculate", "delete"]
             required: false
             example: 'uniform'
           calculate:

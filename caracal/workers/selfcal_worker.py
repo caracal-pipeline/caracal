@@ -1826,7 +1826,8 @@ def worker(pipeline, recipe, config):
         
             if gupdate == 'phase-diag' and matrix_type == 'Fslope':
                 g_table_name = "{0:s}/{3:s}-g-delay-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                       pipeline), num, os.path.splitext(fromname)[0], prefix)            elif gupdate == 'phase-diag':
+                                                                                                       pipeline), num, os.path.splitext(fromname)[0], prefix)
+            elif gupdate == 'phase-diag':
                 g_table_name = "{0:s}/{3:s}-g-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                          pipeline), num, os.path.splitext(fromname)[0], prefix)
             elif gupdate == 'amp-diag':

@@ -1642,6 +1642,7 @@ def worker(pipeline, recipe, config):
         # to achieve accurate restauration we need to reset all parameters properly
         matrix_type = config[key]['gain_matrix_type'][
             num - 1 if len(config[key]['gain_matrix_type']) >= num else -1]
+
         # Decide if take diagonal terms into account
         if matrix_type == 'Gain2x2':
             take_diag_terms = False
@@ -1820,10 +1821,12 @@ def worker(pipeline, recipe, config):
                 "dd-dd-term": False,
                 "model-ddes": 'never',
             }
-            # Set the table name
+
+            matrix_type = config[key]['gain_matrix_type'][num - 1 if len(config[key]['gain_matrix_type']) >= num else -1]
+        
             if gupdate == 'phase-diag' and matrix_type == 'Fslope':
                 g_table_name = "{0:s}/{3:s}-g-delay-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                         pipeline), num, os.path.splitext(fromname)[0], prefix)
+                                                                                                       pipeline), num, os.path.splitext(fromname)[0], prefix)
             elif gupdate == 'phase-diag':
                 g_table_name = "{0:s}/{3:s}-g-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                          pipeline), num, os.path.splitext(fromname)[0], prefix)

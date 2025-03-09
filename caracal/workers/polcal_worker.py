@@ -37,6 +37,52 @@ def scan_length(msinfo, field):
     idx = utils.get_field_id(msinfo, field)[0]
     return float(utils.field_observation_length(msinfo, field)) / len(msinfo['SCAN'][str(idx)])
 
+def configure_set_model_leakage(config, pipeline, msname, leak_field):
+    """Configura le opzioni per la calibrazione `set_model_leakage`."""
+    if config['set_model_leakage']['unity']:
+        return {
+            "vis": msname,
+            "field": leak_field,
+            "standard": "manual",
+            "scalebychan": True,
+            "usescratch": True,
+        }
+    modelsky = utils.find_in_native_calibrators(msinfo, leak_field, mode='sky')
+    modelpoint = utils.find_in_native_calibrators(msinfo, leak_field, mode='mod')
+    standard = utils.find_in_casa_calibrators(msinfo, leak_field)
+    if config['set_model_leakage']['meerkat_skymodel'] and modelsky:
+        # use local sky model of calibrator field if exists
+        return {
+            "skymodel": modelsky,
+            "msname": msname,
+            "field-id": utils.get_field_id(msinfo, leak_field)[0],
+            "threads": config["set_model_leakage"]['threads'],
+            "mode": "simulate",
+            "tile-size": config["set_model_leakage"]["tile_size"],
+            "column": "MODEL_DATA",
+        }
+    elif modelpoint:  # spectral model if specified in our standard
+        return {
+            "vis": msname,
+            "field": leak_field,
+            "standard": "manual",
+            "fluxdensity": modelpoint['I'],
+            "reffreq": '{0:f}GHz'.format(modelpoint['ref'] / 1e9),
+            "spix": [modelpoint[a] for a in 'abcd'],
+            "scalebychan": True,
+            "usescratch": True,
+        }
+    elif standard:  # NRAO model otherwise
+        return {
+            "vis": msname,
+            "field": leak_field,
+            "standard": standard,
+            "usescratch": True,
+            "scalebychan": True,
+        }
+    else:
+        raise RuntimeError('The flux calibrator field "{}" could not be '
+                           'found in our database or in the CASA NRAO database'.format(leak_field))
 
 def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, ref, polarized_calibrators, caltablelist,
                          gainfieldlist, interplist, calwtlist, applylist, leak_caltablelist,
@@ -75,51 +121,7 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
 
     if not docal:
         if pipeline.enable_task(config, 'set_model_leakage'):
-            if config['set_model_leakage']['unity']:
-                opts = {
-                    "vis": msname,
-                    "field": leak_field,
-                    "standard": "manual",
-                    "scalebychan": True,
-                    "usescratch": True,
-                }
-            else:
-                modelsky = utils.find_in_native_calibrators(msinfo, leak_field, mode='sky')
-                modelpoint = utils.find_in_native_calibrators(msinfo, leak_field, mode='mod')
-                standard = utils.find_in_casa_calibrators(msinfo, leak_field)
-                if config['set_model_leakage']['meerkat_skymodel'] and modelsky:
-                    # use local sky model of calibrator field if exists
-                    opts = {
-                        "skymodel": modelsky,
-                        "msname": msname,
-                        "field-id": utils.get_field_id(msinfo, leak_field)[0],
-                        "threads": config["set_model_leakage"]['threads'],
-                        "mode": "simulate",
-                        "tile-size": config["set_model_leakage"]["tile_size"],
-                        "column": "MODEL_DATA",
-                    }
-                elif modelpoint:  # spectral model if specified in our standard
-                    opts = {
-                        "vis": msname,
-                        "field": leak_field,
-                        "standard": "manual",
-                        "fluxdensity": modelpoint['I'],
-                        "reffreq": '{0:f}GHz'.format(modelpoint['ref'] / 1e9),
-                        "spix": [modelpoint[a] for a in 'abcd'],
-                        "scalebychan": True,
-                        "usescratch": True,
-                    }
-                elif standard:  # NRAO model otherwise
-                    opts = {
-                        "vis": msname,
-                        "field": leak_field,
-                        "standard": standard,
-                        "usescratch": True,
-                        "scalebychan": True,
-                    }
-                else:
-                    raise RuntimeError('The flux calibrator field "{}" could not be '
-                                       'found in our database or in the CASA NRAO database'.format(leak_field))
+            opts = configure_set_model_leakage(config, pipeline, msname, leak_field)
             step = 'set_model_cal-{0:d}'.format(i)
             cabtouse = 'cab/casa_setjy'
             recipe.add(cabtouse if "skymodel" not in opts else 'cab/simulator', step,

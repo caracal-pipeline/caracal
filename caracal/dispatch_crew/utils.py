@@ -312,6 +312,31 @@ def find_in_casa_calibrators(info, field):
     return db['standards'][int(standard)]
 
 
+def read_taylor_legodi_row(info, field):
+    """
+    Read the model from `taylor_legodi_2024.txt`
+    """
+    if isinstance(info, str):
+        with open(info, 'r') as f:
+            info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+
+    file_path = caracal.pckgdir + '/data/taylor_legodi_2024.txt'
+
+    with open(file_path, mode="r", encoding="utf-8") as file:
+        lines = file.readlines()
+
+        if not lines:
+            raise ValueError(f"File '{file_path}' is empty.")
+
+        headers = lines[0].strip().split()
+        data_rows = [line.strip().split() for line in lines[1:]]
+
+        for row in data_rows:
+            if row[0] == field:
+                head = ['fluxdensity', 'spix', 'reffreq', 'polindex', 'polangle', 'rotmeas']
+                return dict(zip(head, [row[1], row[3], '1.4GHz', row[7]/100.,row[9]*np.pi/180,row[13]]))
+
+
 def meerkat_refant(obsinfo):
     """ get reference antenna. Only works for MeerKAT observations downloaded through CARACal"""
 

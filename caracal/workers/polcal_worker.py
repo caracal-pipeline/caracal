@@ -1195,7 +1195,7 @@ def worker(pipeline, recipe, config):
                 polarized_calibrators = yaml.safe_load(open(file_path, 'r', encoding='utf-8'))
                 polarized_calibrators["J1331+3030"] = polarized_calibrators["3C286"]
                 polarized_calibrators["J0521+1638"] = polarized_calibrators["3C138"]
-            elif config["set_model_pol"]["taylor_legodi"]:
+            elif config["set_model_pol"]["taylor_legodi_model"]:
                 polarized_calibrators[config["pol_calib"]] = utils.read_taylor_legodi_row(msinfo, config["pol_calib"])
                 polarized_calibrators["3C286"] = polarized_calibrators["J1331+3030"]
                 polarized_calibrators["3C138"] = polarized_calibrators["J0521+1638"]

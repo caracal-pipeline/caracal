@@ -334,7 +334,8 @@ def read_taylor_legodi_row(info, field):
         for row in data_rows:
             if row[0] == field:
                 head = ['fluxdensity', 'spix', 'reffreq', 'polindex', 'polangle', 'rotmeas']
-                return dict(zip(head, [row[1], row[3], '1.4GHz', float(row[7])/100.,float(row[9])*numpy.pi/180,row[13]]))
+                return dict(zip(head, [float(row[1]), float(row[3]), '1.4GHz', float(row[7])/100.,float(row[9])*numpy.pi/180,float(row[13])]))
+        raise ValueError("Field not found in Taylor-Legodi file.")
 
 
 def meerkat_refant(obsinfo):

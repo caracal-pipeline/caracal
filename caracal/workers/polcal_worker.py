@@ -132,7 +132,7 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                        "msname": msname,
                        "usescratch": True,
                        "field": field,
-                       "standard": polarized_calibrators[field]["standard"],
+                       "standard": "manual",
                        "fluxdensity": polarized_calibrators[field]["fluxdensity"],
                        "spix": polarized_calibrators[field]["spix"],
                        "reffreq": polarized_calibrators[field]["reffreq"],
@@ -427,7 +427,7 @@ def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                        "msname": msname,
                        "usescratch": True,
                        "field": field,
-                       "standard": polarized_calibrators[field]["standard"],
+                       "standard": "manual",
                        "fluxdensity": polarized_calibrators[field]["fluxdensity"],
                        "spix": spix,
                        "reffreq": polarized_calibrators[field]["reffreq"],
@@ -1189,16 +1189,19 @@ def worker(pipeline, recipe, config):
                         'XX', 'XY', 'YX', 'YY']))
 
         if config["pol_calib"] != 'none':
-            pol_calib = ",".join(getattr(pipeline, config["pol_calib"])[i])
+            pol_calib = pipeline.config["obsconf"][config["pol_calib"]][i]
             if config["set_model_pol"]["nrao_model"]:
                 file_path = caracal.pckgdir + '/data/nrao_xcal.yml'
                 polarized_calibrators = yaml.safe_load(open(file_path, 'r', encoding='utf-8'))
                 polarized_calibrators["J1331+3030"] = polarized_calibrators["3C286"]
                 polarized_calibrators["J0521+1638"] = polarized_calibrators["3C138"]
             elif config["set_model_pol"]["taylor_legodi_model"]:
-                polarized_calibrators[config["pol_calib"]] = utils.read_taylor_legodi_row(msinfo, config["pol_calib"])
-                polarized_calibrators["3C286"] = polarized_calibrators["J1331+3030"]
-                polarized_calibrators["3C138"] = polarized_calibrators["J0521+1638"]
+                polarized_calibrators = dict.fromkeys(["NAME"])
+                polarized_calibrators[pol_calib] = utils.read_taylor_legodi_row(msinfo, pol_calib)
+                if pol_calib == "3C286":
+                    polarized_calibrators["3C286"] = polarized_calibrators["J1331+3030"]
+                if pol_calib == "3C138":
+                    polarized_calibrators["3C138"] = polarized_calibrators["J0521+1638"]
             elif len(config["set_model_pol"]["user_model"])>0:
                 polarized_calibrators[config["pol_calib"]] = config["set_model_pol"]["user_model"].split(',')
             else:

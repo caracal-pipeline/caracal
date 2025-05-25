@@ -7,11 +7,11 @@ caracal-selfcal:
         image-prefix: /home/ramaila/working/ar1-output-001/calmodel/0408-6
         image-mfs-image: /home/ramaila/working/ar1-output-001/calmodel/0408-6-MFS-image.fits
         image-fits-mask: /home/ramaila/working/ar1-output-001/calmodel/0408-3-mask.fits
-        image-no-update-model-required: false
-        image-col: CORRECTED_DATA
+        image-no-update-model-required: true
+        image-col: FSLOPE_CORRECTED_DATA
         image-npix: 4096
         image-niter: 100000
-        image-threshold: 0.0008
+        image-threshold: 0.0005
         image-multiscale: true
         image-multiscale-bais: 0.5
         image-multiscale-scales: [0, 5, 10, 19]

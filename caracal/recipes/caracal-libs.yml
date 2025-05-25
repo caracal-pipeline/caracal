@@ -14,7 +14,8 @@ opts:
     singularity:
       enable: true
       auto_build: true
-      image_dir: ~/.singularity
+      image_dir: /home/ramaila/working
+      #image_dir: ~/.singularity
     rlimits:
       NOFILE: 10000  # set high limit on number of open files
 
@@ -127,8 +128,8 @@ lib:
             threshold_global: 8
             max_deviation: 1000
           K:
-            time_interval: 128
-            freq_interval: 64
+            time_interval: 1
+            freq_interval: 0
             type: delay_and_offset
             initial_estimate: false
       k-g:
@@ -200,7 +201,7 @@ lib:
           fits-mask: =IFSET(recipe.image-fits-mask)
           auto-mask: =IFSET(recipe.image-auto-mask)
           threads: =IFSET(recipe.ncpu)
-          niter: 100000 #=IFSET(recipe.image-niter)
+          niter: 200000 #=IFSET(recipe.image-niter)
           column: =IFSET(recipe.image-col)
           use-wgridder: true
           #absmem: 500

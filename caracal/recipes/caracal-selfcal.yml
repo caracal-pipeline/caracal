@@ -59,20 +59,10 @@ caracal-selfcal:
         flags.reinit-bitflags: false
         k.save-to: "{recipe.dir-out-base}/PAsol-{info.suffix}"
 
-    image-0:
-      _use: lib.steps.wsclean.image
-      info: image and construct initial image using the PA_CORRECTED_DATA column
-      skip: =IF(recipe.selfcal-pa-rotate, IF(recipe.image-enable, false, true), true)
-      params:
-        column: =IF(recipe.selfcal.pa-rotate, steps.pa-correction-0.out.column, recipe.image-col)
-        no-update-model-required: =recipe.image-no-update-model-required
-
     image-pol-0:
       info: image and construct initial model image using the PA_CORRECTED_DATA column using a mask
       skip: =IF(not recipe.selcal-pa-rotate, IF(recipe.image-enable, false, true), true)
       _use: lib.steps.wsclean.image-pol
-      _scrub:
-        - deconvolution-channels
       params:
         column: =IF(recipe.selfcal.pa-rotate, steps.pa-correction-0.out.column, recipe.image-col)
         no-update-model-required: =recipe.image-no-update-model-required
@@ -107,15 +97,6 @@ caracal-selfcal:
         threshold: 10.0
         dilate: 2
         #boxsize: 60
-
-    image-1:
-      info: image and construct initial model image using the CORRECTED_DATA column using a mask
-      _use: caracal-selfcal.steps.image-0
-      params:
-        ms: =recipe.ms
-        fits-mask: =IF(recipe.image-fits-mask, recipe.image-fits-mask, IF(recipe.image-breizorro-enable, steps.masking-0.mask, UNSET))
-        #fits-mask: =IF(recipe.image-breizorro-enable, steps.masking-0.mask, UNSET)
-        #fits-mask: =steps.masking-0.mask
 
     image-pol-1:
       info: image and construct initial model image using the CORRECTED_DATA column using a mask
@@ -173,14 +154,6 @@ caracal-selfcal:
         ms: =recipe.ms
         versionname: =step.save-flags-0.versionname
         mode: restore
-
-    image-2:
-      info: image and construct initial model image using the FSLOPE_CORRECTED_DATA column using a mask
-      _use: caracal-selfcal.steps.image-1
-      cab: wsclean
-      params:
-        threshold: 0.000030
-        column: FSLOPE_CORRECTED_DATA
 
     image-pol-2:
       info: image and construct initial model image using the FSLOPE_CORRECTED_DATA column using a mask
@@ -261,15 +234,6 @@ caracal-selfcal:
         output.columns: [G_CORRECTED_DATA]
         output.gain_directory: "{recipe.dir-out-base}/KG8-{info.suffix}.qc/"
         output.log_directory: "{recipe.dir-out-base}/KG8-{info.suffix}.qc/log/"
-
-    image-3:
-      info: image using the G_CORRECTED_DATA column using a mask
-      _use: caracal-selfcal.steps.image-0
-      params:
-        threshold: 0.000035
-        column: G_CORRECTED_DATA
-        #no-update-model-required: =recipe.image-no-update-model-required
-        #fits-mask: =IF(recipe.image-breizorro-enable, steps.masking-2.mask, UNSET)
 
     image-pol-3:
       info: image using the G_CORRECTED_DATA column using a mask

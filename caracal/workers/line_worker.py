@@ -975,8 +975,7 @@ def worker(pipeline, recipe, config):
                             caracal.log.info('CDELT = {}'.format(cdelt))
                             caracal.log.info('ChWidth = {}'.format(chanwidth[0]))
 
-
-                            if np.round(cdelt) > np.round(chanwidth[0]*binchans,5):
+                            if np.round(cdelt,5) > np.round(chanwidth[0]*binchans,5):
                                 doSpec = True
                             elif doProj:
                                 pass

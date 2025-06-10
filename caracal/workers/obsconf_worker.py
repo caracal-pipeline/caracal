@@ -184,6 +184,10 @@ def worker(pipeline, recipe, config):
         pipeline.chanwidth[i] = chanwidth
         caracal.log.info('  CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
             ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
+        
+        exposure = msdict["EXPOSURE"]
+        caracal.log.info(f'  Exposure time: {exposure:.2g} seconds')
+        caracal.log.info(" ")
         if i == pipeline.nobs - 1 and np.max(pipeline.chanwidth) > 0 and np.min(pipeline.chanwidth) < 0:
             caracal.log.err('Some datasets have a positive channel increment, some negative. This will lead to errors. Exiting')
             raise caracal.BadDataError("MSs with mixed channel ordering not supported")
@@ -240,9 +244,13 @@ def worker(pipeline, recipe, config):
                 _ra.append(ra)
                 _dec.append(dec)
                 _fid.append(fid)
-                tobs = utils.field_observation_length(msdict, f) / 60.0
-                caracal.log.info(
-                    '    {0:s} (ID={1:d}) : {2:.2f} minutes | RA={3:.2f} deg, Dec={4:.2f} deg'.format(f, fid, tobs, ra, dec))
+                tobs, scans = utils.field_observation_length(msdict, f, return_scans=True)
+                caracal.log.info(f'    {f:s} (ID={fid:d})')
+                caracal.log.info(f'      {tobs/60:.2f} minutes ({int(tobs/exposure)} timeslots)' )
+                scan_tslots = [str(int(sc/exposure)) for sc in scans]
+                caracal.log.info(f'      Scan timeslots: {", ".join(scan_tslots)}')
+                caracal.log.info(f'      RA={ra:.2f} deg, Dec={dec:.2f} deg')
+                caracal.log.info(f'---')
             getattr(pipeline, term + "_ra")[i] = _ra
             getattr(pipeline, term + "_dec")[i] = _dec
             getattr(pipeline, term + "_id")[i] = _fid

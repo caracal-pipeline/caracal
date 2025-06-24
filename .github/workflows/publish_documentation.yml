@@ -36,13 +36,6 @@ jobs:
         git status
         git add _build/html
 
-    - name: Set up Git credentials
-      run: |
-        git config --global user.name "Athanaseus Javas Ramaila"
-        git config --global user.email "aramaila@ska.ac.za"
-        git remote set-url origin https://x-access-token:${{ secrets.CARACAL_DOCS_PAT }}@github.com/caracal-pipeline/caracal-docs.git
-      working-directory: ../caracal-docs
-
     - name: Create Pull Request
       id: cpr
       uses: peter-evans/create-pull-request@v5
@@ -51,7 +44,7 @@ jobs:
         token: ${{ secrets.CARACAL_DOCS_PAT }}
         commit-message: Update report
         committer: Athanaseus Javas Ramaila <aramaila@ska.ac.za>
-        author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+        author: Athanaseus Javas Ramaila <aramaila@ska.ac.za>
         signoff: false
         branch: readthedocs
         delete-branch: true

@@ -26,8 +26,15 @@ jobs:
         pip install sphinx sphinx-rtd-theme
         pip install recommonmark
         pip install ruamel.yaml==0.17.21
+
     - name: Clone caracal-docs repo
       run: git clone https://x-access-token:${{ secrets.CARACAL_DOCS_PAT }}@github.com/caracal-pipeline/caracal-docs.git ../caracal-docs/
+
+    - name: Set Git remote URL with PAT
+      run: |
+        cd ../caracal-docs
+        git remote set-url origin https://x-access-token:${{ secrets.CARACAL_DOCS_PAT }}@github.com/caracal-pipeline/caracal-docs.git
+
     - name: Make changes to pull request
       run: |
         cd ../caracal-docs

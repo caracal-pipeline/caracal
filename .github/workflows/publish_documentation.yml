@@ -29,7 +29,6 @@ jobs:
     - name: Clone caracal-docs repo
       run: git clone https://github.com/caracal-pipeline/caracal-docs.git ../caracal-docs/
 
-    - uses: actions/checkout@v4
     - name: Make changes to pull request
       run: |
         cd ../caracal-docs
@@ -47,7 +46,7 @@ jobs:
         committer: GitHub <noreply@github.com>
         author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
         signoff: false
-        branch: readthedocs_test
+        branch: readthedocs
         delete-branch: true
         title: 'Read the docs updates'
         body: |

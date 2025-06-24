@@ -40,7 +40,7 @@ jobs:
       run: |
         cd ../caracal-docs
         git remote -v
-        git push --dry-run origin readthedocs_test
+        git push --dry-run origin master
 
     - name: Create Pull Request
       id: cpr

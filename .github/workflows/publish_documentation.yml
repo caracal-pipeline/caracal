@@ -36,6 +36,7 @@ jobs:
         python make_caracal_docs.py
         cd sphinx && make html
         git status
+        mkdir -p $GITHUB_WORKSPACE/docs_output
         cp -r _build/html/* $GITHUB_WORKSPACE/docs_output/
         git add _build/html
 

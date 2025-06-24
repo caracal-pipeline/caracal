@@ -47,7 +47,7 @@ jobs:
         committer: GitHub <noreply@github.com>
         author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
         signoff: false
-        branch: readthedocs
+        branch: readthedocs_test
         delete-branch: true
         title: 'Read the docs updates'
         body: |

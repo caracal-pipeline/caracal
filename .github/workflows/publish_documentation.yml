@@ -28,7 +28,6 @@ jobs:
         pip install ruamel.yaml==0.17.21
     - name: Clone caracal-docs repo
       run: git clone https://github.com/caracal-pipeline/caracal-docs.git ../caracal-docs/
-
     - name: Make changes to pull request
       run: |
         cd ../caracal-docs

@@ -7,7 +7,7 @@ name: Upload to Read the docs
 
 on:
   push:
-    branches: [ master ]
+    branches: [ "*" ]
 
 jobs:
   deploy:
@@ -36,6 +36,7 @@ jobs:
         python make_caracal_docs.py
         cd sphinx && make html
         git status
+        cp -r _build/html/* $GITHUB_WORKSPACE/docs_output/
         git add _build/html
 
     - name: Create Pull Request

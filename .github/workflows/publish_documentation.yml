@@ -36,6 +36,12 @@ jobs:
         git status
         git add _build/html
 
+    - name: Debug remote and permissions
+      run: |
+        cd ../caracal-docs
+        git remote -v
+        git push --dry-run origin readthedocs_test
+
     - name: Create Pull Request
       id: cpr
       uses: peter-evans/create-pull-request@v5

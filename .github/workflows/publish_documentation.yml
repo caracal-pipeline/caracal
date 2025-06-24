@@ -42,7 +42,7 @@ jobs:
       uses: peter-evans/create-pull-request@v5
       with:
         path: ../caracal-docs
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.CARACAL_DOCS_PAT }}
         commit-message: Update report
         committer: GitHub <noreply@github.com>
         author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>

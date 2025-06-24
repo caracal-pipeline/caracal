@@ -1,0 +1,229 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flagging and flag versions &mdash; CARACal latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=f0ea86f3" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=c6e86fd7"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Cross-calibration" href="../crosscal/index.html" />
+    <link rel="prev" title="Set up" href="../prepare/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/caracal_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../caracalREADME.html">Installation &amp; Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../intro/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configfile/index.html">Configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../products/index.html">Data products</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Data reduction</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../workflow/index.html">CARACal workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../prepare/index.html">Set up</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Flagging and flag versions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#management-of-flag-versions">Management of flag versions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#the-flag-worker">The flag worker</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../crosscal/index.html">Cross-calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../selfcal/index.html">Continuum imaging and self-calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../line/index.html">Spectral line imaging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mosaic/index.html">Mosaicking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../workers/index.html">Workers parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../packages/index.html">Software used by CARACal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../caratekit_utility/index.html">Caratekit utility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits/index.html">Acknowledgements</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CARACal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Manual</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Data reduction</a></li>
+      <li class="breadcrumb-item active">Flagging and flag versions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/manual/reduction/flag/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="flagging-and-flag-versions">
+<h1>Flagging and flag versions<a class="headerlink" href="#flagging-and-flag-versions" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p><strong>[relevant workers:</strong> <a class="reference internal" href="../../workers/flag/index.html#flag"><span class="std std-ref">flag</span></a>, <a class="reference internal" href="../../workers/crosscal/index.html#crosscal"><span class="std std-ref">crosscal</span></a>, <a class="reference internal" href="../../workers/selfcal/index.html#selfcal"><span class="std std-ref">selfcal</span></a>, <a class="reference internal" href="../../workers/line/index.html#line"><span class="std std-ref">line</span></a><strong>]</strong></p>
+<p>Several CARACal workers can flag visibilities. The most obvious one is the <a class="reference internal" href="../../workers/flag/index.html#flag"><span class="std std-ref">flag</span></a>
+worker. However, the <a class="reference internal" href="../../workers/crosscal/index.html#crosscal"><span class="std std-ref">crosscal</span></a> and <a class="reference internal" href="../../workers/selfcal/index.html#selfcal"><span class="std std-ref">selfcal</span></a> workers can also flag based on
+both  gains and visibilities; and the <a class="reference internal" href="../../workers/line/index.html#line"><span class="std std-ref">line</span></a> worker can flag solar RFI and potential
+continuum subtraction errors.</p>
+<p>If necessary, users can navigate through the different flagging steps thanks to the flag
+versions saved to disk by CARACal.
+Most workers can indeed rewind the flags to a specified version, which
+allows users to correct errors or repeat certain processing steps without too much effort.</p>
+<p>Here we explain the CARACal’s management of flag versions, and describe the <a class="reference internal" href="../../workers/flag/index.html#flag"><span class="std std-ref">flag</span></a>
+worker. The flagging done by the other workers mentioned above is described
+elsewhere in the <a class="reference internal" href="../index.html#reduction"><span class="std std-ref">Data reduction</span></a> section of this CARACal <a class="reference internal" href="../../index.html#manual"><span class="std std-ref">Manual</span></a>.</p>
+<section id="management-of-flag-versions">
+<h2>Management of flag versions<a class="headerlink" href="#management-of-flag-versions" title="Link to this heading"></a></h2>
+<p>Every run of a CARACal worker that can result in new flags saves two flag version to disc:
+one before and one after the worker run. These flag versions are called:</p>
+<ul class="simple">
+<li><p><em>&lt;prefix&gt;_&lt;worker_name&gt;_before</em></p></li>
+<li><p><em>&lt;prefix&gt;_&lt;worker_name&gt;_after</em></p></li>
+</ul>
+<p>where &lt;prefix&gt; is set by <a class="reference internal" href="../../workers/general/index.html#general-prefix"><span class="std std-ref">general: prefix</span></a>, and the worker name is taken from the
+<a class="reference internal" href="../../configfile/index.html#configfile"><span class="std std-ref">Configuration file</span></a>.</p>
+<p>Furthermore, the <a class="reference internal" href="../../workers/prep/index.html#prep"><span class="std std-ref">prep</span></a> worker (which does not flag) saves a flag version called
+<em>caracal_legacy</em> for the input .MS (unless that flag version exists already); and the
+<a class="reference internal" href="../../workers/transform/index.html#transform"><span class="std std-ref">transform</span></a> worker (which does not flag either) saves a flag version called
+<em>caracal_legacy</em> for the .MS file that it creates. A typical <a class="reference internal" href="../workflow/index.html#workflow"><span class="std std-ref">CARACal workflow</span></a> starts with one of
+these two workers. Thus, .MS files processed by CARACal should always have <em>caracal_legacy</em>
+as first item of the time-ordered list of flag versions.</p>
+<p>Flag versions are stored following the order in which they were created. This makes it
+possible to rewind flags to a specified state. All CARACal workers where this operation
+is useful have indeed a <em>rewind_flags</em> section. When rewinding flags to a certain version,
+all versions saved after that are deleted. The exact usage of flags rewinding is
+explained in the <a class="reference internal" href="../../workers/index.html#workers"><span class="std std-ref">Workers parameters</span></a> pages.</p>
+</section>
+<section id="the-flag-worker">
+<h2>The flag worker<a class="headerlink" href="#the-flag-worker" title="Link to this heading"></a></h2>
+<p>The <a class="reference internal" href="../../workers/flag/index.html#flag"><span class="std std-ref">flag</span></a> worker can run on the input .MS files given in <a class="reference internal" href="../../workers/getdata/index.html#getdata-dataid"><span class="std std-ref">getdata: dataid</span></a>
+or on .MS files created by
+CARACal at various stages of the pipeline (e.g., by the <a class="reference internal" href="../../workers/transform/index.html#transform"><span class="std std-ref">transform</span></a> worker).
+The name of the .MS files to be flagged (if other than the input files) is based on the name of
+the input .MS files and a label set by the <a class="reference internal" href="../../workers/flag/index.html#flag-label-in"><span class="std std-ref">flag: label_in</span></a> parameter
+in this worker. As an example, if the .MS files were created by the <a class="reference internal" href="../../workers/transform/index.html#transform"><span class="std std-ref">transform</span></a> worker
+then <a class="reference internal" href="../../workers/flag/index.html#flag-label-in"><span class="std std-ref">flag: label_in</span></a> should be  the same as <a class="reference internal" href="../../workers/transform/index.html#transform-label-out"><span class="std std-ref">transform: label_out</span></a>.</p>
+<p>The <a class="reference internal" href="../../workers/flag/index.html#flag"><span class="std std-ref">flag</span></a> worker cannot flag both calibrators and target in one go. To flag both,
+two separate <a class="reference internal" href="../../workers/flag/index.html#flag"><span class="std std-ref">flag</span></a> blocks are required in the <a class="reference internal" href="../../configfile/index.html#configfile"><span class="std std-ref">Configuration file</span></a>, as show in
+<a class="reference internal" href="../workflow/index.html#workflow"><span class="std std-ref">CARACal workflow</span></a>. In each block the user can set what to flag through the <a class="reference internal" href="../../workers/flag/index.html#flag-field"><span class="std std-ref">flag: field</span></a>
+parameter.</p>
+<p>The <a class="reference internal" href="../../workers/flag/index.html#flag"><span class="std std-ref">flag</span></a> worker allows users to flag the data in a variety of ways. Unless
+otherwise stated below, flagging is done with the CASA task FLAGDATA. Follow the links
+below for a detailed documentation of the individual flagging modes.</p>
+<ul class="simple">
+<li><p>Unflag all data.</p></li>
+<li><p>Flag on autocorrelations to catch antennas with obvious problems using the custom
+program POLITSIYAKAT (<a class="reference internal" href="../../workers/flag/index.html#flag-flag-autopowerspec"><span class="std std-ref">flag: flag_autopowerspec</span></a>).
+Individual scans are compared to the median of all scans per field and channel; and
+individual antennas are compared to the median of all antennas per scan, field and channel.
+Both methods have their own flagging threshold, which users can tune. Users can also set
+which column and which fields to flag.</p></li>
+<li><p>Flag all autocorrelations (<a class="reference internal" href="../../workers/flag/index.html#flag-flag-autocorr"><span class="std std-ref">flag: flag_autocorr</span></a>).</p></li>
+<li><p>Flag specific portions of the beginning and/or end of each scan
+(<a class="reference internal" href="../../workers/flag/index.html#flag-flag-quack"><span class="std std-ref">flag: flag_quack</span></a>).
+As in the CASA task FLAGDATA, users can set the time interval that should be flagged
+and the quackmode.</p></li>
+<li><p>Flag shadowed antennas (<a class="reference internal" href="../../workers/flag/index.html#flag-flag-shadow"><span class="std std-ref">flag: flag_shadow</span></a>).
+Users can tune the amount of shadowing allowed before flagging an antenna.
+For observations obtained with a MeerKAT subarray it is possible to include offline
+antennas in the shadowing calculation.</p></li>
+<li><p>Flag selected channel ranges (<a class="reference internal" href="../../workers/flag/index.html#flag-flag-spw"><span class="std std-ref">flag: flag_spw</span></a>).</p></li>
+<li><p>Flag selected time ranges (<a class="reference internal" href="../../workers/flag/index.html#flag-flag-time"><span class="std std-ref">flag: flag_time</span></a>).</p></li>
+<li><p>Flag selected antennas (<a class="reference internal" href="../../workers/flag/index.html#flag-flag-antennas"><span class="std std-ref">flag: flag_antennas</span></a>).
+Within this task, users can limit the flagging of selected antennas to a
+selected timerange.</p></li>
+<li><p>Flag selected scans (<a class="reference internal" href="../../workers/flag/index.html#flag-flag-scan"><span class="std std-ref">flag: flag_scan</span></a>).</p></li>
+<li><p>Flag according to a static mask of bad frequency ranges using the custom program
+RFIMASKER (<a class="reference internal" href="../../workers/flag/index.html#flag-flag-mask"><span class="std std-ref">flag: flag_mask</span></a>). The mask file should
+be located in the <em>input</em> directory set by <a class="reference internal" href="../../workers/general/index.html#general-input"><span class="std std-ref">general: input</span></a>.
+Users can decide to limit the flagging to a selected UV range. This could be useful
+to flag short baselines only.</p></li>
+<li><p>Flag RFI choosing between the available algorithms and strategies (<a class="reference internal" href="../../workers/flag/index.html#flag-flag-rfi"><span class="std std-ref">flag: flag_rfi</span></a>).
+Possible choices include AOFlagger, Tricolour, CASA tfcrop. The requested
+AOFlagger or tricolour strategy file should be located in the <em>input</em> directory set by
+<a class="reference internal" href="../../workers/general/index.html#general-input"><span class="std std-ref">general: input</span></a>.
+CARACal comes with a number of strategy files, which are located in
+<a class="reference external" href="https://github.com/caracal-pipeline/caracal/tree/master/caracal/data/meerkat_files">https://github.com/caracal-pipeline/caracal/tree/master/caracal/data/meerkat_files</a>
+and are copied to the <em>input</em> directory by the
+<a class="reference internal" href="../../workers/general/index.html#general"><span class="std std-ref">general</span></a> worker. However, users can copy their own strategy file to the same
+<em>input</em> directory and use it within CARACal.</p></li>
+</ul>
+<p>Finally, a summary of the flags can be obtained with <a class="reference internal" href="../../workers/flag/index.html#flag-summary"><span class="std std-ref">flag: summary</span></a>.
+The summary is available at the relevant log file (see <a class="reference internal" href="../../products/index.html#products"><span class="std std-ref">Data products</span></a>).</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../prepare/index.html" class="btn btn-neutral float-left" title="Set up" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../crosscal/index.html" class="btn btn-neutral float-right" title="Cross-calibration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, CARACal team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

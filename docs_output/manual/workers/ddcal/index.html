@@ -1,0 +1,692 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ddcal &mdash; CARACal latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=f0ea86f3" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=c6e86fd7"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="flag" href="../flag/index.html" />
+    <link rel="prev" title="crosscal" href="../crosscal/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/caracal_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../caracalREADME.html">Installation &amp; Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../intro/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configfile/index.html">Configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../products/index.html">Data products</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reduction/index.html">Data reduction</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Workers parameters</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../crosscal/index.html">crosscal</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ddcal</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#enable"><strong>enable</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#label-in"><strong>label_in</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#use-pb"><strong>use_pb</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#shared-mem"><strong>shared_mem</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#image-dd"><strong>image_dd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#calibrate-dd"><strong>calibrate_dd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#copy-data"><strong>copy_data</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#image-wsclean"><strong>image_wsclean</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#transfer-model-dd"><strong>transfer_model_dd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#report"><strong>report</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cabs"><strong>cabs</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../flag/index.html">flag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../general/index.html">general</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getdata/index.html">getdata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../inspect/index.html">inspect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../line/index.html">line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mask/index.html">mask</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mosaic/index.html">mosaic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../obsconf/index.html">obsconf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../prep/index.html">prep</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../selfcal/index.html">selfcal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../transform/index.html">transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../polcal/index.html">polcal</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../packages/index.html">Software used by CARACal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../caratekit_utility/index.html">Caratekit utility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits/index.html">Acknowledgements</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CARACal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Manual</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Workers parameters</a></li>
+      <li class="breadcrumb-item active">ddcal</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/manual/workers/ddcal/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="ddcal">
+<span id="id1"></span><h1>ddcal<a class="headerlink" href="#ddcal" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>Perform direction-dependent calibration on the data (SHARED-RISK DEVELOPMENT MODE).</p>
+<section id="enable">
+<span id="ddcal-enable"></span><h2><strong>enable</strong><a class="headerlink" href="#enable" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em></p>
+<p>Execute the ddcal worker (i.e. carry out DD-calibration).</p>
+</div></blockquote>
+</section>
+<section id="label-in">
+<span id="ddcal-label-in"></span><h2><strong>label_in</strong><a class="headerlink" href="#label-in" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = corr</em></p>
+<p>Label of the .MS files to process. By default uses the ‘corr’ label_in for self-calibrated dataset.</p>
+</div></blockquote>
+</section>
+<section id="use-pb">
+<span id="ddcal-use-pb"></span><h2><strong>use_pb</strong><a class="headerlink" href="#use-pb" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable primary beam usage in making the DD-corrected DDFacet image. Note that this is EXPERIMENTAL and currently only available for MeerKAT data.</p>
+</div></blockquote>
+</section>
+<section id="shared-mem">
+<span id="ddcal-shared-mem"></span><h2><strong>shared_mem</strong><a class="headerlink" href="#shared-mem" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 400</em></p>
+<p>Shared memory for tasks in units of GBs. Does not work with singularity.</p>
+</div></blockquote>
+</section>
+<section id="image-dd">
+<span id="ddcal-image-dd"></span><h2><strong>image_dd</strong><a class="headerlink" href="#image-dd" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Imaging parameters for DD calibration with DDFacet.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Enable the ‘image_dd’ segment.</p>
+</div></blockquote>
+<p><strong>npix</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 8000</em></p>
+<p>Number of pixels in the image. Note that DDFacet has its own super-special scheme to decide the actual number of pixels, so this is only an approximation.</p>
+</div></blockquote>
+<p><strong>use_mask</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Enable clean mask for DDFacet initial imaging. Note that this doubles the imaging time since it runs DDFacet twice – once to get a preliminary image to make a mask with (mask is made by the cleanmask tool), and once to get the final image with masking. Previous WSClean masks cannot be used because pixel numbers might be different.</p>
+</div></blockquote>
+<p><strong>mask_sigma</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 10.0</em></p>
+<p>The number of standard deviations (i.e. sigma_rms) to use when clipping the initial image for masking.</p>
+</div></blockquote>
+<p><strong>mask_boxes</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 9</em></p>
+<p>Divide the initial image (for making the mask) into this number of boxes, then perform sigma clipping in each of these boxes.</p>
+</div></blockquote>
+<p><strong>mask_niter</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 20</em></p>
+<p>The number of sigma-clipping iterations to perform on the image, for masking, or set to 0 to clip until convergence is achieved.</p>
+</div></blockquote>
+<p><strong>mask_overlap</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.3</em></p>
+<p>Overlap region for the boxes, given as a fraction of the number of boxes.</p>
+</div></blockquote>
+<p><strong>mask_tol</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.75</em></p>
+<p>Tolerance for dilating the mask. Dilation will stop when the percentage difference between dilations is smaller than this value.</p>
+</div></blockquote>
+<p><strong>cell</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 1.3</em></p>
+<p>Pixel size in arcsec.</p>
+</div></blockquote>
+<p><strong>facets_nfacets</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 24</em></p>
+<p>Number of facets to use, and is the same as the Facets-NFacets parameter of DDFacet.</p>
+</div></blockquote>
+<p><strong>weight_col</strong></p>
+<blockquote>
+<div><p><em>{“WEIGHT_SPECTRUM”, “WEIGHT”, “IMAGING_WEIGHT”}</em>, <em>optional</em>, <em>default = WEIGHT</em></p>
+<p>Read data weights from the specified column. Options are WEIGHT_SPECTRUM, WEIGHT, and (for rarer occasions) IMAGING_WEIGHT.</p>
+</div></blockquote>
+<p><strong>weight_mode</strong></p>
+<blockquote>
+<div><p><em>{“Natural”, “Uniform”, “Robust”, “Briggs”}</em>, <em>optional</em>, <em>default = Briggs</em></p>
+<p>UV weighting mode. Options are ‘Natural’, ‘Uniform’, ‘Robust’, and ‘Briggs’.</p>
+</div></blockquote>
+<p><strong>weight_robust</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = -0.4</em></p>
+<p>Briggs robustness parameter, from -2 (more uniform) to 2 (more natural).</p>
+</div></blockquote>
+<p><strong>deconv_maxminoriter</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 100000</em></p>
+<p>Number of clean iterations.</p>
+</div></blockquote>
+<p><strong>freq_nband</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 10</em></p>
+<p>Number of frequency bands for gridding.</p>
+</div></blockquote>
+<p><strong>freq_ndegridband</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 15</em></p>
+<p>Number of frequency bands for degridding. 0 means degrid each channel.</p>
+</div></blockquote>
+<p><strong>deconv_rmsfactor</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.0</em></p>
+<p>Set the minor-cycle stopping-threshold to X*{residual RMS}, where X is this parameter value.</p>
+</div></blockquote>
+<p><strong>deconv_peakfactor</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.25</em></p>
+<p>Set the minor-cycle stopping-threshold to X*{peak residual}, where X is this parameter value.</p>
+</div></blockquote>
+<p><strong>deconv_mode</strong></p>
+<blockquote>
+<div><p><em>{“HMP”, “Hogbom”, “SSD”, “GAClean”}</em>, <em>optional</em>, <em>default = Hogbom</em></p>
+<p>The deconvolution algorithm to use. Options are ‘HMP’ (Hybrid Matching Pursuit, aka multiscale/multifrequency), ‘Hogbom’ (Hogbom’s CLEAN algorithm), ‘SSD’ (SubSpace Deconvolution algorithm), and ‘GAClean’ (Genetic Algorithm Clean). Please direct queries to DDFacet Developers for further details.</p>
+</div></blockquote>
+<p><strong>deconv_gain</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.1</em></p>
+<p>Gain setting for the deconvolution loops.</p>
+</div></blockquote>
+<p><strong>deconv_fluxthr</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 1.0e-6</em></p>
+<p>Absolute flux-density threshold at which deconvolution is stopped, in units of Jy. Relevant for HMP and Hogbom modes.</p>
+</div></blockquote>
+<p><strong>deconv_allownegative</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Allow negative components for cleaning (valid for HMP and Hogbom modes).</p>
+</div></blockquote>
+<p><strong>hogbom_polyfitorder</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 6</em></p>
+<p>Order of the polynomial to be used for frequency fitting.</p>
+</div></blockquote>
+<p><strong>parallel_ncpu</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Number of processes / threads to use in parallel mode. 0 = use all of those available. 1 = disable parallelism.</p>
+</div></blockquote>
+<p><strong>predict_colname</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = MODEL_DATA</em></p>
+<p>MS column to write the predicted visibilities corresponding to the model. Setting ‘’ will disable this parameter.</p>
+</div></blockquote>
+<p><strong>log_memory</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Log the memory usage by DDFacet.</p>
+</div></blockquote>
+<p><strong>cache_reset</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Reset all caches (including PSF and dirty image). Change from default at your own risk.</p>
+</div></blockquote>
+<p><strong>log_boring</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Enable progress bars and other pretty console output. Doesn’t seem to work. But who knows, try it out.</p>
+</div></blockquote>
+<p><strong>data_colname</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = CORRECTED_DATA</em></p>
+<p>Data column to use for initial imaging. Defaults to ‘CORRECTED_DATA’, the assumption being that self-calibration has already been done on the measurement set.</p>
+</div></blockquote>
+<p><strong>data_colname_postcal</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = SUBDD_DATA</em></p>
+<p>Data column to use for imaging after dd-calibration. Defaults to ‘SUBDD_DATA’, so as to not overwrite the corrected data. If data size increase is a concern, switch to ‘CORRECTED_DATA’</p>
+</div></blockquote>
+<p><strong>data_chunkhours</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.05</em></p>
+<p>Chunk data into time bins of X hours to conserve memory, where X is this parameter.</p>
+</div></blockquote>
+<p><strong>output_mode</strong></p>
+<blockquote>
+<div><p><em>{“Dirty”, “Clean”, “Predict”, “PSF”}</em>, <em>optional</em>, <em>default = Clean</em></p>
+<p>Output mode of DDFacet. Options are ‘Dirty’, ‘Clean’, ‘Predict’, and ‘PSF’. This setting defaults to ‘Clean’, since that is what we want to do in this worker.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="calibrate-dd">
+<span id="ddcal-calibrate-dd"></span><h2><strong>calibrate_dd</strong><a class="headerlink" href="#calibrate-dd" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Direction-dependent calibration parameters.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Enable the ‘calibrate_dd’ segment.</p>
+</div></blockquote>
+<p><strong>sigma</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 4.5</em></p>
+<p>Sigma threshold to use in detecting outlier regions in images, via CATDagger (which is enabled by setting ‘de_sources_mode’, below, to ‘auto’). The default value of 4.5 works well, but a lower value may be needed for some images.</p>
+</div></blockquote>
+<p><strong>min_dist_from_phcentre</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 1300</em></p>
+<p>The radius (in number of pixels), from the centre of the image, out to which sources will not be tagged for DD-calibration. (This is because sources close to the phase centre may not have been cleaned deeply enough.) The default is kept at 1300 (which roughly corresponds to 30’).</p>
+</div></blockquote>
+<p><strong>dist_ncpu</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 1</em></p>
+<p>The number of cpus for distributed computing.</p>
+</div></blockquote>
+<p><strong>de_sources_mode</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = manual</em></p>
+<p>Mode in which sources are tagged for DD calibration. Options are ‘auto’ (which uses CATDagger), and ‘manual’ (for which one needs to provide a list of sources). Use ‘auto’ with caution and at your own risk.</p>
+</div></blockquote>
+<p><strong>de_target_manual</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>List of target fieldnames for carrying out DD calibration. The remaining fields will not undergo DD calibration.</p>
+</div></blockquote>
+<p><strong>de_sources_manual</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>List of sources per target to tag for DD calibration, in the same order as the ‘de_target_manual’ list. Use ‘;’ to separate different sources per target.</p>
+</div></blockquote>
+<p><strong>sol_min_bl</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 100</em></p>
+<p>The minimum baseline length to solve for.</p>
+</div></blockquote>
+<p><strong>madmax_enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = true</em></p>
+<p>Enable madmax flagging in CubiCal.</p>
+</div></blockquote>
+<p><strong>madmax_thr</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of int</em>, <em>optional</em>, <em>default = 0, 10</em></p>
+<p>Threshold for MAD flagging per baseline (specified in number of standard deviations). Residuals exceeding mad-thr*MAD/1.428 will be flagged. MAD is computed per baseline. This can be specified as a list e.g. N1,N2,N3,… The first value is used to flag residuals before a solution starts (use 0 to disable), the next value is used when the residuals are first recomputed during the solution several iterations later (see -chi-int), etc. A final pass may be done at the end of the solution. The last value in the list is reused if necessary. Using a list with gradually-decreasing values may be sensible.</p>
+</div></blockquote>
+<p><strong>madmax_global_thr</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of int</em>, <em>optional</em>, <em>default = 0, 12</em></p>
+<p>Threshold for global median MAD (MMAD) flagging. MMAD is computed as the median of the per-baseline MADs. Residuals exceeding S*MMAD/1.428 will be flagged.</p>
+</div></blockquote>
+<p><strong>madmax_estimate</strong></p>
+<blockquote>
+<div><p><em>{“corr”, “all”, “diag”, “offdiag”}</em>, <em>optional</em>, <em>default = corr</em></p>
+<p>MAD estimation mode. Use ‘corr’ for a separate estimate per baseline and correlation. Otherwise, a single estimate per baseline is computed using ‘all’ correlations, or only the ‘diag’ or ‘offdiag’ correlations.</p>
+</div></blockquote>
+<p><strong>dd_data_col</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = CORRECTED_DATA</em></p>
+<p>Column to calibrate, with the assumption that you have already run the selfcal worker.</p>
+</div></blockquote>
+<p><strong>dd_out_data_col</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = SUBDD_DATA</em></p>
+<p>Output data column. Note that the ddcal worker is currently hardcoded for this being set to ‘SUBDD_DATA’.</p>
+</div></blockquote>
+<p><strong>dd_weight_col</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = WEIGHT</em></p>
+<p>Column to read weights from, and apply them by default. Specify an empty string to disable this parameter.</p>
+</div></blockquote>
+<p><strong>dd_sol_stall_quorum</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.95</em></p>
+<p>Minimum percentage of solutions that must have stalled before terminating the solver.</p>
+</div></blockquote>
+<p><strong>dd_g_type</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = complex-2x2</em></p>
+<p>Gain matrix type for the G-Jones matrix. Keep this set to ‘complex-2x2’, because DD-calibration fails otherwise.</p>
+</div></blockquote>
+<p><strong>dd_g_clip_high</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 1.5</em></p>
+<p>Amplitude clipping – flag solutions with any amplitudes above this value for G-Jones matrix.</p>
+</div></blockquote>
+<p><strong>dd_g_clip_low</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.5</em></p>
+<p>Amplitude clipping – flag solutions with any amplitudes below this value for G-Jones matrix.</p>
+</div></blockquote>
+<p><strong>dd_g_update_type</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = phase-diag</em></p>
+<p>Determines update type. This does not change the Jones solver type, but restricts the update rule to pin the solutions within a certain subspace.</p>
+</div></blockquote>
+<p><strong>dd_g_max_prior_error</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.35</em></p>
+<p>Flag solution intervals where the prior error estimate is above this value for G-Jones matrix.</p>
+</div></blockquote>
+<p><strong>dd_g_max_post_error</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.35</em></p>
+<p>Flag solution intervals where the posterior variance estimate is above this value for G-Jones matrix.</p>
+</div></blockquote>
+<p><strong>dd_dd_max_prior_error</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.35</em></p>
+<p>Flag solution intervals where the prior error estimate is above this value for DE term.</p>
+</div></blockquote>
+<p><strong>dd_dd_max_post_error</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.35</em></p>
+<p>Flag solution intervals where the posterior variance estimate is above this value for DE term.</p>
+</div></blockquote>
+<p><strong>dd_g_timeslots_int</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 10</em></p>
+<p>Time solution interval in timeslot units for G-Jones matrix.</p>
+</div></blockquote>
+<p><strong>dd_g_chan_int</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Frequency solution interval in channel units for G-Jones matrix.</p>
+</div></blockquote>
+<p><strong>dd_dd_timeslots_int</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 100</em></p>
+<p>Time solution interval in timeslot units for DE-Jones matrix.</p>
+</div></blockquote>
+<p><strong>dd_dd_chan_int</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 100</em></p>
+<p>Frequency solution interval in channel units for DE-Jones matrix.</p>
+</div></blockquote>
+<p><strong>dist_nworker</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Number of processes.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="copy-data">
+<span id="ddcal-copy-data"></span><h2><strong>copy_data</strong><a class="headerlink" href="#copy-data" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Copy DD-calibrated data to CORRECTED_DATA column. THIS IS DANGEROUS - only if you want to go ahead with line imaging.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Enable copying of DD-calibrated data to CORRECTED_DATA column.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="image-wsclean">
+<span id="ddcal-image-wsclean"></span><h2><strong>image_wsclean</strong><a class="headerlink" href="#image-wsclean" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>WSClean imaging paramaters for ddcal worker.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Enable WSClean imaging of the DD-calibrated data.</p>
+</div></blockquote>
+<p><strong>img_ws_npix</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 1800</em></p>
+<p>Number of pixels in output image.</p>
+</div></blockquote>
+<p><strong>img_ws_padding</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 1.3</em></p>
+<p>Padding in WSClean.</p>
+</div></blockquote>
+<p><strong>img_ws_mgain</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.90</em></p>
+<p>Gain for the major cycle during image CLEANing.</p>
+</div></blockquote>
+<p><strong>img_ws_cell</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 2.</em></p>
+<p>Image pixel size (in arcsec).</p>
+</div></blockquote>
+<p><strong>img_ws_weight</strong></p>
+<blockquote>
+<div><p><em>{“briggs”, “uniform”, “natural”}</em>, <em>optional</em>, <em>default = briggs</em></p>
+<p>Image weighting type. Options are ‘briggs’, ‘uniform’, and ‘natural’. If ‘briggs’, set the img_ws_robust parameter below.</p>
+</div></blockquote>
+<p><strong>img_ws_robust</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.</em></p>
+<p>Briggs robust value.</p>
+</div></blockquote>
+<p><strong>img_ws_uvtaper</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Taper for imaging (in arcsec).</p>
+</div></blockquote>
+<p><strong>img_ws_niter</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 1000000</em></p>
+<p>Number of cleaning iterations.</p>
+</div></blockquote>
+<p><strong>img_ws_nmiter</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Number of major cycles.</p>
+</div></blockquote>
+<p><strong>img_ws_cleanborder</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 1.3</em></p>
+<p>Clean border.</p>
+</div></blockquote>
+<p><strong>img_ws_nchans</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 3</em></p>
+<p>Number of channels in output image.</p>
+</div></blockquote>
+<p><strong>img_ws_joinchans</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Join channels to create MFS image.</p>
+</div></blockquote>
+<p><strong>img_ws_specfit_nrcoeff</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 2</em></p>
+<p>Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1.</p>
+</div></blockquote>
+<p><strong>img_ws_stokes</strong></p>
+<blockquote>
+<div><p><em>{“I”}</em>, <em>optional</em>, <em>default = I</em></p>
+<p>Stokes image to create. For this first release of CARACal, the only option is ‘I’.</p>
+</div></blockquote>
+<p><strong>img_ws_auto_mask</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 7</em></p>
+<p>Auto-masking threshold, given as the number of sigma_rms.</p>
+</div></blockquote>
+<p><strong>img_ws_auto_thr</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.5</em></p>
+<p>Auto-clean threshold, given as the number of sigma_rms.</p>
+</div></blockquote>
+<p><strong>img_ws_col</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = CORRECTED_DATA</em></p>
+<p>Column to image.</p>
+</div></blockquote>
+<p><strong>img_ws_fits_mask</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = catalog_mask.fits</em></p>
+<p>Filename of fits mask (in output/masking folder).</p>
+</div></blockquote>
+<p><strong>img_ws_multi_scale</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Switch on multiscale cleaning.</p>
+</div></blockquote>
+<p><strong>img_ws_multi_scale_scales</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of int</em>, <em>optional</em>, <em>default = 0, 5, 10, 20</em></p>
+<p>Scales for multiscale cleaning, in pixels.</p>
+</div></blockquote>
+<p><strong>img_ws_local_rms</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Switch on local-rms measurement for cleaning.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="transfer-model-dd">
+<span id="ddcal-transfer-model-dd"></span><h2><strong>transfer_model_dd</strong><a class="headerlink" href="#transfer-model-dd" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Repredict WSClean model to the highest channel resolution.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘transfer_model_dd’ segment.</p>
+</div></blockquote>
+<p><strong>dd_model</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = auto</em></p>
+<p>Name of the sky-model file. (Currently the only supported format is that of WSClean component lists.) When set to ‘auto’, the pipeline builds the file name from the input parameters of the selfcal loop. The file is assumed to be in the ‘output’ directory.</p>
+</div></blockquote>
+<p><strong>dd_row_chunks</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Number of rows of input .MS that are processed in a single chunk.</p>
+</div></blockquote>
+<p><strong>dd_model_chunks</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Number of sky-model components that are processed in a single chunk.</p>
+</div></blockquote>
+<p><strong>dd_within</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Give JS9 region file. Only sources within those regions will be included.</p>
+</div></blockquote>
+<p><strong>dd_points_only</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Select only ‘point’ sources.</p>
+</div></blockquote>
+<p><strong>dd_num_sources</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Select only N brightest sources.</p>
+</div></blockquote>
+<p><strong>dd_num_workers</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Explicitly set the number of worker threads. Default is 0, meaning it uses all threads.</p>
+</div></blockquote>
+<p><strong>dd_mem_frac</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.5</em></p>
+<p>Fraction of system RAM that can be used. Used when setting automatically the chunk size.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="report">
+<span id="ddcal-report"></span><h2><strong>report</strong><a class="headerlink" href="#report" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>(Re)generate a full HTML report at the end of this worker.</p>
+</div></blockquote>
+</section>
+<section id="cabs">
+<span id="ddcal-cabs"></span><h2><strong>cabs</strong><a class="headerlink" href="#cabs" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>list</em> <em>of map</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.</p>
+</div></blockquote>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../crosscal/index.html" class="btn btn-neutral float-left" title="crosscal" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../flag/index.html" class="btn btn-neutral float-right" title="flag" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, CARACal team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

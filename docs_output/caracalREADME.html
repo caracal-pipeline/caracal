@@ -1,0 +1,224 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation &amp; Run &mdash; CARACal latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=f0ea86f3" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=c6e86fd7"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Manual" href="manual/index.html" />
+    <link rel="prev" title="CARACal" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/caracal_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation &amp; Run</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#usage-and-publication-policy">Usage and publication policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#installation">Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#manual">1. Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#caratekit-sh-script">2. <cite>caratekit.sh</cite> script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#poetry-for-developers">3. Poetry (For developers)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#installation-on-ilifu-slurm-environment">Installation on (ILIFU) slurm environment</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="manual/index.html">Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="credits/index.html">Acknowledgements</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CARACal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Installation &amp; Run</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/caracalREADME.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="installation-run">
+<h1>Installation &amp; Run<a class="headerlink" href="#installation-run" title="Link to this heading"></a></h1>
+<section id="usage-and-publication-policy">
+<h2>Usage and publication policy<a class="headerlink" href="#usage-and-publication-policy" title="Link to this heading"></a></h2>
+<p>When using CARACal please be aware of and adhere to the <a class="reference external" href="https://docs.google.com/document/d/e/2PACX-1vTqZoKhdewnWvxvEI4C9DxI-IHP1FTCoC5Iqz_MqlX63q8UnnpcqoZvVf-sSfqACu8sA_nufkXICUH6/pub">CARACal publication policy</a>.</p>
+</section>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.python.org">Python</a> 3.8 - 3.11. (For Python version below 3.12 if working on Ubuntu&gt; 22.04. Install the earlier Python version through this <a class="reference external" href="https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa">link</a>)</p></li>
+<li><dl class="simple">
+<dt>Container technology of your choice. It can be one of the following:</dt><dd><ul>
+<li><p><a class="reference external" href="https://www.docker.com">Docker</a></p></li>
+<li><p><a class="reference external" href="https://podman.io">Podman</a></p></li>
+<li><dl class="simple">
+<dt><a class="reference external" href="https://github.com/sylabs/singularity">Singularity</a> 3.5 - 3.9 (nearly all functionality available for &gt; 2.6.0-dist, see <a class="reference external" href="https://github.com/caracal-pipeline/caracal/issues/1154">here</a> for further information)</dt><dd><ul>
+<li><p><a class="reference external" href="https://apptainer.org">Apptainer</a> does not support all CARACal functionalities (at the moment).</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<section id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h3>
+<p>We strongly recommend and describe an installation using a <cite>Python3</cite> virtual environment. Only try outside a virtual environment if you know what you are doing. Any name as <code class="docutils literal notranslate"><span class="pre">${name}</span></code> occurring in the description below can be chosen arbitrarily. If it symbolises directories or files, those directories or files should exist and the user should have <strong>write</strong> access.</p>
+<p>There are three (3) available methods to install the <cite>caracal</cite> pipeline:</p>
+</section>
+</section>
+<section id="manual">
+<h2>1. Manual<a class="headerlink" href="#manual" title="Link to this heading"></a></h2>
+<p>Choose the name of the virtual environment <cite>${caracal-venv}</cite>. Then:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span><span class="si">${</span><span class="nv">caracal</span><span class="p">-venv</span><span class="si">}</span><span class="w">  </span><span class="c1"># Ensure Python version is between 3.8 and 3.11.</span>
+</pre></div>
+</div>
+<p>OR, if the command above does not work</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>virtualenv<span class="w"> </span>-p<span class="w"> </span>python3<span class="w"> </span><span class="si">${</span><span class="nv">caracal</span><span class="p">-venv</span><span class="si">}</span>
+<span class="nb">source</span><span class="w"> </span><span class="si">${</span><span class="nv">caracal</span><span class="p">-venv</span><span class="si">}</span>/bin/activate
+pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>pip<span class="w"> </span>setuptools<span class="w"> </span>wheel
+</pre></div>
+</div>
+<p>For a CARACal stable release run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>caracal
+</pre></div>
+</div>
+<p>And CARACal developer version which is not recommended for users:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span><span class="s1">&#39;caracal @ git+https://github.com/caracal-pipeline/caracal.git@master&#39;</span>
+</pre></div>
+</div>
+<p><em>Ignore any error messages concerning `pyregion`.</em></p>
+</section>
+<section id="caratekit-sh-script">
+<h2>2. <cite>caratekit.sh</cite> script<a class="headerlink" href="#caratekit-sh-script" title="Link to this heading"></a></h2>
+<p>Download the installation script <a class="reference external" href="https://github.com/caracal-pipeline/caracal/blob/master/caratekit.sh">caratekit.sh</a> . Choose the parent directory <code class="docutils literal notranslate"><span class="pre">${workspace}</span></code> and the name of the CARACal directory <code class="docutils literal notranslate"><span class="pre">${caracal_dir}</span></code>. Any name as <code class="docutils literal notranslate"><span class="pre">${name}</span></code> occurring in the description below can be chosen arbitrarily. If it symbolises directories or files, those directories or files should exist and the user should have write acccess.</p>
+<p>If using <a class="reference external" href="https://www.docker.com">Docker</a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>caratekit.sh<span class="w"> </span>-ws<span class="w"> </span><span class="si">${</span><span class="nv">workspace</span><span class="si">}</span><span class="w"> </span>-cr<span class="w"> </span>-di<span class="w"> </span>-ct<span class="w"> </span><span class="si">${</span><span class="nv">caracal_dir</span><span class="si">}</span><span class="w"> </span>-rp<span class="w"> </span>install<span class="w"> </span>-f<span class="w"> </span>-kh
+</pre></div>
+</div>
+<p>If using <a class="reference external" href="https://github.com/sylabs/singularity">Singularity</a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>caratekit.sh<span class="w"> </span>-ws<span class="w"> </span><span class="si">${</span><span class="nv">workspace</span><span class="si">}</span><span class="w"> </span>-cr<span class="w"> </span>-si<span class="w"> </span>-ct<span class="w"> </span><span class="si">${</span><span class="nv">caracal_testdir</span><span class="si">}</span><span class="w"> </span>-rp<span class="w"> </span>install<span class="w"> </span>-f<span class="w"> </span>-kh
+</pre></div>
+</div>
+</section>
+<section id="poetry-for-developers">
+<h2>3. Poetry (For developers)<a class="headerlink" href="#poetry-for-developers" title="Link to this heading"></a></h2>
+<p>Installation from source using <cite>poetry</cite>. First, install poetry:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>poetry
+</pre></div>
+</div>
+<p>In the working directory where source is checked out run <cite>poetry install</cite> or to include all optional dependencies:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>poetry<span class="w"> </span>install
+</pre></div>
+</div>
+<section id="installation-on-ilifu-slurm-environment">
+<h3>Installation on (ILIFU) slurm environment<a class="headerlink" href="#installation-on-ilifu-slurm-environment" title="Link to this heading"></a></h3>
+<p>The installation of CARACal on ilifu has been tried and tested on the Ubuntu 20.0 operating system, although, it should also work on other OS versions. On the login node, follow these instructions:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/path/to/working/area
+module<span class="w"> </span>add<span class="w"> </span>python/3.9.4
+python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>&lt;venv-name&gt;
+<span class="nb">source</span><span class="w"> </span>&lt;venv-name&gt;/bin/activate
+pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>pip<span class="w"> </span>setuptools<span class="w"> </span>wheel
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/caracal-pipeline/caracal.git
+pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>-e<span class="w"> </span>caracal
+deactivate
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">/path/to/working/area</span></code> is the actual path to the directory where you wish to install CARACal.
+In principle, this can also be done in the Slurm environment of ILIFU by submitting an <em>sbatch</em> script.
+Please amend your <cite>pip install</cite> command with <cite>[all]</cite> option when needed in accordance with the instructions above.
+Install the latest release with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>caracal
+</pre></div>
+</div>
+<p>NB: The stimela singularity images needed for CARACal are stored in this location: <code class="docutils literal notranslate"><span class="pre">/software/astro/caracal/</span></code>
+where you can access the latest version of the images, for example, <code class="docutils literal notranslate"><span class="pre">/software/astro/caracal/STIMELA_IMAGES_1.7.0</span></code>.</p>
+<hr class="docutils" />
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="CARACal" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="manual/index.html" class="btn btn-neutral float-right" title="Manual" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, CARACal team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

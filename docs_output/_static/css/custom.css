@@ -1,0 +1,23 @@
+.wy-nav-side {
+    background-color: #004d99;
+}
+
+/* Version branch label below the logo */
+.wy-side-nav-search > div.version {
+    color: #004d99;
+}
+
+/* First level of navigation items */
+
+
+/* First level of navigation items */
+
+.wy-menu-vertical a:hover {
+    background-color: white;
+    color: black;
+}
+
+.wy-menu-vertical a:active {
+    background-color: white;
+}
+

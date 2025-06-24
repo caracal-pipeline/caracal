@@ -1,0 +1,226 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cross-calibration &mdash; CARACal latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=f0ea86f3" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=c6e86fd7"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Continuum imaging and self-calibration" href="../selfcal/index.html" />
+    <link rel="prev" title="Flagging and flag versions" href="../flag/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/caracal_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../caracalREADME.html">Installation &amp; Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../intro/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configfile/index.html">Configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../products/index.html">Data products</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Data reduction</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../workflow/index.html">CARACal workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../prepare/index.html">Set up</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flag/index.html">Flagging and flag versions</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Cross-calibration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#flexible-cross-calibration-strategies">Flexible cross-calibration strategies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#apply-the-cross-calibration-and-diagnostic-plots">Apply the cross-calibration and diagnostic plots</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../selfcal/index.html">Continuum imaging and self-calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../line/index.html">Spectral line imaging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mosaic/index.html">Mosaicking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../workers/index.html">Workers parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../packages/index.html">Software used by CARACal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../caratekit_utility/index.html">Caratekit utility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits/index.html">Acknowledgements</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CARACal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Manual</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Data reduction</a></li>
+      <li class="breadcrumb-item active">Cross-calibration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/manual/reduction/crosscal/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cross-calibration">
+<h1>Cross-calibration<a class="headerlink" href="#cross-calibration" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p><strong>[relevant workers:</strong> <a class="reference internal" href="../../workers/crosscal/index.html#crosscal"><span class="std std-ref">crosscal</span></a>, <a class="reference internal" href="../../workers/inspect/index.html#inspect"><span class="std std-ref">inspect</span></a><strong>]</strong></p>
+<p>Cross-calibration runs largely on CASA tasks. Using these tasks, CARACal allows users to
+solve for delays, bandpass, gains and flux scale in several different ways. The <a class="reference internal" href="../../workers/crosscal/index.html#crosscal"><span class="std std-ref">crosscal</span></a>
+worker operates within the framework that .MS files  include
+a primary (bandpass and flux) calibrator and, optionally, a secondary (gains) calibrator.</p>
+<p>Just as a classic, simple example, it is possible to solve for:</p>
+<ol class="arabic simple">
+<li><p>time-independent antenna delays and normalised bandpass based on the observation of the
+primary calibrator;</p></li>
+<li><p>time-dependent antenna flux scale based on the observation of the primary calibrator;</p></li>
+<li><p>time-dependent antenna gains based on the observation of the secondary calibrator;</p></li>
+<li><p>time-dependent antenna flux scale at fine time resolution obtained by scaling the gains
+from step 3 above to the gains from step 2 above.</p></li>
+</ol>
+<p>However, CARACal allows users to take less traditional cross-calibtation steps, too,
+such as self-calibration on the secondary calibrator, or delay
+calibration on the secondary, and to flag the calibrated visibilities in between
+calibration steps.</p>
+<section id="flexible-cross-calibration-strategies">
+<h2>Flexible cross-calibration strategies<a class="headerlink" href="#flexible-cross-calibration-strategies" title="Link to this heading"></a></h2>
+<p>CARACal allows for powerful and sophisticated cross-calibration strategies thanks
+to the flexibility provided by the parameters <a class="reference internal" href="../../workers/crosscal/index.html#crosscal-primary"><span class="std std-ref">crosscal: primary: order</span></a>
+and <a class="reference internal" href="../../workers/crosscal/index.html#crosscal-secondary"><span class="std std-ref">crosscal: secondary: order</span></a>. These allow users to build
+their favourite sequence of calibration/imaging/flagging steps choosing among:</p>
+<ul class="simple">
+<li><p>K = delay calibration with CASA GAINCAL</p></li>
+<li><p>B = bandpass calibration with CASA BANDPASS</p></li>
+<li><p>G = gain amplitude and/or phase calibration with CASA GAINCAL</p></li>
+<li><p>F = gain amplitude and/or phase calibration with CASA GAINCAL, followed by bootstrapping
+of the flux scale from the primary calibrator with CASA FLUXSCALE (secondary calibrator only)</p></li>
+<li><p>I = imaging with WSCLEAN (secondary calibrator only)</p></li>
+<li><p>A = flagging with CASA FLAGDATA using the tfcrop algorithm</p></li>
+</ul>
+<p>Each of these steps may have its own settings with respect to gain type (e.g., each G could
+be amplitude-only, phase-only, or both amplitude and phase), solution interval, normalisation,
+data combination at boundaries (e.g., scan, SPW), imaging and flagging settings.</p>
+<p>For example, <a class="reference internal" href="../../workers/crosscal/index.html#crosscal-primary"><span class="std std-ref">crosscal: primary: order</span></a>: KGBAKGB results in:</p>
+<ul class="simple">
+<li><p>delay calibration (K);</p></li>
+<li><p>gain calibration (G) applying the intial K on the fly;</p></li>
+<li><p>bandpass calibration (B) applying the initial K and G on the fly;</p></li>
+<li><p>flagging of the visibilities with the initial K, G and B applied;</p></li>
+<li><p>final K calibration applying the initial G and B on the fly;</p></li>
+<li><p>final G calibration applying the final K and initial B on the fly;</p></li>
+<li><p>final B calibration applying the final K and G on the fly.</p></li>
+</ul>
+<p>In this example, it would be possible to set different solution intervals for the
+initial and final G through the <a class="reference internal" href="../../workers/crosscal/index.html#crosscal-primary"><span class="std std-ref">crosscal: primary: solint</span></a>
+parameter, which is a sequence containing one entry per element in
+<a class="reference internal" href="../../workers/crosscal/index.html#crosscal-primary"><span class="std std-ref">crosscal: primary: order</span></a>. In case the solution interval
+is not relevant (A and I steps) users can  give an empty string ‘’. The same applies to
+the calibration parameters <a class="reference internal" href="../../workers/crosscal/index.html#crosscal-primary"><span class="std std-ref">crosscal: primary: calmode</span></a> and
+<a class="reference internal" href="../../workers/crosscal/index.html#crosscal-primary"><span class="std std-ref">crosscal: primary: combine</span></a>.</p>
+<p>An example for the secondary is <a class="reference internal" href="../../workers/crosscal/index.html#crosscal-primary"><span class="std std-ref">crosscal: secondary: order</span></a>: FIG,
+which results in:</p>
+<ul class="simple">
+<li><p>gain calibration and bootstrapping of the flux scale;</p></li>
+<li><p>imaging;</p></li>
+<li><p>gain calibration.</p></li>
+</ul>
+<p>Note that in this example no bootstrapping of the flux scale is necessary
+after the second gain calibration G because the gains are now self-calibrated on
+a I sky model which, following the initial F, is already on the correct flux scale.</p>
+<p>We refer to the <a class="reference internal" href="../../workers/crosscal/index.html#crosscal"><span class="std std-ref">crosscal</span></a> page for a complete description of all cross-calibration parameters.</p>
+</section>
+<section id="apply-the-cross-calibration-and-diagnostic-plots">
+<h2>Apply the cross-calibration and diagnostic plots<a class="headerlink" href="#apply-the-cross-calibration-and-diagnostic-plots" title="Link to this heading"></a></h2>
+<p>CARACal can apply the cross calibration tables to all calibrators (useful for diagnostics).
+It can also apply it to the target, although this can also be done by the <a class="reference internal" href="../../workers/transform/index.html#transform"><span class="std std-ref">transform</span></a> worker
+on the fly while splitting the  target from the input .MS file.
+When applyin the calibration, the <a class="reference internal" href="../../workers/crosscal/index.html#crosscal"><span class="std std-ref">crosscal</span></a> worker adopts the following interpolation rules:</p>
+<ul class="simple">
+<li><p>Delay calibration: applied to primary, secondary, target with nearest, linear, linear interpolation, respectively.</p></li>
+<li><p>Bandpass calibration: applied to primary, secondary, target with nearest, linear, linear interpolation, respectively.</p></li>
+<li><p>Gain calibration before bootstrapping the flux scale: applied to primary, secondary, target
+with linear, linear, linear interpolation, respectively.</p></li>
+<li><p>Gain calibration after bootstrapping the flux scale: applied to primary, secondary, target
+with linear, nearest, linear interpolation, repsectively.</p></li>
+</ul>
+<p>The <a class="reference internal" href="../../workers/crosscal/index.html#crosscal"><span class="std std-ref">crosscal</span></a> worker produces .HTML plots of the various calibration terms for later, interactive
+inspection. Furthermore, the <a class="reference internal" href="../../workers/inspect/index.html#inspect"><span class="std std-ref">inspect</span></a> worker produces .PNG plots of the caibrators’
+calibrated visibilities to check the quality of the calibration. A variety of standard plots are produced,
+such as phase-vs-uvdistance and real-vs-imaginary. Furthermore, users can define their own plots as
+described in the <a class="reference internal" href="../../workers/inspect/index.html#inspect"><span class="std std-ref">inspect</span></a> page.</p>
+<p><em>We strongly recommend that users inspect the .HTML and .PNG plots produced by the</em>
+<a class="reference internal" href="../../workers/crosscal/index.html#crosscal"><span class="std std-ref">crosscal</span></a> <em>and</em> <a class="reference internal" href="../../workers/inspect/index.html#inspect"><span class="std std-ref">inspect</span></a> <em>workers to ensure that the quality of the cross-calibration
+is adequate to their science goals.</em></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../flag/index.html" class="btn btn-neutral float-left" title="Flagging and flag versions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../selfcal/index.html" class="btn btn-neutral float-right" title="Continuum imaging and self-calibration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, CARACal team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

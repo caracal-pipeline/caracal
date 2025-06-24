@@ -1,0 +1,1034 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>selfcal &mdash; CARACal latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=f0ea86f3" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=c6e86fd7"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="transform" href="../transform/index.html" />
+    <link rel="prev" title="prep" href="../prep/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/caracal_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../caracalREADME.html">Installation &amp; Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../intro/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configfile/index.html">Configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../products/index.html">Data products</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reduction/index.html">Data reduction</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Workers parameters</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../crosscal/index.html">crosscal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ddcal/index.html">ddcal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flag/index.html">flag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../general/index.html">general</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getdata/index.html">getdata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../inspect/index.html">inspect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../line/index.html">line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mask/index.html">mask</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mosaic/index.html">mosaic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../obsconf/index.html">obsconf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../prep/index.html">prep</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">selfcal</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#enable"><strong>enable</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#label-in"><strong>label_in</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rewind-flags"><strong>rewind_flags</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#overwrite-flagvers"><strong>overwrite_flagvers</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#calibrate-with"><strong>calibrate_with</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#spwid"><strong>spwid</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ncpu"><strong>ncpu</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#minuvw-m"><strong>minuvw_m</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-npix"><strong>img_npix</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-padding"><strong>img_padding</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-gain"><strong>img_gain</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-mgain"><strong>img_mgain</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-cell"><strong>img_cell</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-weight"><strong>img_weight</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-robust"><strong>img_robust</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-mfs-weighting"><strong>img_mfs_weighting</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-taper"><strong>img_taper</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-maxuv-l"><strong>img_maxuv_l</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-transuv-l"><strong>img_transuv_l</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-niter"><strong>img_niter</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-nmiter"><strong>img_nmiter</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-cleanborder"><strong>img_cleanborder</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-nchans"><strong>img_nchans</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-channelrange"><strong>img_channelrange</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-joinchans"><strong>img_joinchans</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-specfit-nrcoeff"><strong>img_specfit_nrcoeff</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-stokes"><strong>img_stokes</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-multiscale"><strong>img_multiscale</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-multiscale-scales"><strong>img_multiscale_scales</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-multiscale-bias"><strong>img_multiscale_bias</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-nonegative"><strong>img_nonegative</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-nrdeconvsubimg"><strong>img_nrdeconvsubimg</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-nwlayers-factor"><strong>img_nwlayers_factor</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-sofia-settings"><strong>img_sofia_settings</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#img-breizorro-settings"><strong>img_breizorro_settings</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cal-niter"><strong>cal_niter</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#start-iter"><strong>start_iter</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cal-gain-cliplow"><strong>cal_gain_cliplow</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cal-gain-cliphigh"><strong>cal_gain_cliphigh</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cal-timeslots-chunk"><strong>cal_timeslots_chunk</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cal-model-mode"><strong>cal_model_mode</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cal-bjones"><strong>cal_bjones</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cal-cubical"><strong>cal_cubical</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cal-meqtrees"><strong>cal_meqtrees</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aimfast"><strong>aimfast</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#image"><strong>image</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#extract-sources"><strong>extract_sources</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#calibrate"><strong>calibrate</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#restore-model"><strong>restore_model</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#flagging-summary"><strong>flagging_summary</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#transfer-apply-gains"><strong>transfer_apply_gains</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#transfer-model"><strong>transfer_model</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#report"><strong>report</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cabs"><strong>cabs</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../transform/index.html">transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../polcal/index.html">polcal</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../packages/index.html">Software used by CARACal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../caratekit_utility/index.html">Caratekit utility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits/index.html">Acknowledgements</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CARACal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Manual</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Workers parameters</a></li>
+      <li class="breadcrumb-item active">selfcal</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/manual/workers/selfcal/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="selfcal">
+<span id="id1"></span><h1>selfcal<a class="headerlink" href="#selfcal" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>Perform self-calibration on the data.</p>
+<section id="enable">
+<span id="selfcal-enable"></span><h2><strong>enable</strong><a class="headerlink" href="#enable" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em></p>
+<p>Execute the selfcal worker.</p>
+</div></blockquote>
+</section>
+<section id="label-in">
+<span id="selfcal-label-in"></span><h2><strong>label_in</strong><a class="headerlink" href="#label-in" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = corr</em></p>
+<p>Label of the .MS files to process.</p>
+</div></blockquote>
+</section>
+<section id="rewind-flags">
+<span id="selfcal-rewind-flags"></span><h2><strong>rewind_flags</strong><a class="headerlink" href="#rewind-flags" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Rewind flags of the input .MS file(s) to specified version. Note that this is not applied to .MS file(s) you might be running “transfer_apply_gains” on.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Enable segment rewind_flags.</p>
+</div></blockquote>
+<p><strong>mode</strong></p>
+<blockquote>
+<div><p><em>{“reset_worker”, “rewind_to_version”}</em>, <em>optional</em>, <em>default = reset_worker</em></p>
+<p>If mode = ‘reset_worker’ rewind to the flag version before this worker if it exists, or continue if it does not exist; if mode = ‘rewind_to_version’ rewind to the flag version given by ‘version’ and ‘transfer_apply_gains_version’ below.</p>
+</div></blockquote>
+<p><strong>version</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = auto</em></p>
+<p>Flag version to restore. This is applied to the .MS file(s) identified by “label” above. Set to “null” to skip this rewinding step. If ‘auto’ it will rewind to the version prefix_workername_before, where ‘prefix’ is set in the ‘general’ worker, and ‘workername’ is the name of this worker including the suffix ‘__X’ if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.</p>
+</div></blockquote>
+<p><strong>transfer_apply_gains_version</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = auto</em></p>
+<p>Flag version to restore. This is applied to the .MS file(s) identified by “transfer_to_label” in the “transfer_apply_gains” section below. Set to “null” to skip this rewind step. If ‘auto’ it will rewind to the version prefix_workername_before, where ‘prefix’ is set in the ‘general’ worker, and ‘workername’ is the name of this worker including the suffix ‘__X’ if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="overwrite-flagvers">
+<span id="selfcal-overwrite-flagvers"></span><h2><strong>overwrite_flagvers</strong><a class="headerlink" href="#overwrite-flagvers" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Allow CARACal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.</p>
+</div></blockquote>
+</section>
+<section id="calibrate-with">
+<span id="selfcal-calibrate-with"></span><h2><strong>calibrate_with</strong><a class="headerlink" href="#calibrate-with" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>{“meqtrees”, “cubical”}</em>, <em>optional</em>, <em>default = cubical</em></p>
+<p>Tool to use for calibration. Options are meqtrees and cubical.</p>
+</div></blockquote>
+</section>
+<section id="spwid">
+<span id="selfcal-spwid"></span><h2><strong>spwid</strong><a class="headerlink" href="#spwid" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Provide spectral window ID.</p>
+</div></blockquote>
+</section>
+<section id="ncpu">
+<span id="selfcal-ncpu"></span><h2><strong>ncpu</strong><a class="headerlink" href="#ncpu" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Number of CPUs to use for distributed processing. If set to 0 all available CPUs are used. This parameter is passed on to the following software in the selfcal worker, WSClean for imaging, Cubical and MeqTrees for calibration, PyBDSF for source finding.</p>
+</div></blockquote>
+</section>
+<section id="minuvw-m">
+<span id="selfcal-minuvw-m"></span><h2><strong>minuvw_m</strong><a class="headerlink" href="#minuvw-m" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Exclude baselines shorter than this value (given in metres) from the imaging and self-calibration loop.</p>
+</div></blockquote>
+</section>
+<section id="img-npix">
+<span id="selfcal-img-npix"></span><h2><strong>img_npix</strong><a class="headerlink" href="#img-npix" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 1800</em></p>
+<p>Number of pixels in output image.</p>
+</div></blockquote>
+</section>
+<section id="img-padding">
+<span id="selfcal-img-padding"></span><h2><strong>img_padding</strong><a class="headerlink" href="#img-padding" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 1.3</em></p>
+<p>Padding in WSClean.</p>
+</div></blockquote>
+</section>
+<section id="img-gain">
+<span id="selfcal-img-gain"></span><h2><strong>img_gain</strong><a class="headerlink" href="#img-gain" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.10</em></p>
+<p>Fraction of the peak that is cleaned in each minor iteration.</p>
+</div></blockquote>
+</section>
+<section id="img-mgain">
+<span id="selfcal-img-mgain"></span><h2><strong>img_mgain</strong><a class="headerlink" href="#img-mgain" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.90</em></p>
+<p>Gain for major iterations in WSClean. I.e., maximum fraction of the image peak that is cleaned in each major iteration. A value of 1 means that all cleaning happens in the image plane and no major cycle is performed.</p>
+</div></blockquote>
+</section>
+<section id="img-cell">
+<span id="selfcal-img-cell"></span><h2><strong>img_cell</strong><a class="headerlink" href="#img-cell" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 2.</em></p>
+<p>Image pixel size (in units of arcsec).</p>
+</div></blockquote>
+</section>
+<section id="img-weight">
+<span id="selfcal-img-weight"></span><h2><strong>img_weight</strong><a class="headerlink" href="#img-weight" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>{“briggs”, “uniform”, “natural”}</em>, <em>optional</em>, <em>default = briggs</em></p>
+<p>Type of image weighting, where the options are ‘briggs’, ‘uniform’, and ‘natural’. If ‘briggs’, set the ‘img_robust’ parameter.</p>
+</div></blockquote>
+</section>
+<section id="img-robust">
+<span id="selfcal-img-robust"></span><h2><strong>img_robust</strong><a class="headerlink" href="#img-robust" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.</em></p>
+<p>Briggs robust value.</p>
+</div></blockquote>
+</section>
+<section id="img-mfs-weighting">
+<span id="selfcal-img-mfs-weighting"></span><h2><strong>img_mfs_weighting</strong><a class="headerlink" href="#img-mfs-weighting" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = false</em></p>
+<p>Enables MF weighting. Default is enabled.</p>
+</div></blockquote>
+</section>
+<section id="img-taper">
+<span id="selfcal-img-taper"></span><h2><strong>img_taper</strong><a class="headerlink" href="#img-taper" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = 0.</em></p>
+<p>Gaussian taper for imaging (in units of arcsec).</p>
+</div></blockquote>
+</section>
+<section id="img-maxuv-l">
+<span id="selfcal-img-maxuv-l"></span><h2><strong>img_maxuv_l</strong><a class="headerlink" href="#img-maxuv-l" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.</em></p>
+<p>Taper for imaging (in units of lambda).</p>
+</div></blockquote>
+</section>
+<section id="img-transuv-l">
+<span id="selfcal-img-transuv-l"></span><h2><strong>img_transuv_l</strong><a class="headerlink" href="#img-transuv-l" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 10.</em></p>
+<p>Transition length of tukey taper (taper-tukey in WSClean, in % of maxuv).</p>
+</div></blockquote>
+</section>
+<section id="img-niter">
+<span id="selfcal-img-niter"></span><h2><strong>img_niter</strong><a class="headerlink" href="#img-niter" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 1000000</em></p>
+<p>Number of cleaning iterations.</p>
+</div></blockquote>
+</section>
+<section id="img-nmiter">
+<span id="selfcal-img-nmiter"></span><h2><strong>img_nmiter</strong><a class="headerlink" href="#img-nmiter" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Number of major cycles.</p>
+</div></blockquote>
+</section>
+<section id="img-cleanborder">
+<span id="selfcal-img-cleanborder"></span><h2><strong>img_cleanborder</strong><a class="headerlink" href="#img-cleanborder" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 1.3</em></p>
+<p>Clean border.</p>
+</div></blockquote>
+</section>
+<section id="img-nchans">
+<span id="selfcal-img-nchans"></span><h2><strong>img_nchans</strong><a class="headerlink" href="#img-nchans" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 3</em></p>
+<p>Number of channels in output image.</p>
+</div></blockquote>
+</section>
+<section id="img-channelrange">
+<span id="selfcal-img-channelrange"></span><h2><strong>img_channelrange</strong><a class="headerlink" href="#img-channelrange" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>list</em> <em>of int</em>, <em>optional</em>, <em>default = -1</em></p>
+<p>Only image the given channel range. Indices specify channel indices, end index is exclusive. .e.g. 0, 1023. Default ‘-1’ means all channels.</p>
+</div></blockquote>
+</section>
+<section id="img-joinchans">
+<span id="selfcal-img-joinchans"></span><h2><strong>img_joinchans</strong><a class="headerlink" href="#img-joinchans" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Join channels to create MFS image.</p>
+</div></blockquote>
+</section>
+<section id="img-specfit-nrcoeff">
+<span id="selfcal-img-specfit-nrcoeff"></span><h2><strong>img_specfit_nrcoeff</strong><a class="headerlink" href="#img-specfit-nrcoeff" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 2</em></p>
+<p>Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1. Use 0 to disable spectral fitting. Note that spectral fitting is required if you want to do subsequent continumm subtraction using crystalball.</p>
+</div></blockquote>
+</section>
+<section id="img-stokes">
+<span id="selfcal-img-stokes"></span><h2><strong>img_stokes</strong><a class="headerlink" href="#img-stokes" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>{“I”}</em>, <em>optional</em>, <em>default = I</em></p>
+<p>Stokes image to create.</p>
+</div></blockquote>
+</section>
+<section id="img-multiscale">
+<span id="selfcal-img-multiscale"></span><h2><strong>img_multiscale</strong><a class="headerlink" href="#img-multiscale" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Switch on multiscale cleaning.</p>
+</div></blockquote>
+</section>
+<section id="img-multiscale-scales">
+<span id="selfcal-img-multiscale-scales"></span><h2><strong>img_multiscale_scales</strong><a class="headerlink" href="#img-multiscale-scales" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Comma-separated integer scales for multiscale cleaning in pixels. If set to an empty string WSClean selects the scales automatically. These include the 0 scale, a scale calculated based on the beam size, and all scales obtained increasing the scale by a factor of 2 until the image size is reached.</p>
+</div></blockquote>
+</section>
+<section id="img-multiscale-bias">
+<span id="selfcal-img-multiscale-bias"></span><h2><strong>img_multiscale_bias</strong><a class="headerlink" href="#img-multiscale-bias" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.6</em></p>
+<p>Comma-separated set of biases for multiscale cleaning. This balances between how sensitive the algorithm is towards large scales compared to smaller scales. Lower values will clean larger scales earlier and deeper. Its default is 0.6, which means something like “if a peak is 0.6 times larger at a 2x larger scale, select the larger scale”</p>
+</div></blockquote>
+</section>
+<section id="img-nonegative">
+<span id="selfcal-img-nonegative"></span><h2><strong>img_nonegative</strong><a class="headerlink" href="#img-nonegative" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Do not allow negative components during cleaning</p>
+</div></blockquote>
+</section>
+<section id="img-nrdeconvsubimg">
+<span id="selfcal-img-nrdeconvsubimg"></span><h2><strong>img_nrdeconvsubimg</strong><a class="headerlink" href="#img-nrdeconvsubimg" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 1</em></p>
+<p>Speed-up deconvolution by splitting the image into a number of subimages, which are deconvolved in parallel. This parameter sets the number of subimages as follows. If set to 1 no parallel deconvolution is performed. If set to 0 the number of subimages is the same as the number of CPUs used by the selfcal worker (see “ncpu” parameter above). If set to a number &gt; 1 , the number of subimages is greater than or equal to the one requested by the user.</p>
+</div></blockquote>
+</section>
+<section id="img-nwlayers-factor">
+<span id="selfcal-img-nwlayers-factor"></span><h2><strong>img_nwlayers_factor</strong><a class="headerlink" href="#img-nwlayers-factor" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 3</em></p>
+<p>Use automatic calculation of the number of w-layers, but multiple that number by the given factor. This can e.g. be useful for increasing w-accuracy. In practice, if there are more cores available than the number of w-layers asked for then the number of w-layers used will equal the number of cores available.</p>
+</div></blockquote>
+</section>
+<section id="img-sofia-settings">
+<span id="selfcal-img-sofia-settings"></span><h2><strong>img_sofia_settings</strong><a class="headerlink" href="#img-sofia-settings" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>SoFiA source finder settings used for the imaging iterations whose entry in ‘image/cleanmask_method’ below is ‘sofia’. The resulting clean mask is located in &lt;output&gt;/masking.</p>
+<p><strong>kernels</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of float</em>, <em>optional</em>, <em>default = 0., 3., 6., 9.</em></p>
+<p>FWHM of spatial Gaussian kernels in pixels.</p>
+</div></blockquote>
+<p><strong>pospix</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Merges only positive pixels of sources in mask.</p>
+</div></blockquote>
+<p><strong>flag</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Set whether flag regions are to be used (True) or not (False).</p>
+</div></blockquote>
+<p><strong>flagregion</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], …].</p>
+</div></blockquote>
+<p><strong>inputmask</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>User-provided input-mask that will be (regridded if needed and) added onto the SoFiA mask.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="img-breizorro-settings">
+<span id="selfcal-img-breizorro-settings"></span><h2><strong>img_breizorro_settings</strong><a class="headerlink" href="#img-breizorro-settings" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Breizorro settings used for the imaging iterations whose entry in ‘image/cleanmask_method’ below is ‘breizorro’. The resulting clean mask is located in &lt;output&gt;/masking.</p>
+<p><strong>boxsize</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 50</em></p>
+<p>Box size over which to compute stats (default = 50)</p>
+</div></blockquote>
+<p><strong>dilate</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Apply dilation with a radius of R pixels</p>
+</div></blockquote>
+<p><strong>fill_holes</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = false</em></p>
+<p>Fill holes (i.e. entirely closed regions) in mask</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="cal-niter">
+<span id="selfcal-cal-niter"></span><h2><strong>cal_niter</strong><a class="headerlink" href="#cal-niter" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 2</em></p>
+<p>Number of self-calibration iterations to perform.</p>
+</div></blockquote>
+</section>
+<section id="start-iter">
+<span id="selfcal-start-iter"></span><h2><strong>start_iter</strong><a class="headerlink" href="#start-iter" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 1</em></p>
+<p>Start selfcal iteration loop at this start value (1-indexed).</p>
+</div></blockquote>
+</section>
+<section id="cal-gain-cliplow">
+<span id="selfcal-cal-gain-cliplow"></span><h2><strong>cal_gain_cliplow</strong><a class="headerlink" href="#cal-gain-cliplow" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.5</em></p>
+<p>Lower threshold for clipping on gain amplitude.</p>
+</div></blockquote>
+</section>
+<section id="cal-gain-cliphigh">
+<span id="selfcal-cal-gain-cliphigh"></span><h2><strong>cal_gain_cliphigh</strong><a class="headerlink" href="#cal-gain-cliphigh" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 2.</em></p>
+<p>Upper threshold for clipping on gain amplitude.</p>
+</div></blockquote>
+</section>
+<section id="cal-timeslots-chunk">
+<span id="selfcal-cal-timeslots-chunk"></span><h2><strong>cal_timeslots_chunk</strong><a class="headerlink" href="#cal-timeslots-chunk" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = -1</em></p>
+<p>Chunk data up by this number of timeslots. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the time solution intervals that may be employed. 0 means ‘use the full time-axis’ but does not cross scan boundaries. -1 means ‘use the largest solution interval’.</p>
+</div></blockquote>
+</section>
+<section id="cal-model-mode">
+<span id="selfcal-cal-model-mode"></span><h2><strong>cal_model_mode</strong><a class="headerlink" href="#cal-model-mode" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>{“vis_only”, “pybdsm_only”, “pybdsm_vis”}</em>, <em>optional</em>, <em>default = vis_only</em></p>
+<p>Mode for using a calibration model, based on visibilities and/or PyBDSM source-finding. Options are vis_only, pybdsm_only, and pybdsm_vis. ‘vis_only’ means that only MODEL_DATA will be used to to calibrate. ‘pybdsm_only’ means that PyBDSM-generated, tigger-format local sky models will be used. ‘pybdsm_vis’ is the same as the ‘pybdsm_only’ mode except for the last iteration of selfcal, where the PyBDSM-based model is complemented by MODEL_DATA. This third mode is only to be used with output_data set to ‘CORR_RES’ (below) and is very tricky. Therefore, user discretion is advised.</p>
+</div></blockquote>
+</section>
+<section id="cal-bjones">
+<span id="selfcal-cal-bjones"></span><h2><strong>cal_bjones</strong><a class="headerlink" href="#cal-bjones" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable calculation of the B-Jones matrix, for bandpass calibration.</p>
+</div></blockquote>
+</section>
+<section id="cal-cubical">
+<span id="selfcal-cal-cubical"></span><h2><strong>cal_cubical</strong><a class="headerlink" href="#cal-cubical" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Parameters that only apply when using CubiCal for the calibration.</p>
+<p><strong>max_prior_error</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.3</em></p>
+<p>Flag solution intervals where the prior variance estimate is above this value.</p>
+</div></blockquote>
+<p><strong>max_post_error</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.3</em></p>
+<p>Flag solution intervals where the posterior variance estimate is above this value.</p>
+</div></blockquote>
+<p><strong>chan_chunk</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = -1</em></p>
+<p>Chunk data up by this number of channels. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the frequency solution intervals that may be employed. 0 means ‘use the full frequency-axis’ but does not cross SPW boundaries. -1 means ‘use the largest solution interval’.</p>
+</div></blockquote>
+<p><strong>weight_col</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = WEIGHT</em></p>
+<p>Column with weights for use in CubiCal.</p>
+</div></blockquote>
+<p><strong>shared_mem</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = 100Gb</em></p>
+<p>Set the amount of shared memory for CubiCal.</p>
+</div></blockquote>
+<p><strong>flag_madmax</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Flags based on maximum of mad in CubiCal.</p>
+</div></blockquote>
+<p><strong>madmax_flag_thr</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of int</em>, <em>optional</em>, <em>default = 0, 10</em></p>
+<p>Threshold for madmax flagging in CubiCal, where the provided list works exactly as described in CubiCal readthedocs for the parameter –madmax-threshold.</p>
+</div></blockquote>
+<p><strong>solterm_niter</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of int</em>, <em>optional</em>, <em>default = 50, 50, 50</em></p>
+<p>Number of iterations per Jones term for CubiCal. Always a 3 digit array with iterations for ‘G,B,GA’ even when B or GA are not used.</p>
+</div></blockquote>
+<p><strong>overwrite</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Allow CubiCal to overwrite the existing gain_tables and other CubiCal output for self-calibration that were produced in a previous run of the selfcal worker with the same prefix.</p>
+</div></blockquote>
+<p><strong>dist_max_chunks</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 4</em></p>
+<p>Maximum number of time/freq data-chunks to load into memory simultaneously. If set to 0, then as many data-chunks as possible will be loaded.</p>
+</div></blockquote>
+<p><strong>out_derotate</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Explicitly enables or disables derotation of output visibilities. Default (None) is to use the –model-pa-rotate and –model-feed-rotate settings.</p>
+</div></blockquote>
+<p><strong>model_pa_rotate</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Apply parallactic angle rotation to model visibilities. Enable this for alt-azmounts, unless your model visibilities are already rotated.</p>
+</div></blockquote>
+<p><strong>model_feed_rotate</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Apply a feed angle rotation to the model visibilities. Use ‘auto’ to read angles from FEED subtable, or give an explicit value in degrees.</p>
+</div></blockquote>
+<p><strong>gain_plot</strong></p>
+<blockquote>
+<div><p>Use cubical gain-plotter to plot diagnostic plots for self-calibration.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the plotting of diagnostics, using gain-plotter.</p>
+</div></blockquote>
+<p><strong>diag</strong></p>
+<blockquote>
+<div><p><em>{“ri”, “ap”, “none”}</em>, <em>optional</em>, <em>default = ap</em></p>
+<p>Plot diagonal elements as real/imag or amp/phase.</p>
+</div></blockquote>
+<p><strong>off_diag</strong></p>
+<blockquote>
+<div><p><em>{“ri”, “ap”, “none”}</em>, <em>optional</em>, <em>default = none</em></p>
+<p>Also plot off-diagonal elements as real/imag or amp/phase.</p>
+</div></blockquote>
+<p><strong>nrow</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 6</em></p>
+<p>Number of plot rows.</p>
+</div></blockquote>
+<p><strong>ncol</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 12</em></p>
+<p>Number of plot columns.</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="cal-meqtrees">
+<span id="selfcal-cal-meqtrees"></span><h2><strong>cal_meqtrees</strong><a class="headerlink" href="#cal-meqtrees" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Parameters that only apply when using MeqTrees for the calibration.</p>
+<p><strong>two_step</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Trigger a two-step calibration process in MeqTrees where the phase-only calibration is applied before continuing with amplitude + phase-calibration. Aimfast is turned on to determine the solution sizes automatically.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="aimfast">
+<span id="selfcal-aimfast"></span><h2><strong>aimfast</strong><a class="headerlink" href="#aimfast" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Quality assessment parameter.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘aimfast’ segment.</p>
+</div></blockquote>
+<p><strong>tol</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.02</em></p>
+<p>Relative change in weighted mean of metrics (specified via convergence_criteria below) from aimfast.</p>
+</div></blockquote>
+<p><strong>convergence_criteria</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>The residual statistic to check convergence against. Every metric/criterion listed will be combined into a weighted mean. Options are ‘DR’ (dynamic range), ‘MEAN’ (mean of the residual flux), ‘STDDev’ (standard deviation), ‘SKEW’ (skewness, 3rd-moment), and ‘KURT’ (kurtosis, 4th-moment). However, note that when cal_model_mode = ‘vis_only’, ‘DR’ is no longer an option. Default is ‘’, which means no convergence is checked.</p>
+</div></blockquote>
+<p><strong>area_factor</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 6</em></p>
+<p>A multiplicative factor that sets the total area over which the metrics are calculated, where total_area = psf_size*area_factor. This area is centred on the position of peak flux-density in the image.</p>
+</div></blockquote>
+<p><strong>radius</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.6</em></p>
+<p>Cross-matching radius (in units of arcsec), for comparing source properties in a catalogue before and after an iteration of self-calibration.</p>
+</div></blockquote>
+<p><strong>normality_model</strong></p>
+<blockquote>
+<div><p><em>{“normaltest”, “shapiro”}</em>, <em>optional</em>, <em>default = normaltest</em></p>
+<p>The type of normality test, to use for testing how well the residual image is modelled by a normal distribution. Options are ‘normaltest’ (i.e. D’Agostino) and ‘shapiro’.</p>
+</div></blockquote>
+<p><strong>plot</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Generate html plots for comparing catalogues and residuals.</p>
+</div></blockquote>
+<p><strong>online_catalog</strong></p>
+<blockquote>
+<div><p>Perform an online catalog comparison</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable online comparison</p>
+</div></blockquote>
+<p><strong>catalog_type</strong></p>
+<blockquote>
+<div><p><em>{“nvss”, “sumss”}</em>, <em>optional</em>, <em>default = nvss</em></p>
+<p>Online catalog type to compare local models</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="image">
+<span id="selfcal-image"></span><h2><strong>image</strong><a class="headerlink" href="#image" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Imaging parameters.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘image’ segment.</p>
+</div></blockquote>
+<p><strong>col</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of str</em>, <em>optional</em>, <em>default = DATA, CORRECTED_DATA</em></p>
+<p>Column(s) to image.</p>
+</div></blockquote>
+<p><strong>clean_cutoff</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of float</em>, <em>optional</em>, <em>default = 0.5, 0.5</em></p>
+<p>Cleaning threshold to be used by WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the noise level estimated by WSClean from the residual image before the start of every major deconvolution iteration.</p>
+</div></blockquote>
+<p><strong>cleanmask_method</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of str</em>, <em>optional</em>, <em>default = wsclean, wsclean</em></p>
+<p>Method used to create the clean mask. The possible values are 1) ‘wsclean’ to use WSClean’s auto-masking (threshold set by clean_mask_threshold below); 2) ‘sofia’ to create a clean mask using SoFiA (threshold set by clean_mask_threshold below, and additional settings in sofia_settings, do not use if output_data = CORR_RES ); 3) ‘breizorro’  to create a clean mask using Breizorro (threshold set by clean_mask_threshold below, and additional settings in breizorro_settings; 4) a prefix string to use an existing .FITS mask located in output/masking and called prefix_target.fits, where the name of the target is set automatically by the pipeline. The latter .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this third  maskingm ethod can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output/masking.</p>
+</div></blockquote>
+<p><strong>cleanmask_thr</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of float</em>, <em>optional</em>, <em>default = 10.0, 6.0</em></p>
+<p>Threshold used to create the clean mask when clean_mask_method = ‘wsclean’, ‘sofia’ or ‘breizorro’. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the (local) noise level.</p>
+</div></blockquote>
+<p><strong>cleanmask_localrms</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of bool</em>, <em>optional</em>, <em>default = False, False</em></p>
+<p>Use a local-rms measurement when creating a clean mask with clean_mask_method = ‘wsclean’ or ‘sofia’. If clean_mask_method = ‘wsclean’, this local-rms setting is also used for the clean_threshold above. Otherwise it is only used to define the clean mask, and clean_threshold is in terms of the global noise (rather than the local noise).</p>
+</div></blockquote>
+<p><strong>cleanmask_localrms_window</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of int</em>, <em>optional</em>, <em>default = 31, 31</em></p>
+<p>Width of the window used to measure the local rms when creating the clean mask. The window width is in pixels for clean_mask_method = ‘sofia’, and in PSFs for clean_mask_method = ‘wsclean’.</p>
+</div></blockquote>
+<p><strong>ncpu_img</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Number of threads used by wsclean; has a default value of ‘0’. If specified in the configuration file, will overrule the value set by ncpu, which is the global default for both cubical and wsclean</p>
+</div></blockquote>
+<p><strong>absmem</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 100.0</em></p>
+<p>Specifies a fixed amount of memory in gigabytes.</p>
+</div></blockquote>
+<p><strong>nr_parallel_grid</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 1</em></p>
+<p>Will execute multiple gridders simultaneously when using w-stacking. When parallel gridding is not possible, or when image sizes are reasonably large (say 5k-10k), the w-gridder might be a better choice.</p>
+</div></blockquote>
+<p><strong>use_wgridder</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Use the w-gridding gridder developed by Martin Reinecke. Otherwise, the default will be w-stacking.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="extract-sources">
+<span id="selfcal-extract-sources"></span><h2><strong>extract_sources</strong><a class="headerlink" href="#extract-sources" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Source-finding parameters.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘extract_sources’ segment.</p>
+</div></blockquote>
+<p><strong>sourcefinder</strong></p>
+<blockquote>
+<div><p><em>{“pybdsm”, “sofia”}</em>, <em>optional</em>, <em>default = pybdsm</em></p>
+<p>Set the source finder to be used. Options are ‘pybdsm’ (i.e. pybdsf) and ‘sofia’.</p>
+</div></blockquote>
+<p><strong>local_rms</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Use a local-rms estimate when applying the source-finding detection threshold.</p>
+</div></blockquote>
+<p><strong>spi</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Extract the spectral index for the fitted sources.</p>
+</div></blockquote>
+<p><strong>thr_pix</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of int</em>, <em>optional</em>, <em>default = 5</em></p>
+<p>Pixel threshold to be used for the source finder. I.e. the minimum number of contiguous pixels for emission to be classed as a ‘source’.</p>
+</div></blockquote>
+<p><strong>thr_isl</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of int</em>, <em>optional</em>, <em>default = 3</em></p>
+<p>Threshold to be used by the source finder to set the island boundary, given in the number of sigma above the mean. This determines the extent of the island used for fitting.</p>
+</div></blockquote>
+<p><strong>detection_image</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Constrain the PyBDSM source-finding to only find sources included in the clean model.</p>
+</div></blockquote>
+<p><strong>breizorro_image</strong></p>
+<blockquote>
+<div><p>Use breizorro image.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Use a breizorro product image to perform source finding in order to do source comparison.</p>
+</div></blockquote>
+<p><strong>sum_to_peak</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 500</em></p>
+<p>Sum to peak ratio of flux islands to mask in original image. Default = 500, will mask everything with a ratio above 500.</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="calibrate">
+<span id="selfcal-calibrate"></span><h2><strong>calibrate</strong><a class="headerlink" href="#calibrate" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Calibration parameters.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘calibrate’ segment.</p>
+</div></blockquote>
+<p><strong>model</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of str</em>, <em>optional</em>, <em>default = 1,2</em></p>
+<p>Model number to use, or a combination of models. E.g. ‘1+2’ to use the first and second models for calibration.</p>
+</div></blockquote>
+<p><strong>output_data</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of str</em>, <em>optional</em>, <em>default = CORR_DATA</em></p>
+<p>Data to output after calibration. Options are ‘PA_DATA’, ‘CORR_RES’, ‘CORR_DATA’ or ‘CORRECTED_DATA’, where CORR_DATA and CORRECTED_DATA are synonyms. Note that for ‘PA_DATA’ only parallactic angle corrections will be applied to the data to produce ‘CORRECTED_DATA’ column.</p>
+</div></blockquote>
+<p><strong>gain_matrix_type</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of str</em>, <em>optional</em>, <em>default = Fslope, Fslope</em></p>
+<p>Gain matrix type. ‘GainDiagPhase’ = phase-only calibration, ‘GainDiagAmp’ = amplitude only, ‘GainDiag’ = Amplitude + Phase, ‘Gain2x2’ = Amplitude + Phase taking non-diagonal terms into account, ‘Fslope’ = delay selfcal (for which solution intervals should be set to at least twice the values you would use for GainDiagPhase). Note that Fslope does not work with MeqTrees.</p>
+</div></blockquote>
+<p><strong>gsols_timeslots</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of int</em>, <em>optional</em>, <em>default = 2</em></p>
+<p>G-Jones time solution interval. The parameter cal_timeslots_chunk above should be a multiple of Gsols_time. 0 entails using a single solution for the full time of the observations.</p>
+</div></blockquote>
+<p><strong>gsols_chan</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>G-Jones frequency solution interval. The parameter chan_chunk in calibrate section should a multiple of Gsols_channel. 0 entails using a single solution for the full bandwidth.</p>
+</div></blockquote>
+<p><strong>bsols_timeslots</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>B-Jones solutions for individual calibration steps in time.</p>
+</div></blockquote>
+<p><strong>bsols_chan</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of int</em>, <em>optional</em>, <em>default = 2</em></p>
+<p>B-Jones solutions for individual calibration steps in frequency.</p>
+</div></blockquote>
+<p><strong>gasols_timeslots</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of int</em>, <em>optional</em>, <em>default = -1</em></p>
+<p>Time intervals for amplitude calibration in CubiCal. 0 indicates average all. -1 defaults to Gsols_timeslots. If different from Gsols_timeslots, a second matrix is used and applied.</p>
+</div></blockquote>
+<p><strong>gasols_chan</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of int</em>, <em>optional</em>, <em>default = -1</em></p>
+<p>Channel intervals for amplitude calibration in CubiCal. 0 indicates average all. -1 defaults to Gsols_channel. If different from Gsols_channels, a second matrix is used and applied.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="restore-model">
+<span id="selfcal-restore-model"></span><h2><strong>restore_model</strong><a class="headerlink" href="#restore-model" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Take the modelled source(s) and restore it(/them) to the final, calibrated residual image.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘restore_model’ segment.</p>
+</div></blockquote>
+<p><strong>model</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = 1+2</em></p>
+<p>Model number to use, or a combination of models. E.g. ‘1+2’ to use the first and second models.</p>
+</div></blockquote>
+<p><strong>clean_model</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = 3</em></p>
+<p>Clean model number to use, or combination of clean models. E.g. ‘1+2’ to use the first and second clean models.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="flagging-summary">
+<span id="selfcal-flagging-summary"></span><h2><strong>flagging_summary</strong><a class="headerlink" href="#flagging-summary" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Output the flagging summary.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘flagging_summary’ segment.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="transfer-apply-gains">
+<span id="selfcal-transfer-apply-gains"></span><h2><strong>transfer_apply_gains</strong><a class="headerlink" href="#transfer-apply-gains" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Interpolate gains over the high frequency-resolution data.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘transfer_apply_gains’ segment.</p>
+</div></blockquote>
+<p><strong>transfer_to_label</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = corr</em></p>
+<p>Label of cross-calibrated .MS file to which to transfer and apply the selfcal gains.</p>
+</div></blockquote>
+<p><strong>interpolate</strong></p>
+<blockquote>
+<div><p>To interpolate the gains or not to interpolate the gains. That is indeed the question.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Enable gain interpolation.</p>
+</div></blockquote>
+<p><strong>timeslots_int</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = -1</em></p>
+<p>Solution interval in time (units of timeslots/integration time) for transferring gains. -1 means use the solution interval from the calibration that is applied.</p>
+</div></blockquote>
+<p><strong>chan_int</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = -1</em></p>
+<p>Solution interval in frequency (units of channels) for transferring gains. -1 means use the solution interval from the calibration that is applied.</p>
+</div></blockquote>
+<p><strong>timeslots_chunk</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = -1</em></p>
+<p>Time chunk in units of timeslots for transferring gains with CubiCal. -1 means use the solution interval from the calibration that is applied.</p>
+</div></blockquote>
+<p><strong>chan_chunk</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = -1</em></p>
+<p>Frequency chunk in units of channels for transferring gains with CubiCal. ‘0’ means the whole spw. -1 means use the solution interval from the calibration that is applied.</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="transfer-model">
+<span id="selfcal-transfer-model"></span><h2><strong>transfer_model</strong><a class="headerlink" href="#transfer-model" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Transfer the model from the last WSClean imaging run to the MODEL_DATA column of another .MS .</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘transfer_model’ segment.</p>
+</div></blockquote>
+<p><strong>transfer_to_label</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = corr</em></p>
+<p>Label of the .MS file to which to transfer the model.</p>
+</div></blockquote>
+<p><strong>model</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = auto</em></p>
+<p>Name of the sky model file. (Currently the only supported format is that of WSClean component lists.) When ‘auto’, the pipeline builds the file name from the input parameters of the selfcal loop. The file is assumed to be in the ‘output’ directory.</p>
+</div></blockquote>
+<p><strong>row_chunks</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Number of rows of the input .MS that are processed in a single chunk.</p>
+</div></blockquote>
+<p><strong>model_chunks</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Number of sky model components that are processed in a single chunk.</p>
+</div></blockquote>
+<p><strong>within</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Give the JS9 region file. Only sources within those regions will be included.</p>
+</div></blockquote>
+<p><strong>points_only</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Select only ‘point’ sources.</p>
+</div></blockquote>
+<p><strong>num_sources</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Select only N brightest sources.</p>
+</div></blockquote>
+<p><strong>num_workers</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Explicitly set the number of worker threads. Default is 0, meaning it uses all threads.</p>
+</div></blockquote>
+<p><strong>mem_frac</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.05</em></p>
+<p>Fraction of system RAM that can be used. Used when setting automatically the chunk size.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="report">
+<span id="selfcal-report"></span><h2><strong>report</strong><a class="headerlink" href="#report" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>(Re)generate a full HTML report at the end of this worker.</p>
+</div></blockquote>
+</section>
+<section id="cabs">
+<span id="selfcal-cabs"></span><h2><strong>cabs</strong><a class="headerlink" href="#cabs" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>list</em> <em>of map</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.</p>
+</div></blockquote>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../prep/index.html" class="btn btn-neutral float-left" title="prep" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../transform/index.html" class="btn btn-neutral float-right" title="transform" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, CARACal team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

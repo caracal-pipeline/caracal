@@ -1,0 +1,304 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>prep &mdash; CARACal latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=f0ea86f3" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=c6e86fd7"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="selfcal" href="../selfcal/index.html" />
+    <link rel="prev" title="obsconf" href="../obsconf/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/caracal_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../caracalREADME.html">Installation &amp; Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../intro/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configfile/index.html">Configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../products/index.html">Data products</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reduction/index.html">Data reduction</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Workers parameters</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../crosscal/index.html">crosscal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ddcal/index.html">ddcal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flag/index.html">flag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../general/index.html">general</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getdata/index.html">getdata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../inspect/index.html">inspect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../line/index.html">line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mask/index.html">mask</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mosaic/index.html">mosaic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../obsconf/index.html">obsconf</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">prep</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#enable"><strong>enable</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#label-in"><strong>label_in</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#field"><strong>field</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tol"><strong>tol</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tol-diff"><strong>tol_diff</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fixuvw"><strong>fixuvw</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fixcalcoords"><strong>fixcalcoords</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#clearcal"><strong>clearcal</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#manage-flags"><strong>manage_flags</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#specweights"><strong>specweights</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#report"><strong>report</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cabs"><strong>cabs</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../selfcal/index.html">selfcal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../transform/index.html">transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../polcal/index.html">polcal</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../packages/index.html">Software used by CARACal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../caratekit_utility/index.html">Caratekit utility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits/index.html">Acknowledgements</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CARACal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Manual</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Workers parameters</a></li>
+      <li class="breadcrumb-item active">prep</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/manual/workers/prep/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="prep">
+<span id="id1"></span><h1>prep<a class="headerlink" href="#prep" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>Prepare the data for calibration and imaging.</p>
+<section id="enable">
+<span id="prep-enable"></span><h2><strong>enable</strong><a class="headerlink" href="#enable" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em></p>
+<p>Execute the prep worker (i.e. the  data-preparation step).</p>
+</div></blockquote>
+</section>
+<section id="label-in">
+<span id="prep-label-in"></span><h2><strong>label_in</strong><a class="headerlink" href="#label-in" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em></p>
+<p>If this label is an empty string this worker operates on the input .MS file(s) given in the getdata worker. If the label is not an empty string then it is added to the input .MS file(s) name (specified for the getdata worker) to define the name of the .MS file(s) to work on. These are named &lt;input&gt;_&lt;label&gt;.ms if ‘field’ (see below) is set to ‘calibrators’, or &lt;input&gt;-&lt;target&gt;_&lt;label&gt;.ms if ‘field’ is set to ‘target’ (with one .MS file for each target in the input .MS).</p>
+</div></blockquote>
+</section>
+<section id="field">
+<span id="prep-field"></span><h2><strong>field</strong><a class="headerlink" href="#field" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>{“target”, “calibrators”}</em>, <em>optional</em>, <em>default = calibrators</em></p>
+<p>In combination with a non-empty ‘label_in’ (see above), ‘field’ defines which .MS file(s) to work on. This parameter is ignored if ‘label_in’ is empty. Options are ‘target’ and ‘calibrators’.</p>
+</div></blockquote>
+</section>
+<section id="tol">
+<span id="prep-tol"></span><h2><strong>tol</strong><a class="headerlink" href="#tol" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 360.0</em></p>
+<p>Tolerance (in arcseconds) for matching calibrator to database names.</p>
+</div></blockquote>
+</section>
+<section id="tol-diff">
+<span id="prep-tol-diff"></span><h2><strong>tol_diff</strong><a class="headerlink" href="#tol-diff" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 1.0</em></p>
+<p>Tolerance (in arcseconds) for checking if coordinates differ from those in the database so much that rephasing is required. Please keep the value less than ‘tol’ .</p>
+</div></blockquote>
+</section>
+<section id="fixuvw">
+<span id="prep-fixuvw"></span><h2><strong>fixuvw</strong><a class="headerlink" href="#fixuvw" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Fix the UVW coordinates through the CASA task ‘fixvis’.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘fixvis’ segment.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="fixcalcoords">
+<span id="prep-fixcalcoords"></span><h2><strong>fixcalcoords</strong><a class="headerlink" href="#fixcalcoords" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Fix the coordinates of the bandpass calibrators.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable fixing calibrator coodinate fixing segment.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="clearcal">
+<span id="prep-clearcal"></span><h2><strong>clearcal</strong><a class="headerlink" href="#clearcal" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Clear out calibrated data and reset the previous predicted model.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘clearcal’ segment</p>
+</div></blockquote>
+<p><strong>addmodel</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Enable ‘addmodel’ which will add the scratch columns if they don’t exist. Switch this on when using crystalball models for primary.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="manage-flags">
+<span id="prep-manage-flags"></span><h2><strong>manage_flags</strong><a class="headerlink" href="#manage-flags" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Manage flags.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Enable the ‘manage_flags’ segment.</p>
+</div></blockquote>
+<p><strong>mode</strong></p>
+<blockquote>
+<div><p><em>{“legacy”, “restore”}</em>, <em>optional</em>, <em>default = legacy</em></p>
+<p>Mode for managing flags. If set to ‘legacy’, save the current FLAG column as a ‘caracal_legacy’ flag version if a flag version with that name does not exisy yet; else restore the ‘caracal_legacy’ flag version and delete all flag versions created after it. If set to ‘restore’, restore flags from the flag version specified by ‘version’ below, and delete all flag versions created after that version.</p>
+</div></blockquote>
+<p><strong>version</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = auto</em></p>
+<p>Name of the flag version to restore. If set to ‘auto’, rewind to the version prefix_workername_before, where ‘prefix’ is set in the ‘general’ worker, and ‘workername’ is the name of this worker including the suffix ‘__X’ if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="specweights">
+<span id="prep-specweights"></span><h2><strong>specweights</strong><a class="headerlink" href="#specweights" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>How to initialize spectral weights.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘spectral_weights’ segment.</p>
+</div></blockquote>
+<p><strong>mode</strong></p>
+<blockquote>
+<div><p><em>{“uniform”, “calculate”, “delete”}</em>, <em>optional</em>, <em>default = uniform</em></p>
+<p>Mode for spectral weights. Options are ‘uniform’ (set all weights to unity), ‘estimate’ (estimate spectral weights from frequency-dependent SEFD/Tsys/Noise values, and see ‘estimate’ segment of this section), and ‘delete’ (delete WEIGHT_SPECTRUM column if it exists).</p>
+</div></blockquote>
+<p><strong>calculate</strong></p>
+<blockquote>
+<div><p>Calculate spectral weights from frequency-dependent SEFD/Tsys/Noise values.</p>
+<p><strong>statsfile</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = use_package_meerkat_spec</em></p>
+<p>File with SEFD/Tsys/Noise data. If data is from the MeerKAT telescope, you can specify ‘use_package_meerkat_spec’ to use package data.</p>
+</div></blockquote>
+<p><strong>weightcols</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of str</em>, <em>optional</em>, <em>default = WEIGHT, WEIGHT_SPECTRUM</em></p>
+<p>Column names for spectral weights.</p>
+</div></blockquote>
+<p><strong>noisecols</strong></p>
+<blockquote>
+<div><p><em>list</em> <em>of str</em>, <em>optional</em>, <em>default = SIGMA, SIGMA_SPECTRUM</em></p>
+<p>Column names for noise values.</p>
+</div></blockquote>
+<p><strong>apply</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Write columns to file.</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="report">
+<span id="prep-report"></span><h2><strong>report</strong><a class="headerlink" href="#report" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>(Re)generate a full HTML report at the end of this worker.</p>
+</div></blockquote>
+</section>
+<section id="cabs">
+<span id="prep-cabs"></span><h2><strong>cabs</strong><a class="headerlink" href="#cabs" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>list</em> <em>of map</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.</p>
+</div></blockquote>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../obsconf/index.html" class="btn btn-neutral float-left" title="obsconf" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../selfcal/index.html" class="btn btn-neutral float-right" title="selfcal" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, CARACal team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

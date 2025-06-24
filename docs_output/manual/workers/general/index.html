@@ -1,0 +1,240 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>general &mdash; CARACal latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=f0ea86f3" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=c6e86fd7"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="getdata" href="../getdata/index.html" />
+    <link rel="prev" title="flag" href="../flag/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/caracal_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../caracalREADME.html">Installation &amp; Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../intro/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configfile/index.html">Configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../products/index.html">Data products</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reduction/index.html">Data reduction</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Workers parameters</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../crosscal/index.html">crosscal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ddcal/index.html">ddcal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flag/index.html">flag</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">general</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#title"><strong>title</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#msdir"><strong>msdir</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rawdatadir"><strong>rawdatadir</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#input"><strong>input</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#output"><strong>output</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#prefix"><strong>prefix</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#prep-workspace"><strong>prep_workspace</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#init-notebooks"><strong>init_notebooks</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#report-notebooks"><strong>report_notebooks</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#final-report"><strong>final_report</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backend"><strong>backend</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cabs"><strong>cabs</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../getdata/index.html">getdata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../inspect/index.html">inspect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../line/index.html">line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mask/index.html">mask</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mosaic/index.html">mosaic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../obsconf/index.html">obsconf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../prep/index.html">prep</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../selfcal/index.html">selfcal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../transform/index.html">transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../polcal/index.html">polcal</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../packages/index.html">Software used by CARACal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../caratekit_utility/index.html">Caratekit utility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits/index.html">Acknowledgements</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CARACal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Manual</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Workers parameters</a></li>
+      <li class="breadcrumb-item active">general</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/manual/workers/general/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="general">
+<span id="id1"></span><h1>general<a class="headerlink" href="#general" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>General pipeline information, including data IDs, and prefixes for output files.</p>
+<section id="title">
+<span id="general-title"></span><h2><strong>title</strong><a class="headerlink" href="#title" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>An optional project title.</p>
+</div></blockquote>
+</section>
+<section id="msdir">
+<span id="general-msdir"></span><h2><strong>msdir</strong><a class="headerlink" href="#msdir" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = msdir</em></p>
+<p>Location where CARACal will write and expect to find .MS files. The only exception is that of read-only input .MS files, which can be located in rawdatadir (see below).</p>
+</div></blockquote>
+</section>
+<section id="rawdatadir">
+<span id="general-rawdatadir"></span><h2><strong>rawdatadir</strong><a class="headerlink" href="#rawdatadir" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>If set to an empty string this parameter is ignored. If not set to an empty string, this is the directory where CARACal expects to find the input .MS files. This directory and the input .MS files within it can be reado-only, which makes it possible to work on large data without moving them within a shared machine. Any .MS file further created by CARACal is still written to msdir (see above).</p>
+</div></blockquote>
+</section>
+<section id="input">
+<span id="general-input"></span><h2><strong>input</strong><a class="headerlink" href="#input" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = input</em></p>
+<p>Location where CARACal expects to find various input files (e.g., RFI flagging strategy files).</p>
+</div></blockquote>
+</section>
+<section id="output">
+<span id="general-output"></span><h2><strong>output</strong><a class="headerlink" href="#output" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = output</em></p>
+<p>Location where CARACal writes output products.</p>
+</div></blockquote>
+</section>
+<section id="prefix">
+<span id="general-prefix"></span><h2><strong>prefix</strong><a class="headerlink" href="#prefix" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = caracal</em></p>
+<p>Prefix for CARACal output products.</p>
+</div></blockquote>
+</section>
+<section id="prep-workspace">
+<span id="general-prep-workspace"></span><h2><strong>prep_workspace</strong><a class="headerlink" href="#prep-workspace" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Initialise the pipeline by copying input files (i.e. those that are MeerKAT specific, flagging strategies, beam model, etc.).</p>
+</div></blockquote>
+</section>
+<section id="init-notebooks">
+<span id="general-init-notebooks"></span><h2><strong>init_notebooks</strong><a class="headerlink" href="#init-notebooks" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>list</em> <em>of str</em>, <em>optional</em>, <em>default = std-progress-report, project-logs</em></p>
+<p>Install standard radiopadre notebooks, given by list of basenames.</p>
+</div></blockquote>
+</section>
+<section id="report-notebooks">
+<span id="general-report-notebooks"></span><h2><strong>report_notebooks</strong><a class="headerlink" href="#report-notebooks" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>list</em> <em>of str</em>, <em>optional</em>, <em>default = detailed-final-report</em></p>
+<p>Like init_notebooks, but will also be automatically rendered to HTML when report=True in a worker</p>
+</div></blockquote>
+</section>
+<section id="final-report">
+<span id="general-final-report"></span><h2><strong>final_report</strong><a class="headerlink" href="#final-report" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Render report_notebooks to HTML at the end of each pipeline run</p>
+</div></blockquote>
+</section>
+<section id="backend">
+<span id="general-backend"></span><h2><strong>backend</strong><a class="headerlink" href="#backend" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>{“docker”, “udocker”, “singularity”, “podman”}</em>, <em>optional</em>, <em>default = docker</em></p>
+<p>Which container backend to use (docker, udocker, singularity, podman)</p>
+</div></blockquote>
+</section>
+<section id="cabs">
+<span id="general-cabs"></span><h2><strong>cabs</strong><a class="headerlink" href="#cabs" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>list</em> <em>of map</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.</p>
+</div></blockquote>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../flag/index.html" class="btn btn-neutral float-left" title="flag" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../getdata/index.html" class="btn btn-neutral float-right" title="getdata" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, CARACal team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

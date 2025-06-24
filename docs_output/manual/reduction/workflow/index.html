@@ -1,0 +1,295 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CARACal workflow &mdash; CARACal latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=f0ea86f3" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=c6e86fd7"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Set up" href="../prepare/index.html" />
+    <link rel="prev" title="Data reduction" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/caracal_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../caracalREADME.html">Installation &amp; Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../intro/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configfile/index.html">Configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../products/index.html">Data products</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Data reduction</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">CARACal workflow</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#recommended-workflow">Recommended workflow</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simple-workflow">Simple workflow</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../prepare/index.html">Set up</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flag/index.html">Flagging and flag versions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../crosscal/index.html">Cross-calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../selfcal/index.html">Continuum imaging and self-calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../line/index.html">Spectral line imaging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mosaic/index.html">Mosaicking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../workers/index.html">Workers parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../packages/index.html">Software used by CARACal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../caratekit_utility/index.html">Caratekit utility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits/index.html">Acknowledgements</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CARACal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Manual</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Data reduction</a></li>
+      <li class="breadcrumb-item active">CARACal workflow</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/manual/reduction/workflow/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="caracal-workflow">
+<span id="workflow"></span><h1>CARACal workflow<a class="headerlink" href="#caracal-workflow" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>A CARACal run involves running a sequence of CARACal workers following the order in which they
+are listed in the user configuration file. For reference see <a class="reference internal" href="../../intro/index.html#workerlist"><span class="std std-ref">List and Brief description of CARACal workers</span></a>.</p>
+<p>Users can design their own CARACal workflow with some level of flexibility. The exact workflow
+(i.e., the exact sequence of CARACal workers) will depend on science goals but also on I/O
+constraints. Below we provide two examples.</p>
+<section id="recommended-workflow">
+<span id="recommended"></span><h2>Recommended workflow<a class="headerlink" href="#recommended-workflow" title="Link to this heading"></a></h2>
+<p>The currently recommended CARACal workflow minimises the data volume increase
+during the course of a full CARACal run, and allows to treat the input .MS file(s)
+as read-only.</p>
+<p>This workflow is implemented in all sample configuration files located at
+<a class="reference external" href="https://github.com/caracal-pipeline/caracal/tree/master/caracal/sample_configurations">https://github.com/caracal-pipeline/caracal/tree/master/caracal/sample_configurations</a> .</p>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="../../workers/general/index.html#general"><span class="std std-ref">general</span></a></div>
+<div class="line">Compulsory worker to set up data/input/output directories.</div>
+<div class="line"><a class="reference internal" href="../../workers/getdata/index.html#getdata"><span class="std std-ref">getdata</span></a></div>
+<div class="line">Compulsory worker to specify the input .MS files.</div>
+<div class="line"><a class="reference internal" href="../../workers/obsconf/index.html#obsconf"><span class="std std-ref">obsconf</span></a></div>
+<div class="line">Compulsory worker to set up target/calibrators names.</div>
+</div>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="../../workers/transform/index.html#transform"><span class="std std-ref">transform</span></a></div>
+<div class="line">Split calibrators-only .MS files, one per input .MS file.</div>
+<div class="line"><a class="reference internal" href="../../workers/prep/index.html#prep"><span class="std std-ref">prep</span></a></div>
+<div class="line">Prepare the calibrators-only .MS files for processing.</div>
+<div class="line"><a class="reference internal" href="../../workers/flag/index.html#flag"><span class="std std-ref">flag</span></a></div>
+<div class="line">Flag the calibrators-only .MS files.</div>
+<div class="line"><a class="reference internal" href="../../workers/crosscal/index.html#crosscal"><span class="std std-ref">crosscal</span></a></div>
+<div class="line">Derive the cross-calibration tables and apply them to the calibrators.</div>
+<div class="line"><a class="reference internal" href="../../workers/inspect/index.html#inspect"><span class="std std-ref">inspect</span></a></div>
+<div class="line">Inspect the calibrated calibrator’s visibilities to check the quality of the</div>
+<div class="line">cross-calibration.</div>
+</div>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="../../workers/transform/index.html#transform"><span class="std std-ref">transform</span></a></div>
+<div class="line">Split target-only .MS files, one per input .MS file and target, applying the</div>
+<div class="line">cross-calibration on the fly.</div>
+<div class="line"><a class="reference internal" href="../../workers/prep/index.html#prep"><span class="std std-ref">prep</span></a></div>
+<div class="line">Prepare the target-only .MS files for processing.</div>
+<div class="line"><a class="reference internal" href="../../workers/flag/index.html#flag"><span class="std std-ref">flag</span></a></div>
+<div class="line">Flag the target-only .MS files.</div>
+</div>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="../../workers/transform/index.html#transform"><span class="std std-ref">transform</span></a></div>
+<div class="line">Average the target-only .MS files in frequency for continuum imaging.</div>
+<div class="line"><a class="reference internal" href="../../workers/flag/index.html#flag"><span class="std std-ref">flag</span></a></div>
+<div class="line">Flag line channels in the averaged target-only .MS files.</div>
+<div class="line"><a class="reference internal" href="../../workers/selfcal/index.html#selfcal"><span class="std std-ref">selfcal</span></a></div>
+<div class="line">Make a continuum image of each target, self-calibrate, and transfer both gains</div>
+<div class="line">and continuum model to the full-frequency-resolution target-only .MS files.</div>
+</div>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="../../workers/line/index.html#line"><span class="std std-ref">line</span></a></div>
+<div class="line">Subtract the continuum, Doppler correct and make the line cube and moment</div>
+<div class="line">images from the target-only .MS files.</div>
+</div>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="../../workers/mosaic/index.html#mosaic"><span class="std std-ref">mosaic</span></a></div>
+<div class="line">Mosaic the continuum images of the targets.</div>
+<div class="line"><a class="reference internal" href="../../workers/mosaic/index.html#mosaic"><span class="std std-ref">mosaic</span></a></div>
+<div class="line">Mosaic the line cubes.</div>
+</div>
+<p>Note that this workflow includes multiple runs of several workers. These require a
+“__&lt;suffix&gt;” in the configuration file, as described at the page <a class="reference internal" href="../../configfile/index.html#configfile"><span class="std std-ref">Configuration file</span></a>.</p>
+<p>The data volume budget of this workflow is:</p>
+<ul class="simple">
+<li><p>input .MS:</p>
+<ul>
+<li><p>DATA</p></li>
+</ul>
+</li>
+<li><p>target-only .MS:</p>
+<ul>
+<li><p>DATA</p></li>
+<li><p>CORRECTED_DATA</p></li>
+<li><p>MODEL</p></li>
+</ul>
+</li>
+<li><p>calibrators-only .MS (negligible data volume):</p>
+<ul>
+<li><p>DATA</p></li>
+<li><p>CORRECTED_DATA</p></li>
+<li><p>MODEL</p></li>
+</ul>
+</li>
+<li><p>target-only frequency-averaged .MS (negligible data volume):</p>
+<ul>
+<li><p>DATA</p></li>
+<li><p>CORRECTED_DATA</p></li>
+<li><p>MODEL</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="simple-workflow">
+<h2>Simple workflow<a class="headerlink" href="#simple-workflow" title="Link to this heading"></a></h2>
+<p>Simpler workflows than the recommended one are possible. For example, the workflow
+below employs less worker runs. However, it modifies the input .MS file(s), results into
+a larger data volume increase, and runs the self-calibration loop on larger .MS files.</p>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="../../workers/general/index.html#general"><span class="std std-ref">general</span></a></div>
+<div class="line">Compulsory worker to set up data/input/output directories.</div>
+<div class="line"><a class="reference internal" href="../../workers/getdata/index.html#getdata"><span class="std std-ref">getdata</span></a></div>
+<div class="line">Compulsory worker to specify the input .MS files.</div>
+<div class="line"><a class="reference internal" href="../../workers/obsconf/index.html#obsconf"><span class="std std-ref">obsconf</span></a></div>
+<div class="line">Compulsory worker to set up target/calibrators names.</div>
+</div>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="../../workers/prep/index.html#prep"><span class="std std-ref">prep</span></a></div>
+<div class="line">Prepare the input .MS files for processing.</div>
+<div class="line"><a class="reference internal" href="../../workers/flag/index.html#flag"><span class="std std-ref">flag</span></a></div>
+<div class="line">Flag the calibrators in the input .MS files.</div>
+<div class="line"><a class="reference internal" href="../../workers/crosscal/index.html#crosscal"><span class="std std-ref">crosscal</span></a></div>
+<div class="line">Derive the cross-calibration tables and apply them to target and calibrators.</div>
+<div class="line"><a class="reference internal" href="../../workers/inspect/index.html#inspect"><span class="std std-ref">inspect</span></a></div>
+<div class="line">Inspect the calibrated calibrator’s visibilities to check the quality of the</div>
+<div class="line">cross-calibration.</div>
+</div>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="../../workers/transform/index.html#transform"><span class="std std-ref">transform</span></a></div>
+<div class="line">Split cross-calibrated target-only .MS files, one per input .MS file and target.</div>
+<div class="line"><a class="reference internal" href="../../workers/flag/index.html#flag"><span class="std std-ref">flag</span></a></div>
+<div class="line">Flag the target-only .MS files.</div>
+<div class="line"><a class="reference internal" href="../../workers/selfcal/index.html#selfcal"><span class="std std-ref">selfcal</span></a></div>
+<div class="line">Make a continuum image of each target, self-calibrate, and transfer both gains</div>
+<div class="line">and continuum model to the full-frequency-resolution target-only .MS files.</div>
+</div>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="../../workers/line/index.html#line"><span class="std std-ref">line</span></a></div>
+<div class="line">Subtract the continuum, Doppler correct and make the line cube and moment</div>
+<div class="line">images from the target-only .MS files.</div>
+</div>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="../../workers/mosaic/index.html#mosaic"><span class="std std-ref">mosaic</span></a></div>
+<div class="line">Mosaic the continuum images of the targets.</div>
+<div class="line"><a class="reference internal" href="../../workers/mosaic/index.html#mosaic"><span class="std std-ref">mosaic</span></a></div>
+<div class="line">Mosaic the line cubes.</div>
+</div>
+<p>The data volume budget of this workflow is:</p>
+<ul class="simple">
+<li><p>input .MS</p>
+<ul>
+<li><p>DATA</p></li>
+<li><p>CORRECTED_DATA</p></li>
+<li><p>MODEL</p></li>
+</ul>
+</li>
+<li><p>target-only .MS</p>
+<ul>
+<li><p>DATA</p></li>
+<li><p>CORRECTED_DATA</p></li>
+<li><p>MODEL</p></li>
+</ul>
+</li>
+</ul>
+<p>Typically, this is 50% larger than for the <a class="reference internal" href="#recommended"><span class="std std-ref">Recommended workflow</span></a> above.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Data reduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../prepare/index.html" class="btn btn-neutral float-right" title="Set up" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, CARACal team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

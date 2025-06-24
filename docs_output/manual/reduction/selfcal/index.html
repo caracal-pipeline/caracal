@@ -1,0 +1,207 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Continuum imaging and self-calibration &mdash; CARACal latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=f0ea86f3" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=c6e86fd7"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Spectral line imaging" href="../line/index.html" />
+    <link rel="prev" title="Cross-calibration" href="../crosscal/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/caracal_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../caracalREADME.html">Installation &amp; Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../intro/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configfile/index.html">Configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../products/index.html">Data products</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Data reduction</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../workflow/index.html">CARACal workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../prepare/index.html">Set up</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flag/index.html">Flagging and flag versions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../crosscal/index.html">Cross-calibration</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Continuum imaging and self-calibration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#split-average-and-flag-target-visibilities">Split, average and flag target visibilities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#image-the-continuum-and-self-calibrate">Image the continuum and self-calibrate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gain-and-model-transfer">Gain and model transfer</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../line/index.html">Spectral line imaging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mosaic/index.html">Mosaicking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../workers/index.html">Workers parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../packages/index.html">Software used by CARACal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../caratekit_utility/index.html">Caratekit utility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits/index.html">Acknowledgements</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CARACal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Manual</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Data reduction</a></li>
+      <li class="breadcrumb-item active">Continuum imaging and self-calibration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/manual/reduction/selfcal/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="continuum-imaging-and-self-calibration">
+<h1>Continuum imaging and self-calibration<a class="headerlink" href="#continuum-imaging-and-self-calibration" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p><strong>[relevant workers:</strong> <a class="reference internal" href="../../workers/transform/index.html#transform"><span class="std std-ref">transform</span></a>, <a class="reference internal" href="../../workers/flag/index.html#flag"><span class="std std-ref">flag</span></a>, <a class="reference internal" href="../../workers/selfcal/index.html#selfcal"><span class="std std-ref">selfcal</span></a>, <a class="reference internal" href="../../workers/mask/index.html#mask"><span class="std std-ref">mask</span></a><strong>]</strong></p>
+<section id="split-average-and-flag-target-visibilities">
+<h2>Split, average and flag target visibilities<a class="headerlink" href="#split-average-and-flag-target-visibilities" title="Link to this heading"></a></h2>
+<p>Following cross-calibration, CARACal creates a new .MS file which contains the
+cross-calibrated target visibilities only. This is done by the <a class="reference internal" href="../../workers/transform/index.html#transform"><span class="std std-ref">transform</span></a>
+worker. In case the cross-calibration tables have not been applied to the target
+by the <a class="reference internal" href="../../workers/crosscal/index.html#crosscal"><span class="std std-ref">crosscal</span></a> worker, <a class="reference internal" href="../../workers/transform/index.html#transform"><span class="std std-ref">transform</span></a> can do so on the fly while
+splitting using the CASA task MSTRANSFORM.</p>
+<p>Optionally, the <a class="reference internal" href="../../workers/transform/index.html#transform"><span class="std std-ref">transform</span></a> worker can average in time and/or frequency
+while splitting. Depending on the science goals, it might be useful to run this
+worker more than once. E.g., the first time to create a frequency-averaged dataset
+for continuum imaging and self-calibration, and the second time to create a
+narrow-band dataset for spectral-line work. The possibility of running this
+worker multiple times within a single CARACal run allows users to design the
+best <a class="reference internal" href="../workflow/index.html#workflow"><span class="std std-ref">CARACal workflow</span></a> for their project.</p>
+<p>Before self-calibrating it might also be good to flag the target’s visibilities.
+(Typically the target is not flagged before applying the cross-calibration.) This can
+be done with the <a class="reference internal" href="../../workers/flag/index.html#flag"><span class="std std-ref">flag</span></a> worker (which was probably already run on the
+calibrators’ visibilities before cross-calibration) setting <a class="reference internal" href="../../workers/flag/index.html#flag-field"><span class="std std-ref">flag: field</span></a>
+to target.</p>
+</section>
+<section id="image-the-continuum-and-self-calibrate">
+<h2>Image the continuum and self-calibrate<a class="headerlink" href="#image-the-continuum-and-self-calibrate" title="Link to this heading"></a></h2>
+<p>Having cross-calibrated, split, optionally averaged and flagged the target, it is now possible
+to iteratively image the radio continuum emission and self-calibrate the visibilities.
+The resulting gain tables and continuum model can also be transferred to another
+.MS file (particularly useful for spectral line work). All this can be done with the
+<a class="reference internal" href="../../workers/selfcal/index.html#selfcal"><span class="std std-ref">selfcal</span></a> worker.</p>
+<p>Several parameters allow users to set up both the imaging and self-calibration
+according to their needs. Imaging is done with WSclean, and the parameters of this
+imaging software are available in the <a class="reference internal" href="../../workers/selfcal/index.html#selfcal"><span class="std std-ref">selfcal</span></a> worker. Calibration is done
+with either Cubical or MeqTrees, and also in this case the <a class="reference internal" href="../../workers/selfcal/index.html#selfcal"><span class="std std-ref">selfcal</span></a> worker
+includes the parameters available in those packages.</p>
+<p>Additional parameters allow users to decide how many calibration iterations to
+perform through the parameter <a class="reference internal" href="../../workers/selfcal/index.html#selfcal-cal-niter"><span class="std std-ref">selfcal: cal_niter</span></a>.
+For a value N, the code will create N+1 images following the sequence image1,
+selfcal1, image2, selfcal2, … imageN, selfcalN, imageN+1.</p>
+<p>Optionally, users can enable <a class="reference internal" href="../../workers/selfcal/index.html#selfcal-aimfast"><span class="std std-ref">selfcal: aimfast</span></a>, which
+at each new iteration compares the new continuum image with the previous one and
+decides whether the image has improved significantly. In case it has not, no further
+iterations are performed. In this case therefore <a class="reference internal" href="../../workers/selfcal/index.html#selfcal-cal-niter"><span class="std std-ref">selfcal: cal_niter</span></a>
+is the maximum number of iterations.</p>
+<p>While imaging it is usually convenient to identify where to clean. Within CARACal this can be
+done in several different ways through the parameter <a class="reference internal" href="../../workers/selfcal/index.html#selfcal-image"><span class="std std-ref">selfcal: image: clean_mask_method</span></a>:</p>
+<ul class="simple">
+<li><p>with WSclean automated masking method, which cleans blindly down to a masking threshold,
+defines the clean mask as the ensamble  of all cleaned pixels, and then re-cleans them
+down to a deeper clean cutoff;</p></li>
+<li><p>with SoFiA, which makes a clean mask for the Nth imaging run from the (N-1)th image;</p></li>
+<li><p>with a clean mask made by the <a class="reference internal" href="../../workers/mask/index.html#mask"><span class="std std-ref">mask</span></a> worker or supplied by the user.</p></li>
+</ul>
+<p>Several parameters allow users to control the calibration step in the <a class="reference internal" href="../../workers/selfcal/index.html#selfcal"><span class="std std-ref">selfcal</span></a> worker.
+Users can set the time and frequency solution intervals. Gain phase and amplitude can both be solved
+for, each with its own time and frequency solution interval (more standard phase-only
+self-calibration is also possible). We refer to the <a class="reference internal" href="../../workers/selfcal/index.html#selfcal"><span class="std std-ref">selfcal</span></a> page for a full description
+of all available modes and parameters.</p>
+</section>
+<section id="gain-and-model-transfer">
+<h2>Gain and model transfer<a class="headerlink" href="#gain-and-model-transfer" title="Link to this heading"></a></h2>
+<p>If the self-cal loop was executed on a frequency-averaged .MS file, it might
+be necessary to transfer the resulting gains and continuum model back to the
+original, full-frequency-resolution .MS file. This is done with
+<a class="reference internal" href="../../workers/selfcal/index.html#selfcal-transfer-apply-gains"><span class="std std-ref">selfcal: transfer_apply_gains</span></a> (using Cubical)
+and <a class="reference internal" href="../../workers/selfcal/index.html#selfcal-transfer-model"><span class="std std-ref">selfcal: transfer_model</span></a> (using Crystalball),
+respectively. The latter allows users to limit the model transfer to the N brightest
+sources, to sources in a region, or to point sources only. Be aware that the
+model transfer step can be very time consuming for large .MS files.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../crosscal/index.html" class="btn btn-neutral float-left" title="Cross-calibration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../line/index.html" class="btn btn-neutral float-right" title="Spectral line imaging" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, CARACal team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

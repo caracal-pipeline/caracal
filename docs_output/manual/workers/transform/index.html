@@ -1,0 +1,385 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>transform &mdash; CARACal latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=f0ea86f3" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=c6e86fd7"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="polcal" href="../polcal/index.html" />
+    <link rel="prev" title="selfcal" href="../selfcal/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/caracal_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../caracalREADME.html">Installation &amp; Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../intro/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configfile/index.html">Configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../products/index.html">Data products</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reduction/index.html">Data reduction</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Workers parameters</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../crosscal/index.html">crosscal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ddcal/index.html">ddcal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flag/index.html">flag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../general/index.html">general</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getdata/index.html">getdata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../inspect/index.html">inspect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../line/index.html">line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mask/index.html">mask</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mosaic/index.html">mosaic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../obsconf/index.html">obsconf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../prep/index.html">prep</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../selfcal/index.html">selfcal</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">transform</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#enable"><strong>enable</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#field"><strong>field</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#label-in"><strong>label_in</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#label-out"><strong>label_out</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rewind-flags"><strong>rewind_flags</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#split-field"><strong>split_field</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#changecentre"><strong>changecentre</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#concat"><strong>concat</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#obsinfo"><strong>obsinfo</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#report"><strong>report</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cabs"><strong>cabs</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../polcal/index.html">polcal</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../packages/index.html">Software used by CARACal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../caratekit_utility/index.html">Caratekit utility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits/index.html">Acknowledgements</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CARACal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Manual</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Workers parameters</a></li>
+      <li class="breadcrumb-item active">transform</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/manual/workers/transform/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="transform">
+<span id="id1"></span><h1>transform<a class="headerlink" href="#transform" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>Split, average and/or calibrate the data.</p>
+<section id="enable">
+<span id="transform-enable"></span><h2><strong>enable</strong><a class="headerlink" href="#enable" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em></p>
+<p>Execute the transform worker.</p>
+</div></blockquote>
+</section>
+<section id="field">
+<span id="transform-field"></span><h2><strong>field</strong><a class="headerlink" href="#field" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = target</em></p>
+<p>Fields to be split off from the input MS (see split_field below) or whose phase centre should be changed (see changecentre below). Options are (separately) ‘target’, ‘calibrators’, ‘bpcal’, ‘gcal’ and ‘fcal’. Also valid is any combination of ‘bpcal’, ‘gcal’ and ‘fcal’ in a comma-separated string (e.g. ‘bpcal, fcal’).</p>
+</div></blockquote>
+</section>
+<section id="label-in">
+<span id="transform-label-in"></span><h2><strong>label_in</strong><a class="headerlink" href="#label-in" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Label of the input dataset. If split_field/changecentre below are enabled, label_in must be a single value. Else, if concat below is enabled, label_in must include at least two comma-separated values.</p>
+</div></blockquote>
+</section>
+<section id="label-out">
+<span id="transform-label-out"></span><h2><strong>label_out</strong><a class="headerlink" href="#label-out" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = corr</em></p>
+<p>Label of the output dataset.</p>
+</div></blockquote>
+</section>
+<section id="rewind-flags">
+<span id="transform-rewind-flags"></span><h2><strong>rewind_flags</strong><a class="headerlink" href="#rewind-flags" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Rewind flags to specified version. Only works with a single-valued label_in (i.e., it does not loop over multiple comma-separated values in label_in).</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘rewind_flags’ segment.</p>
+</div></blockquote>
+<p><strong>version</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Flag version to restore. Note that all flag versions saved after this version will be deleted.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="split-field">
+<span id="transform-split-field"></span><h2><strong>split_field</strong><a class="headerlink" href="#split-field" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Make new MS of targets or calibrators.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Enable the ‘split_field’ segment.</p>
+</div></blockquote>
+<p><strong>time_avg</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Time averaging to apply to the data, in units of seconds. If this parameter is instead set to ‘’ or ‘0s’ then no time averaging is applied.</p>
+</div></blockquote>
+<p><strong>chan_avg</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 1</em></p>
+<p>Frequency averaging to apply to the data, given as the number of channels per frequency bin. If this parameter is set to ‘’, ‘0’, or ‘1’, then no frequency averaging is applied.</p>
+</div></blockquote>
+<p><strong>col</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = corrected</em></p>
+<p>Column to be split, where the default is ‘corrected’.</p>
+</div></blockquote>
+<p><strong>correlation</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Select the correlations, e.g. ‘XX’, ‘YY’. Setting this to ‘’ means that all correlations are selected.</p>
+</div></blockquote>
+<p><strong>scan</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Select the scan(s), e.g. ‘0,2,5’. Setting this to ‘’ means that all scans are selected.</p>
+</div></blockquote>
+<p><strong>create_specweights</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Create a WEIGHT_SPECTRUM column in the output MS.</p>
+</div></blockquote>
+<p><strong>spw</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Select spectral windows and channels, following the same syntax as for the ‘mstransform’ task in CASA. Setting this to ‘’ means that all spectral windows and channels are selected.</p>
+</div></blockquote>
+<p><strong>antennas</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Select antennas, following the same syntax as for the ‘mstransform’ task in CASA. Setting this to ‘’ means that all antennas are selected.</p>
+</div></blockquote>
+<p><strong>nthreads</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 1</em></p>
+<p>Number of OMP threads to use (currently maximum limited by number of polarizations)</p>
+</div></blockquote>
+<p><strong>otfcal</strong></p>
+<blockquote>
+<div><p>Apply on-the-fly (OTF) calibration.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘otfcal’ segment.</p>
+</div></blockquote>
+<p><strong>callib</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Name of the callib file to be used, if user has their own.</p>
+</div></blockquote>
+<p><strong>label_cal</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Label of the calibration tables to be used.</p>
+</div></blockquote>
+<p><strong>pol_callib</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Name of the polarization callib file to be used. A corresponding .json file must exist.</p>
+</div></blockquote>
+<p><strong>label_pcal</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Label of the polarization calibration tables to be used.</p>
+</div></blockquote>
+<p><strong>output_pcal_ms</strong></p>
+<blockquote>
+<div><p><em>{“final”, “intermediate”, “both”}</em>, <em>optional</em>, <em>default = final</em></p>
+<p>Controls which MSs are produced with polcal in effect. ‘final’ will have polcal-corrected data in DATA. ‘intermediate’ will have KGB-corrected data in DATA and polcal-corrected data in CORRECTED_DATA. ‘both’ will produce both (second one, the ‘intermediate’, will be labelled ‘<a href="#id2"><span class="problematic" id="id3">tmp_</span></a>’+label_out).</p>
+</div></blockquote>
+<p><strong>derotate_pa</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Apply parallactic angle derotation, to put QU into the sky polarization frame.</p>
+</div></blockquote>
+<p><strong>interpolation</strong></p>
+<blockquote>
+<div><p>Overrides interpolations settings for OTF calibration</p>
+<p><strong>delay_cal</strong></p>
+<blockquote>
+<div><p><em>{“default”, “nearest”, “linear”, “nearestPD”, “linearPD”}</em>, <em>optional</em>, <em>default = nearest</em></p>
+<p>Interpolation type (in time) for K-Jones (delay) solutions. ‘nearest’ is recommended for CASA, as ‘linear’ can produce unexpected results.</p>
+</div></blockquote>
+<p><strong>gain_cal</strong></p>
+<blockquote>
+<div><p><em>{“default”, “nearest”, “linear”, “nearestPD”, “linearPD”}</em>, <em>optional</em>, <em>default = linear</em></p>
+<p>Interpolation type (in time) for G-Jones (gain) solutions.</p>
+</div></blockquote>
+<p><strong>bp_cal</strong></p>
+<blockquote>
+<div><p><em>{“default”, “nearest”, “linear”, “nearestPD”, “linearPD”}</em>, <em>optional</em>, <em>default = linear</em></p>
+<p>Interpolation type (in time) for B-Jones (bandpass) solutions.</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="changecentre">
+<span id="transform-changecentre"></span><h2><strong>changecentre</strong><a class="headerlink" href="#changecentre" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Change the phase centre.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘changecentre’ segment.</p>
+</div></blockquote>
+<p><strong>ra</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = 0h0m0.0s</em></p>
+<p>J2000 RA of the new phase centre, in the format XXhXXmXX.XXs .</p>
+</div></blockquote>
+<p><strong>dec</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = 0d0m0.0s</em></p>
+<p>J2000 Dec of the new phase centre, in the format XXdXXmXX.XXs .</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="concat">
+<span id="transform-concat"></span><h2><strong>concat</strong><a class="headerlink" href="#concat" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>For each input .MS and target, concatenate together all .MS files with the different labels included in label_in (comma-separated values). The MS files are concatenated along the frequency axis. This only works if the frequency ranges covered by the MS files are contiguous and if the number of channels is the same for all MS files.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘concat’ segment.</p>
+</div></blockquote>
+<p><strong>col</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = data</em></p>
+<p>Column(s) to be contatenated, where the default is ‘data’; use ‘all’ for all columns.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="obsinfo">
+<span id="transform-obsinfo"></span><h2><strong>obsinfo</strong><a class="headerlink" href="#obsinfo" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Get observation information.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Enable the ‘obsinfo’ segment.</p>
+</div></blockquote>
+<p><strong>listobs</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Run the CASA ‘listobs’ task to get observation information.</p>
+</div></blockquote>
+<p><strong>summary_json</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Run the MSUtils summary function to get observation information written as a JSON file.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="report">
+<span id="transform-report"></span><h2><strong>report</strong><a class="headerlink" href="#report" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>(Re)generate a full HTML report at the end of this worker.</p>
+</div></blockquote>
+</section>
+<section id="cabs">
+<span id="transform-cabs"></span><h2><strong>cabs</strong><a class="headerlink" href="#cabs" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>list</em> <em>of map</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.</p>
+</div></blockquote>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../selfcal/index.html" class="btn btn-neutral float-left" title="selfcal" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../polcal/index.html" class="btn btn-neutral float-right" title="polcal" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, CARACal team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

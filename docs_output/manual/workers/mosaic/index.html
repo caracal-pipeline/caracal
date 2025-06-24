@@ -1,0 +1,268 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mosaic &mdash; CARACal latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=f0ea86f3" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=c6e86fd7"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="obsconf" href="../obsconf/index.html" />
+    <link rel="prev" title="mask" href="../mask/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/caracal_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../caracalREADME.html">Installation &amp; Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../intro/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configfile/index.html">Configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../products/index.html">Data products</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reduction/index.html">Data reduction</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Workers parameters</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../crosscal/index.html">crosscal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ddcal/index.html">ddcal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flag/index.html">flag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../general/index.html">general</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getdata/index.html">getdata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../inspect/index.html">inspect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../line/index.html">line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mask/index.html">mask</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">mosaic</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#enable"><strong>enable</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mosaic-type"><strong>mosaic_type</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#target-images"><strong>target_images</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#label-in"><strong>label_in</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line-name"><strong>line_name</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#use-mfs"><strong>use_mfs</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#name"><strong>name</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#domontage"><strong>domontage</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cutoff"><strong>cutoff</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pb-type"><strong>pb_type</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dish-diameter"><strong>dish_diameter</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ref-frequency"><strong>ref_frequency</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#round-cdelt3"><strong>round_cdelt3</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#report"><strong>report</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cabs"><strong>cabs</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../obsconf/index.html">obsconf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../prep/index.html">prep</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../selfcal/index.html">selfcal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../transform/index.html">transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../polcal/index.html">polcal</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../packages/index.html">Software used by CARACal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../caratekit_utility/index.html">Caratekit utility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits/index.html">Acknowledgements</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CARACal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Manual</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Workers parameters</a></li>
+      <li class="breadcrumb-item active">mosaic</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/manual/workers/mosaic/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mosaic">
+<span id="id1"></span><h1>mosaic<a class="headerlink" href="#mosaic" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>Mosaic the 2D-images (or cubes) made with the selfcal/crosscal (or line) worker. If not available on disc, the primary beam is built by the mosaic worker, assuming a Gaussian shape with FWHM = 1.02 lambda/D.</p>
+<section id="enable">
+<span id="mosaic-enable"></span><h2><strong>enable</strong><a class="headerlink" href="#enable" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em></p>
+<p>Execute the mosaic worker.</p>
+</div></blockquote>
+</section>
+<section id="mosaic-type">
+<span id="mosaic-mosaic-type"></span><h2><strong>mosaic_type</strong><a class="headerlink" href="#mosaic-type" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>{“continuum”, “spectral”}</em></p>
+<p>Type of mosaic to be made, either continuum (2D) or spectral (3D).</p>
+</div></blockquote>
+</section>
+<section id="target-images">
+<span id="mosaic-target-images"></span><h2><strong>target_images</strong><a class="headerlink" href="#target-images" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>list</em> <em>of str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>List of .FITS images/cubes to be mosaicked. Their file names must end with “image.fits” and must include the path relative to the current working directory. These images/cubes MUST be located within (sub-directories of) the current working directory.</p>
+</div></blockquote>
+</section>
+<section id="label-in">
+<span id="mosaic-label-in"></span><h2><strong>label_in</strong><a class="headerlink" href="#label-in" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = corr</em></p>
+<p>For autoselection of images, this needs to match the label/label_cal setting used for the selfcal/crosscal worker (when mosaicking continuum images) or the label setting used for the line worker (when mosaicking cubes).</p>
+</div></blockquote>
+</section>
+<section id="line-name">
+<span id="mosaic-line-name"></span><h2><strong>line_name</strong><a class="headerlink" href="#line-name" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = HI</em></p>
+<p>Spectral mode only – If autoselection is used to find the final cubes, this needs to match the line_name parameter used for the line worker.</p>
+</div></blockquote>
+</section>
+<section id="use-mfs">
+<span id="mosaic-use-mfs"></span><h2><strong>use_mfs</strong><a class="headerlink" href="#use-mfs" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Continuum mode only – If the images to be mosaicked were created using MFS, in the selfcal or crosscal worker, then this needs to be indicated via this parameter.</p>
+</div></blockquote>
+</section>
+<section id="name">
+<span id="mosaic-name"></span><h2><strong>name</strong><a class="headerlink" href="#name" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>The prefix to be used for output files. Default is the pipeline prefix, as set for the general worker.</p>
+</div></blockquote>
+</section>
+<section id="domontage">
+<span id="mosaic-domontage"></span><h2><strong>domontage</strong><a class="headerlink" href="#domontage" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Re-grid the input images, and associated beams.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Enable the ‘domontage’ (i.e. re-gridding) segment.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="cutoff">
+<span id="mosaic-cutoff"></span><h2><strong>cutoff</strong><a class="headerlink" href="#cutoff" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.1</em></p>
+<p>The cutoff in the primary beam. It should be a number between 0 and 1.</p>
+</div></blockquote>
+</section>
+<section id="pb-type">
+<span id="mosaic-pb-type"></span><h2><strong>pb_type</strong><a class="headerlink" href="#pb-type" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>{“gaussian”, “mauchian”}</em>, <em>optional</em>, <em>default = gaussian</em></p>
+<p>If no continuum pb.fits are already in place, user needs to choose whether a rudimentary primary beam is created (‘gaussian’) or one that follows the model of Mauch et al. (2020), relevant for MeerKAT data (‘mauchian’).</p>
+</div></blockquote>
+</section>
+<section id="dish-diameter">
+<span id="mosaic-dish-diameter"></span><h2><strong>dish_diameter</strong><a class="headerlink" href="#dish-diameter" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 13.5</em></p>
+<p>If ‘pb_type’ has been set to ‘gaussian’, user needs to specify the dish diameter (in units of m).</p>
+</div></blockquote>
+</section>
+<section id="ref-frequency">
+<span id="mosaic-ref-frequency"></span><h2><strong>ref_frequency</strong><a class="headerlink" href="#ref-frequency" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 1383685546.875</em></p>
+<p>If no continuum pb.fits are already in place, user needs to specify the reference frequency (in units of Hz) so that primary beams can be created.</p>
+</div></blockquote>
+</section>
+<section id="round-cdelt3">
+<span id="mosaic-round-cdelt3"></span><h2><strong>round_cdelt3</strong><a class="headerlink" href="#round-cdelt3" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>If mosaic_type is “spectral”, round CDELT3 in the header of the input cubes to the number of decimal digits given by this parameter (0 means do not round). This is useful when the CDELT3 values of the input cubes are not identical (which would make the mosaicking algorithm crash) but the differences are small and can be ignored. Note that the CDELT3 values of the input cubes are overwritten with the common, rounded value (if the rounding is sufficient to find a common value).</p>
+</div></blockquote>
+</section>
+<section id="report">
+<span id="mosaic-report"></span><h2><strong>report</strong><a class="headerlink" href="#report" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>(Re)generate a full HTML report at the end of this worker.</p>
+</div></blockquote>
+</section>
+<section id="cabs">
+<span id="mosaic-cabs"></span><h2><strong>cabs</strong><a class="headerlink" href="#cabs" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>list</em> <em>of map</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.</p>
+</div></blockquote>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../mask/index.html" class="btn btn-neutral float-left" title="mask" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../obsconf/index.html" class="btn btn-neutral float-right" title="obsconf" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, CARACal team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

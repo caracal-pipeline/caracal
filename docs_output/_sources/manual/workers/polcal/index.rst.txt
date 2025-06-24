@@ -1,0 +1,378 @@
+.. caracal documentation master file, created by
+   sphinx-quickstart on Mon Feb 18 15:04:26 2019.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+ 
+.. _polcal:
+ 
+==========================================
+polcal
+==========================================
+ 
+.. toctree::
+   :maxdepth: 1
+ 
+Carry out polarization calibration of the data (leakage and polarization angle).
+
+
+
+.. _polcal_enable:
+
+--------------------------------------------------
+**enable**
+--------------------------------------------------
+
+  *bool*, *optional*, *default = True*
+
+  Execute the polcal worker.
+
+
+
+.. _polcal_label_in:
+
+--------------------------------------------------
+**label_in**
+--------------------------------------------------
+
+  *str*, *optional*, *default = ' '*
+
+  Label of the .MS file(s) to work on.
+
+
+
+.. _polcal_label_cal:
+
+--------------------------------------------------
+**label_cal**
+--------------------------------------------------
+
+  *str*, *optional*, *default = 1pcal*
+
+  Label for output files (calibration tables, images).
+
+
+
+.. _polcal_otfcal:
+
+--------------------------------------------------
+**otfcal**
+--------------------------------------------------
+
+  Apply on-the-fly (OTF) calibration.
+
+  **enable**
+
+    *bool*, *optional*, *default = False*
+
+    Enable the 'otfcal' segment.
+
+  **callib**
+
+    *str*, *optional*, *default = ' '*
+
+    Name of the callib file to be used, if user has their own. A corresponding .json file must exist.
+
+  **label_cal**
+
+    *str*, *optional*, *default = ' '*
+
+    Label of the calibration tables to be used.
+
+  **interpolation**
+
+    Overrides interpolations settings for OTF calibration
+
+    **delay_cal**
+
+      *{"default", "nearest", "linear", "nearestPD", "linearPD"}*, *optional*, *default = nearest*
+
+      Interpolation type (in time) for K-Jones (delay) solutions. 'nearest' is recommended for CASA, as 'linear' can produce unexpected results.
+
+    **gain_cal**
+
+      *{"default", "nearest", "linear", "nearestPD", "linearPD"}*, *optional*, *default = linear*
+
+      Interpolation type (in time) for G-Jones (gain) solutions.
+
+    **bp_cal**
+
+      *{"default", "nearest", "linear", "nearestPD", "linearPD"}*, *optional*, *default = linear*
+
+      Interpolation type (in time) for B-Jones (bandpass) solutions.
+
+
+
+.. _polcal_extendflags:
+
+--------------------------------------------------
+**extendflags**
+--------------------------------------------------
+
+  *bool*, *optional*, *default = False*
+
+  use casa_flagdata with mode=extend to flag data which have been already flagged more than 70%. This can improve calibration.
+
+
+
+.. _polcal_feed_angle_rotation:
+
+--------------------------------------------------
+**feed_angle_rotation**
+--------------------------------------------------
+
+  *str*, *optional*, *default = ' '*
+
+  Set the rotation angle for feeds. For MeerKAT data it is suggested to rotate the feeds by -90 degrees to agree with the convention assumed in the CASA software which is used to do the polarization calibration. Leave it empty if you want to use the original value written in the MS (receptor_angle field). Otherwise set the number in degrees (i.e. '-90' stands for -90 degrees).
+
+
+
+.. _polcal_rewind_flags:
+
+--------------------------------------------------
+**rewind_flags**
+--------------------------------------------------
+
+  Rewind flags to specified version.
+
+  **enable**
+
+    *bool*, *optional*, *default = True*
+
+    Enable the rewind_flags segement.
+
+  **mode**
+
+    *{"reset_worker", "rewind_to_version"}*, *optional*, *default = reset_worker*
+
+    If mode = 'reset_worker' rewind to the flag version before this worker if it exists, or continue if it does not exist; if mode = 'rewind_to_version' rewind to the flag version given by 'version' below.
+
+  **version**
+
+    *str*, *optional*, *default = auto*
+
+    Flag version to rewind to. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__X' if it is a repeated instance of this worker in the configuration file. Note that all flag versions that had been saved after this version will be deleted.
+
+
+
+.. _polcal_overwrite_flagvers:
+
+--------------------------------------------------
+**overwrite_flagvers**
+--------------------------------------------------
+
+  *bool*, *optional*, *default = False*
+
+  Allow Caracal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
+
+
+
+.. _polcal_uvrange:
+
+--------------------------------------------------
+**uvrange**
+--------------------------------------------------
+
+  *str*, *optional*, *default = >50*
+
+  Select what UV range should be used throughout this worker following the CASA notation (e.g., ">100"). The default units are metres but other units can be used (e.g., ">0.5klambda").
+
+
+
+.. _polcal_reuse_existing_tables:
+
+--------------------------------------------------
+**reuse_existing_tables**
+--------------------------------------------------
+
+  *bool*, *optional*, *default = True*
+
+  Use existing pcal tables
+
+
+
+.. _polcal_pol_calib:
+
+--------------------------------------------------
+**pol_calib**
+--------------------------------------------------
+
+  *{"xcal", "none"}*, *optional*, *default = xcal*
+
+  calibrator for the polarized angle.
+
+
+
+.. _polcal_leakage_calib:
+
+--------------------------------------------------
+**leakage_calib**
+--------------------------------------------------
+
+  *{"fcal", "bpcal", "xcal", "gcal"}*, *optional*, *default = fcal*
+
+  leakage calibrator. It could be either a known unpolarized calibrator or a polarized calibrator observed at several parallactic angles.
+
+
+
+.. _polcal_set_model_leakage:
+
+--------------------------------------------------
+**set_model_leakage**
+--------------------------------------------------
+
+  Fill in the MODEL column of the .MS file(s) for the leakage calibrator in preparation for polcalibration. Not necessary if you are using the same .MS file(s) of crosscal, it is if you splitted cross calibrated data to execute this worker and if leakage_calib != pol_calib.
+
+  **enable**
+
+    *bool*, *optional*, *default = False*
+
+    Execute the set_model_leakage segment.
+
+  **meerkat_skymodel**
+
+    *bool*, *optional*, *default = False*
+
+    Use the MeerkAT local sky model (lsm) of the calibrator instead of a point source model. At the moment a MeerKAT lsm is only available for the calibrator PKS 1934-638. For the calibrator 0408-6545 a model is available but is not well tested yet and we do not recommend using it.
+
+  **unity**
+
+    *bool*, *optional*, *default = False*
+
+    Enables setting the calibrator to unity.
+
+  **tile_size**
+
+    *int*, *optional*, *default = 128*
+
+    Size of tile (time bins) to process. Can be used to reduce memory footprint.
+
+  **threads**
+
+    *int*, *optional*, *default = 8*
+
+    Number of threads used by MeqTrees if meerkat_skymodel above is enabled.
+
+
+
+.. _polcal_set_model_pol:
+
+--------------------------------------------------
+**set_model_pol**
+--------------------------------------------------
+
+  *bool*, *optional*, *default = True*
+
+  Fill in the MODEL column of the .MS file(s) for the polarized calibrator in preparation for polcalibration. This can be done only for 3C138 and 3C286 using the CASA setjy for point-source models. If False it will derive the model by fitting the PA coverage. This can be done only if more than 3 scans have been acquired. Not recomended for small PAs coverage.
+
+
+
+.. _polcal_freqsel:
+
+--------------------------------------------------
+**freqsel**
+--------------------------------------------------
+
+  *str*, *optional*, *default = ' '*
+
+  Subband selection to be used whenever solving for the DC component of either X or D. This could be picked to avoid RFI. Not used if not set or if set_model_pol is False.
+
+
+
+.. _polcal_gain_solint:
+
+--------------------------------------------------
+**gain_solint**
+--------------------------------------------------
+
+  *str*, *optional*, *default = inf*
+
+  Time solution interval to be used for gaincal. Set to 'int' if set_model_pol is False.
+
+
+
+.. _polcal_time_solint:
+
+--------------------------------------------------
+**time_solint**
+--------------------------------------------------
+
+  *str*, *optional*, *default = inf*
+
+  Time solution interval to be used whenever solving for the DC component of either X or D
+
+
+
+.. _polcal_plotgains:
+
+--------------------------------------------------
+**plotgains**
+--------------------------------------------------
+
+  *bool*, *optional*, *default = True*
+
+  Plot solutions with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/polcal/.
+
+
+
+.. _polcal_apply_pcal:
+
+--------------------------------------------------
+**apply_pcal**
+--------------------------------------------------
+
+  *bool*, *optional*, *default = True*
+
+  Apply the polcal solutions (together with the otfcal solution if that segment is set to True) to the .MS file(s).
+
+
+
+.. _polcal_applyto:
+
+--------------------------------------------------
+**applyto**
+--------------------------------------------------
+
+  *list* *of str*, *optional*, *default = xcal, bpcal, gcal, target*
+
+  Fields to apply calibration to.
+
+
+
+.. _polcal_summary:
+
+--------------------------------------------------
+**summary**
+--------------------------------------------------
+
+  Prints out the butcher's bill, i.e. data flagging summary at the end of pol calibration process.
+
+  **enable**
+
+    *bool*, *optional*, *default = True*
+
+    Execute printing flagging summary.
+
+
+
+.. _polcal_report:
+
+--------------------------------------------------
+**report**
+--------------------------------------------------
+
+  *bool*, *optional*, *default = False*
+
+  (Re)generate a full HTML report at the end of this worker.
+
+
+
+.. _polcal_cabs:
+
+--------------------------------------------------
+**cabs**
+--------------------------------------------------
+
+  *list* *of map*, *optional*, *default = ' '*
+
+  Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.
+

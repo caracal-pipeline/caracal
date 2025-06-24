@@ -1,0 +1,214 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spectral line imaging &mdash; CARACal latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=f0ea86f3" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=c6e86fd7"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Mosaicking" href="../mosaic/index.html" />
+    <link rel="prev" title="Continuum imaging and self-calibration" href="../selfcal/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/caracal_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../caracalREADME.html">Installation &amp; Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../intro/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configfile/index.html">Configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../products/index.html">Data products</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Data reduction</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../workflow/index.html">CARACal workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../prepare/index.html">Set up</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flag/index.html">Flagging and flag versions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../crosscal/index.html">Cross-calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../selfcal/index.html">Continuum imaging and self-calibration</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Spectral line imaging</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#continuum-subtraction">Continuum subtraction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doppler-correction">Doppler correction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#solar-rfi-flagging">Solar RFI flagging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#imaging">Imaging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#diagnostics">Diagnostics</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../mosaic/index.html">Mosaicking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../workers/index.html">Workers parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../packages/index.html">Software used by CARACal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../caratekit_utility/index.html">Caratekit utility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits/index.html">Acknowledgements</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CARACal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Manual</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Data reduction</a></li>
+      <li class="breadcrumb-item active">Spectral line imaging</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/manual/reduction/line/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="spectral-line-imaging">
+<h1>Spectral line imaging<a class="headerlink" href="#spectral-line-imaging" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p><strong>[relevant workers:</strong> <a class="reference internal" href="../../workers/line/index.html#line"><span class="std std-ref">line</span></a><strong>]</strong></p>
+<p>Spectral line imaging runs on a combination of custom software, CASA, WSclean, SunBlocker and SoFiA in order to subtract the continuum,
+Doppler correct, flag solar RFI, create cleaned spectral line cubes and moment images.
+It can run on the input .MS files or on .MS files created by CARACal at various stages of the pipeline
+(e.g., by the <a class="reference internal" href="../../workers/transform/index.html#transform"><span class="std std-ref">transform</span></a> worker). In the latter case the name of the .MS files to be imaged is based on the name of the input .MS files
+and on <a class="reference internal" href="../../workers/line/index.html#line-label-in"><span class="std std-ref">line: label_in</span></a>.</p>
+<p>The input .MS files may contain several targets. In this case, CARACal makes one HI cube per target, using all
+available visibilities for that target from all input .MS files. This worker does not mosaic line cubes made for different targets.
+That is done by the <a class="reference internal" href="../../workers/mosaic/index.html#mosaic"><span class="std std-ref">mosaic</span></a> worker.</p>
+<section id="continuum-subtraction">
+<h2>Continuum subtraction<a class="headerlink" href="#continuum-subtraction" title="Link to this heading"></a></h2>
+<p>Continuum subtraction is usually necessary before imaging the spectral line of interest.
+CARACal can do this using two standard methods, which can be run sequentially within a single CARACal run: <em>i)</em>
+subtraction of the continuum model visibilities from the field visibilities (<a class="reference internal" href="../../workers/line/index.html#line-subtractmodelcol"><span class="std std-ref">line: subtractmodelcol</span></a>);
+and <em>ii)</em> fitting and subtracting polynomials from the individual real and imaginary visibility spectra (parameter
+<a class="reference internal" href="../../workers/line/index.html#line-mstransform"><span class="std std-ref">line: mstransform: uvlin</span></a>).
+A third standard method currently NOT implemented in CARACal consists of fitting and subtracting polynomials from
+individual image spectra in the data cube. This may be implemented in the future.</p>
+<p>In practice, the first method consists of subtracting the MODEL_DATA column from the CORRECTED_DATA column
+of the .MS files. CARACal writes the resulting visibilities in the CORRECTED_DATA column itself.</p>
+<p><strong>Users should therefore be aware that the CORRECTED_DATA column gets overwritten.</strong></p>
+<p>Yes, that is dangerous, but it can be undone with <a class="reference internal" href="../../workers/line/index.html#line-addmodelcol"><span class="std std-ref">line: addmodelcol</span></a>.</p>
+<p>The MODEL_DATA column contains the continuum model to be subtracted. Within
+CARACal, the MODEL_DATA column should have been filled in with the continuum model resulting from the
+continuum imaging and self-calibration done by the <a class="reference internal" href="../../workers/selfcal/index.html#selfcal"><span class="std std-ref">selfcal</span></a> worker.</p>
+<p>When running the second continuum subtraction method, which uses the CASA task MSTRANSFORM, users can select the order of the fit,
+the channels that should be included in the fit, and the column that should be considered. This method writes a new file with an “mst”
+suffix appended to the file name. Subsequent steps of this worker can be instructed to run on the file written by MSTANSFORM.</p>
+<p>We have found that CASA MSTRANSFORM produces bad, partly-unflagged visibility spectra when the only unflagged channels of
+those spectra are not included in the <em>uvlin</em> fit. These bad spectra look like RFI in the cube. In order to flag them, users can
+run the <a class="reference internal" href="../../workers/line/index.html#line-flag-mst-errors"><span class="std std-ref">line: flag_mst_errors</span></a> step.</p>
+</section>
+<section id="doppler-correction">
+<h2>Doppler correction<a class="headerlink" href="#doppler-correction" title="Link to this heading"></a></h2>
+<p>Doppler correction is performed with the CASA task MSTRANSFORM (parameter <a class="reference internal" href="../../workers/line/index.html#line-mstransform"><span class="std std-ref">line: mstransform: doppler</span></a>)
+in the same run of this task used to perform continuum subtraction (see above). Users can select the telescope (choosing from a list
+of available names, see parameter <a class="reference internal" href="../../workers/line/index.html#line-mstransform"><span class="std std-ref">line: mstransform: telescope</span></a>), as well the regridding mode (channel, frequency
+or velocity), velocity type and output frame. Users can also set the frequency (or velocity, …) grid they want to Doppler correct to, but
+they can also let CARACal find the optimal one given the input files. In the latter case, visibilities will be regridded to the widest
+Doppler-corrected spectral interval common to all input .MS files, at the worse Doppler-corrected spectral resolution of them all.</p>
+</section>
+<section id="solar-rfi-flagging">
+<h2>Solar RFI flagging<a class="headerlink" href="#solar-rfi-flagging" title="Link to this heading"></a></h2>
+<p>CARACal flags solar RFI using SunBlocker (<a class="reference internal" href="../../workers/line/index.html#line-sunblocker"><span class="std std-ref">line: sunblocker</span></a>).
+The main idea of SunBlocker is that, because solar RFI is broadband, averaging visibilities in
+frequency should enhance its detectability. However, the phase of solar RFI changes rapidly with frequency, leading to vectorial averages
+with very low amplitude. In order to enhance the detectability of the solar RFI SunBlocker performs a scalar average. It does so in uv cells of the
+visibility plane (i.e., on gridded visibilities). Once that is done, UV cells with anomalously high (scalar) average ampliude are flagged.
+This method has been shown to work well on continuum-subtracted data. Users have control over some of the SunBlocker settings,
+such as flagging threshold and gridding. It is also possible to run this task on day-time data only based on the output of
+<a class="reference internal" href="../../workers/obsconf/index.html#obsconf-obsinfo"><span class="std std-ref">obsconf: obsinfo: vampirisms</span></a>.</p>
+</section>
+<section id="imaging">
+<h2>Imaging<a class="headerlink" href="#imaging" title="Link to this heading"></a></h2>
+<p>Spectral line imaging is done with WSclean or CASA. The former has been used a lot more and is therefore more tested within CARACal.</p>
+<p>WSclean produces a set of individual .FITS images per channel (i.e.,
+dirty image, psf, clean model, restored image), and when that is done CARACal stacks them all together in .FITS image cubes.
+Cleaning is done iteratively by making a first cube using WSClean algorithms for a blind clean, then making a clean mask with SoFiA and
+running WSClean again with that clean mask, and so on. Users can let CARACal continue iterating until the noise in the residual cube
+converges (up to a maximum number of iterations) or perform a fixed number of iterations ignoring noise convergence. Users also have full
+control of all WSCLEAN imaging parameters.</p>
+<p>Several additional steps are available and can be run once the .FITS image cubes are ready. This includes removing the trivial Stokes axis
+from the cubes, converting the frequency axis from frequency to velocity, and creating a primary beam cube on the same WCS grid of the image cube.
+At the moment the primary beam cube is calculated assuming a Gaussian primary beam with FWHM = 1.02 * lightspeed / frequency / dishdiameter.
+Primary beam cubes can be used subsequently in the <a class="reference internal" href="../../workers/mosaic/index.html#mosaic"><span class="std std-ref">mosaic</span></a> worker.</p>
+<p>As a final step, CARACal can run SoFiA in order to make a line detection mask and the corresponding moment images. Users have control
+over several (but not all) SoFiA settings.</p>
+</section>
+<section id="diagnostics">
+<h2>Diagnostics<a class="headerlink" href="#diagnostics" title="Link to this heading"></a></h2>
+<p>As a useful diagnostic, CARACal can run SHARPENER, which extracts 1D spectra at the position of bright continuum sources in the field.
+This is helpful to assess the quality of the continuum subtraction. It can also create one last flagging summary.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../selfcal/index.html" class="btn btn-neutral float-left" title="Continuum imaging and self-calibration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../mosaic/index.html" class="btn btn-neutral float-right" title="Mosaicking" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, CARACal team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

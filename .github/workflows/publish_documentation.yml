@@ -58,7 +58,7 @@ jobs:
         token: ${{ secrets.CARACAL_DOCS_PAT }}
         commit-message: Update report
         signoff: false
-        branch: readthedocs_test
+        branch: Athanaseus Javas Ramaila <aramaila@ska.ac.za>
         committer: Athanaseus Javas Ramaila <aramaila@ska.ac.za>
         author: athanaseus
         delete-branch: true

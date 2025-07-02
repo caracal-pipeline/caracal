@@ -35,6 +35,13 @@ jobs:
         cd ../caracal-docs
         git remote set-url origin https://x-access-token:${{ secrets.CARACAL_DOCS_PAT }}@github.com/caracal-pipeline/caracal-docs.git
 
+    - name: Configure Git identity and remote
+      run: |
+        cd ../caracal-docs
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git remote set-url origin https://x-access-token:${{ secrets.CARACAL_DOCS_PAT }}@github.com/caracal-pipeline/caracal-docs.git
+
     - name: Make changes to pull request
       run: |
         cd ../caracal-docs
@@ -50,8 +57,6 @@ jobs:
         path: ../caracal-docs
         token: ${{ secrets.CARACAL_DOCS_PAT }}
         commit-message: Update report
-        committer: Athanaseus Javas Ramaila <aramaila@ska.ac.za>
-        author: Athanaseus Javas Ramaila <aramaila@ska.ac.za>
         signoff: false
         branch: readthedocs_test
         delete-branch: true

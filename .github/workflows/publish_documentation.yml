@@ -27,8 +27,12 @@ jobs:
         pip install recommonmark
         pip install ruamel.yaml==0.17.21
 
-    - name: Clone caracal-docs repo
-      run: git clone https://x-access-token:${{ secrets.CARACAL_DOCS_PAT }}@github.com/caracal-pipeline/caracal-docs.git ../caracal-docs/
+    - name: Checkout caracal-docs repo with PAT
+      uses: actions/checkout@v4
+      with:
+        repository: caracal-pipeline/caracal-docs
+        token: ${{ secrets.CARACAL_DOCS_PAT }}
+        path: ../caracal-docs
 
     - name: Set Git remote URL with PAT
       run: |
@@ -38,8 +42,8 @@ jobs:
     - name: Configure Git identity and remote
       run: |
         cd ../caracal-docs
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.name "Athanaseus Javas Ramaila"
+        git config user.email "aramaila@ska.ac.za"
         git remote set-url origin https://x-access-token:${{ secrets.CARACAL_DOCS_PAT }}@github.com/caracal-pipeline/caracal-docs.git
 
     - name: Make changes to pull request

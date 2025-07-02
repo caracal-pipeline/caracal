@@ -72,6 +72,7 @@ def worker(pipeline, recipe, config):
     label_out = config['label_out']
     from_target = True if label_in and config['field'] == 'target' else False
     field_to_split = get_fields_to_split(config, wname)
+    multiple_ids = []
     # are we splitting calibrators
     splitting_cals = field_to_split.intersection(_cal_fields)
     if (pipeline.enable_task(config, 'split_field') or
@@ -99,7 +100,6 @@ def worker(pipeline, recipe, config):
         elif transform_mode == 'concat':
             from_mslist = pipeline.get_mslist(i, '', target=from_target)
         to_mslist = pipeline.get_mslist(i, label_out, target=not splitting_cals)
-
         # if splitting cals, we'll split one (combined) target to one output MS
         if splitting_cals:
             calfields = set()
@@ -337,9 +337,16 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'concat'):
                 concat_labels = label_in.split(',')
-
                 step = 'concat-ms{0:d}-{1:d}'.format(i, target_iter)
                 concat_ms = [from_ms.replace('.ms', '-{0:s}.ms'.format(cl)) for cl in concat_labels]
+                if configp['concat']['multiple_ids']:
+                    if i < len(pipeline.msbasenames) - 1:
+                        multiple_ids.append(concat_ms[i])
+                        continue
+                    else:
+                        multiple_ids.append(concat_ms[i])
+                    concat_ms = multiple_ids
+                    
                 recipe.add('cab/casa_concat', step,
                            {
                                "vis": concat_ms,

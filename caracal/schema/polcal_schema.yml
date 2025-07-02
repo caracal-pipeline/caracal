@@ -170,6 +170,11 @@ mapping:
             type: str
             required: false
             example: '8.33843,1.47GHz,0.078,-0.16755,0.0,-0.4981'
+          noise_diode:
+            desc: Use delay calibration noise diode to correct for cross-hand phase. Only available for MeerKAT.
+            type: bool
+            required: false
+            example: 'False'
       freqsel:
         type: str
         required: false

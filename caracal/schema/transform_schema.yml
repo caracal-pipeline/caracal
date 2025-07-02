@@ -187,6 +187,11 @@ mapping:
             type: str
             required: false
             example: 'data'
+          multiple_ids:
+            desc: Concatenate multiple data ids using the multi label_in which indicates the transformed MS from the corresponding data ids"
+            type: bool
+            required: false
+            example: 'False'
       obsinfo:
         desc: Get observation information.
         type: map

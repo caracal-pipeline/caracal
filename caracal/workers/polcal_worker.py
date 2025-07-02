@@ -39,8 +39,10 @@ def scan_length(msinfo, field):
 
 def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, ref, polarized_calibrators, caltablelist,
                          gainfieldlist, interplist, calwtlist, applylist, leak_caltablelist,
-                         leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist):
+                         leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist, usedelay):
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
+    if usedelay:
+        field = pipeline.config["obsconf"][config["pol_calib"]][i]
     leak_field = ",".join(getattr(pipeline, config["leakage_calib"])[i])
 
     freqsel = config.get("freqsel")
@@ -127,21 +129,22 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                        output=pipeline.output,
                        label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
 
-        recipe.add("cab/casa_setjy", "set_model_%d" % 0,
-                   {
-                       "msname": msname,
-                       "usescratch": True,
-                       "field": field,
-                       "standard": "manual",
-                       "fluxdensity": polarized_calibrators[field]["fluxdensity"],
-                       "spix": polarized_calibrators[field]["spix"],
-                       "reffreq": polarized_calibrators[field]["reffreq"],
-                       "polindex": polarized_calibrators[field]["polindex"],
-                       "polangle": polarized_calibrators[field]["polangle"],
-                       "rotmeas": polarized_calibrators[field]["rotmeas"],
-                   },
-                   input=pipeline.input, output=pipeline.output,
-                   label="set_model_%d" % 0)
+        if not usedelay:
+            recipe.add("cab/casa_setjy", "set_model_%d" % 0,
+                       {
+                           "msname": msname,
+                           "usescratch": True,
+                           "field": field,
+                           "standard": "manual",
+                           "fluxdensity": polarized_calibrators[field]["fluxdensity"],
+                           "spix": polarized_calibrators[field]["spix"],
+                           "reffreq": polarized_calibrators[field]["reffreq"],
+                           "polindex": polarized_calibrators[field]["polindex"],
+                           "polangle": polarized_calibrators[field]["polangle"],
+                           "rotmeas": polarized_calibrators[field]["rotmeas"],
+                       },
+                       input=pipeline.input, output=pipeline.output,
+                       label="set_model_%d" % 0)
 
         gain_opts = {
             "vis": msname,
@@ -150,7 +153,7 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
             "uvrange": config["uvrange"],
             "refant": ref,
             "solint": gain_solint,
-            "combine": "",
+            "combine": "scan",
             "parang": True,
             "gaintype": "G",
             "calmode": "p",
@@ -1160,6 +1163,7 @@ def worker(pipeline, recipe, config):
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     label = config["label_cal"]
     label_in = config["label_in"]
+    usedelay = False
 
     # loop over all MSs for this label
     for i, (msbase, prefix_msbase) in enumerate(zip(pipeline.msbasenames, pipeline.prefix_msbases)):
@@ -1187,7 +1191,6 @@ def worker(pipeline, recipe, config):
                 "Cannot calibrate polarization! Allowed strategies are for linear feed data but correlation is: " + str(
                     [
                         'XX', 'XY', 'YX', 'YY']))
-
         if config["pol_calib"] != 'none':
             pol_calib = pipeline.config["obsconf"][config["pol_calib"]][i]
             if config["set_model_pol"]["nrao_model"]:
@@ -1204,15 +1207,16 @@ def worker(pipeline, recipe, config):
                     polarized_calibrators["3C138"] = polarized_calibrators["J0521+1638"]
             elif len(config["set_model_pol"]["user_model"])>0:
                 polarized_calibrators[config["pol_calib"]] = config["set_model_pol"]["user_model"].split(',')
+            elif config["set_model_pol"]["noise_diode"]:
+                usedelay = True
+                polarized_calibrators = {}
             else:
                 raise RuntimeError("No model specified for xcal!")
             #if pol_calib == 'J1130-1449':
             #    caracal.log.info("CARACal knows only bandwidth averaged properties of J1130-1449 based on https://archive-gw-1.kat.ac.za/public/meerkat/MeerKAT-L-band-Polarimetric-Calibration.pdf")
         else:
             pol_calib = 'none'
-
         leakage_calib = ",".join(getattr(pipeline, config["leakage_calib"])[i])
-
         unpolarized_calibrators = ["PKS1934-63", "J1939-6342", "J1938-6341", "PKS 1934-638", "PKS 1934-63",
                                    "PKS1934-638", "PKS0408-65", "J0408-6545", "J0408-6544", "PKS 0408-65", "0407-658", "0408-658",
                                    "PKS 0408-658", "0408-65"]
@@ -1333,9 +1337,14 @@ def worker(pipeline, recipe, config):
             if pol_calib != 'none':
                 caracal.log.info(
                     "You decided to calibrate the polarized angle with a polarized calibrator assuming a model for the calibrator and the leakage with an unpolarized calibrator.")
-                xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, refant, polarized_calibrators,
-                                     caltablelist, gainfieldlist, interplist, calwtlist, applylist,
-                                     leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist)
+                if usedelay:
+                    caracal.log.info(
+                        "Note that noise diode cross-hand phase correction is enable instead of polarized calibrator."
+                        "This is experimental.")
+                xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, refant,
+                                     polarized_calibrators, caltablelist, gainfieldlist, interplist, calwtlist, applylist,
+                                     leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist,
+                                     usedelay)
             elif pol_calib == 'none':
                 caracal.log.info(
                     "You decided to calibrate only the leakage with an unpolarized calibrator. This is experimental.")

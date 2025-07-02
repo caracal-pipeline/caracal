@@ -48,7 +48,7 @@ jobs:
 
     - name: Make changes to pull request
       run: |
-        cd caracal-docs
+        cd ../caracal-docs
         python make_caracal_docs.py
         cd sphinx && make html
         git status
@@ -58,7 +58,7 @@ jobs:
       id: cpr
       uses: peter-evans/create-pull-request@v5
       with:
-        path: caracal-docs
+        path: ../caracal-docs
         token: ${{ secrets.CARACAL_DOCS_PAT }}
         commit-message: Update report
         signoff: false

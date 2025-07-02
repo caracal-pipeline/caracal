@@ -59,8 +59,8 @@ jobs:
         commit-message: Update report
         signoff: false
         branch: readthedocs_test
-        committer: athanaseus
-        author: athanaseus
+        committer: aramaila@ska.ac.za
+        author: aramaila@ska.ac.za
         delete-branch: true
         title: 'Read the docs updates'
         body: |

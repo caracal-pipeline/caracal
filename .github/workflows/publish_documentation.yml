@@ -32,16 +32,16 @@ jobs:
       with:
         repository: caracal-pipeline/caracal-docs
         token: ${{ secrets.CARACAL_DOCS_PAT }}
-        path: caracal-docs
+        path: ../caracal-docs
 
     - name: Set Git remote URL with PAT
       run: |
-        cd caracal-docs
+        cd ../caracal-docs
         git remote set-url origin https://x-access-token:${{ secrets.CARACAL_DOCS_PAT }}@github.com/caracal-pipeline/caracal-docs.git
 
     - name: Configure Git identity and remote
       run: |
-        cd caracal-docs
+        cd ../caracal-docs
         git config user.name "Athanaseus Javas Ramaila"
         git config user.email "aramaila@ska.ac.za"
         git remote set-url origin https://x-access-token:${{ secrets.CARACAL_DOCS_PAT }}@github.com/caracal-pipeline/caracal-docs.git
@@ -49,8 +49,8 @@ jobs:
     - name: Make changes to pull request
       run: |
         ls
-        pwd
-        cd caracal-docs
+        ls ../
+        cd ../caracal-docs
         python make_caracal_docs.py
         cd sphinx && make html
         git status

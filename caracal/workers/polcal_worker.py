@@ -129,22 +129,21 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                        output=pipeline.output,
                        label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
 
-        if not usedelay:
-            recipe.add("cab/casa_setjy", "set_model_%d" % 0,
-                       {
-                           "msname": msname,
-                           "usescratch": True,
-                           "field": field,
-                           "standard": "manual",
-                           "fluxdensity": polarized_calibrators[field]["fluxdensity"],
-                           "spix": polarized_calibrators[field]["spix"],
-                           "reffreq": polarized_calibrators[field]["reffreq"],
-                           "polindex": polarized_calibrators[field]["polindex"],
-                           "polangle": polarized_calibrators[field]["polangle"],
-                           "rotmeas": polarized_calibrators[field]["rotmeas"],
-                       },
-                       input=pipeline.input, output=pipeline.output,
-                       label="set_model_%d" % 0)
+        recipe.add("cab/casa_setjy", "set_model_%d" % 0,
+                   {
+                       "msname": msname,
+                       "usescratch": True,
+                       "field": field,
+                       "standard": "manual",
+                       "fluxdensity": polarized_calibrators[field]["fluxdensity"],
+                       "spix": polarized_calibrators[field]["spix"],
+                       "reffreq": polarized_calibrators[field]["reffreq"],
+                       "polindex": polarized_calibrators[field]["polindex"],
+                       "polangle": polarized_calibrators[field]["polangle"],
+                       "rotmeas": polarized_calibrators[field]["rotmeas"],
+                   },
+                   input=pipeline.input, output=pipeline.output,
+                   label="set_model_%d" % 0)
 
         gain_opts = {
             "vis": msname,

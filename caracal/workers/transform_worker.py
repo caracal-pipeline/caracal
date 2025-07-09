@@ -339,7 +339,7 @@ def worker(pipeline, recipe, config):
                 concat_labels = label_in.split(',')
                 step = 'concat-ms{0:d}-{1:d}'.format(i, target_iter)
                 concat_ms = [from_ms.replace('.ms', '-{0:s}.ms'.format(cl)) for cl in concat_labels]
-                if configp['concat']['multiple_ids']:
+                if config['concat']['multiple_ids']:
                     if i < len(pipeline.msbasenames) - 1:
                         multiple_ids.append(concat_ms[i])
                         continue

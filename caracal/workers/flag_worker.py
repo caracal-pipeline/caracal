@@ -448,7 +448,7 @@ def worker(pipeline, recipe, config):
                                 "config": tricolour_strat,
                                }
                     smc = config['flag_rfi']['tricolour']['subtract_model_column']
-                    args.update({"subtract_model_column": smc} if smc else {})
+                    args.update({"subtract-model-column": smc} if smc else {})
                     caracal.log.info("Flagging strategy in use: {0:}".format(tricolour_strat))
                     recipe.add('cab/tricolour', step, args,
                                input=pipeline.input,

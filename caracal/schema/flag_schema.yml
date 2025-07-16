@@ -329,6 +329,11 @@ mapping:
                 type: str
                 required: False
                 example: 'calibrator_mild_flagging.yaml'
+              subtract_model_column:
+                desc: Column to subtract from 'col' to form residuals to flag on
+                type: str
+                required: False
+                example: ''
           tfcrop:
             type: map
             mapping:

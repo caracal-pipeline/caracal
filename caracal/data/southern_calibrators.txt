@@ -15,6 +15,7 @@ name=CTA21    epoch=2016 ra=03h18m57.8s dec=+16d28m33s a=-13.4672 b=12.4587 c=-3
 name=0320+053 epoch=2016 ra=03h23m20.3s dec=+05d34m12s a=-6.9043 b=7.8471 c=-2.4713 d=0.2296
 name=0403-132 epoch=2016 ra=04h05m34.0s dec=-13d08m14s a=-0.8395 b=2.4438 c=-0.9451 d=0.1006
 name=0408-65 epoch=2016 ra=04h08m20.4s dec=-65d45m09s a=-0.9790 b=3.3662 c=-1.1216 d=0.0861
+name=PKS0408-65 epoch=2016 ra=04h08m20.4s dec=-65d45m09s a=-0.9790 b=3.3662 c=-1.1216 d=0.0861
 lsm name=0408-65 epoch=2018 pks0407-65.lsm
 name=PKS1934-63 epoch=1994 ra=19h39m25.0s dec=-63d42m46s a=-30.7667 b=26.4908 c=-7.0977 d=0.605334
 lsm name=PKS1934-63 epoch=2017 pks1934-638.lsm

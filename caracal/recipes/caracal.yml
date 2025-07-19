@@ -19,9 +19,7 @@ caracal-pointings:
 
   inputs:
     _include: caracal-schema.yml
-    obs:
-      info: "Selects observation by label -- edit caracal-observation-sets.yml"
-      required: true
+
   steps:
     flagging:
       recipe: caracal-flag

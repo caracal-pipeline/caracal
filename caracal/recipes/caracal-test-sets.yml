@@ -1,18 +1,19 @@
 caracal-selfcal:
   assign_based_on:
     obs:
-      0408-S:
+      PicA:
         ms: /home/ramaila/working/msdir/pica-s-band-cal_with_pcal.ms
         dir-out-base: /home/ramaila/working/ar1-output-001/calmodel
-        image-prefix: /home/ramaila/working/ar1-output-001/calmodel/0408-6
-        image-mfs-image: /home/ramaila/working/ar1-output-001/calmodel/0408-6-MFS-image.fits
-        image-fits-mask: /home/ramaila/working/ar1-output-001/calmodel/0408-3-mask.fits
+        selfcal.enable: true
+        selfcal.pa-rotate: true
+        selfcal.cal-model-mode: vis_only
+        selfcal.niter: [1,2,3]
+        ncpu: 16
         image-no-update-model-required: true
-        image-col: FSLOPE_CORRECTED_DATA
+        image-col: DATA
         image-npix: 4096
         image-niter: 100000
         image-threshold: 0.0005
         image-multiscale: true
         image-multiscale-bais: 0.5
         image-multiscale-scales: [0, 5, 10, 19]
-

@@ -3,7 +3,7 @@ _include:
     - aimfast.yml
     - breizorro.yml
     - bdsf.yml
-    - casa-flag.yml
+    - casa/flag.yml
     - crystalball.yml
     - cubical.yml
     - fitstool.yml
@@ -13,7 +13,6 @@ _include:
     - rfinder.yml
     - smops.yml
     - spimple-spifit.yml
-    - tigger.yml
     - tigger-convert.yml
     - tricolour.yml
     - wsclean.yml
@@ -30,6 +29,8 @@ cabs:
         dir:
           dtype: Directory
           writable: true
+          must_exist: false
+
   wsclean:
     inputs:
       dd-psf-grid:

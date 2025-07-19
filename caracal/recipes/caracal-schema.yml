@@ -204,13 +204,13 @@ selfcal.enable:
   dtype: bool
 selfcal.cal-model-mode:
   info: Mode for using a calibration model, based on visibilities and/or PyBDSM source-finding. Options are vis_only and pybdsm_only. 'vis_only' means that only MODEL_DATA will be used to to calibrate. 'pybdsm_only' means that PyBDSM-generated, tigger-format local sky models will be used. 
-  default: pybdsm_only
+  default: vis_only
   dtype: str
   choices: [pybdsm_only, vis_only]
 selfcal.niter:
   info: Number of self-calibration iterations to perform.
-  default: 2
-  dtype: int
+  default: [0,1,2]
+  dtype: List[int]
 selfcal.start-iter:
   info: Start selfcal iteration loop at this start value (1-indexed).
   default: 1
@@ -236,18 +236,19 @@ selfcal.jones:
   dtype: List[str]
   element_choices: ['k', 'g', 'k-g']
 selfcal.jones-time:
-  default: [1, [1, 1]]
-  dtype: Union[List[int], List[List[int]]]
+  default: [[1], [1, 1]]
+  dtype: List[List[int]]
+  #dtype: Union[List[int], List[List[int]]]
 selfcal.jones-freq:
-  default: [0, [0, 32]]
-  dtype: Union[List[int], List[List[int]]]
+  default: [[0], [0, 32]]
+  dtype: List[List[int]]
+  #dtype: Union[List[int], List[List[int]]]
 selfcal.subtract-model:
   default: false
   dtype: bool
 selfcal.mad-flag:
   default: false
   dtype: bool
-
 
 # Direction-dependant calibration
 ddcal.enable:

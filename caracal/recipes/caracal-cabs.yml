@@ -29,6 +29,7 @@ cabs:
         dir:
           dtype: Directory
           writable: true
+          mkdir: true
           must_exist: false
 
   wsclean:

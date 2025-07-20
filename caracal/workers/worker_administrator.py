@@ -353,6 +353,11 @@ class WorkerAdministrator(object):
                         shutil.copytree(src, dest)
                     else:
                         shutil.copy2(src, dest, follow_symlinks=False)
+            log.info("Copying recipes directory into input folder")
+            recipes_src_dir = "{0:s}/recipes".format(pckgdir)
+            recipes_dest_dir = os.path.join(self.input, "recipes") # Assuming 'recipes' is the desired destination folder name
+            if not os.path.exists(recipes_dest_dir):
+                shutil.copytree(recipes_src_dir, recipes_dest_dir)
 
         # Copy standard notebooks
         self._init_notebooks = self.config['general']['init_notebooks']

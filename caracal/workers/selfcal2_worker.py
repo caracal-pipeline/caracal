@@ -38,7 +38,7 @@ CUBICAL_OUT = {
     "PA_DATA": 'ac',
 }
 
-CUBICAL_MT = {
+QUARTICAL_MT = {
     "Gain2x2": 'complex-2x2',
     "GainDiag": 'complex-2x2',  # TODO:: Change this. Ask cubical to support this mode
     "GainDiagAmp": 'complex-2x2',
@@ -496,16 +496,12 @@ def worker(pipeline, recipe, config):
         recipe.add('cab/stimela2', step, {
                    'recipe': f'recipes/caracal.yml',
                    'recipe-name': 'caracal-selfcal',
-                   #'step': 'image-pol-0',
-                   #'params': f'ms-pointings={mslist}'
-                   'params': fake_image_params.update(
+                   'params': image_params.update(
                               [f'ms=/stimela_mount/msdir/{mslist[0]}',
                                f"dir-out-base=/stimela_mount/output/continuum"])
                    },
                    input=pipeline.input,
                    output=pipeline.output,
-                   #shared_memory='300Gb',
-                   #memory_limit='500gb',
                    label='{:s}:: Make image after first round of calibration'.format(step))
 
 
@@ -523,15 +519,8 @@ def worker(pipeline, recipe, config):
         else:
             matrix_type = 'null'
         # If we have a two_step selfcal and Gaindiag we want to use  CORRECTED_DATA
-        if config['calibrate_with'].lower() == 'quartical':# and config['cal_quartical']['two_step'] and num > 1:
-            if trace_matrix[-1] == 'GainDiag':
-                imcolumn = "CORRECTED_DATA"
-            # If we do not have gaindiag but do have two step selfcal check against stupidity and that we are actually ending with ampphase cal and written to a special phase column
-            elif trace_matrix[-1] == 'GainDiagPhase':
-                imcolumn = 'CORRECTED_DATA_PHASE'
-            # If none of these apply then do our normal sefcal
-            else:
-                raise RuntimeError("Something has gone wrong in the two step processing")
+        if config['calibrate_with'].lower() == 'quartical':
+            imcolumn = "CORRECTED_DATA"
         else:
             imcolumn = config[key][
                 'col'][num - 1 if len(config[key]['col']) >= num else -1]
@@ -585,45 +574,45 @@ def worker(pipeline, recipe, config):
             image_opts.update({"channelrange": config['img_channelrange']})
 
         mask_key = config[key]['cleanmask_method'][num - 1 if len(config[key]['cleanmask_method']) >= num else -1]
-        if mask_key == 'wsclean':
-            image_opts.update({
-                "auto-mask": config[key]['cleanmask_thr'][num - 1 if len(config[key]['cleanmask_thr']) >= num else -1],
-                "local-rms": config[key]['cleanmask_localrms'][num - 1 if len(config[key]['cleanmask_localrms']) >= num else -1],
-            })
-            if config[key]['cleanmask_localrms'][num - 1 if len(config[key]['cleanmask_localrms']) >= num else -1]:
-                image_opts.update({
-                    "local-rms-window": config[key]['cleanmask_localrms_window'][num - 1 if len(config[key]['cleanmask_localrms_window']) >= num else -1],
-                })
-        elif mask_key == 'sofia':
-            fits_mask = 'masking/{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
-                prefix, field, num)
-            if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
-                raise caracal.ConfigurationError("SoFiA clean mask {0:s}/{1:s} not found. Something must have gone wrong with the SoFiA run"
-                                                 " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output, fits_mask))
-            image_opts.update({
-                "fitsmask": '{0:s}:output'.format(fits_mask),
-                "local-rms": False,
-            })
-        elif mask_key == 'breizorro':
-            fits_mask = 'masking/{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
-                prefix, field, num)
-            if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
-                raise caracal.ConfigurationError("Breizorro clean mask {0:s}/{1:s} not found. Something must have gone wrong with the Breizorro run"
-                                                 " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output, fits_mask))
-            image_opts.update({
-                "fitsmask": '{0:s}:output'.format(fits_mask),
-                "local-rms": False,
-            })
-        else:
-            fits_mask = 'masking/{0:s}_{1:s}.fits'.format(
-                mask_key, field)
-            if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
-                raise caracal.ConfigurationError("Clean mask {0:s}/{1:s} not found. Please make sure that you have given the correct mask label"
-                                                 " in cleanmask_method, and that the mask exists.".format(pipeline.output, fits_mask))
-            image_opts.update({
-                "fitsmask": '{0:s}:output'.format(fits_mask),
-                "local-rms": False,
-            })
+        #if mask_key == 'wsclean':
+        #    image_opts.update({
+        #        "auto-mask": config[key]['cleanmask_thr'][num - 1 if len(config[key]['cleanmask_thr']) >= num else -1],
+        #        "local-rms": config[key]['cleanmask_localrms'][num - 1 if len(config[key]['cleanmask_localrms']) >= num else -1],
+        #    })
+        #    if config[key]['cleanmask_localrms'][num - 1 if len(config[key]['cleanmask_localrms']) >= num else -1]:
+        #        image_opts.update({
+        #            "local-rms-window": config[key]['cleanmask_localrms_window'][num - 1 if len(config[key]['cleanmask_localrms_window']) >= num else -1],
+        #        })
+        #elif mask_key == 'sofia':
+        #    fits_mask = 'masking/{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
+        #        prefix, field, num)
+        #    if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
+        #        raise caracal.ConfigurationError("SoFiA clean mask {0:s}/{1:s} not found. Something must have gone wrong with the SoFiA run"
+        #                                         " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output, fits_mask))
+        #    image_opts.update({
+        #        "fitsmask": '{0:s}:output'.format(fits_mask),
+        #        "local-rms": False,
+        #    })
+        #elif mask_key == 'breizorro':
+        #    fits_mask = 'masking/{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
+        #        prefix, field, num)
+        #    if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
+        #        raise caracal.ConfigurationError("Breizorro clean mask {0:s}/{1:s} not found. Something must have gone wrong with the Breizorro run"
+        #                                         " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output, fits_mask))
+        #    image_opts.update({
+        #        "fitsmask": '{0:s}:output'.format(fits_mask),
+        #        "local-rms": False,
+        #    })
+        #else:
+        #    fits_mask = 'masking/{0:s}_{1:s}.fits'.format(
+        #        mask_key, field)
+        #    if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
+        #        raise caracal.ConfigurationError("Clean mask {0:s}/{1:s} not found. Please make sure that you have given the correct mask label"
+        #                                         " in cleanmask_method, and that the mask exists.".format(pipeline.output, fits_mask))
+        #    image_opts.update({
+        #        "fitsmask": '{0:s}:output'.format(fits_mask),
+        #        "local-rms": False,
+        #    })
 
         recipe.add('cab/stimela2', step, {
                    #'support-files': ['ar-output-003:output', 'tmp:output'],
@@ -633,7 +622,7 @@ def worker(pipeline, recipe, config):
                    #'params': f'ms-pointings={mslist}'
                    'params': [f'ms=/stimela_mount/msdir/{mslist[0]}',
                               f"image-temp=/stimela_mount/output/tmp",
-                              f"image-prefix=T16R02C02_T16R02C02",
+                              f"image-prefix=mypipeline",
                               f"dir-out-base=/stimela_mount/output/continuum"]
                    },
                    input=pipeline.input,
@@ -958,95 +947,95 @@ def worker(pipeline, recipe, config):
             detection_image = None
 
         sourcefinder = config[key]['sourcefinder']
-        if (sourcefinder == 'pybdsm' or sourcefinder == 'pybdsf'):
-            spi_do = config[key]['spi']
-            if spi_do:
-                im = make_cube(num, get_dir_path(
-                    pipeline.continuum, pipeline) + '/' + img_dir.split("/")[-1], field, 'image')
-                im = im.split("/")[-1]
-            else:
-                im = '{0:s}_{1:s}_{2:d}{3:s}-image.fits:output'.format(
-                    prefix, field, num, mfsprefix)
+        #if (sourcefinder == 'pybdsm' or sourcefinder == 'pybdsf'):
+        #    spi_do = config[key]['spi']
+        #    if spi_do:
+        #        im = make_cube(num, get_dir_path(
+        #            pipeline.continuum, pipeline) + '/' + img_dir.split("/")[-1], field, 'image')
+        #        im = im.split("/")[-1]
+        #    else:
+        #        im = '{0:s}_{1:s}_{2:d}{3:s}-image.fits:output'.format(
+        #            prefix, field, num, mfsprefix)
 
-            if config[key]['breizorro_image']['enable']:
-                step = "Breizorro_masked_image"
-                outmask_image = im.replace('image.fits:output', 'breiz-image.fits')
-                recipe.add('cab/breizorro', step,
-                           {
-                               "restored-image": im,
-                               "outfile": f'{outmask_image}:output',
-                               "threshold": config[key]['thr_pix'][num - 1 if len(config[key]['thr_pix']) >= num else -1],
-                               "sum-peak": config[key]['breizorro_image']['sum_to_peak'],
-                               "fill-holes": True
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output + '/' + img_dir,
-                           label='{0:s}:: Make Breizorro'.format(step))
-                im = '{}:{}'.format(outmask_image, 'output')
-                # In order to make sure that we actually find stuff in the images we execute the rec ipe here
-                recipe.run()
-                # Empty job que after execution
-                recipe.jobs = []
-                caracal.log.info(im)
+        #    if config[key]['breizorro_image']['enable']:
+        #        step = "Breizorro_masked_image"
+        #        outmask_image = im.replace('image.fits:output', 'breiz-image.fits')
+        #        recipe.add('cab/breizorro', step,
+        #                   {
+        #                       "restored-image": im,
+        #                       "outfile": f'{outmask_image}:output',
+        #                       "threshold": config[key]['thr_pix'][num - 1 if len(config[key]['thr_pix']) >= num else -1],
+        #                       "sum-peak": config[key]['breizorro_image']['sum_to_peak'],
+        #                       "fill-holes": True
+        #                   },
+        #                   input=pipeline.input,
+        #                   output=pipeline.output + '/' + img_dir,
+        #                   label='{0:s}:: Make Breizorro'.format(step))
+        #        im = '{}:{}'.format(outmask_image, 'output')
+        #        # In order to make sure that we actually find stuff in the images we execute the rec ipe here
+        #        recipe.run()
+        #        # Empty job que after execution
+        #        recipe.jobs = []
+        #        caracal.log.info(im)
 
 
-            step = 'extract-field{0:d}-iter{1:d}'.format(trg, num)
-            calmodel = '{0:s}_{1:s}_{2:d}-pybdsm'.format(prefix, field, num)
+            #step = 'extract-field{0:d}-iter{1:d}'.format(trg, num)
+            #calmodel = '{0:s}_{1:s}_{2:d}-pybdsm'.format(prefix, field, num)
 
-            if detection_image:
-                blank_limit = 1e-9
-            else:
-                blank_limit = None
-            try:
-                os.remove(
-                    '{0:s}/{1:s}/{2:s}.fits'.format(pipeline.output, img_dir, calmodel))
-            except BaseException:
-                caracal.log.info('No Previous fits log found.')
-            try:
-                os.remove(
-                    '{0:s}/{1:s}/{2:s}.lsm.html'.format(pipeline.output, img_dir, calmodel))
-            except BaseException:
-                caracal.log.info('No Previous lsm.html found.')
-            recipe.add('cab/pybdsm', step,
-                       {
-                           "image": sdm.dismissable(im),
-                           "thresh_pix": config[key]['thr_pix'][num - 1 if len(config[key]['thr_pix']) >= num else -1],
-                           "thresh_isl": config[key]['thr_isl'][num - 1 if len(config[key]['thr_isl']) >= num else -1],
-                           "outfile": '{:s}.gaul:output'.format(calmodel),
-                           "blank_limit": sdm.dismissable(blank_limit),
-                           "adaptive_rms_box": config[key]['local_rms'],
-                           "port2tigger": False,
-                           "format": 'ascii',
-                           "multi_chan_beam": spi_do,
-                           "spectralindex_do": spi_do,
-                           "detection_image": sdm.dismissable(detection_image),
-                           "ncores": ncpu,
-                       },
-                       input=pipeline.input,
-                       # Unfortuntaly need to do it this way for pybdsm
-                       output=pipeline.output + '/' + img_dir,
-                       label='{0:s}:: Extract sources'.format(step))
-            # In order to make sure that we actually find stuff in the images we execute the rec ipe here
-            recipe.run()
-            # Empty job que after execution
-            recipe.jobs = []
+        #    if detection_image:
+        #        blank_limit = 1e-9
+        #    else:
+        #        blank_limit = None
+        #    try:
+        #        os.remove(
+        #            '{0:s}/{1:s}/{2:s}.fits'.format(pipeline.output, img_dir, calmodel))
+        #    except BaseException:
+        #        caracal.log.info('No Previous fits log found.')
+        #    try:
+        #        os.remove(
+        #            '{0:s}/{1:s}/{2:s}.lsm.html'.format(pipeline.output, img_dir, calmodel))
+        #    except BaseException:
+        #        caracal.log.info('No Previous lsm.html found.')
+        #    recipe.add('cab/pybdsm', step,
+        #               {
+        #                   "image": sdm.dismissable(im),
+        #                   "thresh_pix": config[key]['thr_pix'][num - 1 if len(config[key]['thr_pix']) >= num else -1],
+        #                   "thresh_isl": config[key]['thr_isl'][num - 1 if len(config[key]['thr_isl']) >= num else -1],
+        #                   "outfile": '{:s}.gaul:output'.format(calmodel),
+        #                   "blank_limit": sdm.dismissable(blank_limit),
+        #                   "adaptive_rms_box": config[key]['local_rms'],
+        #                   "port2tigger": False,
+        #                   "format": 'ascii',
+        #                   "multi_chan_beam": spi_do,
+        #                   "spectralindex_do": spi_do,
+        #                   "detection_image": sdm.dismissable(detection_image),
+        #                   "ncores": ncpu,
+        #               },
+        #               input=pipeline.input,
+        #               # Unfortuntaly need to do it this way for pybdsm
+        #               output=pipeline.output + '/' + img_dir,
+        #               label='{0:s}:: Extract sources'.format(step))
+        #    # In order to make sure that we actually find stuff in the images we execute the rec ipe here
+        #    recipe.run()
+        #    # Empty job que after execution
+        #    recipe.jobs = []
             # and then check the proper file is produced
-            if not os.path.isfile('{0:s}/{1:s}/{2:s}.gaul'.format(pipeline.output, img_dir, calmodel)):
-                caracal.log.error(
-                    "No model file is found after the PYBDSM run. This probably means no sources were found either due to a bad calibration or to stringent values. ")
-                raise caracal.BadDataError("No model file found after the PyBDSM run")
+        #    if not os.path.isfile('{0:s}/{1:s}/{2:s}.gaul'.format(pipeline.output, img_dir, calmodel)):
+        #        caracal.log.error(
+        #            "No model file is found after the PYBDSM run. This probably means no sources were found either due to a bad calibration or to stringent values. ")
+        #        raise caracal.BadDataError("No model file found after the PyBDSM run")
 
-            step = 'convert-field{0:d}-iter{1:d}'.format(trg, num)
-            recipe.add('cab/tigger_convert', step,
-                       {
-                           "input-skymodel": '{0:s}/{1:s}.gaul:output'.format(img_dir, calmodel),
-                           "output-skymodel": '{0:s}/{1:s}.lsm.html:output'.format(img_dir, calmodel),
-                           "type": 'Gaul',
-                           "output-type": 'Tigger',
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Convert extracted sources to tigger model'.format(step))
+        #    step = 'convert-field{0:d}-iter{1:d}'.format(trg, num)
+        #    recipe.add('cab/tigger_convert', step,
+        #               {
+        #                   "input-skymodel": '{0:s}/{1:s}.gaul:output'.format(img_dir, calmodel),
+        #                   "output-skymodel": '{0:s}/{1:s}.lsm.html:output'.format(img_dir, calmodel),
+        #                   "type": 'Gaul',
+        #                   "output-type": 'Tigger',
+        #               },
+        #               input=pipeline.input,
+        #               output=pipeline.output,
+        #               label='{0:s}:: Convert extracted sources to tigger model'.format(step))
 
     def predict_from_fits(num, model, index, img_dir, mslist, field):
         if isinstance(model, str) and len(model.split('+')) == 2:
@@ -1210,7 +1199,7 @@ def worker(pipeline, recipe, config):
         sol_terms_add = []
         for term in jones_chain.split(","):
             sol_terms_add.append(str(solterm_niter[SOL_TERMS_INDEX[term]]))
-        flags = "-cubical"
+        flags = "-quartical"
 
         for i, msname in enumerate(mslist):
             # Due to a bug in cubical full polarization datasets are not compliant with sel-diag: True
@@ -2035,10 +2024,6 @@ def worker(pipeline, recipe, config):
         self_cal_iter_counter = config['start_iter']
         global reset_cal
         reset_cal = 0
-        global trace_SN
-        trace_SN = []
-        global trace_matrix
-        trace_matrix = []
         image_path = "{0:s}/image_{1:d}".format(
             pipeline.continuum, self_cal_iter_counter)
         # I think it is best to always define selfcal_products as it might be needed for transfer gains or restore

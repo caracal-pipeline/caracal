@@ -103,7 +103,7 @@ lib:
         params:
           input_ms:
             path: =recipe.ms
-            select_corr: [0,1, 2, 3]
+            select_corr: [0,1,2,3]
             select_uv_range: =LIST(400*0.33, 0)
             select_fields: [0]
           input_model:
@@ -115,8 +115,6 @@ lib:
             propagate_flags: true
             robust: false
           output:
-            gain_directory: "{recipe.dir-out-base}/K-{info.suffix}"
-            log_directory: "{recipe.dir-out-base}/K-{info.suffix}"
             overwrite: true
             products: [corrected_data]
             columns: =LIST("CORRECTED{info.suffix}_DATA")
@@ -192,13 +190,11 @@ lib:
         cab: wsclean
         params:
           ms: =recipe.ms
-          prefix: =IF(recipe.image-prefix, recipe.image-prefix, "{recipe.dir-out-base}/image_{info.suffix}/{recipe.image-prefix}_{info.suffix}")
           size: =recipe.image-npix
           scale: =recipe.image-cell
           nchan: =recipe.image-nchans
           abs-threshold: =IFSET(recipe.image-threshold)
           auto-threshold: =IFSET(recipe.image-auto-threshold)
-          fits-mask: =IFSET(recipe.image-fits-mask)
           auto-mask: =IFSET(recipe.image-auto-mask)
           threads: =IFSET(recipe.ncpu)
           niter: 200000 #=IFSET(recipe.image-niter)

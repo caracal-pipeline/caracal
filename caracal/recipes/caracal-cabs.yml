@@ -23,15 +23,45 @@ cabs:
     inputs:
       fill-holes:
         dtype: bool
-  cubical:
+  #cubical:
+   # inputs:
+    #  out:
+        #dir:
+        #  dtype: Directory
+          #mkdir_parent: true
+          #access_parent: true
+          #write_parent: true
+        #  writable: true
+        #  mkdir: true
+        #  must_exist: true
+  iter_out:
+    name: IterOutId
+    info: Iteration ID of previous iter
+    flavour:
+      kind: python-code
+      input_vars: true
+    command: |
+      dir_out = iter - 1
     inputs:
-      out:
-        dir:
-          dtype: Directory
-          writable: true
-          mkdir: true
-          must_exist: false
-
+      iter:
+        dtype: int
+    outputs:
+      dir-out:
+        dtype: int
+  maximum_iter:
+    name: IterMax
+    info: Maximum number of iterations
+    flavour:
+      kind: python-code
+      input_vars: true
+    command: |
+      max_iter = max(niter)
+    inputs:
+      niter:
+        dtype: List[int]
+    outputs:
+      max-iter:
+        dtype: int
   wsclean:
     inputs:
       dd-psf-grid:

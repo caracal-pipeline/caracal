@@ -62,8 +62,10 @@ image-threshold:
   dtype: float
 image-auto-threshold:
   dtype: float
+  default: 7.0
 image-auto-mask:
   dtype: float
+  default: 15.0
 image-nchans:
   info: Number of channels in output image.
   default: 6
@@ -136,7 +138,7 @@ image-multiscale-bais:
   dtype: float
 image-fits-mask:
   dtype: File
-image-masking-enable:
+image-cleanmask-method:
   default: breizorro
   dtype: str
   choices: [wsclean, sofia, breizorro]
@@ -209,8 +211,8 @@ selfcal.cal-model-mode:
   choices: [pybdsm_only, vis_only]
 selfcal.niter:
   info: Number of self-calibration iterations to perform.
-  default: [0,1,2]
-  dtype: List[int]
+  default: 2
+  dtype: int
 selfcal.start-iter:
   info: Start selfcal iteration loop at this start value (1-indexed).
   default: 1

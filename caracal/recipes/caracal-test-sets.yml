@@ -2,12 +2,13 @@ caracal-selfcal:
   assign_based_on:
     obs:
       PicA:
-        ms: /home/ramaila/working/msdir/pica-s-band-cal_with_pcal.ms
-        dir-out-base: /home/ramaila/working/ar1-output-001/calmodel
+        ms: /home/ramaila/working/msdir/1543635069_sdp_l0-T16R02C02-mgpls-time.ms
+        dir-out-base: caracal-output-001
         selfcal.enable: true
         selfcal.pa-rotate: true
         selfcal.cal-model-mode: vis_only
-        selfcal.niter: [1,2,3]
+        selfcal.niter: 2
+        selfcal.jones: ['k', 'k-g']
         ncpu: 16
         image-no-update-model-required: true
         image-col: DATA
@@ -17,3 +18,4 @@ caracal-selfcal:
         image-multiscale: true
         image-multiscale-bais: 0.5
         image-multiscale-scales: [0, 5, 10, 19]
+        image-aimfast-enable: true

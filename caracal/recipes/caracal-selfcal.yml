@@ -15,138 +15,20 @@ caracal-selfcal:
       dtype: MS
       aliases: ['*.ms']
       required: true
-    image-prefix:
-      dtype: str
-      required: true
-    niters:
-      info: list of iteration to process, must be selfcal.niter.
+    selfcal._niters:
+      info: Number of iteration to process
       dtype: List[int]
-      default: [1]
-    image-mfs-image:
-      info: Restored mfs image
-      dtype: File
-    image-mfs-residual:
-      info: Residual mfs image
-      dtype: File
-    image-nchans:
-      dtype: int
-    image-niter:
-      dtype: int
-    image-col:
-      dtype: str
+      default: =RANGE(0, 1+current.selfcal.niter)
 
   for_loop:
     var: iter
-    over: niters
+    over: selfcal._niters
+    display_status: "{var}={value} {index1}/{total}"
     scatter: 1
 
   steps:
-    pa-correction-0: 
-      info: invokes cubical to correct for parallactic angle
-      skip: =IF(not recipe.selfcal-pa-rotate, IF(recipe.selfcal-enable, false, true), true)
-      _use: lib.steps.cubical.pa-corr
-      params:
-        data.ms: =recipe.ms
-        out.column: 'PA_CORRECTED_DATA'
-        out.dir: '{root.dir-out-base}/cal-pa.cc0-out'
-        dist.ncpu: =recipe.ncpu
-        dist.min-chunks: =recipe.ncpu
-        model.list: ''
-        flags.apply: "-cubical0"
-        flags.auto-init: legacy
-        flags.save: "cubical0"
-        flags.save-legacy: auto
-        flags.reinit-bitflags: false
-        k.save-to: "{recipe.dir-out-base}/PAsol-{info.suffix}"
 
-    image-pol-0:
-      info: image and construct initial model image using the PA_CORRECTED_DATA column using a mask
-      skip: =IF(not recipe.selcal-pa-rotate, IF(recipe.image-enable, false, true), true)
-      _use: lib.steps.wsclean.image-pol
-      params:
-        column: =IF(recipe.selfcal.pa-rotate, steps.pa-correction-0.out.column, recipe.image-col)
-        no-update-model-required: =recipe.image-no-update-model-required
-
-    quality-assess-0:
-      info: image quality assessment
-      cab: aimfast
-      skip: =IF(not recipe.image-enable, IF(recipe.aimfast-enable, false, true), true)
-      params:
-        residual_image: =steps.image-*.residual.i.mfs
-        outfile: '{steps.image-*.prefix}-im-{info.suffix}.json'
-
-    masking-0:
-      info: generate a mask
-      cab: breizorro
-      skip: =IF(not recipe.image-enable, IF(recipe.image-breizorro-enable, false, true), true)
-      params:
-        restored-image: =IF(recipe.image-mfs-image, recipe.image-mfs-image, steps.image-0.restored.i.mfs)
-        #mask: '{steps.image-0.prefix}-mask.fits'
-        mask: '{steps.image-0.prefix}-mask.fits'
-        threshold: 10.0
-        dilate: 2
-        #boxsize: 60
-
-    masking-pol-0:
-      info: generate a mask
-      cab: breizorro
-      skip: =IF(not recipe.image-enable, IF(recipe.image-breizorro-enable, false, true), true)
-      params:
-        restored-image: =IF(recipe.image-mfs-image, recipe.image-mfs-image, steps.image-pol-0.restored.i.mfs)
-        mask: '{steps.image-pol-0.prefix}-mask.fits'
-        threshold: 10.0
-        dilate: 2
-        #boxsize: 60
-
-    image-pol-1:
-      info: image and construct initial model image using the CORRECTED_DATA column using a mask
-      skip: true
-      _use: caracal-selfcal.steps.image-pol-0
-      params:
-        ms: =recipe.ms
-        fits-mask: =IF(recipe.image-fits-mask, recipe.image-fits-mask, IF(recipe.image-breizorro-enable, steps.masking-0.mask, UNSET))
-        #fits-mask: =IF(recipe.image-breizorro-enable, steps.masking-0.mask, UNSET)
-
-    source-finder-1:
-      info: automatic source finding
-      _use: lib.steps.source-finder.bdsf
-      params:
-        image: =IF(recipe.image-mfs-image, recipe.image-mfs-image, steps.image-*.restored.i.mfs)
-        advanced_opts: true
-        outfile_gaul: =STRIPEXT(recipe.image-prefix) + '.gaul'
-        outfile_srl: =STRIPEXT(recipe.image-prefix) + '.srl'
-
-    tigger-convert-1:
-      info: convert model to lsm format
-      cab: tigger-convert
-      params:
-        input-model: =steps.source-finder-*.outfile_gaul
-        output-type: Tigger
-        output-model: =STRIPEXT(steps.source-finder-*.outfile_gaul) + '.lsm.html'
-
-    quality-assess-1:
-      info: image quality assessment
-      skip: true
-      cab: aimfast
-      params:
-        residual_image: =IF(recipe.image-mfs-residual, recipe.image-mfs-residual, steps.image-*.residual.i.mfs)
-        outfile: '{steps.image-*.prefix}-im-{info.suffix}.json'
- 
-    selfcal-1:
-      info: first round of delay selfcal
-      _use: lib.steps.quartical.k
-      params:
-        #input_model.recipe: =IF(recipe.selfcal.cal-model-mode, steps.output-model, MODEL_DATA)
-        input_model.recipe: =steps.tigger-convert-*.output-model
-        output.columns: [FSLOPE_CORRECTED_DATA]
-
-    flagsummary-stats-1:
-      info: report flagging statistics after calibration
-      cab: casa.flagsummary
-      params:
-        ms: =recipe.ms
-
-    restore-flags-1:
+    restore-flags:
       info: restore flags to a specific version
       cab: casa.flagman
       skip: true
@@ -155,51 +37,103 @@ caracal-selfcal:
         versionname: =step.save-flags-0.versionname
         mode: restore
 
-    image-pol-2:
-      info: image and construct initial model image using the FSLOPE_CORRECTED_DATA column using a mask
-      _use: caracal-selfcal.steps.image-pol-1
+    pa-correction:
+      info: invokes cubical to correct for parallactic angle
+      skip: =IF(recipe.selfcal.pa-rotate, IF(recipe.iter==0, false, true), IF(recipe.selfcal.enable, false, true))
+      skip_if_outputs: fresh
+      _use: lib.steps.cubical.pa-corr
       params:
-        threshold: 0.000030
-        column: FSLOPE_CORRECTED_DATA
-        #dd-psf-grid: [2,2]
-        #parallel-deconvolution: 4
-        #niter: 1000
-        #pol: IQ
-        #no-update-model-required: true
-        #nmiter: 8
+        data.ms: =recipe.ms
+        out.column: 'PA_CORRECTED_DATA'
+        out.dir: "{recipe.dir-out-base}/cal-pa.cc-out"
+        dist.ncpu: =recipe.ncpu
+        dist.min-chunks: =recipe.ncpu
+        model.list: ''
+        flags.apply: "-cubical0"
+        flags.auto-init: legacy
+        flags.save: "cubical0"
+        flags.save-legacy: auto
+        flags.reinit-bitflags: false
+        k.save-to: "{recipe.dir-out-base}/PAsol"
 
-    quality-assess-2:
+    previous-image-index:
+      info: prefix for image files
+      cab: iter_out
+      params:
+        iter: =recipe.iter
+
+    image-pol-0:
+      info: image and construct initial model image using the PA_CORRECTED_DATA column using a mask
+      skip: =IF(recipe.iter==0, IF(recipe.image-enable, false, true), true)
+      _use: lib.steps.wsclean.image-pol
+      skip_if_outputs: fresh
+      params:
+        prefix: ="{recipe.dir-out-base}/image_{recipe.iter}/{recipe.image-prefix}_{recipe.iter}"
+        column: =IF(recipe.selfcal.pa-rotate, IF(recipe.iter==0, steps.pa-correction.out.column, "CORRECTED_DATA"), recipe.image-col)
+        fits-mask: =IFSET(recipe.image-fits-mask, recipe.image-fits-mask, IFSET(recipe.image-cleanmask-method, IF(recipe.iter>0, "{recipe.dir-out-base}/image_{steps.previous-image-index.dir-out}/{recipe.image-prefix}_{steps.previous-image-index.dir-out}-MFS-mask.fits", UNSET, UNSET), UNSET))
+        no-update-model-required: =recipe.image-no-update-model-required
+
+    quality-assess-0:
       info: image quality assessment
       cab: aimfast
+      skip_if_outputs: fresh
+      skip: =IF(recipe.iter==0, IF(recipe.image-enable, IF(recipe.image-aimfast-enable, false, true), true), true)
       params:
-              #residual_image: =steps.image-*.residual.i.mfs
-        residual_image: =steps.image-2.residual.mfs
-        outfile: '{steps.image-*.prefix}-im-{info.suffix}.json'
+        residual_image: =steps.image-pol-0.residual.i.mfs
+        outfile: '{steps.image-pol-0.prefix}-im-{info.suffix}.json'
 
-    masking-2:
+    masking-0:
       info: generate a mask
       cab: breizorro
+      skip_if_outputs: fresh
+      skip: =IF(recipe.iter==0, IF(recipe.image-enable, IF(recipe.image-cleanmask-method=="breizorro", false, true), true), true)
       params:
-              #restored-image: =steps.image-*.restored.i.mfs
-        restored-image: =steps.image-2.restored.mfs
-        mask: '{steps.image-2.prefix}-MFS-mask.fits'
-        threshold: 15.0
+        restored-image: =steps.image-pol-0.restored.i.mfs
+        outfile: '{steps.image-pol-0.prefix}-MFS-mask.fits'
+        threshold: 10.0
         dilate: 2
-        boxsize: 35
+        boxsize: 60
 
-    copycol-2:
+    source-finder-0:
+      info: automatic source finding
+      _use: lib.steps.source-finder.bdsf
+      skip: =IF(recipe.iter==0, IF(recipe.selfcal.cal-model-mode=='pybdsm_only', false, true), true)
+      skip_if_outputs: fresh
+      params:
+        image: =steps.image-*.restored.i.mfs
+        advanced_opts: true
+        outfile_gaul: =steps.image-*.prefix + '.gaul'
+        outfile_srl: =steps.image-*.prefix + '.srl'
+
+    flagsummary-stats:
+      info: report flagging statistics after calibration
+      cab: casa.flagsummary
+      skip: =IF(recipe.iter==0, false, true)
+      params:
+        ms: =recipe.ms
+
+    save-flags:
+      info: restore flags to a specific version
+      cab: casa.flagman
+      skip: true
+      params:
+        ms: =recipe.ms
+        versionname: =step.save-flags-0.versionname
+        mode: save
+
+    copycol:
       info: Make a copy of the MODEL_DATA column
-      skip: =not recipe.copy-model-columns
+      skip: true #=not recipe.copy-model-columns
       cab: msutils.copycol
       params:
         msname: =recipe.ms
         fromcol: MODEL_DATA
-        #tocol: 'MODEL{info.suffix}_DATA'
-        tocol: 'DR1_NOT_HOT_DATA'
+        tocol: 'MODEL{info.suffix}_DATA'
 
-    upsample-2:
+    upsample:
       info: upsamples model image to higher frequency resolution
       cab: smops
+      skip: true
       params:
         ms: =recipe.ms
         input-prefix: =steps.image*.prefix
@@ -209,75 +143,109 @@ caracal-selfcal:
         stokes: =steps.image*.pol
         channels-out: =recipe.upsample-model-channels
 
-    predict-2:
+    predict:
       _use: lib.steps.wsclean.predict-pol
+      skip: true
       params:
-        prefix: =IF(recipe.upsample-model-channels, steps.upsample-*.output-prefix, steps.image-*.prefix)
-        nchan: =IF(recipe.upsample-model-channels, steps.upsample-*.channels-out, steps.image-*.nchan)
+        prefix: =IFSET(recipe.upsample-model-channels, steps.upsample-*.output-prefix, steps.image*.prefix)
+        nchan: =IFSET(recipe.upsample-model-channels, steps.upsample-*.channels-out, steps.image*.nchan)
         pol: IQUV
         threads: =recipe.ncpu
 
-    predict-copycol-2:
+    predict-copycol:
       info: Make a copy of the MODEL_DATA column
-      skip: =not recipe.copy-model-columns
+      #skip: =not recipe.copy-model-columns
+      skip: true
       cab: msutils.copycol
       params:
         msname: =recipe.ms
         fromcol: MODEL_DATA
-        tocol: =IF(recipe.upsample-model-channels, 'MODEL{info.suffix}_{recipe.upsample-model-channels}_DATA', 'MODEL{info.suffix}_DATA')
- 
-    selfcal-2:
-      info: second round of delay and gain selfcal
-      _use: lib.steps.quartical.k-g
-      params:
-        input_model.recipe: MODEL_DATA
-        output.columns: [G_CORRECTED_DATA]
-        output.gain_directory: "{recipe.dir-out-base}/KG8-{info.suffix}.qc/"
-        output.log_directory: "{recipe.dir-out-base}/KG8-{info.suffix}.qc/log/"
+        tocol: =IFSET(recipe.upsample-model-channels, 'MODEL{info.suffix}_{recipe.upsample-model-channels}_DATA', 'MODEL{info.suffix}_DATA')
 
-    image-pol-3:
-      info: image using the G_CORRECTED_DATA column using a mask
-      _use: caracal-selfcal.steps.image-pol-2
+    max-iter:
+      info: Maximum number of iterations
+      cab: maximum_iter
       params:
-        threshold: 0.000025
-        column: G_CORRECTED_DATA
-        #no-update-model-required: =recipe.image-no-update-model-required
-        #nmiter: 8
+        niter: =recipe.selfcal._niters
 
-    quality-assess-image-3:
+    image-pol:
+      info: image and construct initial model image using the PA_CORRECTED_DATA column using a mask
+      skip: =IF(recipe.iter==0, true, IF(recipe.image-enable, false, true))
+      _use: lib.steps.wsclean.image-pol
+      skip_if_outputs: fresh
+      params:
+        prefix: ="{recipe.dir-out-base}/image_{recipe.iter}/{recipe.image-prefix}_{recipe.iter}"
+        column: =IF(recipe.selfcal.pa-rotate, IF(recipe.iter==0, steps.pa-correction.out.column, "CORRECTED_DATA"), recipe.image-col)
+        fits-mask: =IFSET(recipe.image-fits-mask, recipe.image-fits-mask, IFSET(recipe.image-cleanmask-method, IF(recipe.iter>0, "{recipe.dir-out-base}/image_{steps.previous-image-index.dir-out}/{recipe.image-prefix}_{steps.previous-image-index.dir-out}-MFS-mask.fits", UNSET, UNSET), UNSET))
+        no-update-model-required: =recipe.image-no-update-model-required
+
+    quality-assess:
       info: image quality assessment
       cab: aimfast
+      skip_if_outputs: fresh
+      skip: =IF(recipe.iter==0, true, IF(recipe.image-enable, IF(recipe.image-aimfast-enable, false, true), true))
       params:
-        residual_image: =steps.image-3.residual.i.mfs
+        residual_image: =steps.image-pol.residual.i.mfs
+        outfile: '{steps.image-pol.prefix}-im-{info.suffix}.json'
+
+    masking:
+      info: generate a mask
+      cab: breizorro
+      skip: =IF(recipe.iter==0, true, IF(recipe.image-enable, IF(recipe.image-cleanmask-method=="breizorro", false, true), true))
+      params:
+        restored-image: =steps.image-pol.restored.i.mfs
+        outfile: '{steps.image-pol.prefix}-MFS-mask.fits'
+        threshold: 10.0
+        dilate: 2
+        boxsize: 60
+
+    source-finder:
+      info: automatic source finding
+      _use: lib.steps.source-finder.bdsf
+      skip: =IF(recipe.iter==0, true, IF(recipe.selfcal.cal-model-mode=='pybdsm_only', false, true))
+      skip_if_outputs: fresh
+      params:
+        image: =steps.image-*.restored.i.mfs
+        advanced_opts: true
+        outfile_gaul: =steps.image-*.prefix + '.gaul'
+        outfile_srl: =steps.image-*.prefix + '.srl'
+
+    tigger-convert:
+      info: convert model to lsm format
+      cab: tigger-convert
+      skip: =IF(recipe.iter==0, true, IF(recipe.selfcal.cal-model-mode=='pybdsm_only', false, true))
+      params:
+        input-model: =steps.source-finder.outfile_gaul
+        output-type: Tigger
+        output-model: =STRIPEXT(steps.source-finder.outfile_gaul) + '.lsm.html'
+
+    cross-assess:
+      info: image quality assessment
+      cab: aimfast
+      skip: true
+      params:
+        residual_image: =steps.image-*.residual.i.mfs
         outfile: '{steps.image-*.prefix}-im-{info.suffix}.json'
 
-    upsample-image-3:
-      info: upsamples model image to higher frequency resolution
-      cab: smops
+    selfcal-1:
+      info: Round of delay selfcal
+      _use: lib.steps.quartical.k
+      skip: =IF(recipe.iter==steps.max-iter.max-iter, true, IF(recipe.selfcal.jones[recipe.iter]=='k', false, true))
       params:
-        ms: =recipe.ms
-        input-prefix: =steps.image*.prefix
-        output-prefix: "{steps.image*.prefix}-upsampled"
-        num-threads: =recipe.ncpu
-        polynomial-order: 4
-        stokes: =steps.image*.pol
-        channels-out: =recipe.upsample-model-channels
+        #input_model.recipe: =IF(recipe.selfcal.cal-model-mode, steps.output-model, MODEL_DATA)
+        #input_model.recipe: =steps.tigger-convert-*.output-model
+        input_model.recipe: MODEL_DATA
+        output.columns: [CORRECTED_DATA]
+        output.gain_directory: ="{recipe.dir-out-base}/K-{recipe.iter}.qc/"
+        output.log_directory: "{recipe.dir-out-base}/K-{recipe.iter}.qc/log/"
 
-    predict-upsample-3:
-      _use: lib.steps.wsclean.predict-pol
+    selfcal-2:
+      info: Round of delay and gain selfcal
+      _use: lib.steps.quartical.k-g
+      skip: =IF(recipe.iter==steps.max-iter.max-iter, true, IF(recipe.selfcal.jones[recipe.iter]=='k-g', false, true))
+      #skip: =IF(recipe.iter==MAX(recipe.selfcal.niter), true, IF(recipe.selfcal.jones[recipe.iter]=='k-g', false, true))
       params:
-              #prefix: =IF(recipe.upsample-model-channels, steps.upsample-*.output-prefix, steps.image-*.prefix)
-              #nchan: =IF(recipe.upsample-model-channels, steps.upsample-*.channels-out, steps.image-*.nchan)
-        prefix: =steps.image-*.prefix
-        nchan: =steps.image-*.nchan
-        pol: IQUV
-        threads: =recipe.ncpu
-
-    copycol-predict-3:
-      info: Make a copy of the MODEL_DATA column
-      skip: =not recipe.copy-model-columns
-      cab: msutils.copycol
-      params:
-        msname: =recipe.ms
-        fromcol: MODEL_DATA
-        tocol: =IF(recipe.upsample-model-channels, 'MODEL{info.suffix}_{recipe.upsample-model-channels}_DATA', 'MODEL{info.suffix}_DATA')
+       input_model.recipe: MODEL_DATA
+       output.columns: [CORRECTED_DATA]
+       output.gain_directory: "{recipe.dir-out-base}/KG-{info.suffix}.qc/"
+       output.log_directory: "{recipe.dir-out-base}/KG-{info.suffix}.qc/log/"

@@ -23,17 +23,6 @@ cabs:
     inputs:
       fill-holes:
         dtype: bool
-  #cubical:
-   # inputs:
-    #  out:
-        #dir:
-        #  dtype: Directory
-          #mkdir_parent: true
-          #access_parent: true
-          #write_parent: true
-        #  writable: true
-        #  mkdir: true
-        #  must_exist: true
   iter_out:
     name: IterOutId
     info: Iteration ID of previous iter
@@ -41,12 +30,12 @@ cabs:
       kind: python-code
       input_vars: true
     command: |
-      dir_out = iter - 1
+      iter_out = iter - 1
     inputs:
       iter:
         dtype: int
     outputs:
-      dir-out:
+      iter-out:
         dtype: int
   maximum_iter:
     name: IterMax

@@ -1259,7 +1259,7 @@ def worker(pipeline, recipe, config):
                 "bbc-save-to": "{0:s}/bbc-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                pipeline), num, msbase),
                 "g-solvable": True if config[key]['output_data'][num - 1 if len(config[key]['output_data']) >= num else -1] not in ['PA_DATA'] else False,
-                "g-type": CUBICAL_MT[matrix_type],
+                "g-type": QUARTICAL_MT[matrix_type],
                 "g-update-type": gupdate,
                 "g-time-int": int(gsols_[0]),
                 "g-freq-int": int(gsols_[1]),
@@ -1289,7 +1289,7 @@ def worker(pipeline, recipe, config):
                 cubical_opts.update({
                     "dd-update-type": 'amp-diag',
                     "dd-solvable": True,
-                    "dd-type": CUBICAL_MT[matrix_type],
+                    "dd-type": QUARTICAL_MT[matrix_type],
                     "dd-time-int": int(gasols_[0]),
                     "dd-freq-int": int(gasols_[1]),
                     "dd-save-to": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
@@ -1319,7 +1319,7 @@ def worker(pipeline, recipe, config):
                     "b-solvable": True,
                     "b-time-int": int(bsols_[0]),
                     "b-freq-int": int(bsols_[1]),
-                    "b-type": CUBICAL_MT[matrix_type],
+                    "b-type": QUARTICAL_MT[matrix_type],
                     "b-clip-low": config['cal_gain_cliplow'],
                     "b-save-to": b_table_name,
                     "b-clip-high": config['cal_gain_cliphigh'],
@@ -1519,7 +1519,7 @@ def worker(pipeline, recipe, config):
                 "montblanc-dtype": 'float',
                 "g-solvable": True,
                 "g-update-type": gupdate,
-                "g-type": CUBICAL_MT[matrix_type],
+                "g-type": QUARTICAL_MT[matrix_type],
                 "g-time-int": int(gsols_apply[0]),
                 "g-freq-int": int(gsols_apply[1]),
                 "madmax-enable": config['cal_quartical']['flag_madmax'],
@@ -1583,7 +1583,7 @@ def worker(pipeline, recipe, config):
 
                 cubical_gain_interp_opts.update({
                     "b-update-type": bupdate,
-                    "b-type": CUBICAL_MT[matrix_type],
+                    "b-type": QUARTICAL_MT[matrix_type],
                     "b-time-int": int(bsols_apply[0]),
                     "b-freq-int": int(bsols_apply[1]),
                     "b-solvable": False
@@ -1635,7 +1635,7 @@ def worker(pipeline, recipe, config):
 
                 cubical_gain_interp_opts.update({
                     "dd-update-type": 'amp-diag',
-                    "dd-type": CUBICAL_MT[matrix_type],
+                    "dd-type": QUARTICAL_MT[matrix_type],
                     "dd-time-int": int(gasols_apply[0]),
                     "dd-freq-int": int(gasols_apply[1]),
                     "dd-solvable": False

@@ -5,7 +5,7 @@ caracal-selfcal:
         ms: /home/ramaila/working/msdir/1543635069_sdp_l0-T16R02C02-mgpls-time.ms
         dir-out-base: caracal-output-001
         selfcal.enable: true
-        selfcal.pa-rotate: true
+        selfcal.pa-rotate: false
         selfcal.cal-model-mode: vis_only
         selfcal.niter: 2
         selfcal.jones: ['k', 'k-g']

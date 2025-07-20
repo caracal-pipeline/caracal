@@ -18,7 +18,7 @@ caracal-selfcal:
     selfcal._niters:
       info: Number of iteration to process
       dtype: List[int]
-      default: =RANGE(0, 1+current.selfcal.niter)
+      default: =RANGE(0, 2+current.selfcal.niter)
 
   for_loop:
     var: iter
@@ -39,7 +39,7 @@ caracal-selfcal:
 
     pa-correction:
       info: invokes cubical to correct for parallactic angle
-      skip: =IF(recipe.selfcal.pa-rotate, IF(recipe.iter==0, false, true), IF(recipe.selfcal.enable, false, true))
+      skip: IF(recipe.selfcal.enable, IF(recipe.selfcal.pa-rotate, IF(recipe.iter==0, false, true), true), true)
       skip_if_outputs: fresh
       _use: lib.steps.cubical.pa-corr
       params:
@@ -62,48 +62,65 @@ caracal-selfcal:
       params:
         iter: =recipe.iter
 
-    image-pol-0:
+    image-pol:
       info: image and construct initial model image using the PA_CORRECTED_DATA column using a mask
-      skip: =IF(recipe.iter==0, IF(recipe.image-enable, false, true), true)
-      _use: lib.steps.wsclean.image-pol
+      skip: =IF(recipe.image-enable, false, true)
+      _use: lib.steps.wsclean.image
       skip_if_outputs: fresh
       params:
         prefix: ="{recipe.dir-out-base}/image_{recipe.iter}/{recipe.image-prefix}_{recipe.iter}"
-        column: =IF(recipe.selfcal.pa-rotate, IF(recipe.iter==0, steps.pa-correction.out.column, "CORRECTED_DATA"), recipe.image-col)
-        fits-mask: =IFSET(recipe.image-fits-mask, recipe.image-fits-mask, IFSET(recipe.image-cleanmask-method, IF(recipe.iter>0, "{recipe.dir-out-base}/image_{steps.previous-image-index.dir-out}/{recipe.image-prefix}_{steps.previous-image-index.dir-out}-MFS-mask.fits", UNSET, UNSET), UNSET))
-        no-update-model-required: =recipe.image-no-update-model-required
+        column: =IF(recipe.iter>1, "CORRECTED_DATA", IF(recipe.selfcal.pa-rotate, steps.pa-correction.out.column, recipe.image-col))
+        fits-mask: =IFSET(recipe.image-fits-mask, recipe.image-fits-mask, IFSET(recipe.image-cleanmask-method, IF(recipe.iter>0, "{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}-MFS-mask.fits", UNSET, UNSET), UNSET))
+        no-update-model-required: true
 
-    quality-assess-0:
+    quality-assess:
       info: image quality assessment
       cab: aimfast
       skip_if_outputs: fresh
-      skip: =IF(recipe.iter==0, IF(recipe.image-enable, IF(recipe.image-aimfast-enable, false, true), true), true)
+      skip: =IF(recipe.image-enable, IF(recipe.image-aimfast-enable, false, true), true)
       params:
-        residual_image: =steps.image-pol-0.residual.i.mfs
-        outfile: '{steps.image-pol-0.prefix}-im-{info.suffix}.json'
+        residual_image: =steps.image*.residual.mfs
+        outfile: '{steps.image*.prefix}-im-{info.suffix}.json'
 
-    masking-0:
+    masking:
       info: generate a mask
       cab: breizorro
       skip_if_outputs: fresh
-      skip: =IF(recipe.iter==0, IF(recipe.image-enable, IF(recipe.image-cleanmask-method=="breizorro", false, true), true), true)
+      skip: =IF(recipe.image-enable, IF(recipe.image-cleanmask-method=="breizorro", false, true), true)
       params:
-        restored-image: =steps.image-pol-0.restored.i.mfs
-        outfile: '{steps.image-pol-0.prefix}-MFS-mask.fits'
+        restored-image: =steps.image*.restored.mfs
+        outfile: '{steps.image*.prefix}-MFS-mask.fits'
         threshold: 10.0
         dilate: 2
         boxsize: 60
 
-    source-finder-0:
+    source-finder:
       info: automatic source finding
       _use: lib.steps.source-finder.bdsf
-      skip: =IF(recipe.iter==0, IF(recipe.selfcal.cal-model-mode=='pybdsm_only', false, true), true)
+      skip: =IF(recipe.selfcal.cal-model-mode=='pybdsm_only', false, IF(recipe.image-enable, IF(recipe.image-aimfast-enable, false, true), true))
       skip_if_outputs: fresh
       params:
-        image: =steps.image-*.restored.i.mfs
+        image: =steps.image-*.restored.mfs
         advanced_opts: true
         outfile_gaul: =steps.image-*.prefix + '.gaul'
         outfile_srl: =steps.image-*.prefix + '.srl'
+
+    tigger-convert:
+      info: convert model to lsm format
+      cab: tigger-convert
+      skip: =IF(recipe.selfcal.cal-model-mode=='pybdsm_only', false, IF(recipe.image-enable, IF(recipe.image-aimfast-enable, false, true), true))
+      params:
+        input-model: =steps.source-finder.outfile_gaul
+        output-type: Tigger
+        output-model: =STRIPEXT(steps.source-finder.outfile_gaul) + '.lsm.html'
+
+    cross-assess:
+      info: image quality assessment
+      cab: aimfast
+      skip: true
+      params:
+        residual_image: =steps.image-*.residual.mfs
+        outfile: '{steps.image-*.prefix}-im-{info.suffix}.json'
 
     flagsummary-stats:
       info: report flagging statistics after calibration
@@ -168,69 +185,10 @@ caracal-selfcal:
       params:
         niter: =recipe.selfcal._niters
 
-    image-pol:
-      info: image and construct initial model image using the PA_CORRECTED_DATA column using a mask
-      skip: =IF(recipe.iter==0, true, IF(recipe.image-enable, false, true))
-      _use: lib.steps.wsclean.image-pol
-      skip_if_outputs: fresh
-      params:
-        prefix: ="{recipe.dir-out-base}/image_{recipe.iter}/{recipe.image-prefix}_{recipe.iter}"
-        column: =IF(recipe.selfcal.pa-rotate, IF(recipe.iter==0, steps.pa-correction.out.column, "CORRECTED_DATA"), recipe.image-col)
-        fits-mask: =IFSET(recipe.image-fits-mask, recipe.image-fits-mask, IFSET(recipe.image-cleanmask-method, IF(recipe.iter>0, "{recipe.dir-out-base}/image_{steps.previous-image-index.dir-out}/{recipe.image-prefix}_{steps.previous-image-index.dir-out}-MFS-mask.fits", UNSET, UNSET), UNSET))
-        no-update-model-required: =recipe.image-no-update-model-required
-
-    quality-assess:
-      info: image quality assessment
-      cab: aimfast
-      skip_if_outputs: fresh
-      skip: =IF(recipe.iter==0, true, IF(recipe.image-enable, IF(recipe.image-aimfast-enable, false, true), true))
-      params:
-        residual_image: =steps.image-pol.residual.i.mfs
-        outfile: '{steps.image-pol.prefix}-im-{info.suffix}.json'
-
-    masking:
-      info: generate a mask
-      cab: breizorro
-      skip: =IF(recipe.iter==0, true, IF(recipe.image-enable, IF(recipe.image-cleanmask-method=="breizorro", false, true), true))
-      params:
-        restored-image: =steps.image-pol.restored.i.mfs
-        outfile: '{steps.image-pol.prefix}-MFS-mask.fits'
-        threshold: 10.0
-        dilate: 2
-        boxsize: 60
-
-    source-finder:
-      info: automatic source finding
-      _use: lib.steps.source-finder.bdsf
-      skip: =IF(recipe.iter==0, true, IF(recipe.selfcal.cal-model-mode=='pybdsm_only', false, true))
-      skip_if_outputs: fresh
-      params:
-        image: =steps.image-*.restored.i.mfs
-        advanced_opts: true
-        outfile_gaul: =steps.image-*.prefix + '.gaul'
-        outfile_srl: =steps.image-*.prefix + '.srl'
-
-    tigger-convert:
-      info: convert model to lsm format
-      cab: tigger-convert
-      skip: =IF(recipe.iter==0, true, IF(recipe.selfcal.cal-model-mode=='pybdsm_only', false, true))
-      params:
-        input-model: =steps.source-finder.outfile_gaul
-        output-type: Tigger
-        output-model: =STRIPEXT(steps.source-finder.outfile_gaul) + '.lsm.html'
-
-    cross-assess:
-      info: image quality assessment
-      cab: aimfast
-      skip: true
-      params:
-        residual_image: =steps.image-*.residual.i.mfs
-        outfile: '{steps.image-*.prefix}-im-{info.suffix}.json'
-
     selfcal-1:
       info: Round of delay selfcal
       _use: lib.steps.quartical.k
-      skip: =IF(recipe.iter==steps.max-iter.max-iter, true, IF(recipe.selfcal.jones[recipe.iter]=='k', false, true))
+      skip: =IF(recipe.iter==steps.max-iter.max-iter, true, IF(recipe.selfcal.jones[steps.previous-image-index.iter-out]=='k', IF(recipe.iter==0, true, false), true))
       params:
         #input_model.recipe: =IF(recipe.selfcal.cal-model-mode, steps.output-model, MODEL_DATA)
         #input_model.recipe: =steps.tigger-convert-*.output-model
@@ -242,7 +200,7 @@ caracal-selfcal:
     selfcal-2:
       info: Round of delay and gain selfcal
       _use: lib.steps.quartical.k-g
-      skip: =IF(recipe.iter==steps.max-iter.max-iter, true, IF(recipe.selfcal.jones[recipe.iter]=='k-g', false, true))
+      skip: =IF(recipe.iter==steps.max-iter.max-iter, true, IF(recipe.selfcal.jones[steps.previous-image-index.iter-out]=='k-g', IF(recipe.iter==0, true, false), true))
       #skip: =IF(recipe.iter==MAX(recipe.selfcal.niter), true, IF(recipe.selfcal.jones[recipe.iter]=='k-g', false, true))
       params:
        input_model.recipe: MODEL_DATA

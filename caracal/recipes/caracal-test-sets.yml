@@ -1,7 +1,7 @@
 caracal-selfcal:
   assign_based_on:
     obs:
-      PicA:
+      mypipeline:
         ms: /home/ramaila/working/msdir/1543635069_sdp_l0-T16R02C02-mgpls-time.ms
         dir-out-base: caracal-output-000
         selfcal.enable: true

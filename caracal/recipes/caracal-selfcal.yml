@@ -10,7 +10,7 @@ caracal-selfcal:
     _include: caracal-schema.yml
     obs:
       info: "Selects observation by label -- edit caracal-observation-sets.yml"
-      required: true
+      default: mypipeline
     ms:
       dtype: MS
       aliases: ['*.ms']
@@ -213,8 +213,8 @@ caracal-selfcal:
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
-        output.gain_directory: "{recipe.dir-out-base}/G-{info.suffix}.qc/"
-        output.log_directory: "{recipe.dir-out-base}/G-{info.suffix}.qc/log/"
+        output.gain_directory: "{recipe.dir-out-base}/G-{recipe.iter}.qc/"
+        output.log_directory: "{recipe.dir-out-base}/G-{recipe.iter}.qc/log/"
         G.time_interval: =steps.time_freq_intervals.time_int[0]
         G.freq_interval: =steps.time_freq_intervals.freq_int[0]
 
@@ -225,8 +225,8 @@ caracal-selfcal:
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
-        output.gain_directory: "{recipe.dir-out-base}/KG-{info.suffix}.qc/"
-        output.log_directory: "{recipe.dir-out-base}/KG-{info.suffix}.qc/log/"
+        output.gain_directory: "{recipe.dir-out-base}/KG-{recipe.iter}.qc/"
+        output.log_directory: "{recipe.dir-out-base}/KG-{recipe.iter}.qc/log/"
         K.time_interval: =steps.time_freq_intervals.time_int[0]
         K.freq_interval: =steps.time_freq_intervals.freq_int[0]
         G.time_interval: =steps.time_freq_intervals.time_int[-1]

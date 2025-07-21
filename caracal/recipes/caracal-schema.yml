@@ -239,11 +239,11 @@ selfcal.jones:
   element_choices: ['k', 'g', 'k-g']
 selfcal.jones-time:
   default: [[1], [1, 1]]
-  dtype: List[List[int]]
+  dtype: List[List[str]]
   #dtype: Union[List[int], List[List[int]]]
 selfcal.jones-freq:
   default: [[0], [0, 32]]
-  dtype: List[List[int]]
+  dtype: List[List[str]]
   #dtype: Union[List[int], List[List[int]]]
 selfcal.subtract-model:
   default: false

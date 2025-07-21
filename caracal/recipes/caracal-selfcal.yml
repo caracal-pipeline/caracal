@@ -14,11 +14,10 @@ caracal-selfcal:
     ms:
       dtype: MS
       aliases: ['*.ms']
-      required: true
     selfcal._niters:
       info: Number of iteration to process
       dtype: List[int]
-      default: =RANGE(0, 2+current.selfcal.niter)
+      default: =RANGE(-1+current.selfcal.start-iter, 2+current.selfcal.niter)
 
   for_loop:
     var: iter
@@ -71,7 +70,7 @@ caracal-selfcal:
         prefix: ="{recipe.dir-out-base}/image_{recipe.iter}/{recipe.image-prefix}_{recipe.iter}"
         column: =IF(recipe.iter>1, "CORRECTED_DATA", IF(recipe.selfcal.pa-rotate, steps.pa-correction.out.column, recipe.image-col))
         fits-mask: =IFSET(recipe.image-fits-mask, recipe.image-fits-mask, IFSET(recipe.image-cleanmask-method, IF(recipe.iter>0, "{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}-MFS-mask.fits", UNSET, UNSET), UNSET))
-        no-update-model-required: true
+        no-update-model-required: =IF(recipe.iter>0, IF(recipe.image-no-update-model-required, true, false), true)
 
     quality-assess:
       info: image quality assessment
@@ -161,12 +160,11 @@ caracal-selfcal:
         channels-out: =recipe.upsample-model-channels
 
     predict:
-      _use: lib.steps.wsclean.predict-pol
+      _use: lib.steps.wsclean.predict
       skip: true
       params:
         prefix: =IFSET(recipe.upsample-model-channels, steps.upsample-*.output-prefix, steps.image*.prefix)
         nchan: =IFSET(recipe.upsample-model-channels, steps.upsample-*.channels-out, steps.image*.nchan)
-        pol: IQUV
         threads: =recipe.ncpu
 
     predict-copycol:
@@ -185,25 +183,51 @@ caracal-selfcal:
       params:
         niter: =recipe.selfcal._niters
 
+    time_freq_intervals:
+      info: Time and frequency intervals for selfcal
+      cab: intervals_out
+      params:
+        iter: =recipe.iter
+        time_intervals: =recipe.selfcal.jones-time
+        freq_intervals: =recipe.selfcal.jones-freq
+        jones_types: =recipe.selfcal.jones
+
     selfcal-1:
       info: Round of delay selfcal
       _use: lib.steps.quartical.k
-      skip: =IF(recipe.iter==steps.max-iter.max-iter, true, IF(recipe.selfcal.jones[steps.previous-image-index.iter-out]=='k', IF(recipe.iter==0, true, false), true))
+      skip: =IF(recipe.iter==steps.max-iter.max-iter, true, IF(steps.time_freq_intervals.jones_type=='k', IF(recipe.iter==0, true, false), true))
       params:
         #input_model.recipe: =IF(recipe.selfcal.cal-model-mode, steps.output-model, MODEL_DATA)
         #input_model.recipe: =steps.tigger-convert-*.output-model
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
-        output.gain_directory: ="{recipe.dir-out-base}/K-{recipe.iter}.qc/"
+        output.gain_directory: "{recipe.dir-out-base}/K-{recipe.iter}.qc/"
         output.log_directory: "{recipe.dir-out-base}/K-{recipe.iter}.qc/log/"
+        K.time_interval: =steps.time_freq_intervals.time_int[0]
+        K.freq_interval: =steps.time_freq_intervals.freq_int[0]
 
     selfcal-2:
       info: Round of delay and gain selfcal
-      _use: lib.steps.quartical.k-g
-      skip: =IF(recipe.iter==steps.max-iter.max-iter, true, IF(recipe.selfcal.jones[steps.previous-image-index.iter-out]=='k-g', IF(recipe.iter==0, true, false), true))
-      #skip: =IF(recipe.iter==MAX(recipe.selfcal.niter), true, IF(recipe.selfcal.jones[recipe.iter]=='k-g', false, true))
+      _use: lib.steps.quartical.g
+      skip: =IF(recipe.iter==steps.max-iter.max-iter, true, IF(steps.time_freq_intervals.jones_type=='g', IF(recipe.iter==0, true, false), true))
       params:
-       input_model.recipe: MODEL_DATA
-       output.columns: [CORRECTED_DATA]
-       output.gain_directory: "{recipe.dir-out-base}/KG-{info.suffix}.qc/"
-       output.log_directory: "{recipe.dir-out-base}/KG-{info.suffix}.qc/log/"
+        input_model.recipe: MODEL_DATA
+        output.columns: [CORRECTED_DATA]
+        output.gain_directory: "{recipe.dir-out-base}/G-{info.suffix}.qc/"
+        output.log_directory: "{recipe.dir-out-base}/G-{info.suffix}.qc/log/"
+        G.time_interval: =steps.time_freq_intervals.time_int[0]
+        G.freq_interval: =steps.time_freq_intervals.freq_int[0]
+
+    selfcal-3:
+      info: Round of delay and gain selfcal
+      _use: lib.steps.quartical.k-g
+      skip: =IF(recipe.iter==steps.max-iter.max-iter, true, IF(steps.time_freq_intervals.jones_type=='k-g', IF(recipe.iter==0, true, false), true))
+      params:
+        input_model.recipe: MODEL_DATA
+        output.columns: [CORRECTED_DATA]
+        output.gain_directory: "{recipe.dir-out-base}/KG-{info.suffix}.qc/"
+        output.log_directory: "{recipe.dir-out-base}/KG-{info.suffix}.qc/log/"
+        K.time_interval: =steps.time_freq_intervals.time_int[0]
+        K.freq_interval: =steps.time_freq_intervals.freq_int[0]
+        G.time_interval: =steps.time_freq_intervals.time_int[-1]
+        G.freq_interval: =steps.time_freq_intervals.freq_int[-1]

@@ -23,6 +23,39 @@ cabs:
     inputs:
       fill-holes:
         dtype: bool
+  intervals_out:
+    name: IntervalsOut
+    info: Outputs time and frequency intervals for selfcal
+    flavour:
+      kind: python-code
+      input_vars: true
+    command: |
+      if iter > len(time_intervals) or iter > len(freq_intervals):
+        time_int = time_intervals[-1]
+        freq_int = freq_intervals[-1]
+      else:
+        time_int = time_intervals[iter-1]
+        freq_int = freq_intervals[iter-1]
+      if iter > len(jones_types):
+        jones_type = jones_types[-1]
+      else:
+        jones_type = jones_types[iter-1]
+    inputs:
+      iter:
+        dtype: int
+      time_intervals:
+        dtype: List[List[str]]
+      freq_intervals:
+        dtype: List[List[str]]
+      jones_types:
+        dtype: List[str]
+    outputs:
+      time_int:
+        dtype: List[str]
+      freq_int:
+        dtype: List[str]
+      jones_type:
+        dtype: str
   iter_out:
     name: IterOutId
     info: Iteration ID of previous iter

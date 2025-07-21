@@ -3,14 +3,16 @@ caracal-selfcal:
     obs:
       PicA:
         ms: /home/ramaila/working/msdir/1543635069_sdp_l0-T16R02C02-mgpls-time.ms
-        dir-out-base: caracal-output-001
+        dir-out-base: caracal-output-000
         selfcal.enable: true
         selfcal.pa-rotate: false
         selfcal.cal-model-mode: vis_only
         selfcal.niter: 2
+        selfcal.start-iter: 1
         selfcal.jones: ['k', 'k-g']
         ncpu: 16
-        image-no-update-model-required: true
+        image-no-update-model-required: false
+        image-enable: true
         image-col: DATA
         image-npix: 4096
         image-niter: 100000

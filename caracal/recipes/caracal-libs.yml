@@ -98,7 +98,7 @@ lib:
           k.max-iter: 0
 
     quartical:
-      k:
+      qc:
         cab: quartical
         params:
           input_ms:
@@ -110,7 +110,6 @@ lib:
             recipe: MODEL_DATA
             apply_p_jones: =recipe.selfcal.pa-rotate
           solver:
-            terms: [K]
             iter_recipe: [50,50,50]
             propagate_flags: true
             robust: false
@@ -125,11 +124,29 @@ lib:
             threshold_bl: 6
             threshold_global: 8
             max_deviation: 1000
+
+      k:
+        _use: lib.steps.quartical.qc
+        params:
+          solver:
+            terms: [K]
+          output:
+            products: [corrected_data]
           K:
-            time_interval: 1
-            freq_interval: 0
             type: delay_and_offset
             initial_estimate: false
+
+      g:
+        _use: lib.steps.quartical.qc
+        params:
+          solver:
+            terms: [G]
+          output:
+            products: [corrected_data]
+          G:
+            type: diag_complex
+            initial_estimate: false
+
       k-g:
         _use: lib.steps.quartical.k
         params:
@@ -139,8 +156,6 @@ lib:
           output:
             products: [corrected_data]
           G:
-            time_interval: 1
-            freq_interval: 64
             type: complex
             initial_estimate: false
 
@@ -148,7 +163,7 @@ lib:
         _use: lib.steps.quartical.k-g
         params:
           G:
-            type: complex-diag
+            type: diag_complex
 
       k-de:
         _use: lib.steps.quartical.k

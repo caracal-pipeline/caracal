@@ -23,7 +23,6 @@ caracal-selfcal:
     var: iter
     over: selfcal._niters
     display_status: "{var}={value} {index1}/{total}"
-    scatter: 1
 
   steps:
 
@@ -69,7 +68,9 @@ caracal-selfcal:
       params:
         prefix: ="{recipe.dir-out-base}/image_{recipe.iter}/{recipe.image-prefix}_{recipe.iter}"
         column: =IF(recipe.iter>1, "CORRECTED_DATA", IF(recipe.selfcal.pa-rotate, steps.pa-correction.out.column, recipe.image-col))
-        fits-mask: =IFSET(recipe.image-fits-mask, recipe.image-fits-mask, IFSET(recipe.image-cleanmask-method, IF(recipe.iter>0, "{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}-MFS-mask.fits", UNSET, UNSET), UNSET))
+        fits-mask: =IFSET(recipe.image-fits-mask, recipe.image-fits-mask,
+                          IFSET(recipe.image-cleanmask-method,
+                                IF(recipe.iter>0, "{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}-MFS-mask.fits", UNSET, UNSET), UNSET))
         no-update-model-required: =IF(recipe.iter>0, IF(recipe.image-no-update-model-required, true, false), true)
 
     quality-assess:
@@ -96,8 +97,9 @@ caracal-selfcal:
     source-finder:
       info: automatic source finding
       _use: lib.steps.source-finder.bdsf
-      skip: =IF(recipe.selfcal.cal-model-mode=='pybdsm_only', false, IF(recipe.image-enable, IF(recipe.image-aimfast-enable, false, true), true))
-      skip_if_outputs: fresh
+      skip: =CASES(not recipe.selfcal.cal-model-mode=='pybdsm_only', true,
+                   not recipe.image-enable, true,
+                   not recipe.image-aimfast-enable, true)
       params:
         image: =steps.image-*.restored.mfs
         advanced_opts: true
@@ -107,7 +109,9 @@ caracal-selfcal:
     tigger-convert:
       info: convert model to lsm format
       cab: tigger-convert
-      skip: =IF(recipe.selfcal.cal-model-mode=='pybdsm_only', false, IF(recipe.image-enable, IF(recipe.image-aimfast-enable, false, true), true))
+      skip: =CASES(not recipe.selfcal.cal-model-mode=='pybdsm_only', true,
+                   not recipe.image-enable, true,
+                   not recipe.image-aimfast-enable, true)
       params:
         input-model: =steps.source-finder.outfile_gaul
         output-type: Tigger
@@ -175,7 +179,9 @@ caracal-selfcal:
       params:
         msname: =recipe.ms
         fromcol: MODEL_DATA
-        tocol: =IFSET(recipe.upsample-model-channels, 'MODEL{info.suffix}_{recipe.upsample-model-channels}_DATA', 'MODEL{info.suffix}_DATA')
+        tocol: =IFSET(recipe.upsample-model-channels,
+                      'MODEL{info.suffix}_{recipe.upsample-model-channels}_DATA',
+                      'MODEL{info.suffix}_DATA')
 
     max-iter:
       info: Maximum number of iterations
@@ -192,10 +198,13 @@ caracal-selfcal:
         freq_intervals: =recipe.selfcal.jones-freq
         jones_types: =recipe.selfcal.jones
 
-    selfcal-1:
+    selfcal-delay:
       info: Round of delay selfcal
       _use: lib.steps.quartical.k
-      skip: =IF(recipe.iter==steps.max-iter.max-iter, true, IF(steps.time_freq_intervals.jones_type=='k', IF(recipe.iter==0, true, false), true))
+      skip: =CASES(not recipe.selfcal.enable, true,
+                   recipe.iter==0, true,
+                   recipe.iter==steps.max-iter.max-iter, true,
+                   not steps.time_freq_intervals.jones_type=='k', true)
       params:
         #input_model.recipe: =IF(recipe.selfcal.cal-model-mode, steps.output-model, MODEL_DATA)
         #input_model.recipe: =steps.tigger-convert-*.output-model
@@ -206,10 +215,13 @@ caracal-selfcal:
         K.time_interval: =steps.time_freq_intervals.time_int[0]
         K.freq_interval: =steps.time_freq_intervals.freq_int[0]
 
-    selfcal-2:
+    selfcal-gain:
       info: Round of delay and gain selfcal
       _use: lib.steps.quartical.g
-      skip: =IF(recipe.iter==steps.max-iter.max-iter, true, IF(steps.time_freq_intervals.jones_type=='g', IF(recipe.iter==0, true, false), true))
+      skip: =CASES(not recipe.selfcal.enable, true,
+                   recipe.iter==0, true,
+                   recipe.iter==steps.max-iter.max-iter, true,
+                   not steps.time_freq_intervals.jones_type=='g', true)
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
@@ -218,10 +230,13 @@ caracal-selfcal:
         G.time_interval: =steps.time_freq_intervals.time_int[0]
         G.freq_interval: =steps.time_freq_intervals.freq_int[0]
 
-    selfcal-3:
+    selfcal-delay-gain:
       info: Round of delay and gain selfcal
       _use: lib.steps.quartical.k-g
-      skip: =IF(recipe.iter==steps.max-iter.max-iter, true, IF(steps.time_freq_intervals.jones_type=='k-g', IF(recipe.iter==0, true, false), true))
+      skip: =CASES(not recipe.selfcal.enable, true,
+                   recipe.iter==0, true,
+                   recipe.iter==steps.max-iter.max-iter, true,
+                   not steps.time_freq_intervals.jones_type=='k-g', true)
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]

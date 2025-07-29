@@ -400,7 +400,7 @@ mapping:
            required: false
            example: '0.'
          img_ws_uvtaper:
-           type: str
+           type: float
            desc: Taper for imaging (in arcsec).
            required: false
            example: '0'

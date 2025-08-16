@@ -99,7 +99,7 @@ caracal-selfcal:
       _use: lib.steps.source-finder.bdsf
       skip: =CASES(not recipe.selfcal.cal-model-mode=='pybdsm_only', true,
                    not recipe.image-enable, true,
-                   not recipe.image-aimfast-enable, true)
+                   not recipe.image-aimfast-enable, true, false)
       params:
         image: =steps.image-*.restored.mfs
         advanced_opts: true
@@ -111,7 +111,7 @@ caracal-selfcal:
       cab: tigger-convert
       skip: =CASES(not recipe.selfcal.cal-model-mode=='pybdsm_only', true,
                    not recipe.image-enable, true,
-                   not recipe.image-aimfast-enable, true)
+                   not recipe.image-aimfast-enable, true, false)
       params:
         input-model: =steps.source-finder.outfile_gaul
         output-type: Tigger
@@ -204,7 +204,7 @@ caracal-selfcal:
       skip: =CASES(not recipe.selfcal.enable, true,
                    recipe.iter==0, true,
                    recipe.iter==steps.max-iter.max-iter, true,
-                   not steps.time_freq_intervals.jones_type=='k', true)
+                   not steps.time_freq_intervals.jones_type=='k', true, false)
       params:
         #input_model.recipe: =IF(recipe.selfcal.cal-model-mode, steps.output-model, MODEL_DATA)
         #input_model.recipe: =steps.tigger-convert-*.output-model
@@ -221,7 +221,7 @@ caracal-selfcal:
       skip: =CASES(not recipe.selfcal.enable, true,
                    recipe.iter==0, true,
                    recipe.iter==steps.max-iter.max-iter, true,
-                   not steps.time_freq_intervals.jones_type=='g', true)
+                   not steps.time_freq_intervals.jones_type=='g', true, false)
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
@@ -236,7 +236,7 @@ caracal-selfcal:
       skip: =CASES(not recipe.selfcal.enable, true,
                    recipe.iter==0, true,
                    recipe.iter==steps.max-iter.max-iter, true,
-                   not steps.time_freq_intervals.jones_type=='k-g', true)
+                   not steps.time_freq_intervals.jones_type=='k-g', true, false)
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]

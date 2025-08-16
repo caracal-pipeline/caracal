@@ -209,8 +209,12 @@ class WorkerAdministrator(object):
         """
         Given a base MS name, an optional label, and an optional field name, return the full MS name
         """
-        label = '' if not label else '-' + label
-        field = '' if not field else '-' + utils.filter_name(field)
+        if label:
+            label = '' if not label else '-' + label
+            field = '' if not field else '-' + utils.filter_name(field)
+        else:
+            label = ''
+            field = ''
         return f'{msbase}{field}{label}.{self.ms_extension}'
 
     def get_mslist(self, iobs, label="", target=False):

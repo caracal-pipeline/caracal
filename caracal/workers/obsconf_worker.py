@@ -218,7 +218,7 @@ def worker(pipeline, recipe, config):
                 found_fields = set(all_fields).intersection(conf_fields)
 
             getattr(pipeline, term)[i] = list(found_fields)
-            if not found_fields:
+            if config['obsinfo']['ensure_valid'] and not found_fields:
                 # complain if not found, unless it's 'xcal', which is only for polcal, so let that worker complain
                 if term != "xcal":
                     raise RuntimeError(f"Can't find an appropriate FIELD for obsinfo: {term}: {conf_fields_str}. "

@@ -28,6 +28,11 @@ mapping:
             type: bool
             required: false
             example: 'False'            
+          ensure_valid:
+            desc: Ensure field listing is valid. If can't find an appropriate fields calibration will fail.
+            type: bool
+            required: false
+            example: 'True'
           plotelev:
             desc: Make Elevation vs Hour-angle plots for observed fields.
             type: map

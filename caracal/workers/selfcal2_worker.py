@@ -1303,7 +1303,6 @@ def worker(pipeline, recipe, config):
                    #'support-files': ['ar-output-003:output', 'tmp:output'],
                    'recipe': f'recipes/caracal.yml',
                    'recipe-name': 'caracal-selfcal',
-                   'step': 'selfcal-1',
                    #'params': f'ms-pointings={mslist}'
                    'params': [f'ms=/stimela_mount/msdir/{mslist[0]}',
                               f"image-temp=/stimela_mount/output/tmp",

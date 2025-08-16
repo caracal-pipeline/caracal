@@ -3,13 +3,16 @@ ms-base:
   info: Location where CARACal will write and expect to find .MS files.
   default: msdir
   dtype: str
+  writable: true
 ms-pointings:
   info: Basenames of MS(s).
   dtype: List[MS]
+  writable: true
 dir-out-base:
   info: Location where CARACal writes output products.
   default: output
   dtype: str
+  writable: true
 ncpu:
   dtype: int
 worker-id:

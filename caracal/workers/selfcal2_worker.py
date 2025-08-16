@@ -1819,6 +1819,72 @@ def worker(pipeline, recipe, config):
                 aimfast_settings.update({"restored-image": '{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output'.format(img_dir,
                                                                                                                    prefix, field, im, mfsprefix)})
 
+
+    def config_to_params(config, mslist):
+        params = [
+            f"ms=/stimela_mount/msdir/{mslist[0]}",
+            f"image-temp=/stimela_mount/output/tmp",
+            f"image-prefix=T16R02C02",
+            f"dir-out-base=/stimela_mount/output/continuum",
+            f"ms-base=/stimela_mount/output/msdir"
+        ]
+
+        # Direct mappings
+        mapping = {
+            #"enable": "image-enable",
+            "img_niter": "image-niter",
+            "img_nmiter": "image-mniter",
+            "img_channelrange": "image-channelrange",
+            "img_npix": "image-npix",
+            "img_joinchans": "image-joinchans",
+            "img_specfit_nrcoeff": "image-specfit-nrcoeff",
+            "img_cell": "image-cell",
+            "img_mfs_weighting": "image-mfs-weighting",
+            "img_weight": "image-weight",
+            "img_robust": "image-robust",
+            "img_padding": "image-padding",
+            "img_gain": "image-gain",
+            "img_mgain": "image-mgain",
+            "img_taper": "image-taper",
+            "img_maxuv_l": "image-maxuv-l",
+            "img_transuv_l": "image-transuv-l",
+            "img_multiscale": "image-multiscale",
+            "img_multiscale_scales": "image-multiscale-scales",
+            #"enable": "selfcal.enable",
+            "cal_model_mode": "selfcal.cal-model-mode",
+            "cal_niter": "selfcal.niter",
+            "start_iter": "selfcal.start-iter",
+            #"rewind-flags-enable": "selfcal.rewind-flags-enable",
+            "overwrite_flagvers": "selfcal.overwrite-flagvers",
+            "imodel_pa_rotate": "selfcal.pa-rotate",
+            #"minuvw-m": "selfcal.minuvw-m",
+            #"gaini_matrix_type": "selfcal.jones",
+            "gasols_timeslots": "selfcal.jones-time",
+            "gasols_chan": "selfcal.jones-freq",
+            "flag_madmax": "selfcal.mad-flag"
+        }
+
+        # Add simple mappings
+        for k, newk in mapping.items():
+            val = config.get("image", {}).get(k) or config.get(k)
+            # If value is list, convert to comma-separated string
+            if val is not None and val is not "":
+                if isinstance(val, list):
+                    val = [",".join(map(str, val))]
+                params.append(f"{newk}={val}")
+
+        # Breizorro
+        breiz = config.get("img_breizorro_settings", {})
+        if breiz:
+            if "boxsize" in breiz:
+                params.append(f"breizorro.boxsize={breiz['boxsize']}")
+            if "dilate" in breiz:
+                params.append(f"breizorro.dilate={breiz['dilate']}")
+            if "fill_holes" in breiz:
+                params.append(f"breizorro.fill_holes={breiz['fill_holes']}")
+
+        return params
+
     # decide which tool to use for calibration
     calwith = config['calibrate_with'].lower()
     calibrate = calibrate_quartical
@@ -1853,11 +1919,12 @@ def worker(pipeline, recipe, config):
         recipe.add('cab/stimela2', step, {
                'recipe': f'recipes/caracal.yml',
                'recipe-name': 'caracal-selfcal',
-               'params': [f'ms=/stimela_mount/msdir/{mslist[0]}',
-                          f"image-temp=/stimela_mount/output/tmp",
-                          f"image-prefix=T16R02C02",
-                          f"dir-out-base=/stimela_mount/output/continuum",
-                          f"ms-base=/stimela_mount/output/msdir"]
+               'params': config_to_params(config, mslist),
+               #'params': [f'ms=/stimela_mount/msdir/{mslist[0]}',
+               #           f"image-temp=/stimela_mount/output/tmp",
+               #           f"image-prefix=T16R02C02",
+               #           f"dir-out-base=/stimela_mount/output/continuum",
+               #           f"ms-base=/stimela_mount/output/msdir"]
                 },
                 input=pipeline.input,
                 output=pipeline.output,

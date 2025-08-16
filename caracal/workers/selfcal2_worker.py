@@ -1300,14 +1300,14 @@ def worker(pipeline, recipe, config):
                 "data-freq-chunk": freq_chunk, }
             )
             recipe.add('cab/stimela2', step, {
-                   #'support-files': ['ar-output-003:output', 'tmp:output'],
                    'recipe': f'recipes/caracal.yml',
                    'recipe-name': 'caracal-selfcal',
-                   #'params': f'ms-pointings={mslist}'
-                   'params': [f'ms=/stimela_mount/msdir/{mslist[0]}',
+                   'params': [f'ms-pointings={mslist}',
+                   #'params': [f'ms=/stimela_mount/msdir/{mslist[0]}',
                               f"image-temp=/stimela_mount/output/tmp",
-                              f"image-prefix=T16R02C02_T16R02C02",
-                              f"dir-out-base=/stimela_mount/output/continuum"]
+                              f"image-prefix=T16R02C02",
+                              f"dir-out-base=/stimela_mount/output/continuum",
+                              f"ms-base=/stimela_mount/output/msdir"]
                    },
                    input=pipeline.input,
                    output=pipeline.output,
@@ -1853,11 +1853,11 @@ def worker(pipeline, recipe, config):
         recipe.add('cab/stimela2', step, {
                'recipe': f'recipes/caracal.yml',
                'recipe-name': 'caracal-selfcal',
-               'params': [
-                    f'ms={mslist[0]}',
-                             # f"image-temp=/stimela_mount/output/tmp",
-                             # f"dir-out-base=/stimela_mount/output/continuum"
-                ]
+               'params': [f'ms=/stimela_mount/msdir/{mslist[0]}',
+                          f"image-temp=/stimela_mount/output/tmp",
+                          f"image-prefix=T16R02C02",
+                          f"dir-out-base=/stimela_mount/output/continuum",
+                          f"ms-base=/stimela_mount/output/msdir"]
                 },
                 input=pipeline.input,
                 output=pipeline.output,

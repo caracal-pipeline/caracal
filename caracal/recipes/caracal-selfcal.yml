@@ -5,7 +5,7 @@ _include:
 caracal-selfcal:
   name: CARACal selfcal recipe
   info: "Second generation calibration recipe developed for CaraCal"
- 
+
   inputs:
     _include: caracal-schema.yml
     obs:
@@ -64,7 +64,7 @@ caracal-selfcal:
       info: image and construct initial model image using the PA_CORRECTED_DATA column using a mask
       skip: =IF(recipe.image-enable, false, true)
       _use: lib.steps.wsclean.image
-      skip_if_outputs: fresh
+      skip_if_outputs: exist
       params:
         prefix: ="{recipe.dir-out-base}/image_{recipe.iter}/{recipe.image-prefix}_{recipe.iter}"
         column: =IF(recipe.iter>1, "CORRECTED_DATA", IF(recipe.selfcal.pa-rotate, steps.pa-correction.out.column, recipe.image-col))

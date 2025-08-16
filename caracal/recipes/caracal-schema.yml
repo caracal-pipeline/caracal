@@ -8,7 +8,7 @@ ms-pointings:
   dtype: List[MS]
 dir-out-base:
   info: Location where CARACal writes output products.
-  default: ar-output-003
+  default: output
   dtype: str
 ncpu:
   dtype: int
@@ -164,7 +164,7 @@ aimfast.convergence_criteria:
   dtype: List[str]
   choices: [MEAN, STDDev, DR, SKEW, KURT]
 aimfast.radius:
-  info: Cross-matching radius (in units of arcsec), for comparing source properties in a catalogue before and after an iteration of self-calibration. 
+  info: Cross-matching radius (in units of arcsec), for comparing source properties in a catalogue before and after an iteration of self-calibration.
   default: 0.6
   dtype: float
 aimfast.plot:
@@ -205,7 +205,7 @@ selfcal.enable:
   default: false
   dtype: bool
 selfcal.cal-model-mode:
-  info: Mode for using a calibration model, based on visibilities and/or PyBDSM source-finding. Options are vis_only and pybdsm_only. 'vis_only' means that only MODEL_DATA will be used to to calibrate. 'pybdsm_only' means that PyBDSM-generated, tigger-format local sky models will be used. 
+  info: Mode for using a calibration model, based on visibilities and/or PyBDSM source-finding. Options are vis_only and pybdsm_only. 'vis_only' means that only MODEL_DATA will be used to to calibrate. 'pybdsm_only' means that PyBDSM-generated, tigger-format local sky models will be used.
   default: vis_only
   dtype: str
   choices: [pybdsm_only, vis_only]

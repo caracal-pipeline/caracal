@@ -4,7 +4,7 @@ _include:
 ## this augments the standard 'opts' config section to tweak logging settings
 opts:
   log:
-    dir: logs/log-{config.run.datetime}
+    dir: log-{config.run.datetime}
     name: log-{info.taskname}
     nest: 5
     symlink: log
@@ -14,8 +14,7 @@ opts:
     singularity:
       enable: false
       auto_build: true
-      image_dir: /home/ramaila/working
-      #image_dir: ~/.singularity
+      image_dir: .
     rlimits:
       NOFILE: 10000  # set high limit on number of open files
 
@@ -27,7 +26,7 @@ lib:
       for_loop:
         var: image
         over: images
-        scatter: 36
+        scatter: -1
       inputs:
         mask:
           dtype: File

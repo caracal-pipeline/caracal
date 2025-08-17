@@ -29,7 +29,7 @@ caracal-selfcal:
     restore-flags:
       info: restore flags to a specific version
       cab: casa.flagman
-      skip: true
+      skip: =not recipe.selfcal.rewind-flags-enable
       params:
         ms: =recipe.ms
         versionname: =step.save-flags-0.versionname
@@ -37,7 +37,7 @@ caracal-selfcal:
 
     pa-correction:
       info: invokes cubical to correct for parallactic angle
-      skip: IF(recipe.selfcal.enable, IF(recipe.selfcal.pa-rotate, IF(recipe.iter==0, false, true), true), true)
+      skip: =IF(recipe.selfcal.enable, IF(recipe.selfcal.pa-rotate, IF(recipe.iter==0, false, true), true), true)
       skip_if_outputs: fresh
       _use: lib.steps.cubical.pa-corr
       params:
@@ -64,7 +64,7 @@ caracal-selfcal:
       info: image and construct initial model image using the PA_CORRECTED_DATA column using a mask
       skip: =IF(recipe.image-enable, false, true)
       _use: lib.steps.wsclean.image
-      skip_if_outputs: exist
+      skip_if_outputs: fresh
       params:
         prefix: ="{recipe.dir-out-base}/image_{recipe.iter}/{recipe.image-prefix}_{recipe.iter}"
         column: =IF(recipe.iter>1, "CORRECTED_DATA", IF(recipe.selfcal.pa-rotate, steps.pa-correction.out.column, recipe.image-col))
@@ -215,8 +215,24 @@ caracal-selfcal:
         K.time_interval: =steps.time_freq_intervals.time_int[0]
         K.freq_interval: =steps.time_freq_intervals.freq_int[0]
 
+
+    selfcal-phase:
+      info: Round of phase selfcal
+      _use: lib.steps.quartical.p
+      skip: =CASES(not recipe.selfcal.enable, true,
+                   recipe.iter==0, true,
+                   recipe.iter==steps.max-iter.max-iter, true,
+                   not steps.time_freq_intervals.jones_type=='p', true, false)
+      params:
+        input_model.recipe: MODEL_DATA
+        output.columns: [CORRECTED_DATA]
+        output.gain_directory: "{recipe.dir-out-base}/P-{recipe.iter}.qc/"
+        output.log_directory: "{recipe.dir-out-base}/P-{recipe.iter}.qc/log/"
+        P.time_interval: =steps.time_freq_intervals.time_int[0]
+        P.freq_interval: =steps.time_freq_intervals.freq_int[0]
+
     selfcal-gain:
-      info: Round of delay and gain selfcal
+      info: Round of gain selfcal
       _use: lib.steps.quartical.g
       skip: =CASES(not recipe.selfcal.enable, true,
                    recipe.iter==0, true,

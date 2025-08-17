@@ -154,7 +154,7 @@ mapping:
         example: 'True'
       img_specfit_nrcoeff:
         type: int
-        desc: Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1. Use 0 to disable spectral fitting. Note that spectral fitting is required if you want to do subsequent continumm subtraction using crystalball. 
+        desc: Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1. Use 0 to disable spectral fitting. Note that spectral fitting is required if you want to do subsequent continumm subtraction using crystalball.
         required: false
         example: '2'
       img_stokes:
@@ -277,7 +277,7 @@ mapping:
       cal_model_mode:
         type: str
         enum: ["vis_only", "pybdsm_only", "pybdsm_vis"]
-        desc: Mode for using a calibration model, based on visibilities and/or PyBDSM source-finding. Options are vis_only, pybdsm_only, and pybdsm_vis. 'vis_only' means that only MODEL_DATA will be used to to calibrate. 'pybdsm_only' means that PyBDSM-generated, tigger-format local sky models will be used. 'pybdsm_vis' is the same as the 'pybdsm_only' mode except for the last iteration of selfcal, where the PyBDSM-based model is complemented by MODEL_DATA. This third mode is only to be used with output_data set to 'CORR_RES' (below) and is very tricky. Therefore, user discretion is advised. 
+        desc: Mode for using a calibration model, based on visibilities and/or PyBDSM source-finding. Options are vis_only, pybdsm_only, and pybdsm_vis. 'vis_only' means that only MODEL_DATA will be used to to calibrate. 'pybdsm_only' means that PyBDSM-generated, tigger-format local sky models will be used. 'pybdsm_vis' is the same as the 'pybdsm_only' mode except for the last iteration of selfcal, where the PyBDSM-based model is complemented by MODEL_DATA. This third mode is only to be used with output_data set to 'CORR_RES' (below) and is very tricky. Therefore, user discretion is advised.
         required: false
         example: 'vis_only'
       cal_bjones:
@@ -404,7 +404,7 @@ mapping:
             example: '6'
           radius:
             type: float
-            desc: Cross-matching radius (in units of arcsec), for comparing source properties in a catalogue before and after an iteration of self-calibration. 
+            desc: Cross-matching radius (in units of arcsec), for comparing source properties in a catalogue before and after an iteration of self-calibration.
             required: false
             example: '0.6'
           normality_model:
@@ -478,12 +478,12 @@ mapping:
               - type: int
             required: false
             example: '31, 31'
-          ncpu_img: 
+          ncpu_img:
             type: int
             example: '0'
             required: false
             desc: Number of threads used by wsclean; has a default value of '0'. If specified in the configuration file, will overrule the value set by ncpu, which is the global default for both cubical and wsclean
-          absmem:   
+          absmem:
             type: float
             example: '100.0'
             required: false
@@ -575,7 +575,7 @@ mapping:
           output_data:
             seq:
               - type: str
-            desc: Data to output after calibration. Options are 'PA_DATA', 'CORR_RES', 'CORR_DATA' or 'CORRECTED_DATA', where CORR_DATA and CORRECTED_DATA are synonyms. Note that for 'PA_DATA' only parallactic angle corrections will be applied to the data to produce 'CORRECTED_DATA' column. 
+            desc: Data to output after calibration. Options are 'PA_DATA', 'CORR_RES', 'CORR_DATA' or 'CORRECTED_DATA', where CORR_DATA and CORRECTED_DATA are synonyms. Note that for 'PA_DATA' only parallactic angle corrections will be applied to the data to produce 'CORRECTED_DATA' column.
             required: false
             example: 'CORR_DATA'
           gain_matrix_type:

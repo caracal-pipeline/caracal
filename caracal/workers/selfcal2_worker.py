@@ -40,7 +40,7 @@ QUARTICAL_OUT = {
 
 QUARTICAL_MT = {
     "Gain2x2": 'k-g',
-    "GainDiag": 'g-amp',
+    "GainDiag": 'g',
     "GainDiagAmp": 'g',
     "GainDiagPhase": 'p',
     "ComplexDiag": 'g-diag',
@@ -150,29 +150,6 @@ def check_config(config, name):
                 for i, val in enumerate(config['calibrate']['gasols_chan'][:amount_sols]):
                     if val >= 0:
                         solutions.append(val)
-            # then we assign the timechunk
-            if config['cal_quartical']['chan_chunk'] == -1:
-                if np.min(solutions) != 0.:
-                    chan_chunk = max(solutions)
-                else:
-                    chan_chunk = 0
-            else:
-                chan_chunk = config['cal_quartical']['chan_chunk']
-            # if chan_chunk is not 0 all solutions should fit in there.
-            # if it is 0 then it does not matter as we are not checking remainder intervals
-            if chan_chunk != 0:
-                if 0. in solutions:
-                    caracal.log.error("You are using all channels in your solutions (i.e. 0) but have set chan_chunk, please set it to 0 for using all channels.")
-                    caracal.log.error("Your channel chunk = {} \n".format(chan_chunk))
-                    caracal.log.error("Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
-                    raise caracal.ConfigurationError("Inconsistent selfcal chunking")
-                sol_int_array = float(chan_chunk) / np.array(solutions, dtype=float)
-                for val in sol_int_array:
-                    if val != int(val):
-                        caracal.log.error("Not all applied channel solutions fit in the chan_chunk.")
-                        caracal.log.error("Your channel chunk = {} \n".format(chan_chunk))
-                        caracal.log.error("Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
-                        raise caracal.ConfigurationError("Inconsistent selfcal chunking")
     # Check some imaging stuff
     if config['image']['enable']:
         if config['img_maxuv_l'] > 0. and config['img_taper'] > 0.:
@@ -233,36 +210,6 @@ def worker(pipeline, recipe, config):
             time_chunk = 0
         else:
             time_chunk = max(all_time_solution)
-    # And for the frequencies
-    freq_chunk = config['cal_quartical']['chan_chunk']
-    # If user sets value that is not -1 then use that
-    if int(freq_chunk) < 0 and pipeline.enable_task(config, 'calibrate'):
-        # We're always doing gains
-        if len(config['calibrate']['gsols_chan']) < cal_niter:
-            g_amount_sols = len(config['calibrate']['gsols_chan'])
-        else:
-            g_amount_sols = cal_niter
-        all_freq_solution = config['calibrate']['gsols_chan'][:g_amount_sols]
-        # add the various sections
-        if config['cal_bjones']:
-            if len(config['calibrate']['bsols_chan']) < cal_niter:
-                b_amount_sols = len(config['calibrate']['bsols_chan'])
-            else:
-                b_amount_sols = cal_niter
-            all_freq_solution.append(config['calibrate']['bsols_chan'][:b_amount_sols])
-        if 'GainDiag' in config['calibrate']['gain_matrix_type'][:amount_matrix] or \
-                'Gain2x2' in config['calibrate']['gain_matrix_type'][:amount_matrix]:
-            if len(config['calibrate']['gasols_chan']) < cal_niter:
-                amount_sols = len(config['calibrate']['gasols_chan'])
-            else:
-                amount_sols = int(cal_niter)
-            for val in config['calibrate']['gasols_chan'][:amount_sols]:
-                if int(val) >= 0:
-                    all_freq_solution.append(val)
-        if min(all_freq_solution) == 0:
-            freq_chunk = 0
-        else:
-            freq_chunk = int(max(all_freq_solution))
 
     min_uvw = config['minuvw_m']
 
@@ -1831,9 +1778,9 @@ def worker(pipeline, recipe, config):
 
         # Direct mappings
         mapping = {
-            #"enable": "image-enable",
             "img_niter": "image-niter",
             "img_nmiter": "image-mniter",
+            "img_chans": "image-nchans",
             "img_channelrange": "image-channelrange",
             "img_npix": "image-npix",
             "img_joinchans": "image-joinchans",
@@ -1850,28 +1797,30 @@ def worker(pipeline, recipe, config):
             "img_transuv_l": "image-transuv-l",
             "img_multiscale": "image-multiscale",
             "img_multiscale_scales": "image-multiscale-scales",
-            #"enable": "selfcal.enable",
             "cal_model_mode": "selfcal.cal-model-mode",
             "cal_niter": "selfcal.niter",
             "start_iter": "selfcal.start-iter",
-            #"rewind-flags-enable": "selfcal.rewind-flags-enable",
             "overwrite_flagvers": "selfcal.overwrite-flagvers",
             "imodel_pa_rotate": "selfcal.pa-rotate",
-            #"minuvw-m": "selfcal.minuvw-m",
-            #"gaini_matrix_type": "selfcal.jones",
+            "gaini_matrix_type": "selfcal.jones",
             "gasols_timeslots": "selfcal.jones-time",
             "gasols_chan": "selfcal.jones-freq",
-            "flag_madmax": "selfcal.mad-flag"
+            "flag_madmax": "selfcal.mad-flag",
+            "ncpu": "ncpu"
         }
 
         # Add simple mappings
         for k, newk in mapping.items():
             val = config.get("image", {}).get(k) or config.get(k)
             # If value is list, convert to comma-separated string
-            if val is not None and val is not "":
+            if val is not None and val != "":
                 if isinstance(val, list):
                     val = [",".join(map(str, val))]
                 params.append(f"{newk}={val}")
+
+        # Rewind flags
+        #params.append(f"selfcal.rewind-flags-enable={config['rewind_flags']['enable']}")
+
 
         # Breizorro
         breiz = config.get("img_breizorro_settings", {})
@@ -1882,6 +1831,42 @@ def worker(pipeline, recipe, config):
                 params.append(f"breizorro.dilate={breiz['dilate']}")
             if "fill_holes" in breiz:
                 params.append(f"breizorro.fill_holes={breiz['fill_holes']}")
+
+
+        # Quartical
+        qcal = config.get("calibrate", {})
+        if qcal:
+            params.append(f"selfcal.enable={qcal['enable']}")
+            # gain_matrix_type → jones
+            gm_types = qcal.get("gain_matrix_type") or []
+            if gm_types:
+                jones = [QUARTICAL_MT[g] for g in gm_types if g in QUARTICAL_MT]
+                if jones:
+                    params.append(f"selfcal.jones=[{','.join(jones)}]")
+            # time/freq intervals (align each with corresponding jones)
+            times = []
+            freqs = []
+            if "gsols_timeslots" in qcal or "gsols_chan" in qcal:
+                for n in range(config["cal_niter"]):
+                    times.append([qcal.get("gsols_timeslots", [0])[n]
+                                           if n < len(qcal.get("gsols_timeslots", []))
+                                           else gqcal("gsols_timeslots", [0])[-1]])
+                    freqs.append([qcal.get("gsols_chan", [0])[n]
+                                           if n < len(qcal.get("gsols_chan", []))
+                                           else qcal.get("gsols_chan", [0])[-1]])
+
+
+            if times:
+                params.append(f"selfcal.jones-time={repr(times).replace(' ', '')}")
+            if freqs:
+                params.append(f"selfcal.jones-freq={repr(freqs).replace(' ', '')}")
+
+        # WSClean
+        wsclean = config.get("image", {})
+        if wsclean:
+            params.append(f"image-enable={wsclean['enable']}")
+            params.append(f"image-use-wgridder={wsclean['use_wgridder']}")
+            params.append(f"image-absmem={wsclean['absmem']}")
 
         return params
 

@@ -91,8 +91,8 @@ image-specfit-nrcoeff:
   dtype: int
 image-cell:
   info: Image pixel size (in units of arcsec).
-  default: 1.3asec
-  dtype: str
+  default: 1.3
+  dtype: float
 image-mfs-weighting:
   info: Enables MF weighting.
   default: false
@@ -154,6 +154,11 @@ image-spifit-enable:
 image-no-update-model-required:
   default: false
   dtype: bool
+image-use-wgridder:
+  default: true
+  dtype: bool
+image-absmem:
+  dtype: float
 image-temp:
   dtype: Directory
   default: tmp
@@ -239,7 +244,7 @@ selfcal.minuvw-m:
 selfcal.jones:
   default: ['k', 'k-g']
   dtype: List[str]
-  element_choices: ['k', 'g', 'k-g']
+  element_choices: ['k', 'g', 'p', 'k-g']
 selfcal.jones-time:
   default: [[1], [1, 1]]
   dtype: List[List[str]]

@@ -1263,11 +1263,6 @@ def worker(pipeline, recipe, config):
 
     # decide which tool to use for calibration
     calwith = config['calibrate_with'].lower()
-    calibrate = calibrate_quartical
-
-    # if we use the new two_step analysis aimfast has to be run
-    #if config['cal_quartical']['two_step'] and calwith == 'quartical':
-    #    config['aimfast']['enable'] = True
 
     # if we do not run pybdsm we always need to output the corrected data column
     if not pipeline.enable_task(config, 'extract_sources'):
@@ -1296,11 +1291,6 @@ def worker(pipeline, recipe, config):
                'recipe': f'recipes/caracal.yml',
                'recipe-name': 'caracal-selfcal',
                'params': config_to_params(config, mslist),
-               #'params': [f'ms=/stimela_mount/msdir/{mslist[0]}',
-               #           f"image-temp=/stimela_mount/output/tmp",
-               #           f"image-prefix=T16R02C02",
-               #           f"dir-out-base=/stimela_mount/output/continuum",
-               #           f"ms-base=/stimela_mount/output/msdir"]
                 },
                 input=pipeline.input,
                 output=pipeline.output,

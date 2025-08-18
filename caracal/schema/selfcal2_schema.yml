@@ -57,9 +57,9 @@ mapping:
         example: '0'
       ncpu:
         type: int
-        desc: Number of CPUs to use for distributed processing. If set to 0 all available CPUs are used. This parameter is passed on to the following software in the selfcal worker, WSClean for imaging, Cubical and MeqTrees for calibration, PyBDSF for source finding.
+        desc: Number of CPUs to use for distributed processing. If set to -1 all available CPUs are used. This parameter is passed on to the following software in the selfcal worker, WSClean for imaging, Cubical and MeqTrees for calibration, PyBDSF for source finding.
         required: false
-        example: '0'
+        example: '-1'
       minuvw_m:
         type: int
         desc: Exclude baselines shorter than this value (given in metres) from the imaging and self-calibration loop.

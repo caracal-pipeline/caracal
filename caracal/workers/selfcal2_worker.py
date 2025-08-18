@@ -507,46 +507,6 @@ def worker(pipeline, recipe, config):
             image_opts.update({"channelrange": config['img_channelrange']})
 
         mask_key = config[key]['cleanmask_method'][num - 1 if len(config[key]['cleanmask_method']) >= num else -1]
-        #if mask_key == 'wsclean':
-        #    image_opts.update({
-        #        "auto-mask": config[key]['cleanmask_thr'][num - 1 if len(config[key]['cleanmask_thr']) >= num else -1],
-        #        "local-rms": config[key]['cleanmask_localrms'][num - 1 if len(config[key]['cleanmask_localrms']) >= num else -1],
-        #    })
-        #    if config[key]['cleanmask_localrms'][num - 1 if len(config[key]['cleanmask_localrms']) >= num else -1]:
-        #        image_opts.update({
-        #            "local-rms-window": config[key]['cleanmask_localrms_window'][num - 1 if len(config[key]['cleanmask_localrms_window']) >= num else -1],
-        #        })
-        #elif mask_key == 'sofia':
-        #    fits_mask = 'masking/{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
-        #        prefix, field, num)
-        #    if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
-        #        raise caracal.ConfigurationError("SoFiA clean mask {0:s}/{1:s} not found. Something must have gone wrong with the SoFiA run"
-        #                                         " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output, fits_mask))
-        #    image_opts.update({
-        #        "fitsmask": '{0:s}:output'.format(fits_mask),
-        #        "local-rms": False,
-        #    })
-        #elif mask_key == 'breizorro':
-        #    fits_mask = 'masking/{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
-        #        prefix, field, num)
-        #    if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
-        #        raise caracal.ConfigurationError("Breizorro clean mask {0:s}/{1:s} not found. Something must have gone wrong with the Breizorro run"
-        #                                         " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output, fits_mask))
-        #    image_opts.update({
-        #        "fitsmask": '{0:s}:output'.format(fits_mask),
-        #        "local-rms": False,
-        #    })
-        #else:
-        #    fits_mask = 'masking/{0:s}_{1:s}.fits'.format(
-        #        mask_key, field)
-        #    if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
-        #        raise caracal.ConfigurationError("Clean mask {0:s}/{1:s} not found. Please make sure that you have given the correct mask label"
-        #                                         " in cleanmask_method, and that the mask exists.".format(pipeline.output, fits_mask))
-        #    image_opts.update({
-        #        "fitsmask": '{0:s}:output'.format(fits_mask),
-        #        "local-rms": False,
-        #    })
-
         # Empty job que after execution
         recipe.jobs = []
 
@@ -1771,7 +1731,7 @@ def worker(pipeline, recipe, config):
         params = [
             f"ms=/stimela_mount/msdir/{mslist[0]}",
             f"image-temp=/stimela_mount/output/tmp",
-            f"image-prefix=T16R02C02",
+            f"image-prefix={pipeline.prefix}",
             f"dir-out-base=/stimela_mount/output/continuum",
             f"ms-base=/stimela_mount/output/msdir"
         ]
@@ -1780,13 +1740,13 @@ def worker(pipeline, recipe, config):
         mapping = {
             "img_niter": "image-niter",
             "img_nmiter": "image-mniter",
-            "img_chans": "image-nchans",
+            "img_nchans": "image-nchans",
             "img_channelrange": "image-channelrange",
             "img_npix": "image-npix",
             "img_joinchans": "image-joinchans",
             "img_specfit_nrcoeff": "image-specfit-nrcoeff",
             "img_cell": "image-cell",
-            "img_mfs_weighting": "image-mfs-weighting",
+            "img_mfs_weighting": "image-mf-weighting",
             "img_weight": "image-weight",
             "img_robust": "image-robust",
             "img_padding": "image-padding",
@@ -1850,7 +1810,7 @@ def worker(pipeline, recipe, config):
                 for n in range(config["cal_niter"]):
                     times.append([qcal.get("gsols_timeslots", [0])[n]
                                            if n < len(qcal.get("gsols_timeslots", []))
-                                           else gqcal("gsols_timeslots", [0])[-1]])
+                                           else qcal.get("gsols_timeslots", [0])[-1]])
                     freqs.append([qcal.get("gsols_chan", [0])[n]
                                            if n < len(qcal.get("gsols_chan", []))
                                            else qcal.get("gsols_chan", [0])[-1]])
@@ -1867,6 +1827,8 @@ def worker(pipeline, recipe, config):
             params.append(f"image-enable={wsclean['enable']}")
             params.append(f"image-use-wgridder={wsclean['use_wgridder']}")
             params.append(f"image-absmem={wsclean['absmem']}")
+            params.append(f"image-clean-cutoff={repr(wsclean['clean_cutoff']).replace(' ', '')}")
+            params.append(f"image-cleanmask-thr={repr(wsclean['cleanmask_thr']).replace(' ', '')}")
 
         return params
 

@@ -68,6 +68,8 @@ caracal-selfcal:
       params:
         prefix: ="{recipe.dir-out-base}/image_{recipe.iter}/{recipe.image-prefix}_{recipe.iter}"
         column: =IF(recipe.iter>1, "CORRECTED_DATA", IF(recipe.selfcal.pa-rotate, steps.pa-correction.out.column, recipe.image-col))
+        auto-threshold: =recipe.image-clean-cutoff[0]
+        auto-mask: =recipe.image-cleanmask-thr[0]
         fits-mask: =IFSET(recipe.image-fits-mask, recipe.image-fits-mask,
                           IFSET(recipe.image-cleanmask-method,
                                 IF(recipe.iter>0, "{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}-MFS-mask.fits", UNSET, UNSET), UNSET))
@@ -90,8 +92,8 @@ caracal-selfcal:
       params:
         restored-image: =steps.image*.restored.mfs
         outfile: '{steps.image*.prefix}-MFS-mask.fits'
-        threshold: 10.0
-        dilate: 2
+        threshold: =recipe.image-cleanmask-thr[-1]
+        dilate: 1
         boxsize: 60
 
     source-finder:

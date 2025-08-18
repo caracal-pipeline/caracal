@@ -63,12 +63,12 @@ image-mniter:
   dtype: int
 image-threshold:
   dtype: float
-image-auto-threshold:
-  dtype: float
-  default: 7.0
-image-auto-mask:
-  dtype: float
-  default: 15.0
+image-clean-cutoff:
+  dtype: List[float]
+  default: [0.5]
+image-cleanmask-thr:
+  dtype: List[float]
+  default: [10.0]
 image-nchans:
   info: Number of channels in output image.
   default: 6
@@ -87,15 +87,14 @@ image-joinchas:
   dtype: bool
 image-specfit-nrcoeff:
   info:  Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1. Use 0 to disable spectral fitting. Note that spectral fitting is required if you want to do subsequent continumm subtraction using crystalball.
-  default: 4
+  default: 2
   dtype: int
 image-cell:
   info: Image pixel size (in units of arcsec).
   default: 1.3
   dtype: float
-image-mfs-weighting:
+image-mf-weighting:
   info: Enables MF weighting.
-  default: false
   dtype: bool
 image-weight:
   info: Type of image weighting, where the options are 'briggs', 'uniform', and 'natural'. If 'briggs', set the 'image-robust' parameter.

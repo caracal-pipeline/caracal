@@ -403,7 +403,7 @@ mapping:
            type: float
            desc: Taper for imaging (in arcsec).
            required: false
-           example: '0'
+           example: '0.'
          img_ws_niter:
            type: int
            desc: Number of cleaning iterations.

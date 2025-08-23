@@ -224,7 +224,8 @@ lib:
           column: =IFSET(recipe.image-col)
           use-wgridder: =IFSET(recipe.image-use-wgridder)
           abs-mem: =IFSET(recipe.image-absmem)
-          mf-weighting: =IFSET(recipe.image_mf_weighting)
+          mf-weighting: =IFSET(recipe.image-mf-weighting)
+          no-mf-weighting: =IF(recipe.image-mf-weighting, False, True)
           padding: 1.3
           wstack-nwlayers-factor: 3
           deconvolution-channels: =IFSET(recipe.image-deconv-chan)
@@ -261,7 +262,7 @@ lib:
           nmiter: =IFSET(recipe.image-nmiter)
           join-channels: true
           fit-spectral-pol: =recipe.image-specfit-nrcoeff
-          save-source-list: false
+          save-source-list: true
 
       image-pol:
         _use: lib.steps.wsclean.image

@@ -43,7 +43,7 @@ caracal-selfcal:
       params:
         data.ms: =recipe.ms
         out.column: 'PA_CORRECTED_DATA'
-        out.dir: "{recipe.dir-out-base}/cal-pa.cc-out"
+        out.dir: "{recipe.dir-out-base}/selfcal_products/cal-pa.cc-out"
         dist.ncpu: =recipe.ncpu
         dist.min-chunks: =recipe.ncpu
         model.list: ''
@@ -52,7 +52,7 @@ caracal-selfcal:
         flags.save: "cubical0"
         flags.save-legacy: auto
         flags.reinit-bitflags: false
-        k.save-to: "{recipe.dir-out-base}/PAsol"
+        k.save-to: "{recipe.dir-out-base}/selfcal_products/PAsol"
 
     previous-image-index:
       info: prefix for image files
@@ -72,7 +72,8 @@ caracal-selfcal:
         auto-mask: =recipe.image-cleanmask-thr[0]
         fits-mask: =IFSET(recipe.image-fits-mask, recipe.image-fits-mask,
                           IFSET(recipe.image-cleanmask-method,
-                                IF(recipe.iter>0, "{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}-MFS-mask.fits", UNSET, UNSET), UNSET))
+                                IF(recipe.iter>0, "{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}-MFS-mask.fits",
+                                UNSET, UNSET), UNSET))
         no-update-model-required: =IF(recipe.iter>0, IF(recipe.image-no-update-model-required, true, false), true)
 
     quality-assess:
@@ -93,8 +94,10 @@ caracal-selfcal:
         restored-image: =steps.image*.restored.mfs
         outfile: '{steps.image*.prefix}-MFS-mask.fits'
         threshold: =recipe.image-cleanmask-thr[-1]
+          #threshold: =IF(VALID(recipe.image-cleanmask-thr[1+recipe.iter]),
+          #             recipe.image-cleanmask-thr[1+recipe.iter],
+          #             recipe.image-cleanmask-thr[-1])
         dilate: 1
-        boxsize: 60
 
     source-finder:
       info: automatic source finding
@@ -212,8 +215,8 @@ caracal-selfcal:
         #input_model.recipe: =steps.tigger-convert-*.output-model
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
-        output.gain_directory: "{recipe.dir-out-base}/K-{recipe.iter}.qc/"
-        output.log_directory: "{recipe.dir-out-base}/K-{recipe.iter}.qc/log/"
+        output.gain_directory: "{recipe.dir-out-base}/selfcal_products/K-{recipe.iter}.qc/"
+        output.log_directory: "{recipe.dir-out-base}/selfcal_products/K-{recipe.iter}.qc/log/"
         K.time_interval: =steps.time_freq_intervals.time_int[0]
         K.freq_interval: =steps.time_freq_intervals.freq_int[0]
 
@@ -228,8 +231,8 @@ caracal-selfcal:
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
-        output.gain_directory: "{recipe.dir-out-base}/P-{recipe.iter}.qc/"
-        output.log_directory: "{recipe.dir-out-base}/P-{recipe.iter}.qc/log/"
+        output.gain_directory: "{recipe.dir-out-base}/selfcal_products/P-{recipe.iter}.qc/"
+        output.log_directory: "{recipe.dir-out-base}/selfcal_products/P-{recipe.iter}.qc/log/"
         P.time_interval: =steps.time_freq_intervals.time_int[0]
         P.freq_interval: =steps.time_freq_intervals.freq_int[0]
 
@@ -243,8 +246,8 @@ caracal-selfcal:
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
-        output.gain_directory: "{recipe.dir-out-base}/G-{recipe.iter}.qc/"
-        output.log_directory: "{recipe.dir-out-base}/G-{recipe.iter}.qc/log/"
+        output.gain_directory: "{recipe.dir-out-base}/selfcal_products/G-{recipe.iter}.qc/"
+        output.log_directory: "{recipe.dir-out-base}/selfcal_products/G-{recipe.iter}.qc/log/"
         G.time_interval: =steps.time_freq_intervals.time_int[0]
         G.freq_interval: =steps.time_freq_intervals.freq_int[0]
 
@@ -258,8 +261,8 @@ caracal-selfcal:
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
-        output.gain_directory: "{recipe.dir-out-base}/KG-{recipe.iter}.qc/"
-        output.log_directory: "{recipe.dir-out-base}/KG-{recipe.iter}.qc/log/"
+        output.gain_directory: "{recipe.dir-out-base}/selfcal_products/KG-{recipe.iter}.qc/"
+        output.log_directory: "{recipe.dir-out-base}/selfcal_products/KG-{recipe.iter}.qc/log/"
         K.time_interval: =steps.time_freq_intervals.time_int[0]
         K.freq_interval: =steps.time_freq_intervals.freq_int[0]
         G.time_interval: =steps.time_freq_intervals.time_int[-1]

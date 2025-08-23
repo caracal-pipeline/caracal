@@ -96,6 +96,7 @@ image-cell:
 image-mf-weighting:
   info: Enables MF weighting.
   dtype: bool
+  default: True
 image-weight:
   info: Type of image weighting, where the options are 'briggs', 'uniform', and 'natural'. If 'briggs', set the 'image-robust' parameter.
   default: briggs

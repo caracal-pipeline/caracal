@@ -1156,11 +1156,11 @@ def worker(pipeline, recipe, config):
                                                                                                                    prefix, field, im, mfsprefix)})
 
 
-    def config_to_params(config, mslist):
+    def config_to_params(config, mslist, field):
         params = [
             f"ms=/stimela_mount/msdir/{mslist[0]}",
             f"image-temp=/stimela_mount/output/tmp",
-            f"image-prefix={pipeline.prefix}",
+            f"image-prefix={pipeline.prefix}_{field}",
             f"dir-out-base=/stimela_mount/output/continuum",
             f"ms-base=/stimela_mount/output/msdir"
         ]
@@ -1287,14 +1287,15 @@ def worker(pipeline, recipe, config):
             pipeline.continuum, self_cal_iter_counter)
 
         step = 'selfcal2'
-        recipe.add('cab/stimela2', step, {
+        recipe.add('cab/stimela2', step,
+            {
                'recipe': f'recipes/caracal.yml',
                'recipe-name': 'caracal-selfcal',
-               'params': config_to_params(config, mslist),
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{:s}:: Running CARACal selfcal2'.format(step))
+               'params': config_to_params(config, mslist, field),
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='{:s}:: Running CARACal selfcal2'.format(step))
 
         recipe.run()
         # Empty job que after execution

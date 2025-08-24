@@ -69,7 +69,7 @@ caracal-selfcal:
         prefix: ="{recipe.dir-out-base}/image_{recipe.iter}/{recipe.image-prefix}_{recipe.iter}"
         column: =IF(recipe.iter>1, "CORRECTED_DATA", IF(recipe.selfcal.pa-rotate, steps.pa-correction.out.column, recipe.image-col))
         auto-threshold: =recipe.image-clean-cutoff[0]
-        auto-mask: =recipe.image-cleanmask-thr[0]
+        auto-mask: =IF(recipe.iter==0, recipe.image-cleanmask-thr[0], UNSET)
         fits-mask: =IFSET(recipe.image-fits-mask, recipe.image-fits-mask,
                           IFSET(recipe.image-cleanmask-method,
                                 IF(recipe.iter>0, "{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}-MFS-mask.fits",

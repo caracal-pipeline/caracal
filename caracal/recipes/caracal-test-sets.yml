@@ -10,14 +10,9 @@ caracal-selfcal:
         selfcal.niter: 2
         selfcal.start-iter: 1
         selfcal.jones: ['k', 'k-g']
-        ncpu: 16
-        image-no-update-model-required: false
         image-enable: true
         image-col: DATA
         image-npix: 4096
         image-niter: 100000
-        image-threshold: 0.0005
-        image-multiscale: true
-        image-multiscale-bais: 0.5
-        image-multiscale-scales: [0, 5, 10, 19]
+        image-no-update-model-required: false
         image-aimfast-enable: true

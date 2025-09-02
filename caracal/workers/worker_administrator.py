@@ -243,7 +243,8 @@ class WorkerAdministrator(object):
 
     def get_callib_name(self, name, ext="yml", extra_label=None):
         """Makes a callib name with the given extension. Replaces extension if needed. Adds callib- if needed."""
-        name, _ = os.path.splitext(name)
+        if os.path.splitext(name)[-1] in ['.yml', '.txt']:
+            name, _ = os.path.splitext(name)
         if not name.startswith("callib-"):
             name = f"callib-{name}"
         if extra_label:

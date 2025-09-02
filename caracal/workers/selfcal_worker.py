@@ -1642,6 +1642,7 @@ def worker(pipeline, recipe, config):
         # to achieve accurate restauration we need to reset all parameters properly
         matrix_type = config[key]['gain_matrix_type'][
             num - 1 if len(config[key]['gain_matrix_type']) >= num else -1]
+
         # Decide if take diagonal terms into account
         if matrix_type == 'Gain2x2':
             take_diag_terms = False
@@ -1820,10 +1821,12 @@ def worker(pipeline, recipe, config):
                 "dd-dd-term": False,
                 "model-ddes": 'never',
             }
-            # Set the table name
+
+            matrix_type = config[key]['gain_matrix_type'][num - 1 if len(config[key]['gain_matrix_type']) >= num else -1]
+        
             if gupdate == 'phase-diag' and matrix_type == 'Fslope':
                 g_table_name = "{0:s}/{3:s}-g-delay-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                         pipeline), num, os.path.splitext(fromname)[0], prefix)
+                                                                                                       pipeline), num, os.path.splitext(fromname)[0], prefix)
             elif gupdate == 'phase-diag':
                 g_table_name = "{0:s}/{3:s}-g-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                          pipeline), num, os.path.splitext(fromname)[0], prefix)
@@ -2255,7 +2258,6 @@ def worker(pipeline, recipe, config):
         gain_tables = glob.glob('{0:s}/{1:s}/{2:s}/{3:s}'.format(pipeline.output,
                                                                  get_dir_path(pipeline.continuum, pipeline),
                                                                  'selfcal_products', f'{pipeline.prefix}*.parmdb'))
-        #'mkat_deep2-g-amp-phase-diag-gains-2-1491291289.1ghz.1.1ghz.4hrs-DEEP_2-corr.parmdb'
         for gt in gain_tables:
             if any(key in gt for key in ['g-delay', 'g-amp', 'g-phase']):
 
@@ -2264,24 +2266,10 @@ def worker(pipeline, recipe, config):
                 recipe.add('cab/cubical_pgs', step,
                            {
                                "files": f"{gain_table_name}:output",
-                                "output-name": outname + '-B.png',
-                                "bandpass": True,
-                                "diag": config['cal_cubical']['gain_plot']['diag'],
-                                "off-diag": config['cal_cubical']['gain_plot']['diag'],
-                                "nrow": config['cal_cubical']['gain_plot']['nrow'],
-                                "ncol": config['cal_cubical']['gain_plot']['ncol'],
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Plot gaincal phase : {1:s}'.format(step, gain_table_name))
-
-                recipe.add('cab/cubical_pgs', step,
-                           {
-                               "files": f"{gain_table_name}:output",
                                 "output-name": outname + '-G.png',
                                 "gain": True,
                                 "diag": config['cal_cubical']['gain_plot']['diag'],
-                                "off-diag": config['cal_cubical']['gain_plot']['diag'],
+                                "off-diag": config['cal_cubical']['gain_plot']['off_diag'],
                                 "nrow": config['cal_cubical']['gain_plot']['nrow'],
                                 "ncol": config['cal_cubical']['gain_plot']['ncol'],
                            },
@@ -2465,9 +2453,13 @@ def worker(pipeline, recipe, config):
                 shutil.copyfile(plot, '{0:s}/{1:s}'.format(plot_path, os.path.basename(plot)))
                 os.remove(plot)
 
-        if pipeline.enable_task(config, 'calibrate'):
+        try:
             if config['cal_cubical']['gain_plot']['enable']:
                 plotting_cubical_tables()
+        except:
+            caracal.log.warn("Please check if the gain tables exist.")
+            caracal.log.warn("No plotting performed.")
+
 
         if pipeline.enable_task(config, 'restore_model'):
             if config['restore_model']['model']:

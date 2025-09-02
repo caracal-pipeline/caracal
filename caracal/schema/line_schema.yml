@@ -593,80 +593,225 @@ mapping:
             type: bool
             required: false
             example: 'False'
-      
+ 
       imcontsub:
-        desc: Use the final output image cube (lastiter true) or all (lastiter false) when using wsclean or a specified set of cubes. Fit a function or filter along the third axis, subtract it from the original, and return the result. Possible is a polynomial fit (fitmode = poly) or a Savitzky-Golay filter. In case of the Savitzky-Golay filter the window length is given by the parameter with the name length. The polynomial order of either polynomial or the filter is specified with the parameter polyorder. A Savitzky-Golay filter with polynomial order 0 is a median filter. Optionally a mask data cube with the same dimensions of the input data cube can be provided.  Voxels for which the mask data cube is not equal to zero are ignored. For the polynomial fit the voxels are simply ignored. In case of the Savitzky Golay filter, an iterative process is started.  All masked voxels are set to zero and a median filter is run along the frequency axis. After that the Savitzky-Golay filter is run sgiters times. If the parameter sgiters is set to 0, only one Savitzky-Golay filter is applied (no initial median filtering, does not work for ). With the parameter fitted the user can optionally supply the name of the output fitted data cube.
+        desc: Perform continuum subtraction in the image plane.
         type: map
         mapping:
           enable:
-            desc: Enable the 'imcontsub' segment.
+            desc: Enable the 'imcontusb' segment.
             type: bool
             required: false
-            example: 'False'
-          incubus:
-            desc: List of input cubes; will select either image or dirty cubes if empty or not specified
-            seq:
-              - type: str
-            required: false
-            example: ''
-          lastiter:
-            desc: If incubus is empty, select only the last iteration for continuum subtraction (true) or all (false)
-            type: bool
-            required: false
-            example: 'True'
-          fitmode:
-            desc: Type of fit ('poly' or 'savgol')
-            type: str
-            enum: ['poly', 'savgol']
-            required: false
-            example: 'poly'
-          length:
-            desc: Length of the sliding window in channels (only used for fitmode = savgol must be odd, default is 25)
-            type: int
-            required: false
-            example: '25'
-          polyorder:
-            desc: Order of the polynomial or of the Savitzky-Golay filter (default is 0)
-            type: int
-            required: False
-            example: '0'
-          mask:
-            desc: Mask cubes to use. '' means do not use mask cubes or those specified with parameter masculin. 'clean' means use clean masks if available. 'sofia' means use sofia masks if available.
-            type: str
-            required: False
-            example: ''
-          masculin:
-            desc: List of input mask cubes. Only used if mask = ''. Must be empty or the same number of cubes as the input cubes.
-            seq:
-              - type: str
-            required: false
-            example: ''
-          sgiters:
-            desc: Number of Savitzky-Golay filter iterations (default is 0)
-            type: int
-            required: False
-            example: '0'
-          kertyp:
-            desc: Kernel type to convolve the polynomial fit with ('gauss', 'tophat')
-            type: str
-            enum: ['gauss', 'tophat']
-            required: false
-            example: 'tophat'
-          kersiz:
-            desc: Kernel size to convolve the polynomial fit with (pixel, 0 means no convolution)
-            type: int
-            required: false
-            example: '0'
-          outfit:
-            desc: Produce fitted data cubes (True means yes, default is False)
-            type: bool
-            required: false
-            example: 'False'
-          outfitcon:
-            desc: Produce fitted and convolved data cubes (True means yes, default is False)
-            type: bool
-            required: false
-            example: 'False'
+            example: 'false'  
+        label_in:
+          type: str
+          desc: Label of the .fits datacube to process.
+          required: false
+          example: 'corr'    
+        mask-image:
+          info: 1) 'sofia' to use the mask output of SoFiA  2) a prefix string to use an existing .FITS mask located in output/masking and called prefix_target.fits, where the name of the target is set automatically by the pipeline. The latter .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this third  maskingm ethod can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output/masking.
+          type: str
+          required: False
+          example: 'sofia'
+        #### TO complete
+        sigma-clip:
+          info: Sigma clip for each iteration. Only required if mask-image is not given.
+          dtype: List[float]
+          policies:
+            repeat: "[]"
+        automask-per-iter:
+          info: Generate a new mask per iteration.
+          dtype: bool
+          default: False
+        fit-model:
+          info: "### NOT IMPLEMENTED ### Fit function to model the continuum."
+          dtype: str
+          choices:
+            - spline
+          default: spline
+        cont-fit-tol:
+          info: "Minimum perentage of valid spectrum data points required to do a fit.
+                Spectra below this tolerance will be set to NaN.
+                Leaving this unset may result in poor or NaN spectra in the output cubes"
+          dtype: float
+          default: 0
+        overwrite:
+          info: Overwrite output image if it already exists
+          dtype: bool
+          default: yes
+        stokes-index:
+          info: "Index of stokes channel (zero-based) to use."
+          dtype: int
+          default: 0
+          choices: [0,1,2,3]
+        rest-freq:
+          info: Cube rest frequency in MHz. Will ignore the one in the FITS header if it exists.
+          dtype: float
+        stokes-axis:
+          info: "### DEPRECATED #### Set this flag if the input image has a stokes dimension. (Default is True)."
+          default: yes
+          dtype: bool
+        hdu-index:
+          info: FITS primary HDU index
+          dtype: int
+          default: 0
+          abbreviation: hi
+        ra-chunks:
+          info: Chunking along RA-axis. If set to zero, no Chunking is perfomed.
+          dtype: int 
+          default: 64
+        nworkers:
+          info: Number of workers (one per CPU)
+          dtype: int
+          default: 4
+        input-image:
+          info: Input image
+          dtype: File
+          must_exist: yes
+          required: yes
+          policies:
+            positional: yes
+        output-prefix:
+          info: Name of ouput image
+          dtype: str
+        mask-image:
+          info: Mask image
+          dtype: File
+          must_exist: true
+        sigma-clip:
+          info: Sigma clip for each iteration. Only required if mask-image is not given.
+          dtype: List[float]
+          policies:
+            repeat: "[]"
+        automask-per-iter:
+          info: Generate a new mask per iteration.
+          dtype: bool
+          default: False
+        fit-model:
+          info: "### NOT IMPLEMENTED ### Fit function to model the continuum."
+          dtype: str
+          choices:
+            - spline
+          default: spline
+        cont-fit-tol:
+          info: "Minimum perentage of valid spectrum data points required to do a fit.
+                Spectra below this tolerance will be set to NaN.
+                Leaving this unset may result in poor or NaN spectra in the output cubes"
+          dtype: float
+          default: 0
+        overwrite:
+          info: Overwrite output image if it already exists
+          dtype: bool
+          default: yes
+        stokes-index:
+          info: "Index of stokes channel (zero-based) to use."
+          dtype: int
+          default: 0
+          choices: [0,1,2,3]
+        rest-freq:
+          info: Cube rest frequency in MHz. Will ignore the one in the FITS header if it exists.
+          dtype: float
+        stokes-axis:
+          info: "### DEPRECATED #### Set this flag if the input image has a stokes dimension. (Default is True)."
+          default: yes
+          dtype: bool
+        hdu-index:
+          info: FITS primary HDU index
+          dtype: int
+          default: 0
+          abbreviation: hi
+        ra-chunks:
+          info: Chunking along RA-axis. If set to zero, no Chunking is perfomed.
+          dtype: int 
+          default: 64
+        nworkers:
+          info: Number of workers (one per CPU)
+          dtype: int
+          default: 4
+        loglevel:
+          info: Log level for the output
+          dtype: str
+          default: info
+          choices:
+            - info
+            - debug
+            - trace
+            - error
+            - critical
+#### TO complete END
+      # imcontsub:
+      #   desc: Use the final output image cube (lastiter true) or all (lastiter false) when using wsclean or a specified set of cubes. Fit a function or filter along the third axis, subtract it from the original, and return the result. Possible is a polynomial fit (fitmode = poly) or a Savitzky-Golay filter. In case of the Savitzky-Golay filter the window length is given by the parameter with the name length. The polynomial order of either polynomial or the filter is specified with the parameter polyorder. A Savitzky-Golay filter with polynomial order 0 is a median filter. Optionally a mask data cube with the same dimensions of the input data cube can be provided.  Voxels for which the mask data cube is not equal to zero are ignored. For the polynomial fit the voxels are simply ignored. In case of the Savitzky Golay filter, an iterative process is started.  All masked voxels are set to zero and a median filter is run along the frequency axis. After that the Savitzky-Golay filter is run sgiters times. If the parameter sgiters is set to 0, only one Savitzky-Golay filter is applied (no initial median filtering, does not work for ). With the parameter fitted the user can optionally supply the name of the output fitted data cube.
+      #   type: map
+      #   mapping:
+      #     enable:
+      #       desc: Enable the 'imcontsub' segment.
+      #       type: bool
+      #       required: false
+      #       example: 'False'
+      #     incubus:
+      #       desc: List of input cubes; will select either image or dirty cubes if empty or not specified
+      #       seq:
+      #         - type: str
+      #       required: false
+      #       example: ''
+      #     lastiter:
+      #       desc: If incubus is empty, select only the last iteration for continuum subtraction (true) or all (false)
+      #       type: bool
+      #       required: false
+      #       example: 'True'
+      #     fitmode:
+      #       desc: Type of fit ('poly' or 'savgol')
+      #       type: str
+      #       enum: ['poly', 'savgol']
+      #       required: false
+      #       example: 'poly'
+      #     length:
+      #       desc: Length of the sliding window in channels (only used for fitmode = savgol must be odd, default is 25)
+      #       type: int
+      #       required: false
+      #       example: '25'
+      #     polyorder:
+      #       desc: Order of the polynomial or of the Savitzky-Golay filter (default is 0)
+      #       type: int
+      #       required: False
+      #       example: '0'
+      #     mask:
+      #       desc: Mask cubes to use. '' means do not use mask cubes or those specified with parameter masculin. 'clean' means use clean masks if available. 'sofia' means use sofia masks if available.
+      #       type: str
+      #       required: False
+      #       example: ''
+      #     masculin:
+      #       desc: List of input mask cubes. Only used if mask = ''. Must be empty or the same number of cubes as the input cubes.
+      #       seq:
+      #         - type: str
+      #       required: false
+      #       example: ''
+      #     sgiters:
+      #       desc: Number of Savitzky-Golay filter iterations (default is 0)
+      #       type: int
+      #       required: False
+      #       example: '0'
+      #     kertyp:
+      #       desc: Kernel type to convolve the polynomial fit with ('gauss', 'tophat')
+      #       type: str
+      #       enum: ['gauss', 'tophat']
+      #       required: false
+      #       example: 'tophat'
+      #     kersiz:
+      #       desc: Kernel size to convolve the polynomial fit with (pixel, 0 means no convolution)
+      #       type: int
+      #       required: false
+      #       example: '0'
+      #     outfit:
+      #       desc: Produce fitted data cubes (True means yes, default is False)
+      #       type: bool
+      #       required: false
+      #       example: 'False'
+      #     outfitcon:
+      #       desc: Produce fitted and convolved data cubes (True means yes, default is False)
+      #       type: bool
+      #       required: false
+      #       example: 'False'
             
       sofia:
         desc: Run SoFiA source-finder on the final HI cubes to produce a detection mask, moment images and catalogues. Note that these settings are not used to make clean masks.

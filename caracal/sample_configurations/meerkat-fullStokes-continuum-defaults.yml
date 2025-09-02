@@ -48,10 +48,10 @@ crosscal:
     meerkat_skymodel: true
   primary:
     reuse_existing_gains: false
-    order: KGBAKGBK
-    combine: ["","","",null,"", "", "scan","scan"]
-    solint: [inf, inf, inf, null, 60s, 60s, inf,inf]
-    calmode: [a, ap, ap, null, a, ap, ap, a]
+    order: KGB
+    combine: ["","","",]
+    solint: [inf, inf, inf]
+    calmode: [a, ap, ap]
     b_fillgaps: 70
     plotgains: true
   secondary:
@@ -140,6 +140,9 @@ polcal:
   reuse_existing_tables: false
   pol_calib: xcal
   leakage_calib: fcal
+  set_model_pol:
+    enable: true
+    nrao_model: true
   gain_solint: '60s'
   time_solint: 'inf'
   plotgains: true
@@ -262,13 +265,36 @@ mask:
 
 selfcal:
   enable: true
-  img_npix: 4096
-  img_cell: 1.3
-  cal_timeslots_chunk: 15
+  label_in: corr
+  img_npix: 2048
+  img_cell: 2
+  cal_timeslots_chunk: 4
+  cal_niter: 2
   image:
     enable: true
   calibrate:
     enable: true
-    gsols_timeslots: [15]
+    gsols_timeslots: [4]
+    gain_matrix_type: ['Fslope', 'Fslope']
   transfer_model:
     enable: false
+
+polimg:
+  enable: true
+  label_in: corr
+  stokes: QU
+  make_images:
+    enable: true
+    img_npix: 2048
+    img_cell: 2
+    img_mgain: 0.9
+    img_nchans: 5
+    img_chan_range: 0, 100
+    col: CORRECTED_DATA
+  make_extra_images:
+    enable: true
+    schema: both
+    make_pb_images: true
+    convl_images: true
+    convl_beam: '0.006,0.006,0'
+

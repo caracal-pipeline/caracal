@@ -1,0 +1,16 @@
+3C138:
+  standard: "manual"
+  fluxdensity: [8.33843]
+  spix: [-0.4981, -0.1552, -0.0102, 0.0223]
+  reffreq: "1.47GHz"
+  polindex: [0.078]
+  polangle: [-0.16755]
+  rotmeas: 0.0
+3C286:
+  standard: "manual"
+  fluxdensity: [14.7172]
+  spix: [-0.4507, -0.1798, 0.0357]
+  reffreq: "1.47GHz"
+  polindex: [0.098]
+  polangle: [0.575959]
+  rotmeas: 0.0

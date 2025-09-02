@@ -70,8 +70,42 @@ And CARACal developer version which is not recommended for users:
     pip install -U 'caracal @ git+https://github.com/caracal-pipeline/caracal.git@master'
 
 
-
 *Ignore any error messages concerning `pyregion`.*
+
+1.1 container configuration 
+------------------------
+
+In case you are *not* carrying out a fresh installation, remove earlier Stimela images with:
+
+..  code-block:: bash
+
+    stimela clean -ac
+
+
+Then, if using `Docker <https://www.docker.com>`_:
+
+..  code-block:: bash
+
+    stimela pull
+
+If using `Singularity <https://github.com/sylabs/singularity>`_, choose a pull folder ``${singularity_pull_folder}``, where the `Singularity <https://github.com/sylabs/singularity>`_ images are stored and define an environment variable by adding this in the rc file of your shell (e.g. .bashrc):
+
+..  code-block:: bash
+
+    export SINGULARITY_PULLFOLDER=${WORKSPACE_ROOT}/singularity_images
+
+and run:
+
+..  code-block:: bash
+
+    stimela pull -s
+
+If using `Podman <https://podman.io>`_:
+
+..  code-block:: bash
+
+  stimela pull -p 
+
 
 2. `caratekit.sh` script
 ------------------------
@@ -181,36 +215,7 @@ When opening a new issue, please include your:
   #. CARACal configuration file
   #. CARACal log files.
 
-In case you are *not* carrying out a fresh installation, remove earlier Stimela images with:
 
-..  code-block:: bash
-
-    stimela clean -ac
-
-
-Then, if using `Docker <https://www.docker.com>`_:
-
-..  code-block:: bash
-
-    stimela pull
-
-If using `Singularity <https://github.com/sylabs/singularity>`_, choose a pull folder ``${singularity_pull_folder}``, where the `Singularity <https://github.com/sylabs/singularity>`_ images are stored and define an environment variable by adding this in the rc file of your shell (e.g. .bashrc):
-
-..  code-block:: bash
-
-    export SINGULARITY_PULLFOLDER=${WORKSPACE_ROOT}/singularity_images
-
-and run:
-
-..  code-block:: bash
-
-    stimela pull -s
-
-If using `Podman <https://podman.io>`_:
-
-..  code-block:: bash
-
-  stimela pull -p 
 
 =======
 License

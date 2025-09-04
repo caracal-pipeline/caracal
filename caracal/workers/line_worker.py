@@ -1611,15 +1611,61 @@ def worker(pipeline, recipe, config):
                     label='{0:s}:: Make SoFiA mask and images for cube {1:s}'.format(step, simage_cube_list[uu]))
         
 ##### Insert here NEW IMCONTSUB #######
+        if pipeline.enable_task(config, 'imcontsub'):
+            
+            imcontsub_opts = {
+                "output-prefix": config['imcontsub']['label_out'],
+                "order":config['imcontsub']['order'],
+                "segments": config['imcontsub']['segments'], #300,250 : these should be set automatically
+                "sigma-clip":  config['imcontsub']['sigma-clip'],
+                }
+
+            
+            if config['imcontsub']['mask-image'] != None:
+
+                imcontsub_opts.update({"mask-image": config['imcontsub']['mask-image']})    #Maybe this is not needed. 
+
+            if config['imcontsub']['input_cube']== None:
+
+                sub_image_cube_list = image_cube_list
+
+                for uu in range(len(sub_image_cube_list)):
+                    
+                    step = 'Image-continuum-subtraction-{0:d}'.format(uu)
+                
+                    imcontsub_opts.update({"infits": simage_cube_list[uu].split('/')[-1] + ':input'})
+                    recipe.add('cab/sofia', step,
+                        imcontsub_opts,
+                        input=pipeline.output,
+                        output=pipeline.output,
+                        label='{0:s}:: Image continuum subtraction'.format(step))
+                    recipe.run()
+                    recipe.jobs = []
+                caracal.log.info(
+                    'Subtracting continuum in the image domain for target {0:d}'.format(tt))
+        
+            else:
+
+                step = 'Image-continuum-subtraction-{0:d}'.format(uu)
+            
+                imcontsub_opts.update({"infits": config['imcontsub']})
+                recipe.add('cab/sofia', step,
+                    imcontsub_opts,
+                    input=pipeline.output,
+                    output=pipeline.output,
+                    label='{0:s}:: Single cube continuum subtraction'.format(step))
+                recipe.run()
+                recipe.jobs = []
+
+                caracal.log.info(
+                    'Subtracting continuum in the image domain for target {0:d}'.format(tt))
+
 
         # # Again, in some cases this should run once
         # if rancsonce:
         #     pass
         # else:
-        #     if pipeline.enable_task(config, 'imcontsub'):
-
-        #         caracal.log.info(
-        #             'Subtracting continuum in the image domain for target {0:d}'.format(tt))
+        #     
 
         #         # Using highest cube directory
         #         dirlist = glob.glob('{0:s}/{1:s}/cube_*'.format(pipeline.output, cube_dir))

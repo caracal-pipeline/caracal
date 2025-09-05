@@ -401,7 +401,7 @@ mapping:
            example: '0.'
          img_ws_uvtaper:
            type: float
-           desc: Taper for imaging (in arcsec).
+           desc: Gaussian taper for imaging (in units of arcsec).
            required: false
            example: '0.'
          img_ws_niter:

@@ -107,7 +107,7 @@ mapping:
         required: false
         example: 'false'
       img_taper:
-        type: str
+        type: float
         desc: Gaussian taper for imaging (in units of arcsec).
         required: false
         example: '0.'

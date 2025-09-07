@@ -1,13 +1,13 @@
 # -*- coding: future_fstrings -*-
 
 import logging.handlers
-import pkg_resources
 import os
 import subprocess
 import logging
 from time import gmtime, strftime
 import stimela
 import stimela.utils
+from importlib.metadata import version, PackageNotFoundError
 
 ##############################################################################
 # Globals
@@ -61,8 +61,8 @@ class ExtraDependencyError(Exception):
 def report_version():
     # Distutils standard  way to do version numbering
     try:
-        __version__ = pkg_resources.require("caracal")[0].version
-    except pkg_resources.DistributionNotFound:
+        __version__ = version("caracal")
+    except PackageNotFoundError:
         __version__ = "dev"
     # perhaps we are in a github with tags; in that case return describe
     path = os.path.dirname(os.path.abspath(__file__))

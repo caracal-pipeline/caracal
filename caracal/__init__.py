@@ -1,5 +1,3 @@
-# -*- coding: future_fstrings -*-
-
 import logging.handlers
 import os
 import subprocess

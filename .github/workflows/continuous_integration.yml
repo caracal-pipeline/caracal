@@ -6,7 +6,7 @@ name: Ubuntu CI
 on: [push, pull_request]
 
 env:
-  POETRY_VERSION: 1.4.0
+  POETRY_VERSION: 2.1.4
 
 jobs:
   test:
@@ -14,20 +14,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-22.04 ]
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        os: [ ubuntu-22.04,  ubuntu-22.04 ]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
     steps:
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Cache Installations
-        id: cache-installs
-        uses: actions/cache@v3
-        with:
-          path: ~/.local
-          key: install-${{ env.INSTALL_CACHE_HASH }}-2
 
       - name: Install Poetry
         if: steps.cache-installs.outputs.cache-hit != 'true'

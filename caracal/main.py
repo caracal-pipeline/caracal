@@ -284,7 +284,8 @@ def main(argv):
         config, version = parser.validate_config(config_file)
         if version != SCHEMA_VERSION:
             log.warning("Config file {} schema version is {}, current CARACal version is {}".format(config_file,
-                                                                                                    version, SCHEMA_VERSION))
+                                                                                                    SCHEMA_VERSION,
+                                                                                                    version))
             log.warning("Will try to proceed anyway, but please be advised that configuration options may have changed.")
         # populate parser with items from config
         parser.populate_parser(config)

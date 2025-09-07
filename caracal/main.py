@@ -250,8 +250,8 @@ def main(argv):
             _, version = parser.validate_config(sample_config_path)
             if version != SCHEMA_VERSION:
                 log.warning("Sample config file {} version is {}, current CARACal version is {}.".format(sample_config,
-                                                                                                         version,
-                                                                                                         SCHEMA_VERSION))
+                                                                                                         SCHEMA_VERSION,
+                                                                                                         version))
                 log.warning("Proceeding anyway, but please notify the CARACal team to ship a newer sample config!")
         except config_parser.ConfigErrors as exc:
             log.error("{}, list of errors follows:".format(exc))

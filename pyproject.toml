@@ -30,6 +30,7 @@ psutil = "^5.9.4"
 pykwalify = "^1.8.0"
 progressbar2 = "^4.2.0"
 "ruamel.yaml" = "^0.17.21"
+pyyaml = "^6.0.1"
 astropy = "^5.3.3"
 scipy = "*"
 regions = "*"
@@ -48,11 +49,10 @@ requires = ["setuptools", "poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.extras]
-scipy = ["scipy"]
 astropy = ["astropy"]
 regions = ["regions"]
 astroquery = ["astroquery"]
-all = ["scipy", "astropy", "regions", "astroquery"]
+all = ["astropy", "regions", "astroquery"]
 
 
 [tool.poetry.group.tests]

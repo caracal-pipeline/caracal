@@ -1615,14 +1615,11 @@ def worker(pipeline, recipe, config):
             
             imcontsub_opts = {
                 "output-prefix": config['imcontsub']['label_out'],
-                "order":config['imcontsub']['order'],
+                "order": config['imcontsub']['order'],
                 "segments": config['imcontsub']['segments'], #300,250 : these should be set automatically
                 "sigma-clip":  config['imcontsub']['sigma-clip'],
                 }
 
-            
-
- 
 
             if config['imcontsub']['mask-image'].split('.fits')[-1] != None:
                 caracal.log.info('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ INPUTMAS $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')

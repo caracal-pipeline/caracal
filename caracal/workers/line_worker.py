@@ -1624,9 +1624,11 @@ def worker(pipeline, recipe, config):
 
  
 
-            elif config['imcontsub']['mask-image'] != None:
-
+            if config['imcontsub']['mask-image'].split('.fits')[-1] != None:
+                caracal.log.info('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ INPUTMAS $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+                print(config['imcontsub']['mask-image'].split('.fits')[-1])
                 imcontsub_opts.update({"mask-image": config['imcontsub']['mask-image']})    
+                caracal.log.info('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ INPUTCUBE $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
 
 
             if config['imcontsub']['input_cube']== None:
@@ -1641,7 +1643,7 @@ def worker(pipeline, recipe, config):
                     if config['imcontsub']['mask-image'] == 'sofia':
 
                         mask_name_tmp=simage_cube_list[uu].split('/')[-1]
-                        mask_name = mask_name_tmp.split('-image')[0]+'-image_mask.fits'
+                        mask_name = mask_name_tmp.split('.image')[0]+'.image_mask.fits'
                         caracal.log.info(
                         '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ mask_name $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
                         print(mask_name)
@@ -1660,8 +1662,9 @@ def worker(pipeline, recipe, config):
                     'Subtracting continuum in the image domain for target {0:d}'.format(tt))
         
             else:
+                caracal.log.info('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ INPUTCUBE $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
 
-                step = 'Image-continuum-subtraction-{0:d}'.format(uu)
+                step = 'Image-continuum-subtraction-INPUTCUBE'
             
                 imcontsub_opts.update({"infits": config['imcontsub']})
                 

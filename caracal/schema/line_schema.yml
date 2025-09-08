@@ -652,7 +652,7 @@ mapping:
           cont-fit-tol:
             desc: Minimum perentage of valid spectrum data points required to do a fit. Spectra below this tolerance will be set to NaN. Leaving this unset may result in poor or NaN spectra in the output cubes"
             type: float
-            example: 0
+            example: '0'
             required: False
           overwrite:
             desc: Overwrite output image if it already exists
@@ -662,12 +662,12 @@ mapping:
           stokes-index:
             desc: Index of stokes channel (zero-based) to use, choose between 0,1,2,3
             type: int
-            example: 0
+            example: '0'
             required: False
           rest-freq:
             info: Cube rest frequency in MHz. Will ignore the one in the FITS header if it exists.
             dtype: float
-            example: 1420.4057
+            example: '1420.4057'
             required: False
           stokes-axis:
             desc: DEPRECATED  Set this flag if the input image has a stokes dimension. (Default is True).
@@ -677,16 +677,16 @@ mapping:
           hdu-index:
             desc: FITS primary HDU index, Abbreviation - hi
             type: int
-            example: 0
+            example: '0'
             required: False
           ra-chunks:
             desc: Chunking along RA-axis. If set to zero, no Chunking is perfomed.
             type: int 
-            example: 64
+            example: '64'
           ncpus:
             info: Number of workers (one per CPU) 
             type: int
-            example: 4
+            example: '4'
             required: False
 
 

@@ -665,8 +665,8 @@ mapping:
             example: '0'
             required: False
           rest-freq:
-            info: Cube rest frequency in MHz. Will ignore the one in the FITS header if it exists.
-            dtype: float
+            desc: Cube rest frequency in MHz. Will ignore the one in the FITS header if it exists.
+            type: float
             example: '1420.4057'
             required: False
           stokes-axis:

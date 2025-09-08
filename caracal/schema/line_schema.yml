@@ -685,7 +685,7 @@ mapping:
             example: '64'
             required: False
           ncpus:
-            exclude_known_sources: Number of workers (one per CPU) 
+            desc: Number of workers (one per CPU) 
             type: int
             example: '4'
             required: False

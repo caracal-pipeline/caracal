@@ -1623,7 +1623,7 @@ def worker(pipeline, recipe, config):
 
             if config['imcontsub']['mask-image'].split('.fits')[-1] != None:
                 caracal.log.info('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ INPUTMAS $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
-                print(config['imcontsub']['mask-image'].split('.fits')[-1])
+                print(config['imcontsub']['mask_image'].split('.fits')[-1])
                 imcontsub_opts.update({"mask-image": config['imcontsub']['mask-image']})    
                 caracal.log.info('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ INPUTCUBE $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
 

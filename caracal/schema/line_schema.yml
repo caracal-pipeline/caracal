@@ -683,8 +683,9 @@ mapping:
             desc: Chunking along RA-axis. If set to zero, no Chunking is perfomed.
             type: int 
             example: '64'
+            required: False
           ncpus:
-            info: Number of workers (one per CPU) 
+            exclude_known_sources: Number of workers (one per CPU) 
             type: int
             example: '4'
             required: False

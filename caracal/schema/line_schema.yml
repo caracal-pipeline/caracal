@@ -628,7 +628,7 @@ mapping:
             type: seq
             seq:
               - type: float
-            example: ''
+            example: 'nan'
             required: False
           order:
             desc: Order of spline. If given as a list of size N, then N iterations will be perfomed.

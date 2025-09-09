@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 import os
 import shutil
 import glob
@@ -1553,7 +1552,7 @@ def worker(pipeline, recipe, config):
                 "out-plots": True,
                 "out-derotate": config['cal_cubical']['out_derotate'],
                 "dist-max-chunks": config['cal_cubical']['dist_max_chunks'],
-                "out-casa-gaintables": True,
+                "out-casa-gaintables": False,
                 "weight-column": config['cal_cubical']['weight_col'],
                 "montblanc-dtype": 'float',
                 "bbc-save-to": "{0:s}/bbc-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
@@ -2258,7 +2257,6 @@ def worker(pipeline, recipe, config):
         gain_tables = glob.glob('{0:s}/{1:s}/{2:s}/{3:s}'.format(pipeline.output,
                                                                  get_dir_path(pipeline.continuum, pipeline),
                                                                  'selfcal_products', f'{pipeline.prefix}*.parmdb'))
-        #'mkat_deep2-g-amp-phase-diag-gains-2-1491291289.1ghz.1.1ghz.4hrs-DEEP_2-corr.parmdb'
         for gt in gain_tables:
             if any(key in gt for key in ['g-delay', 'g-amp', 'g-phase']):
 
@@ -2267,24 +2265,10 @@ def worker(pipeline, recipe, config):
                 recipe.add('cab/cubical_pgs', step,
                            {
                                "files": f"{gain_table_name}:output",
-                                "output-name": outname + '-B.png',
-                                "bandpass": True,
-                                "diag": config['cal_cubical']['gain_plot']['diag'],
-                                "off-diag": config['cal_cubical']['gain_plot']['diag'],
-                                "nrow": config['cal_cubical']['gain_plot']['nrow'],
-                                "ncol": config['cal_cubical']['gain_plot']['ncol'],
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Plot gaincal phase : {1:s}'.format(step, gain_table_name))
-
-                recipe.add('cab/cubical_pgs', step,
-                           {
-                               "files": f"{gain_table_name}:output",
                                 "output-name": outname + '-G.png',
                                 "gain": True,
                                 "diag": config['cal_cubical']['gain_plot']['diag'],
-                                "off-diag": config['cal_cubical']['gain_plot']['diag'],
+                                "off-diag": config['cal_cubical']['gain_plot']['off_diag'],
                                 "nrow": config['cal_cubical']['gain_plot']['nrow'],
                                 "ncol": config['cal_cubical']['gain_plot']['ncol'],
                            },
@@ -2468,9 +2452,13 @@ def worker(pipeline, recipe, config):
                 shutil.copyfile(plot, '{0:s}/{1:s}'.format(plot_path, os.path.basename(plot)))
                 os.remove(plot)
 
-        if pipeline.enable_task(config, 'calibrate'):
+        try:
             if config['cal_cubical']['gain_plot']['enable']:
                 plotting_cubical_tables()
+        except:
+            caracal.log.warn("Please check if the gain tables exist.")
+            caracal.log.warn("No plotting performed.")
+
 
         if pipeline.enable_task(config, 'restore_model'):
             if config['restore_model']['model']:

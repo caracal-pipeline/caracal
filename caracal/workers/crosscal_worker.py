@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 from collections import OrderedDict
 import sys
 import os

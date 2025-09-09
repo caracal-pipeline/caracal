@@ -1,5 +1,3 @@
-# -*- coding: future_fstrings -*-
-
 from pykwalify.core import Core
 import argparse
 import yaml

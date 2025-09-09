@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 import sys
 import os
 import glob
@@ -695,7 +694,7 @@ def worker(pipeline, recipe, config):
             step = 'flag_mst_errors-ms{0:d}'.format(i)
             recipe.add('cab/autoflagger',
                     step,
-                    {   
+                    {
                         "msname": msname_mst,
                         "column": 'DATA',
                         "strategy": config['flag_mst_errors']['strategy'],
@@ -918,7 +917,7 @@ def worker(pipeline, recipe, config):
                         doProj = False
                         doSpec = False
                         C = 2.99792458e+8  # m/s
-                        femit = [r.strip() for r in re.split('([-+]?\d+\.\d+)|([-+]?\d+)', restfreq.strip()) if r is not None and r.strip() != '']
+                        femit = [r.strip() for r in re.split(r'([-+]?\d+\.\d+)|([-+]?\d+)', restfreq.strip()) if r is not None and r.strip() != '']
                         femit = (eval(femit[0]) * units.Unit(femit[1])).to(units.Hz).value  # Hz
                         t = mslist[0].replace('.ms', '-summary.json') # first file given to WSClean as input
                         with open('{}/{}'.format(pipeline.msdir, t)) as f:
@@ -929,7 +928,7 @@ def worker(pipeline, recipe, config):
                         cubeWidth = config['make_cube']['npix'][1] if len(config['make_cube']['npix']) == 2 else cubeHeight
 
                         preGridMask = own_line_clean_mask
-                        
+
                         caracal.log.info('+++++++++++++++++++++++++++++')
                         caracal.log.info('Checking Mask dimensions')
                         caracal.log.info('doProj = {}'.format(doProj))
@@ -990,12 +989,12 @@ def worker(pipeline, recipe, config):
                                 for key in ['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']:
                                     ax3param.append(hdul[0].header[key])
 
- 
+
                         caracal.log.info('doSpecProj = {}'.format(doSpec))
                         caracal.log.info('+++++++++++++++++++++++++++++')
                         caracal.log.info('doSpaceProj = {}'.format(doProj))
                         caracal.log.info('+++++++++++++++++++++++++++++')
-                        
+
                         if doProj:
                             '''
                             MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK AND REPROJECT
@@ -1124,7 +1123,7 @@ def worker(pipeline, recipe, config):
 
                             caracal.log.info('CDELT = {}'.format(cdelt))
                             caracal.log.info('ChWidth = {}'.format(chanwidth[0]))
-                            
+
                             caracal.log.info('CRVAL = {}'.format(crval))
                             caracal.log.info('CRVALE = {}'.format(crvale))
 

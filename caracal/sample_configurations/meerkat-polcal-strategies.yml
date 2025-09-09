@@ -1,4 +1,4 @@
-schema_version: 1.0.3
+schema_version: 1.2.0
 
 general:
   prefix: mypipelinerun

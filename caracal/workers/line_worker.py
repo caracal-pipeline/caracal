@@ -1655,6 +1655,7 @@ def worker(pipeline, recipe, config):
         
             else:
                 if os.path.exists(pipeline.output+config['imcontsub']['input_cube']):
+                    print(pipeline.output+config['imcontsub']['input_cube'])
                     caracal.log.info('Continum subtraction in the image plage on datacube {0:s} provided by user '.format(config['imcontsub']['input_cube']))
                     step = 'Image-continuum-subtraction-{0:s}'.format(config['imcontsub']['input_cube'])
                     imcontsub_opts.update({"infits": config['imcontsub']['input_cube']})

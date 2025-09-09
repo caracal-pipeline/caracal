@@ -1622,7 +1622,7 @@ def worker(pipeline, recipe, config):
             print(config['imcontsub']['input_cube'])
             caracal.log.info(
                         '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ mask_name $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
-            if config['imcontsub']['input_cube']== None:
+            if config['imcontsub']['input_cube']== '':
                 caracal.log.info('Continum subtraction in the image plane for target '.format(tt))
 
                 sub_image_cube_list = image_cube_list

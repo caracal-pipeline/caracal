@@ -36,7 +36,6 @@ def scan_length(msinfo, field):
     idx = utils.get_field_id(msinfo, field)[0]
     return float(utils.field_observation_length(msinfo, field)) / len(msinfo['SCAN'][str(idx)])
 
-
 def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, ref, polarized_calibrators, caltablelist,
                          gainfieldlist, interplist, calwtlist, applylist, leak_caltablelist,
                          leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist):
@@ -132,7 +131,7 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                        "msname": msname,
                        "usescratch": True,
                        "field": field,
-                       "standard": polarized_calibrators[field]["standard"],
+                       "standard": "manual",
                        "fluxdensity": polarized_calibrators[field]["fluxdensity"],
                        "spix": polarized_calibrators[field]["spix"],
                        "reffreq": polarized_calibrators[field]["reffreq"],
@@ -427,7 +426,7 @@ def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                        "msname": msname,
                        "usescratch": True,
                        "field": field,
-                       "standard": polarized_calibrators[field]["standard"],
+                       "standard": "manual",
                        "fluxdensity": polarized_calibrators[field]["fluxdensity"],
                        "spix": spix,
                        "reffreq": polarized_calibrators[field]["reffreq"],
@@ -1161,34 +1160,6 @@ def worker(pipeline, recipe, config):
     label = config["label_cal"]
     label_in = config["label_in"]
 
-    # define pol and unpol calibrators, P&B2017 + updated pol properties from NRAO web site (https://science.nrao.edu/facilities/vla/docs/manuals/obsguide/modes/pol, Table 7.2.7)
-    polarized_calibrators = {"3C138": {"standard": "manual",
-                                       "fluxdensity": [8.33843],
-                                       "spix": [-0.4981, -0.1552, -0.0102, 0.0223],
-                                       "reffreq": "1.47GHz",
-                                       "polindex": [0.078],
-                                       "polangle": [-0.16755],
-                                       "rotmeas": 0.0},
-                             "3C286": {"standard": "manual",
-                                       "fluxdensity": [14.7172],
-                                       "spix": [-0.4507, -0.1798, 0.0357],
-                                       "reffreq": "1.47GHz",
-                                       "polindex": [0.098],
-                                       "polangle": [0.575959],
-                                       "rotmeas": 0.0},
-                             "J1130-1449": {"standard": "manual",
-                                            "fluxdensity": [4.940],
-                                            "spix": 0,
-                                            "reffreq": "1.35GHz",
-                                            "polindex": [0.03],
-                                            "polangle": [-0.202893],
-                                            "rotmeas": 33},
-                             }
-    polarized_calibrators["J1331+3030"] = polarized_calibrators["3C286"]
-    polarized_calibrators["J0521+1638"] = polarized_calibrators["3C138"]
-    unpolarized_calibrators = ["PKS1934-63", "J1939-6342", "J1938-6341", "PKS 1934-638", "PKS 1934-63", "PKS1934-638",
-                               "PKS0408-65", "J0408-6545", "J0408-6544", "PKS 0408-65", "0407-658", "0408-658", "PKS 0408-658", "0408-65"]
-
     # loop over all MSs for this label
     for i, (msbase, prefix_msbase) in enumerate(zip(pipeline.msbasenames, pipeline.prefix_msbases)):
         msname = pipeline.form_msname(msbase, label_in)
@@ -1217,13 +1188,33 @@ def worker(pipeline, recipe, config):
                         'XX', 'XY', 'YX', 'YY']))
 
         if config["pol_calib"] != 'none':
-            pol_calib = ",".join(getattr(pipeline, config["pol_calib"])[i])
-            if pol_calib == 'J1130-1449':
-                caracal.log.info("CARACal knows only bandwidth averaged properties of J1130-1449 based on https://archive-gw-1.kat.ac.za/public/meerkat/MeerKAT-L-band-Polarimetric-Calibration.pdf")
+            pol_calib = pipeline.config["obsconf"][config["pol_calib"]][i]
+            if config["set_model_pol"]["nrao_model"]:
+                file_path = caracal.pckgdir + '/data/nrao_xcal.yml'
+                polarized_calibrators = yaml.safe_load(open(file_path, 'r', encoding='utf-8'))
+                polarized_calibrators["J1331+3030"] = polarized_calibrators["3C286"]
+                polarized_calibrators["J0521+1638"] = polarized_calibrators["3C138"]
+            elif config["set_model_pol"]["taylor_legodi_model"]:
+                polarized_calibrators = dict.fromkeys(["NAME"])
+                polarized_calibrators[pol_calib] = utils.read_taylor_legodi_row(msinfo, pol_calib)
+                if pol_calib == "3C286":
+                    polarized_calibrators["3C286"] = polarized_calibrators["J1331+3030"]
+                if pol_calib == "3C138":
+                    polarized_calibrators["3C138"] = polarized_calibrators["J0521+1638"]
+            elif len(config["set_model_pol"]["user_model"])>0:
+                polarized_calibrators[config["pol_calib"]] = config["set_model_pol"]["user_model"].split(',')
+            else:
+                raise RuntimeError("No model specified for xcal!")
+            #if pol_calib == 'J1130-1449':
+            #    caracal.log.info("CARACal knows only bandwidth averaged properties of J1130-1449 based on https://archive-gw-1.kat.ac.za/public/meerkat/MeerKAT-L-band-Polarimetric-Calibration.pdf")
         else:
             pol_calib = 'none'
+
         leakage_calib = ",".join(getattr(pipeline, config["leakage_calib"])[i])
 
+        unpolarized_calibrators = ["PKS1934-63", "J1939-6342", "J1938-6341", "PKS 1934-638", "PKS 1934-63",
+                                   "PKS1934-638", "PKS0408-65", "J0408-6545", "J0408-6544", "PKS 0408-65", "0407-658", "0408-658",
+                                   "PKS 0408-658", "0408-65"]
         # check if cross_callib needs to be applied
         if config['otfcal']:
             if pol_calib != 'none':
@@ -1338,7 +1329,7 @@ def worker(pipeline, recipe, config):
 
         # choose the strategy according to config parameters
         if leakage_calib in unpolarized_calibrators:
-            if pol_calib in polarized_calibrators:
+            if pol_calib != 'none':
                 caracal.log.info(
                     "You decided to calibrate the polarized angle with a polarized calibrator assuming a model for the calibrator and the leakage with an unpolarized calibrator.")
                 xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, refant, polarized_calibrators,

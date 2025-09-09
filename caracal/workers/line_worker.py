@@ -1623,9 +1623,9 @@ def worker(pipeline, recipe, config):
             if config['imcontsub']['mask_image'].split('.fits')[-1] != (None and 'sofia'):
                 
                 imcontsub_opts.update({"mask-image": '{0:s}/{1:s}'.format(
-                                    get_relative_path(pipeline.masking, pipeline), 
+                                    pipeline.masking, 
                                     config['imcontsub']['mask_image'])})    
-                print(imcontsub_opts)
+                print(imcontsub_opts,pipeline.masking)
 
 
             if config['imcontsub']['input_cube']== None:

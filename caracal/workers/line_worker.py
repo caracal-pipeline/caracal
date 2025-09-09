@@ -1619,14 +1619,12 @@ def worker(pipeline, recipe, config):
                 "segments": config['imcontsub']['segments'][0], #300,250 : these should be set automatically
                 "sigma-clip":  config['imcontsub']['sigma_clip'][0],
                 }
-
+            print(imcontsub_opts)
 
             if config['imcontsub']['mask_image'].split('.fits')[-1] != (None and 'sofia'):
                 
-                caracal.log.info('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ INPUTMASK $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
                 print(config['imcontsub']['mask_image'].split('.fits')[-1])
                 imcontsub_opts.update({"mask-image": config['imcontsub']['mask_image']})    
-                caracal.log.info('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ INPUTCUBE $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
 
 
             if config['imcontsub']['input_cube']== None:

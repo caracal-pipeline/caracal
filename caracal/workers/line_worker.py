@@ -1654,8 +1654,9 @@ def worker(pipeline, recipe, config):
                     'Subtracting continuum in the image domain for target {0:d}'.format(tt))
         
             else:
+                print(pipeline.output+config['imcontsub']['input_cube'])
                 if os.path.exists(pipeline.output+config['imcontsub']['input_cube']):
-                    print(pipeline.output+config['imcontsub']['input_cube'])
+                    p
                     caracal.log.info('Continum subtraction in the image plage on datacube {0:s} provided by user '.format(config['imcontsub']['input_cube']))
                     step = 'Image-continuum-subtraction-{0:s}'.format(config['imcontsub']['input_cube'])
                     imcontsub_opts.update({"infits": config['imcontsub']['input_cube']})
@@ -1667,7 +1668,6 @@ def worker(pipeline, recipe, config):
                     imcontsub_opts.update({"mask-image": '{0:s}/{1:s}'.format(
                                         get_relative_path(pipeline.masking, pipeline), 
                                         config['imcontsub']['mask_image'])})    
-                    print(imcontsub_opts)
   
                 recipe.add('cab/imcontsub', step,
                     imcontsub_opts,

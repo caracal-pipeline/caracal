@@ -1625,7 +1625,7 @@ def worker(pipeline, recipe, config):
             if not config['imcontsub']['input_cube']:
                 caracal.log.info('Continum subtraction in the image plane for target {0:d}'.format(tt))
 
-                imsub_image_cube_list.copy(image_cube_list)
+                imsub_image_cube_list= image_cube_list.copy()
 
                 for uu in range(len(imsub_image_cube_list)):
                     

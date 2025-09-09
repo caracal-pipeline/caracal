@@ -1622,10 +1622,16 @@ def worker(pipeline, recipe, config):
             print(config['imcontsub']['input_cube'])
             caracal.log.info(
                         '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ mask_name $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+            
+
+
+
             if not config['imcontsub']['input_cube']:
                 caracal.log.info('Continum subtraction in the image plane for target {0:d}'.format(tt))
                 cube_dir = get_relative_path(pipeline.cubes, pipeline)
-
+                dirlist = glob.glob('{0:s}/{1:s}/cube_*'.format(pipeline.output, cube_dir))
+                maxcube_dir = max([int(gi[-1]) for gi in dirlist])
+                
                 imsub_image_cube_list= image_cube_list.copy()
 
                 for uu in range(len(imsub_image_cube_list)):
@@ -1640,10 +1646,10 @@ def worker(pipeline, recipe, config):
                         caracal.log.info(
                         '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ mask_name $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
                         print(mask_name)
-                        imcontsub_opts.update({"mask-image": '{0:s}/{1:s}'.format(cube_dir,mask_name) + ':input'})
+                        imcontsub_opts.update({"mask-image": '{0:s}/{cube_{1:d}/{2:s}'.format(cube_dir,mask_name) + ':input'})
 
                     print(imsub_image_cube_list[uu].split('/')[-1])
-                    imcontsub_opts.update({"infits": '{0:s}/{1:s}'.format(cube_dir,imsub_image_cube_list[uu].split('/')[-1]) + ':input'})
+                    imcontsub_opts.update({"infits": '{0:s}/cube_{1:d}/{2:s}'.format(cube_dir,maxcube_dir,imsub_image_cube_list[uu].split('/')[-1]) + ':input'})
                     print(imcontsub_opts)
                     recipe.add('cab/imcontsub', step,
                         imcontsub_opts,

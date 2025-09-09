@@ -1639,6 +1639,7 @@ def worker(pipeline, recipe, config):
                     if config['imcontsub']['mask_image'] == 'sofia':                            
                             mask_name_tmp=imsub_image_cube_list[uu].split('/')[-1]
                             mask_name = mask_name_tmp.split('.image')[0]+'.image_mask.fits'
+                            print('{0:s}/cube_{1:d}/{2:s}'.format(cube_dir,maxcube_dir,mask_name))
                             if os.path.exists('{0:s}/cube_{1:d}/{2:s}'.format(cube_dir,maxcube_dir,mask_name)):
                                 caracal.log.info('Using the mask produced by SoFiA within the CARACal line-worker loop')
                                 imcontsub_opts.update({"mask-image": '{0:s}/cube_{1:d}/{2:s}'.format(cube_dir,maxcube_dir,mask_name) + ':input'})

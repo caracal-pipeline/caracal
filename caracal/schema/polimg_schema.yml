@@ -1,0 +1,291 @@
+type: map
+mapping:
+  polimg:
+    type: map
+    desc: Perform polarization imaging.
+    mapping:
+      enable:
+        type: bool
+        desc: Execute the polimg worker.
+        required: true
+        example: 'False'
+      label_in:
+        type: str
+        desc: Label of the .MS files to process.
+        required: false
+        example: 'corr'
+      rewind_flags:
+        desc: Rewind flags of the input .MS file(s) to specified version. Note that this is not applied to .MS file(s) you might be running "transfer_apply_gains" on.
+        type: map
+        mapping:
+          enable:
+            desc: Enable segment rewind_flags.
+            type: bool
+            required: false
+            example: 'True'
+          mode:
+            desc: If mode = 'reset_worker' rewind to the flag version before this worker if it exists, or continue if it does not exist; if mode = 'rewind_to_version' rewind to the flag version given by 'version' and 'transfer_apply_gains_version' below.
+            type: str
+            enum: [ 'reset_worker', 'rewind_to_version' ]
+            required: false
+            example: 'reset_worker'
+          version:
+            type: str
+            desc: Flag version to restore. This is applied to the .MS file(s) identified by "label" above. Set to "null" to skip this rewinding step. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__X' if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.
+            example: 'auto'
+            required: false
+      overwrite_flagvers:
+        desc: Allow CARACal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
+        type: bool
+        example: 'False'
+        required: false
+      ncpu:
+        type: int
+        desc: Number of CPUs used by WSClean. If set to 0 all available CPUs are used.
+        required: false
+        example: '0'
+      stokes:
+        type: str
+        enum: [ "QU","QUV","IQU","IQUV","I","Q","U","V" ]
+        desc: Stokes image to create. For this worker the options are "QU","QUV","IQU","IQUV","I","Q","U","V". Before this step, we recomand to perform the I imaging with the selfcal worker and to do the polarization imaging on the self-calibrated MS.
+        required: false
+        example: 'QUV'
+      make_images:
+        type: map
+        desc: make images
+        mapping:
+          enable:
+            type: bool
+            desc: List of options
+            required: false
+            example: 'True'
+          minuvw_m:
+            type: int
+            desc: Exclude baselines shorter than this value (given in metres) from the imaging and self-calibration loop.
+            required: false
+            example: '0'
+          img_npix:
+            type: int
+            desc: Number of pixels in output image.
+            required: false
+            example: '1800'
+          img_padding:
+            type: float
+            desc: Padding in WSClean. Set to -1 if you do not want to disable.
+            required: false
+            example: '1.3'
+          img_gain:
+            type: float
+            desc: Fraction of the peak that is cleaned in each minor iteration. Set to -1 if you do not want to disable.
+            required: false
+            example: '0.10'
+          img_mgain:
+            type: float
+            desc: Gain for major iterations in WSClean. I.e., maximum fraction of the image peak that is cleaned in each major iteration. A value of 1 means that all cleaning happens in the image plane and no major cycle is performed.
+            required: false
+            example: '0.90'
+          img_cell:
+            type: float
+            desc: Image pixel size (in units of arcsec).
+            required: false
+            example: '2.'
+          img_weight:
+            type: str
+            enum: [ "briggs", "uniform", "natural" ]
+            desc: Type of image weighting, where the options are 'briggs', 'uniform', and 'natural'. If 'briggs', set the 'img_robust' parameter.
+            required: false
+            example: 'briggs'
+          img_robust:
+            type: float
+            desc: Briggs robust value.
+            required: false
+            example: '0.'
+          img_mfs_weighting:
+            type: bool
+            desc: Enables MF weighting. Default is enabled.
+            required: false
+            example: 'false'
+          img_taper:
+            type: str
+            desc: Gaussian taper for imaging (in units of arcsec).
+            required: false
+            example: '0.'
+          img_maxuv_l:
+            type: float
+            desc: Taper for imaging (in units of lambda).
+            required: false
+            example: '0.'
+          img_transuv_l:
+            type: float
+            desc: Transition length of tukey taper (taper-tukey in WSClean, in % of maxuv).
+            required: false
+            example: '10.'
+          img_niter:
+            type: int
+            desc: Number of cleaning iterations.
+            required: false
+            example: '1000000'
+          img_nmiter:
+            type: int
+            desc: Number of major cycles.
+            required: False
+            example: '0'
+          img_nchans:
+            type: int
+            desc: Number of channels in output image.
+            required: false
+            example: '3'
+          img_chan_range:
+            type: str
+            desc: Channel range to be imaged. Comma-separated integer values.
+            required: false
+            example: ''
+          img_joinchans:
+            type: bool
+            desc: Join channels to create MFS image.
+            required: false
+            example: 'True'
+          img_squared_chansjoin:
+            type: bool
+            desc: Search peaks in the sum of Q^2 and/or U^2 image to clean. If 'join-polarisations' will set to True peaks will be search in the sum of Q^2+U^2.
+            required: false
+            example: 'True'
+          img_join_polarizations:
+            type: bool
+            desc: In combination with 'img_squared_chansjoin' will clean the image searching the peaks in the sum of Q^2+U^2.
+            required: false
+            example: 'True'
+          img_specfit_nrcoeff:
+            type: int
+            desc: Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1. Use 0 to disable spectral fitting. Note that spectral fitting is required if you want to do subsequent continumm subtraction using crystalball.
+            required: false
+            example: '2'
+          img_multiscale:
+            type: bool
+            desc: Switch on multiscale cleaning.
+            required: false
+            example: 'False'
+          img_multiscale_scales:
+            type: str
+            desc: Comma-separated integer scales for multiscale cleaning in pixels. If set to an empty string WSClean selects the scales automatically. These include the 0 scale, a scale calculated based on the beam size, and all scales obtained increasing the scale by a factor of 2 until the image size is reached.
+            required: false
+            example: ''
+          img_nrdeconvsubimg:
+            desc: Speed-up deconvolution by splitting the image into a number of subimages, which are deconvolved in parallel. This parameter sets the number of subimages as follows. If set to 1 no parallel deconvolution is performed. If set to 0 the number of subimages is the same as the number of CPUs used by the selfcal worker (see "ncpu" parameter above). If set to a number > 1 , the number of subimages is greater than or equal to the one requested by the user.
+            type: int
+            required: false
+            example: '0'
+          img_nwlayers_factor:
+            type: int
+            desc: Use automatic calculation of the number of w-layers, but multiple that number by the given factor. This can e.g. be useful for increasing w-accuracy. In practice, if there are more cores available than the number of w-layers asked for then the number of w-layers used will equal the number of cores available. Set to -1 if you do not want to disable.
+            required: false
+            example: '3'
+          col:
+            type: str
+            desc: Column(s) to image.
+            required: false
+            example: 'DATA, CORRECTED_DATA'
+          clean_cutoff:
+            type: float
+            desc: Cleaning threshold to be used by WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the noise level estimated by WSClean from the residual image before the start of every major deconvolution iteration.
+            required: false
+            example: '0.5'
+          cleanmask_method:
+            type: str
+            desc: Method used to create the clean mask. The possible values are 1) 'wsclean' to use WSClean's auto-masking (threshold set by clean_mask_threshold below); 2) a prefix string to use an existing .FITS mask located in output/masking and called name.fits.
+            required: false
+            example: 'wsclean'
+          cleanmask_thr:
+            type: float
+            desc: Threshold used to create the clean mask when WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the (local) noise level. Set to -1 if you do not want to disable.
+            required: false
+            example: '5.0'
+          cleanmask_localrms:
+            type: bool
+            desc: Use a local-rms measurement when creating a clean mask with WSClean. This local-rms setting is also used for the clean_threshold above. Otherwise it is only used to define the clean mask, and clean_threshold is in terms of the global noise (rather than the local noise).
+            required: false
+            example: 'False'
+          cleanmask_localrms_window:
+            desc: Width of the window used to measure the local rms when creating the clean mask. The window width is in PSFs for clean_mask_method = 'wsclean'.
+            type: int
+            required: false
+            example: '31'
+          weighting_rank_filter:
+            desc: Filter the weights and set high weights to the local mean. The level parameter specifies the filter level; any value larger than level*localmean will be set to level*localmean.
+            type: float
+            required: false
+            example: '3.'
+          absmem:
+            type: float
+            example: '100.0'
+            required: false
+            desc: "Specifies a fixed amount of memory in gigabytes."
+      make_extra_images:
+        type: map
+        desc: make convolved images and/or PB images.
+        mapping:
+          enable:
+            type: bool
+            desc: List of options
+            required: false
+            example: 'False'
+          schema:
+            type: str
+            desc: specify if you want single channel images (single), cubes (cube), or both (both).
+            required: false
+            example: 'both'
+          convl_images:
+            type: bool
+            desc: Convolve output images to a common resolution
+            required: false
+            example: 'False'
+          convl_beam:
+            type: str
+            desc: Target beam for images. If empty the target beam is the channel zero beam. Otherwise set as 'bmin, bmaj, bpa' in deg units.
+            required: false
+            example: ''
+          # bug in stimela
+          #circular_beam:
+          #  type: bool
+          #  desc: Force the target beam to be circular
+          #  required: false
+          #  example: 'False'
+          make_pb_images:
+            type: bool
+            desc: Make PB images
+            required: false
+            example: 'True'
+      flagging_summary:
+        type: map
+        desc: Output the flagging summary.
+        mapping:
+          enable:
+            type: bool
+            desc: Enable the 'flagging_summary' segment.
+            required: false
+            example: 'False'
+      report:
+        type: bool
+        required: false
+        desc: (Re)generate a full HTML report at the end of this worker.
+        example: 'False'
+      cabs:
+        desc: 'Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.'
+        required: false
+        seq:
+          - type: map
+            mapping:
+              name:
+                type: str
+                required: true
+                example: 'cabname'
+              version:
+                type: str
+                required: false
+                example: ''
+              tag:
+                type: str
+                required: false
+                example: ''
+        example: ''
+

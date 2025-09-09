@@ -263,7 +263,7 @@ mapping:
             seq:
               - type: str
             required: false
-            desc: Sequence of flagging rules, of the form "ms_pattern key:value key:value"
+            desc: Sequence of flagging rules, of the form "ms_pattern key:value key:value". e.g.  ['antenna:XX scan:X', 'antenna:xxx timerange:YYYY/MM/DD/HH:MM:SS~YYYY/MM/DD/HH:MM:SS']
             example: ''
       flag_rfi:
         desc: Flag RFI using AOFlagger, Tricolour, or CASA FLAGDATA with tfcrop.

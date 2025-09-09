@@ -1660,7 +1660,7 @@ def worker(pipeline, recipe, config):
                     step = 'Image-continuum-subtraction-{0:s}'.format(config['imcontsub']['input_cube'])
                     imcontsub_opts.update({"infits": config['imcontsub']['input_cube']})
                 else:
-                    caracal.log.error('Input datacube not found in output/ or output/cubes please check your configuration file.')'Expected "nchan,chan0,chanw" (note the commas) where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mstransform:mode')
+                    caracal.log.error('Input datacube not found in output/ or output/cubes please check your configuration file.')
                     raise caracal.ConfigurationError("can't parse imcontsub:input_cube: setting")                    
 
                 if config['imcontsub']['mask_image'].split('.fits')[-1] != (None and 'sofia'):

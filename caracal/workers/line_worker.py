@@ -1620,12 +1620,7 @@ def worker(pipeline, recipe, config):
                 "sigma-clip":  config['imcontsub']['sigma_clip'][0],
                 }
 
-            if config['imcontsub']['mask_image'].split('.fits')[-1] != (None and 'sofia'):
-                
-                imcontsub_opts.update({"mask-image": '{0:s}/{1:s}'.format(
-                                    get_relative_path(pipeline.masking, pipeline), 
-                                    config['imcontsub']['mask_image'])})    
-                print(imcontsub_opts)
+
 
 
             if config['imcontsub']['input_cube']== None:
@@ -1659,12 +1654,20 @@ def worker(pipeline, recipe, config):
                     'Subtracting continuum in the image domain for target {0:d}'.format(tt))
         
             else:
-                caracal.log.info('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ INPUTCUBE $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+                if os.path.exists(pipeline.output+config['imcontsub']['input_cube']):
+                    caracal.log.info('Continum subtraction in the image plage on datacube {0:s} provided by user '.format(config['imcontsub']['input_cube']))
+                    step = 'Image-continuum-subtraction-{0:s}'.format(config['imcontsub']['input_cube'])
+                    imcontsub_opts.update({"infits": config['imcontsub']['input_cube']})
 
-                step = 'Image-continuum-subtraction-INPUTCUBE'
-            
-                imcontsub_opts.update({"infits": config['imcontsub']['input_cube']})
-                print(imcontsub_opts)
+
+                if config['imcontsub']['mask_image'].split('.fits')[-1] != (None and 'sofia'):
+                    caracal.log.info(
+                            'Mask provided by user, continuum subtraction will exclude the masked pixels from fitting.')
+                    imcontsub_opts.update({"mask-image": '{0:s}/{1:s}'.format(
+                                        get_relative_path(pipeline.masking, pipeline), 
+                                        config['imcontsub']['mask_image'])})    
+                    print(imcontsub_opts)
+  
                 recipe.add('cab/imcontsub', step,
                     imcontsub_opts,
                     input=pipeline.output,

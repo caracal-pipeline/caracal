@@ -1619,7 +1619,9 @@ def worker(pipeline, recipe, config):
                 "segments": config['imcontsub']['segments'], #300,250 : these should be set automatically
                 "sigma-clip":  config['imcontsub']['sigma_clip'][0],
                 }
-
+            print(config['imcontsub']['input_cube'])
+            caracal.log.info(
+                        '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ mask_name $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
             if config['imcontsub']['input_cube']== None:
                 caracal.log.info('Continum subtraction in the image plane for target '.format(tt))
 
@@ -1673,7 +1675,7 @@ def worker(pipeline, recipe, config):
                                             config['imcontsub']['mask_image'])})    
                     else:
                         caracal.log.error('Mask datacube not found in output/masking but a mask is provided, please check your configuration file')
-                        raise caracal.ConfigurationError("can't parse imcontsub:maks_image: setting") 
+                        raise caracal.ConfigurationError("can't parse imcontsub:mask_image: setting") 
   
                 recipe.add('cab/imcontsub', step,
                     imcontsub_opts,

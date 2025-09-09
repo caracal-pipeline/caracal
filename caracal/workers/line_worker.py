@@ -1684,7 +1684,7 @@ def worker(pipeline, recipe, config):
                 recipe.jobs = []
 
                 caracal.log.info(
-                    'Subtracting continuum in the image domain for datacube {0:s} provided by user '.format(config['imcontsub']['input_cube'])
+                    'Subtracting continuum in the image domain for datacube {0:s} provided by user '.format(config['imcontsub']['input_cube']))
 
 
         # # Again, in some cases this should run once

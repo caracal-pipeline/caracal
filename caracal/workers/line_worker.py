@@ -1622,8 +1622,8 @@ def worker(pipeline, recipe, config):
             print(config['imcontsub']['input_cube'])
             caracal.log.info(
                         '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ mask_name $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
-            if config['imcontsub']['input_cube']== '':
-                caracal.log.info('Continum subtraction in the image plane for target '.format(tt))
+            if not config['imcontsub']['input_cube']:
+                caracal.log.info('Continum subtraction in the image plane for target {0:d}'.format(tt))
 
                 sub_image_cube_list = image_cube_list
 
@@ -1633,7 +1633,7 @@ def worker(pipeline, recipe, config):
 
 
                     if config['imcontsub']['mask_image'] == 'sofia':
-                        caracal.log.info('Using the image produced by sofia in previous loop '.format(tt))
+                        caracal.log.info('Using the image produced by sofia in previous loop {0:d}'.format(tt))
 
                         mask_name_tmp=simage_cube_list[uu].split('/')[-1]
                         mask_name = mask_name_tmp.split('.image')[0]+'.image_mask.fits'

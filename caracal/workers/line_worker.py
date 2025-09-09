@@ -1664,7 +1664,7 @@ def worker(pipeline, recipe, config):
                 step = 'Image-continuum-subtraction-INPUTCUBE'
             
                 imcontsub_opts.update({"infits": config['imcontsub']})
-                
+                print(imcontsub_opts)
                 recipe.add('cab/imcontsub', step,
                     imcontsub_opts,
                     input=pipeline.output,

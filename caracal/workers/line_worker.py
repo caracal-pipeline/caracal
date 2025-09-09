@@ -1624,6 +1624,7 @@ def worker(pipeline, recipe, config):
                         '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ mask_name $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
             if not config['imcontsub']['input_cube']:
                 caracal.log.info('Continum subtraction in the image plane for target {0:d}'.format(tt))
+                cube_dir = get_relative_path(pipeline.cubes, pipeline)
 
                 imsub_image_cube_list= image_cube_list.copy()
 
@@ -1631,16 +1632,15 @@ def worker(pipeline, recipe, config):
                     
                     step = 'Image-continuum-subtraction-{0:d}'.format(uu)
 
-
+                    
                     if config['imcontsub']['mask_image'] == 'sofia':
                         caracal.log.info('Using the image produced by sofia in previous loop {0:d}'.format(tt))
-
                         mask_name_tmp=imsub_image_cube_list[uu].split('/')[-1]
                         mask_name = mask_name_tmp.split('.image')[0]+'.image_mask.fits'
                         caracal.log.info(
                         '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ mask_name $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
                         print(mask_name)
-                        imcontsub_opts.update({"mask-image": mask_name + ':input'})
+                        imcontsub_opts.update({"mask-image": '{},{}'.format(cube_dir,mask_name) + ':input'})
 
                     print(imsub_image_cube_list[uu].split('/')[-1])
                     imcontsub_opts.update({"infits": imsub_image_cube_list[uu].split('/')[-1] + ':input'})

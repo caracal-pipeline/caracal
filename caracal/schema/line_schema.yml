@@ -628,21 +628,21 @@ mapping:
             type: seq
             seq:
               - type: float
-            example: '3'
+            example: '5'
             required: False
           order:
             desc: Order of spline. If given as a list of size N, then N iterations will be perfomed.
             type: seq
             seq:
               - type: int
-            example: '3, 3'
+            example: '3'
             required: False
           segments: 
             desc: Width of spline segments in km/s. If given as a list, then it must have same size as --order.
             type: seq
             seq:
               - type: float
-            example: '300, 250'
+            example: '250'
             required: False
           automask-per-iter:
             desc: Generate a new mask per iteration.

@@ -1620,10 +1620,8 @@ def worker(pipeline, recipe, config):
                 "sigma-clip":  config['imcontsub']['sigma_clip'][0],
                 }
 
-
-
-
             if config['imcontsub']['input_cube']== None:
+                caracal.log.info('Continum subtraction in the image plane for target '.format(tt))
 
                 sub_image_cube_list = image_cube_list
 
@@ -1633,6 +1631,7 @@ def worker(pipeline, recipe, config):
 
 
                     if config['imcontsub']['mask_image'] == 'sofia':
+                        caracal.log.info('Using the image produced by sofia in previous loop '.format(tt))
 
                         mask_name_tmp=simage_cube_list[uu].split('/')[-1]
                         mask_name = mask_name_tmp.split('.image')[0]+'.image_mask.fits'
@@ -1654,20 +1653,27 @@ def worker(pipeline, recipe, config):
                     'Subtracting continuum in the image domain for target {0:d}'.format(tt))
         
             else:
-                print('{0:s}/{1:s}'.format(pipeline.output,config['imcontsub']['input_cube']))
-                if os.path.exists('{0:s}/{1:s}'.format(pipeline.output,config['imcontsub']['input_cube'])):
-                    p
+
+
+                if os.path.exists('{0:s}/{1:s}'.format(pipeline.output,config['imcontsub']['input_cube'])) or os.path.exists('{0:s}/cubes/{1:s}'.format(pipeline.output,config['imcontsub']['input_cube'])):           
                     caracal.log.info('Continum subtraction in the image plage on datacube {0:s} provided by user '.format(config['imcontsub']['input_cube']))
                     step = 'Image-continuum-subtraction-{0:s}'.format(config['imcontsub']['input_cube'])
                     imcontsub_opts.update({"infits": config['imcontsub']['input_cube']})
-
+                else:
+                    caracal.log.error('Input datacube not found in output/ or output/cubes please check your configuration file.')'Expected "nchan,chan0,chanw" (note the commas) where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mstransform:mode')
+                    raise caracal.ConfigurationError("can't parse imcontsub:input_cube: setting")                    
 
                 if config['imcontsub']['mask_image'].split('.fits')[-1] != (None and 'sofia'):
                     caracal.log.info(
                             'Mask provided by user, continuum subtraction will exclude the masked pixels from fitting.')
-                    imcontsub_opts.update({"mask-image": '{0:s}/{1:s}'.format(
-                                        get_relative_path(pipeline.masking, pipeline), 
-                                        config['imcontsub']['mask_image'])})    
+                    
+                    if os.path.exists('{0:s}/{1:s}'.format(pipeline.masking,config['imcontsub']['mask_image'])):
+                        imcontsub_opts.update({"mask-image": '{0:s}/{1:s}'.format(
+                                            get_relative_path(pipeline.masking, pipeline), 
+                                            config['imcontsub']['mask_image'])})    
+                    else:
+                        caracal.log.error('Mask datacube not found in output/masking but a mask is provided, please check your configuration file')
+                        raise caracal.ConfigurationError("can't parse imcontsub:maks_image: setting") 
   
                 recipe.add('cab/imcontsub', step,
                     imcontsub_opts,
@@ -1678,7 +1684,7 @@ def worker(pipeline, recipe, config):
                 recipe.jobs = []
 
                 caracal.log.info(
-                    'Subtracting continuum in the image domain for target {0:d}'.format(tt))
+                    'Subtracting continuum in the image domain for datacube {0:s} provided by user '.format(config['imcontsub']['input_cube'])
 
 
         # # Again, in some cases this should run once

@@ -1642,7 +1642,7 @@ def worker(pipeline, recipe, config):
                         mask_name_tmp=simage_cube_list[uu].split('/')[-1]
                         mask_name = mask_name_tmp.split('.image')[0]+'.image_mask.fits'
                         caracal.log.info(
-                        '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ mask_name $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+                        '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ mask_name $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
                         print(mask_name)
                         imcontsub_opts.update({"mask-image": mask_name + ':input'})
 

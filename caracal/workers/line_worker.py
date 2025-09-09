@@ -1615,6 +1615,10 @@ def worker(pipeline, recipe, config):
                 "segments": config['imcontsub']['segments'], #300,250 : these should be set automatically
                 }
 
+            
+            if config['imcontsub']['sigma_clip']:
+                imcontsub_opts.update({'sigma-clip' :  config['imcontsub']['sigma_clip']})
+
             caracal.log.info('Image-plane continuum subtraction')
 
             #find where cubes generally are

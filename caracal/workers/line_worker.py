@@ -1666,7 +1666,7 @@ def worker(pipeline, recipe, config):
             
                 imcontsub_opts.update({"infits": config['imcontsub']})
                 
-                recipe.add('cab/sofia', step,
+                recipe.add('cab/imcontsub', step,
                     imcontsub_opts,
                     input=pipeline.output,
                     output=pipeline.output,

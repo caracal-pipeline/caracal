@@ -1646,7 +1646,7 @@ def worker(pipeline, recipe, config):
                         caracal.log.info(
                         '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ mask_name $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
                         print(mask_name)
-                        imcontsub_opts.update({"mask-image": '{0:s}/{cube_{1:d}/{2:s}'.format(cube_dir,mask_name) + ':input'})
+                        imcontsub_opts.update({"mask-image": '{0:s}/cube_{1:d}/{2:s}'.format(cube_dir,mask_name) + ':input'})
 
                     print(imsub_image_cube_list[uu].split('/')[-1])
                     imcontsub_opts.update({"infits": '{0:s}/cube_{1:d}/{2:s}'.format(cube_dir,maxcube_dir,imsub_image_cube_list[uu].split('/')[-1]) + ':input'})

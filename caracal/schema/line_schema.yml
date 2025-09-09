@@ -634,7 +634,7 @@ mapping:
             desc: Order of spline. If given as a list of size N, then N iterations will be perfomed.
             type: seq
             seq:
-              - type: float
+              - type: int
             example: '3, 3'
             required: False
           segments: 

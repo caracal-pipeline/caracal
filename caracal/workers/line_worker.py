@@ -1635,7 +1635,7 @@ def worker(pipeline, recipe, config):
                     if config['imcontsub']['mask_image'] == 'sofia':
                         caracal.log.info('Using the image produced by sofia in previous loop {0:d}'.format(tt))
 
-                        mask_name_tmp=simage_cube_list[uu].split('/')[-1]
+                        mask_name_tmp=image_cube_list[uu].split('/')[-1]
                         mask_name = mask_name_tmp.split('.image')[0]+'.image_mask.fits'
                         caracal.log.info(
                         '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ mask_name $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')

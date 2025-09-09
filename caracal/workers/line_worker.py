@@ -1624,7 +1624,7 @@ def worker(pipeline, recipe, config):
             if config['imcontsub']['mask_image'].split('.fits')[-1] != (None and 'sofia'):
                 
                 caracal.log.info('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ INPUTMASK $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
-                print(config['imcontsub']['mask_image'].split('.fits'))
+                print(config['imcontsub']['mask_image'].split('.fits')[-1])
                 imcontsub_opts.update({"mask-image": config['imcontsub']['mask_image']})    
                 caracal.log.info('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ INPUTCUBE $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
 
@@ -1649,7 +1649,7 @@ def worker(pipeline, recipe, config):
 
                     print(simage_cube_list[uu].split('/')[-1])
                     imcontsub_opts.update({"infits": simage_cube_list[uu].split('/')[-1] + ':input'})
-                    recipe.add('cab/sofia', step,
+                    recipe.add('cab/imcontsub', step,
                         imcontsub_opts,
                         input=pipeline.output,
                         output=pipeline.output,

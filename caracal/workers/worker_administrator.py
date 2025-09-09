@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 from caracal.dispatch_crew import utils
 from collections import OrderedDict
 import caracal

@@ -1,5 +1,3 @@
-# -*- coding: future_fstrings -*-
-
 from caracal import log
 import caracal
 import os
@@ -252,8 +250,8 @@ def main(argv):
             _, version = parser.validate_config(sample_config_path)
             if version != SCHEMA_VERSION:
                 log.warning("Sample config file {} version is {}, current CARACal version is {}.".format(sample_config,
-                                                                                                         version,
-                                                                                                         SCHEMA_VERSION))
+                                                                                                         SCHEMA_VERSION,
+                                                                                                         version))
                 log.warning("Proceeding anyway, but please notify the CARACal team to ship a newer sample config!")
         except config_parser.ConfigErrors as exc:
             log.error("{}, list of errors follows:".format(exc))
@@ -284,7 +282,8 @@ def main(argv):
         config, version = parser.validate_config(config_file)
         if version != SCHEMA_VERSION:
             log.warning("Config file {} schema version is {}, current CARACal version is {}".format(config_file,
-                                                                                                    version, SCHEMA_VERSION))
+                                                                                                    SCHEMA_VERSION,
+                                                                                                    version))
             log.warning("Will try to proceed anyway, but please be advised that configuration options may have changed.")
         # populate parser with items from config
         parser.populate_parser(config)

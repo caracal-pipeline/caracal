@@ -1615,9 +1615,9 @@ def worker(pipeline, recipe, config):
             
             imcontsub_opts = {
                 "output-prefix": config['imcontsub']['label_out'],
-                "order": config['imcontsub']['order'],
-                "segments": config['imcontsub']['segments'], #300,250 : these should be set automatically
-                "sigma-clip":  config['imcontsub']['sigma_clip'],
+                "order": config['imcontsub']['order'][0],
+                "segments": config['imcontsub']['segments'][0], #300,250 : these should be set automatically
+                "sigma-clip":  config['imcontsub']['sigma_clip'][0],
                 }
 
 

@@ -1664,9 +1664,9 @@ def worker(pipeline, recipe, config):
                         else:
                             restfreq_cube = config['imcontsub']['rest-freq']*1e6
                         hdul_cube['cdelt3'] = -C * float(hdul_cube['cdelt3']) / restfreq_cube
-                        vel_range = hdul_cube['cdelt3'] * hdul_cube['naxis3']/1e3                 
+                        vel_range = abs(hdul_cube['cdelt3'] * hdul_cube['naxis3']/1e3)                 
                     else:
-                        vel_range = hdul_cube['cdelt3'] * hdul_cube['naxis3']
+                        vel_range = abs(hdul_cube['cdelt3'] * hdul_cube['naxis3'])
                         if vel_range > 1e4:
                             # if cube in m/s then convert the velocity_range in km/s
                             vel_range = vel_range / 1e3

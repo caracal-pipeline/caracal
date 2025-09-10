@@ -1694,7 +1694,7 @@ def worker(pipeline, recipe, config):
                 cubepaths_to_check = [
                     '{0:s}/{1:s}'.format(pipeline.output,config['imcontsub']['input_cube']),
                     '{0:s}/cubes/{1:s}'.format(pipeline.output,config['imcontsub']['input_cube']),
-                    '{0:s}/cubes/cube_{0:d}/{1:s}'.format(pipeline.output,maxcube_dir,config['imcontsub']['input_cube']),
+                    '{0:s}/cubes/cube_{1:d}/{1:s}'.format(pipeline.output,maxcube_dir,config['imcontsub']['input_cube']),
                 ]
                 cubepath = next((path for path in cubepaths_to_check if path.exists()), None)
                 cubepath = cubepath.split('output/')[-1]

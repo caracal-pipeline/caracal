@@ -1623,7 +1623,8 @@ def worker(pipeline, recipe, config):
             caracal.log.info('Image-plane continuum subtraction')
 
             #find where cubes generally are
-            dirlist = glob.glob('{0:s}/{1:s}/cube_*'.format(pipeline.output, pipeline.cubes))
+
+            dirlist = glob.glob('{0:s}/cube_*'.format(pipeline.cubes))
             maxcube_dir = max([int(gi[-1]) for gi in dirlist])
             
             # Here starts the loop within the logic of the line worker. Imcontsub will use subtract into the datacube in the cubes directory of maximum order.

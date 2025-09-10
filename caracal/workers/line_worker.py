@@ -1702,7 +1702,7 @@ def worker(pipeline, recipe, config):
                 if cubepath:
                     caracal.log.info('Continum subtraction in the image plage on datacube {0:s} provided by user '.format(config['imcontsub']['input_cube']))
                     step = 'Image-continuum-subtraction-{0:s}'.format(config['imcontsub']['input_cube'])
-                    imcontsub_opts.update({"infits": config['imcontsub']['input_cube']})
+                    imcontsub_opts.update({"infits": cubepath})
 
                     ##the segment size is chosen as the datacube velocity range / spline order
                     if all(item == 0. for item in config['imcontsub']['segments']):
@@ -1743,7 +1743,7 @@ def worker(pipeline, recipe, config):
                 recipe.add('cab/imcontsub', step,
                     imcontsub_opts,
                     input=pipeline.output,
-                    output='{0:s}/{1:s}'.format(pipeline.output,cubepath),
+                    output=pipeline.output,
                     label='{0:s}:: Single cube continuum subtraction'.format(step))
                 recipe.run()
                 recipe.jobs = []

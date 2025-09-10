@@ -1680,7 +1680,7 @@ def worker(pipeline, recipe, config):
                     recipe.add('cab/imcontsub', step,
                         imcontsub_opts,
                         input=pipeline.output,
-                        output=pipeline.output,
+                        output='/'.join(imsub_image_cube_list[uu].split('/')[:-1]),
                         label='{0:s}:: Image continuum subtraction for cube '.format(step, input_cube))
                     recipe.run()
                     recipe.jobs = []
@@ -1742,7 +1742,7 @@ def worker(pipeline, recipe, config):
                 recipe.add('cab/imcontsub', step,
                     imcontsub_opts,
                     input=pipeline.output,
-                    output=pipeline.output,
+                    output='{0:s}/{1:s}'.format(pipeline.output,cubepath),
                     label='{0:s}:: Single cube continuum subtraction'.format(step))
                 recipe.run()
                 recipe.jobs = []

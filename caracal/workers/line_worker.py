@@ -1736,8 +1736,8 @@ def worker(pipeline, recipe, config):
                                             get_relative_path(pipeline.masking, pipeline), 
                                             config['imcontsub']['mask_image'])})    
                     else:
-                        caracal.log.error('Mask datacube not found in output/masking but a mask is provided, please check your configuration file')
-                        raise caracal.ConfigurationError("check imcontsub:mask_image: setting") 
+                        caracal.log.info('Mask datacube not found in output/masking')
+                        caracal.log.info('Will proceed with automasking')
                 print(imcontsub_opts)
   
                 recipe.add('cab/imcontsub', step,

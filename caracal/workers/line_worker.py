@@ -1657,7 +1657,7 @@ def worker(pipeline, recipe, config):
                             caracal.log.info('Will proceed with automasking')
 
                     ##the segment size is chosen as the datacube velocity range / spline order
-                    if (config['imcontsub']['segments']==0).all():
+                    if all(item == 0. for item config['imcontsub']['segments']):
                         hdul_cube = fits.getheader('{0:s}/cube_{1:d}/{2:s}'.format(pipeline.cubes,maxcube_dir,input_cube))
                         if 'FREQ' in hdul_cube['CTYPE3']:
                             if 'RESTFREQ' in hdul_cube:
@@ -1705,7 +1705,7 @@ def worker(pipeline, recipe, config):
                     imcontsub_opts.update({"infits": config['imcontsub']['input_cube']})
 
                     ##the segment size is chosen as the datacube velocity range / spline order
-                    if (config['imcontsub']['segments']==0).all():
+                    if all(item == 0. for item config['imcontsub']['segments']):
                         hdul_cube = fits.getheader(input_cube)
                         if 'FREQ' in hdul_cube['CTYPE3']:
                             if 'RESTFREQ' in hdul_cube:

@@ -1663,13 +1663,13 @@ def worker(pipeline, recipe, config):
                             restfreq_cube = hdul_cube['RESTFREQ']
                         else:
                             restfreq_cube = config['imcontsub']['rest-freq']*1e6
-                        hdul_cube['cdelt3'] = -C * float(headcube['cdelt3']) / restfreq_cube
-                        vel_range = hdul_cube['cdelt3'] * hdul_cube['naxis3']                    
+                        hdul_cube['cdelt3'] = -C * float(hdul_cube['cdelt3']) / restfreq_cube
+                        vel_range = hdul_cube['cdelt3'] * hdul_cube['naxis3']/1e3                 
                     else:
                         vel_range = hdul_cube['cdelt3'] * hdul_cube['naxis3']
-                        if vel_range > 1e3 or hdul_cube['cunit3'] == 'm/s':
+                        if vel_range > 1e4:
                             # if cube in m/s then convert the velocity_range in km/s
-                            vel_range = vel_range * 1e3
+                            vel_range = vel_range / 1e3
                     config['imcontsub']['segments'] = [vel_range / item for item in config['imcontsub']['order']]
                     imcontsub_opts.update({"segments": config['imcontsub']['segments']})
                     
@@ -1713,9 +1713,9 @@ def worker(pipeline, recipe, config):
                         vel_range = hdul_cube['cdelt3'] * hdul_cube['naxis3']                    
                     else:
                         vel_range = hdul_cube['cdelt3'] * hdul_cube['naxis3']
-                        if vel_range > 1e3 or hdul_cube['cunit3'] == 'm/s':
+                        if vel_range > 1e4:
                             # if cube in m/s then convert the velocity_range in km/s
-                            vel_range = vel_range * 1e3
+                            vel_range = vel_range / 1e3
 
                     config['imcontsub']['segments'] = [vel_range / item for item in config['imcontsub']['order']]
                     imcontsub_opts.update({"segments": config['imcontsub']['segments']})

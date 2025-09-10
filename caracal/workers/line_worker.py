@@ -1670,6 +1670,7 @@ def worker(pipeline, recipe, config):
                         if vel_range > 1e4:
                             # if cube in m/s then convert the velocity_range in km/s
                             vel_range = vel_range / 1e3
+                    print(vel_range)
                     config['imcontsub']['segments'] = [vel_range / item for item in config['imcontsub']['order']]
                     imcontsub_opts.update({"segments": config['imcontsub']['segments']})
                     

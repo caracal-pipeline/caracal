@@ -1653,8 +1653,8 @@ def worker(pipeline, recipe, config):
                                                     get_relative_path(pipeline.masking, pipeline), 
                                                     config['imcontsub']['mask_image'])})    
                         else:
-                            caracal.log.error('Mask datacube not found in output/masking')
-                            raise caracal.ConfigurationError("check imcontsub:mask_image: setting")                         
+                            caracal.log.info('Mask datacube not found in output/masking')
+                            caracal.log.info('Will proceed with automasking')
 
                     ##the segment size is chosen as the datacube velocity range / spline order
                     if not config['imcontsub']['segments']:

@@ -1657,7 +1657,7 @@ def worker(pipeline, recipe, config):
                             caracal.log.info('Will proceed with automasking')
 
                     ##the segment size is chosen as the datacube velocity range / spline order
-                    if not config['imcontsub']['segments']:
+                    if (config['imcontsub']['segments']==0).all():
                         hdul_cube = fits.getheader('{0:s}/cube_{1:d}/{2:s}'.format(pipeline.cubes,maxcube_dir,input_cube))
                         if 'FREQ' in hdul_cube['CTYPE3']:
                             if 'RESTFREQ' in hdul_cube:
@@ -1705,21 +1705,22 @@ def worker(pipeline, recipe, config):
                     imcontsub_opts.update({"infits": config['imcontsub']['input_cube']})
 
                     ##the segment size is chosen as the datacube velocity range / spline order
-                    hdul_cube = fits.getheader(input_cube)
-                    if 'FREQ' in hdul_cube['CTYPE3']:
-                        if 'RESTFREQ' in hdul_cube:
-                            restfreq_cube = hdul_cube['RESTFREQ']
+                    if (config['imcontsub']['segments']==0).all():
+                        hdul_cube = fits.getheader(input_cube)
+                        if 'FREQ' in hdul_cube['CTYPE3']:
+                            if 'RESTFREQ' in hdul_cube:
+                                restfreq_cube = hdul_cube['RESTFREQ']
+                            else:
+                                restfreq_cube = config['imcontsub']['rest-freq']*1e6
+                            hdul_cube['cdelt3'] = -C * float(headcube['cdelt3']) / restfreq_cube
+                            vel_range = hdul_cube['cdelt3'] * hdul_cube['naxis3']                    
                         else:
-                            restfreq_cube = config['imcontsub']['rest-freq']*1e6
-                        hdul_cube['cdelt3'] = -C * float(headcube['cdelt3']) / restfreq_cube
-                        vel_range = hdul_cube['cdelt3'] * hdul_cube['naxis3']                    
-                    else:
-                        vel_range = hdul_cube['cdelt3'] * hdul_cube['naxis3']
-                        if vel_range > 1e4:
-                            # if cube in m/s then convert the velocity_range in km/s
-                            vel_range = vel_range / 1e3
+                            vel_range = hdul_cube['cdelt3'] * hdul_cube['naxis3']
+                            if vel_range > 1e4:
+                                # if cube in m/s then convert the velocity_range in km/s
+                                vel_range = vel_range / 1e3
 
-                    config['imcontsub']['segments'] = [round(vel_range,0) / item for item in config['imcontsub']['order']]
+                        config['imcontsub']['segments'] = [round(vel_range,0) / item for item in config['imcontsub']['order']]
                     imcontsub_opts.update({"segments": config['imcontsub']['segments']})
 
                 else:

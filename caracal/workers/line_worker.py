@@ -1702,11 +1702,11 @@ def worker(pipeline, recipe, config):
                 if cubepath:
                     caracal.log.info('Continum subtraction in the image plage on datacube {0:s} provided by user '.format(config['imcontsub']['input_cube']))
                     step = 'Image-continuum-subtraction-{0:s}'.format(config['imcontsub']['input_cube'])
-                    imcontsub_opts.update({"infits": cubepath})
+                    imcontsub_opts.update({"infits": '{0:s}/{1:s}'.format(cubepath,config['imcontsub']['input_cube'])+':input'})
 
                     ##the segment size is chosen as the datacube velocity range / spline order
                     if all(item == 0. for item in config['imcontsub']['segments']):
-                        hdul_cube = fits.getheader(cubepath)
+                        hdul_cube = fits.getheader('{0:s}/{1:s}/{2:s}'.format(pipeline.output,cubepath,config['imcontsub']['input_cube']))
                         if 'FREQ' in hdul_cube['CTYPE3']:
                             if 'RESTFREQ' in hdul_cube:
                                 restfreq_cube = hdul_cube['RESTFREQ']

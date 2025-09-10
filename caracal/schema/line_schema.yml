@@ -603,18 +603,13 @@ mapping:
             type: bool
             example: 'false'  
             required: false
-          label_in:
-            type: str
-            desc: Label of the .fits datacube to process.
-            example: 'corr'    
-            required: false
           label_out:
             desc: Name of ouput image
             type: str
             example: 'imsub'
             required: False
           input_cube:
-            desc: name of input datacube located in /output/cubes/cube_xx/ . Where xx is the highest number. This will overrid label_in. To use when running imcontsub independently.
+            desc: name of input datacube located in /output/ (preferentially in outpupt/cubes/cube_xx/ . Where xx is the highest number. To use when running imcontsub independently.
             type: str
             example: ''
             required: False

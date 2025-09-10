@@ -1661,7 +1661,7 @@ def worker(pipeline, recipe, config):
                         if 'RESTFREQ' in hdul_cube:
                             restfreq_cube = hdul_cube['RESTFREQ']
                         else:
-                            restfreq_cube = config['imcontsub']['rest-freq']
+                            restfreq_cube = config['imcontsub']['rest-freq']*1e6
                         hdul_cube['cdelt3'] = -C * float(headcube['cdelt3']) / restfreq_cube
                         vel_range = hdul_cube['cdelt3'] * hdul_cube['naxis3']                    
                     else:
@@ -1669,9 +1669,9 @@ def worker(pipeline, recipe, config):
                         if vel_range > 1e3 or hdul_cube['cunit3'] == 'm/s':
                             # if cube in m/s then convert the velocity_range in km/s
                             vel_range = vel_range * 1e3
-
                     config['imcontsub']['segments'] = [vel_range / item for item in config['imcontsub']['order']]
                     imcontsub_opts.update({"segments": config['imcontsub']['segments']})
+                    
                     imcontsub_opts.update({"infits": '{0:s}/cube_{1:d}/{2:s}'.format(cube_dir,maxcube_dir,input_cube) + ':input'})
                     print(imcontsub_opts)
                     recipe.add('cab/imcontsub', step,
@@ -1703,13 +1703,11 @@ def worker(pipeline, recipe, config):
 
                     ##the segment size is chosen as the datacube velocity range / spline order
                     hdul_cube = fits.getheader(input_cube)
-
-
                     if 'FREQ' in hdul_cube['CTYPE3']:
                         if 'RESTFREQ' in hdul_cube:
                             restfreq_cube = hdul_cube['RESTFREQ']
                         else:
-                            restfreq_cube = config['imcontsub']['rest-freq']
+                            restfreq_cube = config['imcontsub']['rest-freq']*1e6
                         hdul_cube['cdelt3'] = -C * float(headcube['cdelt3']) / restfreq_cube
                         vel_range = hdul_cube['cdelt3'] * hdul_cube['naxis3']                    
                     else:

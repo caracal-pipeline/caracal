@@ -1706,7 +1706,7 @@ def worker(pipeline, recipe, config):
 
                     ##the segment size is chosen as the datacube velocity range / spline order
                     if all(item == 0. for item in config['imcontsub']['segments']):
-                        hdul_cube = fits.getheader(input_cube)
+                        hdul_cube = fits.getheader(cubepath)
                         if 'FREQ' in hdul_cube['CTYPE3']:
                             if 'RESTFREQ' in hdul_cube:
                                 restfreq_cube = hdul_cube['RESTFREQ']

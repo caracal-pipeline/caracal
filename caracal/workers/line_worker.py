@@ -1616,7 +1616,6 @@ def worker(pipeline, recipe, config):
             imcontsub_opts = {
                 "output-prefix": config['imcontsub']['label_out'],
                 "order": config['imcontsub']['order'],
-                "segments": config['imcontsub']['segments'], #300,250 : these should be set automatically
                 'sigma-clip' :  config['imcontsub']['sigma_clip']
                 }
 
@@ -1674,7 +1673,7 @@ def worker(pipeline, recipe, config):
                     config['imcontsub']['segments'] = [vel_range / item for item in config['imcontsub']['order']]
                     imcontsub_opts.update({"segments": config['imcontsub']['segments']})
                     imcontsub_opts.update({"infits": '{0:s}/cube_{1:d}/{2:s}'.format(cube_dir,maxcube_dir,input_cube) + ':input'})
-
+                    print(imcontsub_opts)
                     recipe.add('cab/imcontsub', step,
                         imcontsub_opts,
                         input=pipeline.output,
@@ -1737,6 +1736,7 @@ def worker(pipeline, recipe, config):
                     else:
                         caracal.log.error('Mask datacube not found in output/masking but a mask is provided, please check your configuration file')
                         raise caracal.ConfigurationError("check imcontsub:mask_image: setting") 
+                print(imcontsub_opts)
   
                 recipe.add('cab/imcontsub', step,
                     imcontsub_opts,

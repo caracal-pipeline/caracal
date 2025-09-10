@@ -642,7 +642,7 @@ mapping:
             type: seq
             seq:
               - type: float
-            example: 0.
+            example: '0.'
             required: False
           automask-per-iter:
             desc: Generate a new mask per iteration.

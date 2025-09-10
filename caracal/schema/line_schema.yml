@@ -638,11 +638,11 @@ mapping:
             example: '3'
             required: False
           segments: 
-            desc: Width of spline segments in km/s. If given as a list, then it must have same size as --order.
+            desc: Width of spline segments in km/s. Default is datacube velocity range / order of spline. Must be given as list of same size --order.
             type: seq
             seq:
               - type: float
-            example: '250'
+            example: ''
             required: False
           automask-per-iter:
             desc: Generate a new mask per iteration.

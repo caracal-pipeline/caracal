@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 import os
 import shutil
 import glob
@@ -1553,7 +1552,7 @@ def worker(pipeline, recipe, config):
                 "out-plots": True,
                 "out-derotate": config['cal_cubical']['out_derotate'],
                 "dist-max-chunks": config['cal_cubical']['dist_max_chunks'],
-                "out-casa-gaintables": True,
+                "out-casa-gaintables": False,
                 "weight-column": config['cal_cubical']['weight_col'],
                 "montblanc-dtype": 'float',
                 "bbc-save-to": "{0:s}/bbc-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,

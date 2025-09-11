@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "caracal"
-version = "1.1.5"
+version = "1.2.0"
 description = "Containerized Automated Radio Astronomy Calibration"
 authors = ["The CaraCAL Team <caracal-info@googlegroups.com>"]
 readme = "README.rst"
@@ -53,11 +53,10 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.extras]
-scipy = ["scipy"]
 astropy = ["astropy"]
 regions = ["regions"]
 astroquery = ["astroquery"]
-all = ["scipy", "astropy", "regions", "astroquery"]
+all = ["astropy", "regions", "astroquery"]
 
 
 [tool.poetry.group.tests]

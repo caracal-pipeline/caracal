@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 import os
 from caracal import log
 

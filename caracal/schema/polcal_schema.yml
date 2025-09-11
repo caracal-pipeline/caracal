@@ -147,10 +147,29 @@ mapping:
             required: false
             example: '8'
       set_model_pol:
-        desc: Fill in the MODEL column of the .MS file(s) for the polarized calibrator in preparation for polcalibration. This can be done only for 3C138 and 3C286 using the CASA setjy for point-source models. If False it will derive the model by fitting the PA coverage. This can be done only if more than 3 scans have been acquired. Not recomended for small PAs coverage.
-        type: bool
-        required: false
-        example: 'True'
+        desc: Fill in the MODEL column of the .MS file(s) for the polarized calibrator in preparation for polcalibration. If False it will derive the model by fitting the PA coverage. This can be done only if more than 3 scans have been acquired. Not recomended for small PAs coverage.
+        type: map
+        mapping:
+          enable:
+            desc: Execute the set_model_pol segment.
+            type: bool
+            required: false
+            example: 'True'
+          nrao_model:
+            desc: P&B2017 + updated pol properties from NRAO web site (https://science.nrao.edu/facilities/vla/docs/manuals/obsguide/modes/pol, Table 7.2.7). Only available for 3C138 and 3C286 using the CASA setjy for point-source models.
+            type: bool
+            required: false
+            example: 'True'
+          taylor_legodi_model:
+            desc: It loads the model by Taylor & Legodi 2024.
+            type: bool
+            required: false
+            example: 'False'
+          user_model:
+            desc: You can upload a model written as flux_density in Jy, reffreq, polindex, polang in rad, RM, spix. You can include more than one term for the spectral index according to the CASA setjy description.
+            type: str
+            required: false
+            example: '8.33843,1.47GHz,0.078,-0.16755,0.0,-0.4981'
       freqsel:
         type: str
         required: false

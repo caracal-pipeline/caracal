@@ -25,11 +25,11 @@ When using CARACal please be aware of and adhere to the `CARACal publication pol
 
 Requirements
 ------------
-* `Python <https://www.python.org>`_ 3.8 - 3.11. (For Python version below 3.12 if working on Ubuntu> 22.04. Install the earlier Python version through this `link <https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa>`_)
+* `Python <https://www.python.org>`_ 3.9 - 3.12. (For Python version below 3.12 if working on Ubuntu> 22.04. Install the earlier Python version through this `link <https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa>`_)
 * Container technology of your choice. It can be one of the following:
     * `Docker <https://www.docker.com>`_
     * `Podman <https://podman.io>`_
-    * `Singularity <https://github.com/sylabs/singularity>`_ 3.5 - 3.9 (nearly all functionality available for > 2.6.0-dist, see `here <https://github.com/caracal-pipeline/caracal/issues/1154>`_ for further information) 
+    * `Singularity <https://github.com/sylabs/singularity>`_ 3.5 - 4.1 (nearly all functionality available for > 2.6.0-dist, see `here <https://github.com/caracal-pipeline/caracal/issues/1154>`_ for further information) 
         * `Apptainer <https://apptainer.org>`_ does not support all CARACal functionalities (at the moment).
 
 ============

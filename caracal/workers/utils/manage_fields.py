@@ -1,5 +1,3 @@
-# -*- coding: future_fstrings -*-
-
 def get_field(pipeline, i, field):
     """
         gets field ids parsed previously in the pipeline

@@ -30,10 +30,12 @@ psutil = "*"
 pykwalify = "*"
 progressbar2 = "*"
 "ruamel.yaml" = "*"
+future_fstrings = "*"
 astropy = [
     { version = "5.3.3", python = ">=3.9,<3.11"},
     {version= "^7.0", python=">=3.11,<=3.13"}
 ]
+uritools = "*"
 scipy = "*"
 regions = "*"
 astroquery = "*"

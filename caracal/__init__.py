@@ -5,9 +5,7 @@ import pkg_resources
 import os
 import subprocess
 import logging
-from time import gmtime, strftime
 import stimela
-import stimela.utils
 
 ##############################################################################
 # Globals

@@ -25,6 +25,10 @@ mapping:
             desc: Enable the 'untar' segment.
             required: false
             example: 'False'
+          tar_extension:
+            type: str
+            desc: Extension of tar file. The filename is assumed to be <dataid>.<ms extension>.<tar_extension>
+            example: "tar"
           tar_options: 
             type: str
             desc: The tar options to pass to the 'tar' command.

@@ -1,18 +1,12 @@
-# -*- coding: future_fstrings -*-
-from collections import OrderedDict
-import sys
 import os
 import caracal.dispatch_crew.utils as utils
 import caracal
 import stimela.dismissable as sdm
 from caracal.workers.utils import manage_flagsets as manflags
-from caracal.workers.utils import manage_caltabs as manGtabs
 from caracal.workers.utils import manage_antennas as manants
 from caracal.workers.utils import callibs
 import copy
 import re
-import json
-import glob
 import shutil
 import numpy as np
 from casacore.tables import table
@@ -321,8 +315,6 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
                            input=pipeline.input, output=pipeline.crosscal_continuum,
                            label="%s:: Image %s field" % (step, ftype))
 
-    nterms = len(order)
-
     # terms that need an apply
     groups_apply = list(filter(lambda g: g, re.findall("([AI]+)?", order)))
     # terms that need a solve
@@ -414,7 +406,7 @@ def transfer_fluxscale(msname, recipe, gaintable, fluxtable, pipeline, i, refere
         label="Transfer fluxscale")
 
 
-def get_caltab_final(order, gaintable, interp, gainfield, field):
+def get_caltab_final(order, gaintable, interp, gainfield):
     rorder = list(reversed(order))
     if "G" in order:
         gi = rorder.index("G")
@@ -459,7 +451,7 @@ def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipelin
     """
 
     gaintables, interps, fields = get_caltab_final(order, gaintable, interp,
-                                                    gainfield, field)
+                                                    gainfield)
 
     step = "apply_gains-%s-%s-%d" % (field, label, i)
     recipe.add("cab/casa_applycal", step, {
@@ -551,12 +543,10 @@ def worker(pipeline, recipe, config):
 
         if len(pipeline.fcal[i]) > 1:
             fluxscale_field = utils.observed_longest(msinfo, pipeline.fcal[i])
-            fluxscale_field_id = utils.get_field_id(msinfo, fluxscale_field)[0]
             caracal.log.info("Found more than one flux calibrator."
                             f"Will use the one observed the longest {fluxscale_field}.")
         else:
             fluxscale_field = pipeline.fcal[i][0]
-            fluxscale_field_id = utils.get_field_id(msinfo, fluxscale_field)[0]
 
         pipeline.fluxscale_reference = fluxscale_field
 
@@ -693,14 +683,14 @@ def worker(pipeline, recipe, config):
         applycal_recipes = callibs.new_callib()
         # the fluxscale_field has already been chosen, so using "nearest" here does not make sense to FROM(Sphe)
         # see issue #1474 
-        primary_tables = get_caltab_final(primary_order, primary["gaintables"], primary["interps"], fluxscale_field, "target")
+        primary_tables = get_caltab_final(primary_order, primary["gaintables"], primary["interps"], fluxscale_field)
         if no_secondary:
             for gt, itp, fd in zip(*primary_tables):
                 callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)
         else:
             # default recipes from secondary
             for gt, itp, fd in zip(*get_caltab_final(secondary_order, secondary["gaintables"], secondary["interps"],
-                                                    "nearest", "target")):
+                                                    gainfields)):
                 # if the table is already applied with the primary in it, re-add it with an "all" (empty) field
                 # add_callib_recipe(applycal_recipes, gt, itp, fd, '' if gt in applycal_recipes else targets)
                 callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)

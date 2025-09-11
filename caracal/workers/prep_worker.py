@@ -1,16 +1,17 @@
-# -*- coding: future_fstrings -*-
 import os
-import sys
 import caracal
 from caracal.dispatch_crew.utils import closeby
 import caracal.dispatch_crew.caltables as mkct
 import numpy as np
 from caracal.workers.utils import manage_flagsets as manflags
-from caracal.dispatch_crew import utils
+from caracal.workers import PIPELINE_MIN_REQUIRES
 
 NAME = "Prepare Data for Processing"
 LABEL = 'prep'
 
+PIPELINE_REQUIRES = PIPELINE_MIN_REQUIRES + [
+    
+]
 
 def getfield_coords(info, field, db, tol=2.9E-3, tol_diff=4.8481E-6):
     """
@@ -91,8 +92,6 @@ def worker(pipeline, recipe, config):
                                 from astropy.coordinates import SkyCoord
                                 return SkyCoord(ra_corr, dec_corr, unit='deg')
                             c = needs_astropy()
-                            rahms = c.ra.hms
-                            decdms = c.dec.dms
                             coordstring = 'J2000 ' + c.to_string('hmsdms')
                             step = 'fixuvw-ms{0:d}-{1:s}'.format(i, f)
                             recipe.add('cab/casa_fixvis', step,

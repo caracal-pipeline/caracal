@@ -1,13 +1,14 @@
 import os
-import os
 from caracal import log
 from caracal.dispatch_crew import utils
 from collections import OrderedDict
 import itertools
-from caracal import log
 import ruamel.yaml
 
-def get_msinfo(pipeline, msname):
+yaml = ruamel.yaml.YAML(typ="rt")
+
+
+def get_msinfo(pipeline, /, msname):
     """Returns info dict corresponding to an MS. Caches and reloads as needed"""
     msinfo_file = os.path.splitext(msname)[0] + "-summary.json"
     msinfo_path = os.path.join(pipeline.msdir, msinfo_file)
@@ -19,13 +20,11 @@ def get_msinfo(pipeline, msname):
     mtime = os.path.getmtime(msinfo_path)
     if msdict is None or mtime > mtime_cache:
         with open(msinfo_path, 'r') as f:
-            msdict = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+            msdict = yaml.load(f)
         pipeline._msinfo_cache[msname] = msdict, mtime
     return msdict
 
-
-
-def enable_task(pipeline, config, task):
+def enable_task(pipeline, /, config, task):
     return task in config and config[task].get("enable")
 
 def remove_output_products(files, directory=None, log=None):
@@ -41,30 +40,29 @@ def remove_output_products(files, directory=None, log=None):
             os.system(f'rm -rf {fullpath}')
 
 
-def form_msname(pipeline, msbase, label=None, field=None):
+def form_msname(pipeline, /, label=None, field=None):
     """
     Given a base MS name, an optional label, and an optional field name, return the full MS name
     """
     label = '' if not label else '-' + label
     field = '' if not field else '-' + utils.filter_name(field)
-    return f'{msbase}{field}{label}.{pipeline.ms_extension}'
+    return f'{pipeline.msbasename}{field}{label}.{pipeline.ms_extension}'
 
 
-def get_mslist(pipeline, iobs, label="", target=False):
+def get_mslist(pipeline, /, label="", target=False):
     """
     Given an MS number (0...nobs-1), and an optional label, returns list of corresponding MSs.
     If target is True, this will be one MS per each (split-out) target.
     If target is False, the list will contain just the single MS.
     Applies label in both cases.
     """
-    msbase = pipeline.msbasenames[iobs]
     if target:
-        return [form_msname(msbase, label, targ) for targ in pipeline.target[iobs]]
+        return [form_msname(pipeline, label, targ) for targ in pipeline.target]
     else:
-        return [form_msname(msbase, label)]
+        return [form_msname(pipeline, label)]
 
 
-def get_target_mss(pipeline, label=None):
+def get_target_mss(pipeline, /, label=None):
     """
     Given an MS label, returns a tuple of unique_targets, all_mss, mss_per_target
     Where all_mss is a list of all MSs to be processed for all targets, and mss_per_target maps target field
@@ -72,15 +70,13 @@ def get_target_mss(pipeline, label=None):
     """
     target_msfiles = OrderedDict()
     # self.target is a list of lists of targets, per each MS
-    for msbase, targets in zip(pipeline.msbasenames, pipeline.target):
-        for targ in targets:
-            target_msfiles.setdefault(targ, []).append(form_msname(msbase, label, targ))
-    # collect into flat list of MSs
-    target_ms_ls = list(itertools.chain(*target_msfiles.values()))
-    return list(target_msfiles.keys()), target_ms_ls, target_msfiles
+    for target in pipeline.target:
+        target_msfiles[target] = form_msname(pipeline, label, target)
+    
+    return target_msfiles
 
 
-def get_callib_name(pipeline, name, ext="yml", extra_label=None):
+def get_callib_name(pipeline, /, name, ext="yml", extra_label=None):
     """Makes a callib name with the given extension. Replaces extension if needed. Adds callib- if needed."""
     if os.path.splitext(name)[-1] in ['.yml', '.txt']:
         name, _ = os.path.splitext(name)
@@ -91,7 +87,7 @@ def get_callib_name(pipeline, name, ext="yml", extra_label=None):
     return os.path.join(pipeline.caltables, f"{name}.{ext}")
 
 
-def load_callib(pipeline, name):
+def load_callib(pipeline, /, name):
     """Loads calibration library specified by name"""
     filename = get_callib_name(pipeline, name)
     if not os.path.exists(filename):
@@ -100,13 +96,12 @@ def load_callib(pipeline, name):
         return ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
 
-def save_callib(pipeline, callib, name):
+def save_callib(pipeline, /, callib, name):
     """Dumps caldict to calibration library specified by name"""
     with open(get_callib_name(pipeline, name), 'w') as f:
         ruamel.yaml.dump(callib, f, ruamel.yaml.RoundTripDumper)
-
-
-def parse_cabspec_dict(cabspec_seq):
+        
+def parse_cabspec_dict(pipeline, /, cabspec_seq):
     """Turns sequence of cabspecs into a Stimela cabspec dict"""
     cabspecs = OrderedDict()
     speclists = OrderedDict()
@@ -135,14 +130,3 @@ def parse_cabspec_dict(cabspec_seq):
             log.info(f"  {name}: using tag {tag} for version {version}")
     return cabspecs
 
-
-def make_symlink(link, target):
-    if os.path.lexists(link):
-        if os.path.islink(link):
-            os.unlink(link)  # old symlink can go
-        else:
-            log.warning("{} already exists and is not a symlink, can't relink".format(link))
-            return False
-    if not os.path.lexists(link):
-        os.symlink(target, link)
-        log.info("{} links to {}".format(link, target))

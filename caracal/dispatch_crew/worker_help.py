@@ -1,5 +1,3 @@
-import yaml
-import sys
 from argparse import ArgumentParser
 
 

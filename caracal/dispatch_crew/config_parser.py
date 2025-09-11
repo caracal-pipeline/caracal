@@ -9,6 +9,8 @@ import copy
 import ruamel.yaml
 from collections import OrderedDict
 
+yaml = ruamel.yaml.YAML(typ="rt")
+
 # shut this guy up
 import logging
 pykwalify_logger = logging.getLogger('pykwalify.core')
@@ -96,15 +98,6 @@ then edit the file to suit your needs.
         help='disable generation of HTML reports throughout the pipeline',
         action='store_true')
 
-    # add('-rv', '--report-viewer', action='store_true',
-    #     help='Start the interactive report viewer (requires X session with decent [ie. firefox] webbrowser installed).')
-    #
-    # add('--interactive-port', type=int, default=8888,
-    #     help='Port on which to listen when an interactive mode is selected (e.g the configuration editor)')
-
-    # add("-la", '--log-append', help="Append to existing log-caracal.txt file instead of replacing it",
-    #     action='store_true')
-
     return parser
 
 
@@ -137,7 +130,7 @@ class config_parser(object):
         """
         with open(config_file, 'r') as file:
             try:
-                config_content = ruamel.yaml.load(file, ruamel.yaml.RoundTripLoader, version=(1, 1))
+                config_content = yaml.load(file)
             except BaseException as exc:
                 raise ConfigErrors(config_file, {'at top level': [str(exc)]})
 
@@ -169,7 +162,7 @@ class config_parser(object):
                     continue
 
                 with open(schema_fn, 'r') as file:
-                    full_schema = ruamel.yaml.load(file, ruamel.yaml.RoundTripLoader, version=(1, 1))
+                    full_schema = yaml.load(file)
 
                 schema = full_schema["mapping"][_worker]
                 self._schemas[worker] = self._schemas[_worker] = schema_fn, schema
@@ -401,5 +394,3 @@ class config_parser(object):
         ordered_groups = OrderedDict(sorted(list(config.items()),
                                             key=lambda p: p[1].get("order", 0)))
         _tree_print(ordered_groups)
-        # caracal.log.info(
-        #     "".join(["".ljust(25, "#"), " END OF CONFIGURATION ", "".ljust(25, "#")]))

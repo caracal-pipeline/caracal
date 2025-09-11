@@ -1,8 +1,5 @@
 # -*- coding: future_fstrings -*-
 import os
-import sys
-import json
-import math
 from caracal import log
 
 
@@ -123,7 +120,7 @@ def restore_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label="
             output=pipeline.output,
             label="{0:s}:: Restoring flags to flag version [{1:s}]".format(label or cab_name, flagname))
     else:
-        log.warn("Flag version [{0:s}] could not be found".format(flagname))
+        log.warning("Flag version [{0:s}] could not be found".format(flagname))
 
 
 def add_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label="", overwrite=False):

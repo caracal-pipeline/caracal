@@ -140,7 +140,7 @@ class Pipeline:
         all_nbs = set(self._init_notebooks) | set(self._report_notebooks)
         if all_nbs:
             notebooks.setup_default_notebooks(all_nbs, output_dir=self.output, prefix=self.prefix, config=self.config_dict)
-       
+
         self.__getdata__()
         self.add_worker("obsconf")
         self.run_worker("obsconf")
@@ -207,6 +207,9 @@ class Pipeline:
         
         self.CURRENT_WORKER = name
         
+        if not hasattr(worker, "worker_module"):
+            self.add_worker(name)
+        
         missing_requires = []
         worker_requires = getattr(worker.worker_module, "PIPELINE_REQUIRES", PIPELINE_MIN_REQUIRES)
         
@@ -222,6 +225,9 @@ class Pipeline:
         cabspecs.update(worker_cabspecs)
         
         recipe = stimela.Recipe(name,
+                                indir=self.input,
+                                outdir=self.output,
+                                msdir=self.msdir, 
                                 JOB_TYPE=self.container_tech,
                                 singularity_image_dir=self.container_image_dir,
                                 log_dir=self.logs,
@@ -230,7 +236,7 @@ class Pipeline:
                                 logfile_task=f'{self.logs}/log-{name}-{{task}}-{self.timeNow}.txt')
         
         worker.worker_module.worker(self, recipe, self.config_dict[name])
-         
+
         if recipe.jobs:
             if name in ["getdata", "obsconf"]:
                 recipe.run()

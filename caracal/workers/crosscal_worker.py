@@ -119,7 +119,7 @@ def get_last_gain(gaintables, my_term="dummy"):
         return []
 
 
-def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
+def solve(msname, msinfo, recipe, config, pipeline, prefix, label, ftype,
           append_last_secondary=None, prev=None, prev_name=None, smodel=False):
     """
     """
@@ -127,34 +127,33 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
     interps = []
     fields = []
     iters = {}
+    obsid = pipeline.obsid
 
     if prev and prev_name:
         for item in config[ftype]['apply']:
             gaintables.append("%s_%s.%s%d" % (prefix, prev_name, item, prev["iters"][item]))
             ft = RULES[item]["field"]
-            fields.append(",".join(getattr(pipeline, ft)[iobs]))
+            fields.append(",".join(getattr(pipeline, ft)))
             interps.append(RULES[item]["interp"])
 
-    field = getattr(pipeline, CALS[ftype])[iobs]
+    field = getattr(pipeline, CALS[ftype])
     order = config[ftype]["order"]
     field_id = utils.get_field_id(msinfo, field)
 
     def do_KGBF(i):
-        gtable_ = None
-        ftable_ = None
         interp = RULES[term]["interp"]
-        if pipeline.refant[iobs] in ['auto']:
+        if pipeline.refant in ['auto']:
             params["refant"] = manants.get_refant(pipeline, recipe,
-                                                  prefix, msname, fields,
-                                                  pipeline.minbase[iobs],
-                                                  pipeline.maxdist[iobs], i)
+                                                prefix, msname, fields,
+                                                pipeline.minbase,
+                                                pipeline.maxdist, i)
             if params["refant"]:
                 caracal.log.info(f"Auto selected ref antenna(s): {params['refant']}")
             else:
                 caracal.log.error("Cannot auto-select ref antenna(s). Set it manually.")
 
         else:
-            params["refant"] = pipeline.refant[iobs]
+            params["refant"] = pipeline.refant
         params["solint"] = first_if_single(config[ftype]["solint"], i)
         params["combine"] = first_if_single(config[ftype]["combine"], i).strip("'")
         params["field"] = ",".join(field)
@@ -216,7 +215,7 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
             if term == "F":
                 if os.path.exists(caltable_path):
                     shutil.rmtree(caltable_path)
-                cpstep = "copy_primary_gains_%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
+                cpstep = "copy_primary_gains_%s-%s-%d-%d-%s" % (name, label, itern, obsid, ftype)
                 recipe.add(shutil.copytree, cpstep, {
                     "src": caltable_path_original,
                     "dst": caltable_path,
@@ -227,7 +226,7 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
                        label="%s:: %s calibration" % (step, term))
             if term == "F":
                 transfer_fluxscale(msname, recipe, primary_G + ":output", caltable + ":output", pipeline,
-                                   iobs, reference=pipeline.fluxscale_reference, label=label)
+                                   reference=pipeline.fluxscale_reference, label=label)
             elif term == "B" and config[ftype]["b_smoothwindow"] > 1:
                 recipe.add(smooth_bandpass, 'smooth_bandpass', {
                     "bptable": '{0:s}/{1:s}'.format(pipeline.caltables, caltable),
@@ -239,7 +238,7 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
 
         # Assume gains were plotted when they were created
         if config[ftype]["plotgains"] and not can_reuse:
-            plotgains(recipe, pipeline, field_id if term != "F" else None, caltable, iobs, term=term)
+            plotgains(recipe, pipeline, field_id if term != "F" else None, caltable, term=term)
 
         fields.append(",".join(field))
         interps.append(interp)
@@ -248,13 +247,13 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
     def do_IA(i):
         if i == 0:
             raise RuntimeError("Have encountered an imaging/flagging request before any gains have been computed."
-                               "an I only makes sense after a G or K (usually both)."
-                               "Please review your 'order' option in the self_cal:secondary section")
+                            "an I only makes sense after a G or K (usually both)."
+                            "Please review your 'order' option in the self_cal:secondary section")
 
         if not applied:
             applycal(latest_KGBF_group, msname, recipe, gaintables,
-                     interps, fields, CALS[ftype], pipeline, iobs,
-                     calmode="calflag")
+                    interps, fields, CALS[ftype], pipeline,
+                    calmode="calflag")
         else:
             caracal.log.info(
                 "Gains have already been applied using this exact set of gain tables and fields. Skipping unnecessary applycal step")
@@ -263,7 +262,7 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
             if not set("KGBF").intersection(order[:i]):
                 raise RuntimeError(
                     "Have encountered a request to flag the secondary calibrator without any gain, bandpass or delay tables to apply first.")
-            step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
+            step = "%s-%s-%d-%d-%s" % (name, label, itern, obsid, ftype)
             params["mode"] = RULES[term]["mode"]
             params["field"] = ",".join(field)
             params["datacolumn"] = config[ftype]["flag"]["col"]
@@ -281,8 +280,8 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
 
         else:
             for fid in field_id:
-                step = "%s-%s-%d-%d-%s-field%d" % (name, label, itern, iobs, ftype, fid)
-                calimage = "%s-%s-I%d-%d-field%d:output" % (prefix, ftype, itern, iobs, fid)
+                step = "%s-%s-%d-%d-%s-field%d" % (name, label, itern, obsid, ftype, fid)
+                calimage = "%s-%s-I%d-%d-field%d:output" % (prefix, ftype, itern, obsid, fid)
                 cab_params = {
                     "msname": msname,
                     "name": calimage,
@@ -358,7 +357,7 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
             params = {}
             params["vis"] = msname
 
-            step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
+            step = "%s-%s-%d-%d-%s" % (name, label, itern, obsid, ftype)
 
             if even:
                 do_KGBF(i)
@@ -373,8 +372,8 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
     }
 
 
-def plotgains(recipe, pipeline, field_id, gtab, i, term):
-    step = "plotgains-%s-%d-%s" % (term, i, "".join(map(str, field_id or [])))
+def plotgains(recipe, pipeline, field_id, gtab, term):
+    step = "plotgains-%s-%d-%s" % (term, pipeline.obsid, "".join(map(str, field_id or [])))
     params = {
         "table": f"{gtab}:msfile",
         "corr": '',
@@ -390,11 +389,11 @@ def plotgains(recipe, pipeline, field_id, gtab, i, term):
                label='{0:s}:: Plot gaincal phase'.format(step))
 
 
-def transfer_fluxscale(msname, recipe, gaintable, fluxtable, pipeline, i, reference, label=""):
+def transfer_fluxscale(msname, recipe, gaintable, fluxtable, pipeline, reference, label=""):
     """
     Transfer fluxscale
     """
-    step = "transfer_fluxscale-%s-%d" % (label, i)
+    step = "transfer_fluxscale-%s-%d" % (label, pipeline.obsid)
     recipe.add("cab/casa_fluxscale", step, {
         "vis": msname,
         "caltable": gaintable,
@@ -440,7 +439,7 @@ def get_caltab_final(order, gaintable, interp, gainfield):
     return gaintables, interps, fields
 
 
-def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipeline, i,
+def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipeline,
              calmode="calflag", label=""):
     """
     Apply gains
@@ -453,10 +452,10 @@ def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipelin
     gaintables, interps, fields = get_caltab_final(order, gaintable, interp,
                                                     gainfield)
 
-    step = "apply_gains-%s-%s-%d" % (field, label, i)
+    step = "apply_gains-%s-%s-%d" % (field, label, pipeline.obsid)
     recipe.add("cab/casa_applycal", step, {
         "vis": msname,
-        "field": ",".join(getattr(pipeline, field)[i]),
+        "field": ",".join(getattr(pipeline, field)),
         "applymode": calmode,
         "gaintable": [tab + ":output" for tab in gaintables],
         "interp": interps,
@@ -490,232 +489,231 @@ def worker(pipeline, recipe, config):
     label = config["label_cal"]
     label_in = config["label_in"]
 
-    # loop over all MSs for this label
-    for i, msbase in enumerate(pipeline.msbasenames):
-        msname = pipeline.form_msname(msbase, label_in)
-        msinfo = pipeline.get_msinfo(msname)
-        prefix_msbase = f"{pipeline.prefix_msbases[i]}-{label}"
+    msname = pipeline.form_msname(label_in)
+    msinfo = pipeline.get_msinfo(msname)
+    obsid = pipeline.obsid
+    prefix_msbase = f"{pipeline.prefix_msbase}-{label}"
 
-        if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
-            # Write/rewind flag versions
-            available_flagversions = manflags.get_flags(pipeline, msname)
-            if config['rewind_flags']['enable']:
-                if config['rewind_flags']['mode'] == 'reset_worker':
+    if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
+        # Write/rewind flag versions
+        available_flagversions = manflags.get_flags(pipeline, msname)
+        if config['rewind_flags']['enable']:
+            if config['rewind_flags']['mode'] == 'reset_worker':
+                version = flags_before_worker
+                stop_if_missing = False
+            elif config['rewind_flags']['mode'] == 'rewind_to_version':
+                version = config['rewind_flags']['version']
+                if version == 'auto':
                     version = flags_before_worker
-                    stop_if_missing = False
-                elif config['rewind_flags']['mode'] == 'rewind_to_version':
-                    version = config['rewind_flags']['version']
-                    if version == 'auto':
-                        version = flags_before_worker
-                    stop_if_missing = True
-                if version in available_flagversions:
-                    if flags_before_worker in available_flagversions and available_flagversions.index(
-                        flags_before_worker) < available_flagversions.index(version) and not config[
-                            'overwrite_flagvers']:
-                        manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker,
-                                        flags_after_worker)
-                    substep = 'version-{0:s}-ms{1:d}'.format(version, i)
-                    manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
-                    if version != available_flagversions[-1]:
-                        substep = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, i)
-                        manflags.delete_cflags(pipeline, recipe,
-                                                available_flagversions[available_flagversions.index(version) + 1],
-                                                msname, cab_name=substep)
-                    if version != flags_before_worker:
-                        substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
-                        manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                                            msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
-                elif stop_if_missing:
-                    manflags.conflict('rewind_to_non_existing', pipeline, wname, msname, config, flags_before_worker,
+                stop_if_missing = True
+            if version in available_flagversions:
+                if flags_before_worker in available_flagversions and available_flagversions.index(
+                    flags_before_worker) < available_flagversions.index(version) and not config[
+                        'overwrite_flagvers']:
+                    manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker,
                                     flags_after_worker)
-                else:
-                    substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
+                substep = 'version-{0:s}-ms{1:d}'.format(version, obsid)
+                manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
+                if version != available_flagversions[-1]:
+                    substep = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, obsid)
+                    manflags.delete_cflags(pipeline, recipe,
+                                            available_flagversions[available_flagversions.index(version) + 1],
+                                            msname, cab_name=substep)
+                if version != flags_before_worker:
+                    substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, obsid)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
                                         msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
+            elif stop_if_missing:
+                manflags.conflict('rewind_to_non_existing', pipeline, wname, msname, config, flags_before_worker,
+                                flags_after_worker)
             else:
-                if flags_before_worker in available_flagversions and not config['overwrite_flagvers']:
-                    manflags.conflict('would_overwrite_bw', pipeline, wname, msname, config, flags_before_worker,
-                                    flags_after_worker)
-                else:
-                    substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
-                    manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                                        msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
-
-        if len(pipeline.fcal[i]) > 1:
-            fluxscale_field = utils.observed_longest(msinfo, pipeline.fcal[i])
-            caracal.log.info("Found more than one flux calibrator."
-                            f"Will use the one observed the longest {fluxscale_field}.")
+                substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, obsid)
+                manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                                    msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
         else:
-            fluxscale_field = pipeline.fcal[i][0]
+            if flags_before_worker in available_flagversions and not config['overwrite_flagvers']:
+                manflags.conflict('would_overwrite_bw', pipeline, wname, msname, config, flags_before_worker,
+                                flags_after_worker)
+            else:
+                substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, obsid)
+                manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                                    msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
 
-        pipeline.fluxscale_reference = fluxscale_field
+    if len(pipeline.fcal) > 1:
+        fluxscale_field = utils.observed_longest(msinfo, pipeline.fcal)
+        caracal.log.info("Found more than one flux calibrator."
+                        f"Will use the one observed the longest {fluxscale_field}.")
+    else:
+        fluxscale_field = pipeline.fcal[0]
 
-        if pipeline.enable_task(config, 'set_model'):
-            if config['set_model']['unity']:
+    pipeline.fluxscale_reference = fluxscale_field
+
+    if pipeline.enable_task(config, 'set_model'):
+        if config['set_model']['unity']:
+            opts = {
+                "vis": msname,
+                "field": fluxscale_field,
+                "standard": "manual",
+                "scalebychan": True,
+                "usescratch": True,
+            }
+        else:
+            modelsky = utils.find_in_native_calibrators(msinfo, fluxscale_field, mode='sky')
+            modelcrystal = utils.find_in_native_calibrators(msinfo, fluxscale_field, mode='crystal')
+            modelpoint = utils.find_in_native_calibrators(msinfo, fluxscale_field, mode='mod')
+            standard = utils.find_in_casa_calibrators(msinfo, fluxscale_field)
+            if config['set_model']['meerkat_skymodel'] and modelsky:
+                # use local sky model of calibrator field if exists
+                opts = {
+                    "skymodel": modelsky,
+                    "msname": msname,
+                    "field-id": utils.get_field_id(msinfo, fluxscale_field)[0],
+                    "threads": config["set_model"]['threads'],
+                    "mode": "simulate",
+                    "tile-size": config["set_model"]["tile_size"],
+                    "column": "MODEL_DATA",
+                }
+            elif config['set_model']['meerkat_crystalball_skymodel'] and modelcrystal:  # Use Ben's crystalball models
+                opts = {
+                    "ms": msname,
+                    "sky-model": modelcrystal,
+                    "field": fluxscale_field,
+                    "memory-fraction": sdm.dismissable(config['set_model']["meerkat_crystalball_memory_fraction"]),
+                    "num-workers": sdm.dismissable(config['set_model']['meerkat_crystalball_ncpu']),
+                    "row-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_row_chunks"]),
+                    "model-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_model_chunks"]),
+                    "num-sources": sdm.dismissable(config['set_model']['meerkat_crystalball_num_sources']),
+                }
+            elif modelpoint:  # spectral model if specified in our standard
                 opts = {
                     "vis": msname,
                     "field": fluxscale_field,
                     "standard": "manual",
+                    "fluxdensity": modelpoint['I'],
+                    "reffreq": '{0:f}GHz'.format(modelpoint['ref'] / 1e9),
+                    "spix": [modelpoint[a] for a in 'abcd'],
                     "scalebychan": True,
                     "usescratch": True,
                 }
+            elif standard:  # NRAO model otherwise
+                opts = {
+                    "vis": msname,
+                    "field": fluxscale_field,
+                    "standard": standard,
+                    "usescratch": True,
+                    "scalebychan": True,
+                }
             else:
-                modelsky = utils.find_in_native_calibrators(msinfo, fluxscale_field, mode='sky')
-                modelcrystal = utils.find_in_native_calibrators(msinfo, fluxscale_field, mode='crystal')
-                modelpoint = utils.find_in_native_calibrators(msinfo, fluxscale_field, mode='mod')
-                standard = utils.find_in_casa_calibrators(msinfo, fluxscale_field)
-                if config['set_model']['meerkat_skymodel'] and modelsky:
-                    # use local sky model of calibrator field if exists
-                    opts = {
-                        "skymodel": modelsky,
-                        "msname": msname,
-                        "field-id": utils.get_field_id(msinfo, fluxscale_field)[0],
-                        "threads": config["set_model"]['threads'],
-                        "mode": "simulate",
-                        "tile-size": config["set_model"]["tile_size"],
-                        "column": "MODEL_DATA",
-                    }
-                elif config['set_model']['meerkat_crystalball_skymodel'] and modelcrystal:  # Use Ben's crystalball models
-                    opts = {
-                        "ms": msname,
-                        "sky-model": modelcrystal,
-                        "field": fluxscale_field,
-                        "memory-fraction": sdm.dismissable(config['set_model']["meerkat_crystalball_memory_fraction"]),
-                        "num-workers": sdm.dismissable(config['set_model']['meerkat_crystalball_ncpu']),
-                        "row-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_row_chunks"]),
-                        "model-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_model_chunks"]),
-                        "num-sources": sdm.dismissable(config['set_model']['meerkat_crystalball_num_sources']),
-                    }
-                elif modelpoint:  # spectral model if specified in our standard
-                    opts = {
-                        "vis": msname,
-                        "field": fluxscale_field,
-                        "standard": "manual",
-                        "fluxdensity": modelpoint['I'],
-                        "reffreq": '{0:f}GHz'.format(modelpoint['ref'] / 1e9),
-                        "spix": [modelpoint[a] for a in 'abcd'],
-                        "scalebychan": True,
-                        "usescratch": True,
-                    }
-                elif standard:  # NRAO model otherwise
-                    opts = {
-                        "vis": msname,
-                        "field": fluxscale_field,
-                        "standard": standard,
-                        "usescratch": True,
-                        "scalebychan": True,
-                    }
-                else:
 
-                    raise RuntimeError('The flux calibrator field "{}" could not be '
-                                        'found in our database or in the CASA NRAO database'.format(fluxscale_field))
-            step = 'set_model_cal-{0:d}'.format(i)
-            if "skymodel" in opts:
-                cabtouse = 'cab/simulator'
-            elif "sky-model" in opts:
-                cabtouse = 'cab/crystalball'
-            else:
-                cabtouse = 'cab/casa_setjy'
-            recipe.add(cabtouse, step,
-                        opts,
-                        input=pipeline.input,
-                        output=pipeline.output,
-                        label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
+                raise RuntimeError('The flux calibrator field "{}" could not be '
+                                    'found in our database or in the CASA NRAO database'.format(fluxscale_field))
+        step = 'set_model_cal-{0:d}'.format(obsid)
+        if "skymodel" in opts:
+            cabtouse = 'cab/simulator'
+        elif "sky-model" in opts:
+            cabtouse = 'cab/crystalball'
+        else:
+            cabtouse = 'cab/casa_setjy'
+        recipe.add(cabtouse, step,
+                    opts,
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
 
-        gcal_set = set(pipeline.gcal[i])
-        fcal_set = set(pipeline.fcal[i])
-        calmode = config["apply_cal"]["calmode"]
+    gcal_set = set(pipeline.gcal)
+    fcal_set = set(pipeline.fcal)
+    calmode = config["apply_cal"]["calmode"]
+    primary_order = config["primary"]["order"]
+    secondary_order = config["secondary"]["order"]
+    no_secondary = gcal_set == set() or len(gcal_set - fcal_set) == 0
+    if no_secondary:
         primary_order = config["primary"]["order"]
-        secondary_order = config["secondary"]["order"]
-        no_secondary = gcal_set == set() or len(gcal_set - fcal_set) == 0
-        if no_secondary:
-            primary_order = config["primary"]["order"]
-            primary = solve(msname, msinfo, recipe, config, pipeline, i,
-                            prefix_msbase, label=label, ftype="primary")
-            caracal.log.info("Secondary calibrator is the same as the primary. Skipping fluxscale")
-            interps = primary["interps"]
-            gainfields = primary["gainfield"]
-            gaintables = primary["gaintables"]
+        primary = solve(msname, msinfo, recipe, config, pipeline,
+                        prefix_msbase, label=label, ftype="primary")
+        caracal.log.info("Secondary calibrator is the same as the primary. Skipping fluxscale")
+        interps = primary["interps"]
+        gainfields = primary["gainfield"]
+        gaintables = primary["gaintables"]
 
-            if "bpcal" in config["apply_cal"]["applyto"] or "gcal" in config["apply_cal"]["applyto"]:
-                applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-                        "nearest", "bpcal", pipeline, i, calmode=calmode, label=label)
-            if "xcal" in config["apply_cal"]["applyto"]:
-                applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-                        "nearest", "xcal", pipeline, i, calmode=calmode, label=label)
-            if "target" in config["apply_cal"]["applyto"]:
-                applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-                        "nearest", "target", pipeline, i, calmode=calmode, label=label)
-        else:
-            primary = solve(msname, msinfo, recipe, config, pipeline, i,
-                            prefix_msbase, label=label, ftype="primary")
+        if "bpcal" in config["apply_cal"]["applyto"] or "gcal" in config["apply_cal"]["applyto"]:
+            applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
+                    "nearest", "bpcal", pipeline, calmode=calmode, label=label)
+        if "xcal" in config["apply_cal"]["applyto"]:
+            applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
+                    "nearest", "xcal", pipeline, calmode=calmode, label=label)
+        if "target" in config["apply_cal"]["applyto"]:
+            applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
+                    "nearest", "target", pipeline, calmode=calmode, label=label)
+    else:
+        primary = solve(msname, msinfo, recipe, config, pipeline,
+                        prefix_msbase, label=label, ftype="primary")
 
-            secondary = solve(msname, msinfo, recipe, config, pipeline, i,
-                            prefix_msbase, label=label, ftype="secondary",
-                            prev=primary, prev_name="primary", smodel=True)
+        secondary = solve(msname, msinfo, recipe, config, pipeline,
+                        prefix_msbase, label=label, ftype="secondary",
+                        prev=primary, prev_name="primary", smodel=True)
 
-            interps = primary["interps"]
-            gaintables = primary["gaintables"]
+        interps = primary["interps"]
+        gaintables = primary["gaintables"]
 
-            if "bpcal" in config["apply_cal"]["applyto"]:
-                applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-                        "nearest", "bpcal", pipeline, i, calmode=calmode, label=label)
+        if "bpcal" in config["apply_cal"]["applyto"]:
+            applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
+                    "nearest", "bpcal", pipeline, calmode=calmode, label=label)
 
-            interps = secondary["interps"]
-            gainfields = secondary["gainfield"]
-            gaintables = secondary["gaintables"]
+        interps = secondary["interps"]
+        gainfields = secondary["gainfield"]
+        gaintables = secondary["gaintables"]
 
-            if "gcal" in config["apply_cal"]["applyto"]:
-                applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
-                        gainfields, "gcal", pipeline, i, calmode=calmode, label=label)
-            if "xcal" in config["apply_cal"]["applyto"]:
-                applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
-                        "nearest", "xcal", pipeline, i, calmode=calmode, label=label)
-            if "target" in config["apply_cal"]["applyto"]:
-                applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
-                        "nearest", "target", pipeline, i, calmode=calmode, label=label)
+        if "gcal" in config["apply_cal"]["applyto"]:
+            applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
+                    gainfields, "gcal", pipeline, calmode=calmode, label=label)
+        if "xcal" in config["apply_cal"]["applyto"]:
+            applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
+                    "nearest", "xcal", pipeline, calmode=calmode, label=label)
+        if "target" in config["apply_cal"]["applyto"]:
+            applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
+                    "nearest", "target", pipeline, calmode=calmode, label=label)
 
-        if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
-            substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, i)
-            manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep,
-                                overwrite=config['overwrite_flagvers'])
+    if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
+        substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, obsid)
+        manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep,
+                            overwrite=config['overwrite_flagvers'])
 
-        applycal_recipes = callibs.new_callib()
-        # the fluxscale_field has already been chosen, so using "nearest" here does not make sense to FROM(Sphe)
-        # see issue #1474 
-        primary_tables = get_caltab_final(primary_order, primary["gaintables"], primary["interps"], fluxscale_field)
-        if no_secondary:
-            for gt, itp, fd in zip(*primary_tables):
-                callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)
-        else:
-            # default recipes from secondary
-            for gt, itp, fd in zip(*get_caltab_final(secondary_order, secondary["gaintables"], secondary["interps"],
-                                                    gainfields)):
-                # if the table is already applied with the primary in it, re-add it with an "all" (empty) field
-                # add_callib_recipe(applycal_recipes, gt, itp, fd, '' if gt in applycal_recipes else targets)
-                callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)
-            # make list of primary recipes that apply specifically to primary
-            for gt, itp, fd in zip(*primary_tables):
-                callibs.add_callib_recipe(applycal_recipes, gt, itp, fd, field=fluxscale_field)
+    applycal_recipes = callibs.new_callib()
+    # the fluxscale_field has already been chosen, so using "nearest" here does not make sense to FROM(Sphe)
+    # see issue #1474 
+    primary_tables = get_caltab_final(primary_order, primary["gaintables"], primary["interps"], fluxscale_field)
+    if no_secondary:
+        for gt, itp, fd in zip(*primary_tables):
+            callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)
+    else:
+        # default recipes from secondary
+        for gt, itp, fd in zip(*get_caltab_final(secondary_order, secondary["gaintables"], secondary["interps"],
+                                                gainfields)):
+            # if the table is already applied with the primary in it, re-add it with an "all" (empty) field
+            # add_callib_recipe(applycal_recipes, gt, itp, fd, '' if gt in applycal_recipes else targets)
+            callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)
+        # make list of primary recipes that apply specifically to primary
+        for gt, itp, fd in zip(*primary_tables):
+            callibs.add_callib_recipe(applycal_recipes, gt, itp, fd, field=fluxscale_field)
 
-        pipeline.save_callib(applycal_recipes, prefix_msbase)
+    pipeline.save_callib(applycal_recipes, prefix_msbase)
 
-        if pipeline.enable_task(config, 'summary'):
-            step = 'summary-{0:s}-{1:d}'.format(label, i)
-            recipe.add('cab/flagstats', step,
-                        {
-                            "msname": msname,
-                            "plot": True,
-                            "outfile": ('{0:s}-{1:s}-'
-                                        'crosscal-summary-{2:d}.json').format(
-                                prefix_msbase, wname, i),
-                            "htmlfile": ('{0:s}-{1:s}-'
-                                        'crosscal-summary-plots-{2:d}.html').format(
-                                prefix_msbase, wname, i)
-                        },
-                        input=pipeline.input,
-                        output=pipeline.diagnostic_plots,
-                        label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
-            recipe.run()
-            # Empty job que after execution
-            recipe.jobs = []
+    if pipeline.enable_task(config, 'summary'):
+        step = 'summary-{0:s}-{1:d}'.format(label, obsid)
+        recipe.add('cab/flagstats', step,
+                    {
+                        "msname": msname,
+                        "plot": True,
+                        "outfile": ('{0:s}-{1:s}-'
+                                    'crosscal-summary-{2:d}.json').format(
+                            prefix_msbase, wname, obsid),
+                        "htmlfile": ('{0:s}-{1:s}-'
+                                    'crosscal-summary-plots-{2:d}.html').format(
+                            prefix_msbase, wname, obsid)
+                    },
+                    input=pipeline.input,
+                    output=pipeline.diagnostic_plots,
+                    label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
+        recipe.run()
+        # Empty job que after execution
+        recipe.jobs = []

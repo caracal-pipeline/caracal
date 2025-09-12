@@ -3,27 +3,10 @@ import caracal
 import numpy as np
 import os
 import shutil
-from caracal.workers import PIPELINE_MIN_REQUIRES
-from caracal.utils import ObjDict
 
 
 NAME = 'Automatically Categorize Observed Fields'
 LABEL = 'obsconf'
-
-PIPELINE_REQUIRES = PIPELINE_MIN_REQUIRES + [
-   "msbasename",
-   "obsinfo",
-   "get_msinfo",
-]
-
-DIRECTORIES = []
-
-WORKER_INPUTS = ObjDict.from_dict({
-    "msname" : "Name of input MS",
-    "msbasename": "MS basename",
-    "obsid": "Observation index",
-    "name": "Name of worker"
-})
 
 def repeat_val(val, n):
     l = []
@@ -126,20 +109,9 @@ def worker(pipeline, recipe, config):
     # initialse things
     for item in 'xcal fcal bpcal gcal target refant minbase maxdist'.split():
         val = config[item]
-        for attr in ["", "_ra", "_dec", "_id"]:
-            setattr(pipeline, item + attr, val)
-
-    pipeline.nchans = None
-    pipeline.firstchanfreq = None
-    pipeline.lastchanfreq = None 
-    pipeline.chanwidth = None
-    pipeline.specframe = None
-    pipeline.startdate = None
-    pipeline.enddate = None
-
+        setattr(pipeline, item, val)
     
     caracal.log.info(f"MS #{obsid}: {msname}")
-
     msdict = pipeline.get_msinfo(msname)
     obsinfo = f'{msroot}-obsinfo.txt'
     summary = f'{msroot}-summary.json'
@@ -174,11 +146,6 @@ def worker(pipeline, recipe, config):
                 month_num = '{:02d}'.format(calender_month_abbr.index(month_abbr.lower()) + 1)
                 correct_date = ''.join([year, month_num, day, hr, minute, sec])
                 pipeline.enddate  = float(correct_date)
-
-    # get reference antenna LEAVING THIS LINE HERE
-    # FOR WHEN WE COME UP WITH A WAY TO AUTOSELECT
-    # if config.get('refant') == 'auto':
-    #    pipeline.refant[i] = '0'
 
     # Get channels in MS
     spw = msdict['SPW']['NUM_CHAN']

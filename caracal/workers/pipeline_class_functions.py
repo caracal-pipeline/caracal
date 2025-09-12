@@ -2,7 +2,6 @@ import os
 from caracal import log
 from caracal.dispatch_crew import utils
 from collections import OrderedDict
-import itertools
 import ruamel.yaml
 
 yaml = ruamel.yaml.YAML(typ="rt")
@@ -98,8 +97,8 @@ def load_callib(pipeline, /, name):
 
 def save_callib(pipeline, /, callib, name):
     """Dumps caldict to calibration library specified by name"""
-    with open(get_callib_name(pipeline, name), 'w') as f:
-        ruamel.yaml.dump(callib, f, ruamel.yaml.RoundTripDumper)
+    with open(get_callib_name(pipeline, name), 'w') as stdw:
+        yaml.dump(callib, stdw)
         
 def parse_cabspec_dict(pipeline, /, cabspec_seq):
     """Turns sequence of cabspecs into a Stimela cabspec dict"""

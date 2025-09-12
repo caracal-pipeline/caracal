@@ -208,7 +208,7 @@ def get_xy(plot_name):
     return basic[plot_name]
 
 
-def get_cfg_fields(pipeline, iobs, cfg_field, label_in):
+def get_cfg_fields(pipeline, cfg_field):
     """
     Convert field representative names (e.g bpcal etc) to actual field names
     and ids
@@ -217,13 +217,9 @@ def get_cfg_fields(pipeline, iobs, cfg_field, label_in):
     ----------
     pipeline:
         caracal pipeline object
-    iobs: :obj:`int`
-        Item number in observation list
     cfg_field: :obj:`str`
         A string from the field section configuration file containing the
         representative field names
-    label_in: str
-        Label associated with input MS
 
     Returns
     -------
@@ -242,11 +238,11 @@ def get_cfg_fields(pipeline, iobs, cfg_field, label_in):
         # meaning the field specified were comma separated
         cfg_field = set(cfg_field.split())
         f_types = (cfg_field if cfg_field.issubset(cases["calibrators"])
-                   else [])
+                else [])
     # convert field types to field names and field IDs
     fields = {}
     for f_type in f_types:
-        fnames = getattr(pipeline, f_type)[iobs]
+        fnames = getattr(pipeline, f_type)
         for _fname in fnames:
             fields.setdefault(_fname, []).append(f_type)
 
@@ -367,7 +363,7 @@ def _process_shadems_plot_list(plot_args, basesubst, plotlist, defaults, descrip
             raise ConfigurationError(f"{description}: unexpected 'plots' entry of type {type(entry)}")
 
 
-def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
+def direct_shadems(pipeline, recipe, shade_cfg):
     """
     Create recipes for the new shade-ms plots
     """
@@ -553,8 +549,6 @@ def worker(pipeline, recipe, config):
     plot_axes = plot_axes._asdict()
 
     # general pipeline setup
-    nobs = pipeline.nobs
-
     subdir = gen_params.dirname
     label_in = gen_params.label_in
     label = gen_params.label_plot
@@ -566,71 +560,70 @@ def worker(pipeline, recipe, config):
     else:
         output_dir = pipeline.diagnostic_plots
 
-    for iobs in range(nobs):
-        mslist = pipeline.get_mslist(iobs, label_in,
-                                    target=(config['field'] == 'target'))
+    iobs = pipeline.obsid
+    mslist = pipeline.get_mslist(label_in,
+                                target=(config['field'] == 'target'))
 
-        for ms in mslist:
-            if not ms_exists(pipeline.msdir, ms):
-                raise IOError(f"MS {ms} does not exist. Please check that is where it should be.")
+    for ms in mslist:
+        if not ms_exists(pipeline.msdir, ms):
+            raise IOError(f"MS {ms} does not exist. Please check that is where it should be.")
 
-            log.info(f"Plotting MS: {ms}")
+        log.info(f"Plotting MS: {ms}")
 
-            ms_base = os.path.splitext(ms)[0]
+        ms_base = os.path.splitext(ms)[0]
 
-            ms_info_dict = pipeline.get_msinfo(ms)
-            # get corr types for MS
-            ms_corrs = ms_info_dict["CORR"]["CORR_TYPE"]
+        ms_info_dict = pipeline.get_msinfo(ms)
+        # get corr types for MS
+        ms_corrs = ms_info_dict["CORR"]["CORR_TYPE"]
 
-            corrs = get_cfg_corrs(plotter_params.correlation, ms_corrs)
+        corrs = get_cfg_corrs(plotter_params.correlation, ms_corrs)
 
-            fields = get_cfg_fields(pipeline, iobs, plotter_params.field,
-                                    label_in)
+        fields = get_cfg_fields(pipeline, plotter_params.field)
 
-            if fields is None:
-                raise ValueError(f"""
-                    Eligible values for 'field': 'target', \
-                    'calibrators', 'fcal', 'bpcal', 'xcal' or 'gcal'. \
-                    User selected {",".join(fields)}""")
+        if fields is None:
+            raise ValueError(f"""
+                Eligible values for 'field': 'target', \
+                'calibrators', 'fcal', 'bpcal', 'xcal' or 'gcal'. \
+                User selected {",".join(fields)}""")
 
-            # for the newer plots to shadems
-            if pipeline.enable_task(config, "shadems"):
-                shade_cfg = config["shadems"]
-                shade_cfg.update({
-                    "ms": ms,
-                    "iobs": iobs,
-                    "label": label,
-                    "corrs": corrs,
-                    "fields": fields,
-                    "ms_base": ms_base,
-                    "output_dir": output_dir})
-                direct_shadems(pipeline, recipe, shade_cfg)
+        # for the newer plots to shadems
+        if pipeline.enable_task(config, "shadems"):
+            shade_cfg = config["shadems"]
+            shade_cfg.update({
+                "ms": ms,
+                "iobs": iobs,
+                "label": label,
+                "corrs": corrs,
+                "fields": fields,
+                "ms_base": ms_base,
+                "output_dir": output_dir})
+            direct_shadems(pipeline, recipe, shade_cfg)
 
-            # the older plots
-            if plotter and plotter != "none":
-                for axes in plot_axes:
-                    if pipeline.enable_task(config, axes):
-                        del plot_axes[axes]["enable"]
-                    else:
-                        continue
+        # the older plots
+        if plotter and plotter != "none":
+            for axes in plot_axes:
+                if pipeline.enable_task(config, axes):
+                    del plot_axes[axes]["enable"]
+                else:
+                    continue
 
-                    plot_args = get_xy(axes)
+                plot_args = get_xy(axes)
 
-                    for fname, ftype in fields.items():
-                        plot_args.update({
-                            "ms": ms,
-                            "data": check_data(plot_axes[axes].get("col")),
-                            "corr": corrs,
-                            "iterate": "corr",
-                            # "colour": "scan",
-                            "num_cores": plotter_params.num_cores,
-                            "mem_limit": plotter_params.mem_limit,
-                            "uvrange": plotter_params.uvrange,
-                            "field": fname,
-                            "output": f"{label}-{ms_base}-{ftype[0]}-{fname}-{axes}",
-                            "output_dir": output_dir,
-                            "step": f"plot-{axes}-{iobs}-{ftype[0]}",
-                            "label": label,
-                            **plot_axes[axes]})
+                for fname, ftype in fields.items():
+                    plot_args.update({
+                        "ms": ms,
+                        "data": check_data(plot_axes[axes].get("col")),
+                        "corr": corrs,
+                        "iterate": "corr",
+                        # "colour": "scan",
+                        "num_cores": plotter_params.num_cores,
+                        "mem_limit": plotter_params.mem_limit,
+                        "uvrange": plotter_params.uvrange,
+                        "field": fname,
+                        "output": f"{label}-{ms_base}-{ftype[0]}-{fname}-{axes}",
+                        "output_dir": output_dir,
+                        "step": f"plot-{axes}-{iobs}-{ftype[0]}",
+                        "label": label,
+                        **plot_axes[axes]})
 
-                        globals()[plotter](pipeline, recipe, plot_args, extras=None)
+                    globals()[plotter](pipeline, recipe, plot_args, extras=None)

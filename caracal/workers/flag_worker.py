@@ -438,17 +438,18 @@ def worker(pipeline, recipe, config):
                         if bandwidth <= 20.0:
                             caracal.log.info("Narrowband data detected, selecting appropriate flagging strategy")
                             tricolour_strat = config['flag_rfi']['tricolour']['strat_narrow']
-
+                    args = {
+                                "ms": msname,
+                                "data-column": config['flag_rfi']['col'],
+                                "window-backend": config['flag_rfi']['tricolour']['backend'],
+                                "field-names": fields,
+                                "flagging-strategy": 'polarisation',
+                                "config": tricolour_strat,
+                               }
+                    smc = config['flag_rfi']['tricolour']['subtract_model_column']
+                    args.update({"subtract-model-column": smc} if smc else {})
                     caracal.log.info("Flagging strategy in use: {0:}".format(tricolour_strat))
-                    recipe.add('cab/tricolour', step,
-                               {
-                                   "ms": msname,
-                                   "data-column": config['flag_rfi']['col'],
-                                   "window-backend": config['flag_rfi']['tricolour']['backend'],
-                                   "field-names": fields,
-                                   "flagging-strategy": 'polarisation',
-                                   "config": tricolour_strat,
-                               },
+                    recipe.add('cab/tricolour', step, args,
                                input=pipeline.input,
                                output=pipeline.output,
                                label='{0:s}:: Tricolour auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))

@@ -47,7 +47,7 @@ Choose the name of the virtual environment `${caracal-venv}`. Then:
 
 ..  code-block:: bash
 
-    $ python3 -m venv ${caracal-venv}  # Ensure Python version is between 3.8 and 3.11.
+    $ python3 -m venv ${caracal-venv}  # Ensure Python version is between 3.9 and 3.12.
 
 OR, if the command above does not work
 
@@ -169,8 +169,9 @@ Install the latest release with:
     pip install -U caracal
 
 
-NB: The stimela singularity images needed for CARACal are stored in this location: ``/software/astro/caracal/``
-where you can access the latest version of the images, for example, ``/software/astro/caracal/STIMELA_IMAGES_1.7.0``. 
+NB: The latest version of stimela singularity images needed for CARACal are stored in this location:
+``/idia/software/containers/STIMELA_IMAGES/``. For older versions, refer to the legacy directory:
+``/idia/software/containers/STIMELA_IMAGES_legacy/``. 
 
 =======
 Running

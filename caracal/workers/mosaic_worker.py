@@ -1,17 +1,14 @@
-# -*- coding: future_fstrings -*-
 import os
 import glob
 import sys
 import caracal
 import numpy as np
 from caracal.dispatch_crew import utils
-from caracal.utils.requires import extras
 
 NAME = "Mosaic 2D-images or cubes"
 LABEL = 'mosaic'
 
 
-@extras(packages="astropy")
 def worker(pipeline, recipe, config):
 
     from astropy import units as u
@@ -253,6 +250,14 @@ def worker(pipeline, recipe, config):
 
     caracal.log.info('PLEASE CHECK -- Images to be mosaicked are:')
     caracal.log.info(specified_images)
+
+    found_stokes = (np.array([fits.getval(ff, 'naxis') for ff in specified_images]) == 4).sum()
+    if found_stokes:
+        caracal.log.error('At least one of the input cubes has 4 axis. Mosaic Steward will not work.')
+        caracal.log.error('In order to proceed please run the line worker with the removal of the Stokes axis enabled.')
+        caracal.log.error('    line: remove_stokes_axis: enable: true')
+        caracal.log.error('You may also want to disable any steps of the line worker that you do not need to repeat (e.g., make_cube).')
+        raise caracal.BadDataError('Stokes axis in input cubes. Cannot proceed')
 
     # Although montage_mosaic checks whether pb.fits files are present, we need to do this earlier in the worker,
     # so that we can create simple Gaussian (or Mauchian) primary beams if need be

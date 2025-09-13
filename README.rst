@@ -25,11 +25,11 @@ When using CARACal please be aware of and adhere to the `CARACal publication pol
 
 Requirements
 ------------
-* `Python <https://www.python.org>`_ 3.8 or higher.
+* `Python <https://www.python.org>`_ 3.9 - 3.12. (For Python version below 3.12 if working on Ubuntu> 22.04. Install the earlier Python version through this `link <https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa>`_)
 * Container technology of your choice. It can be one of the following:
     * `Docker <https://www.docker.com>`_
-    * `Podman <https://podman.io/>`_
-    * `Singularity <https://github.com/sylabs/singularity>`_ 3.5 - 3.9 (nearly all functionality available for > 2.6.0-dist, see `here <https://github.com/caracal-pipeline/caracal/issues/1154>`_ for further information) 
+    * `Podman <https://podman.io>`_
+    * `Singularity <https://github.com/sylabs/singularity>`_ 3.5 - 4.1 (nearly all functionality available for > 2.6.0-dist, see `here <https://github.com/caracal-pipeline/caracal/issues/1154>`_ for further information) 
         * `Apptainer <https://apptainer.org>`_ does not support all CARACal functionalities (at the moment).
 
 ============
@@ -47,7 +47,7 @@ Choose the name of the virtual environment `${caracal-venv}`. Then:
 
 ..  code-block:: bash
 
-    $ python3 -m venv ${caracal-venv}
+    $ python3 -m venv ${caracal-venv}  # Ensure Python version is between 3.9 and 3.12.
 
 OR, if the command above does not work
 
@@ -63,21 +63,49 @@ For a CARACal stable release run:
 
     pip install -U caracal
 
-CARACal has a few optional dependencies (*scipy, astropy, regions, astroquery*) which are not installed by default. But to get full functionality, you can install them by running:
-
-..  code-block:: bash
-
-    pip install -U caracal[all]
-
 And CARACal developer version which is not recommended for users:
 
 ..  code-block:: bash
 
-    pip install -U 'caracal[all] @ git+https://github.com/caracal-pipeline/caracal.git@master'
-
+    pip install -U 'caracal @ git+https://github.com/caracal-pipeline/caracal.git@master'
 
 
 *Ignore any error messages concerning `pyregion`.*
+
+1.1 container configuration 
+------------------------
+
+In case you are *not* carrying out a fresh installation, remove earlier Stimela images with:
+
+..  code-block:: bash
+
+    stimela clean -ac
+
+
+Then, if using `Docker <https://www.docker.com>`_:
+
+..  code-block:: bash
+
+    stimela pull
+
+If using `Singularity <https://github.com/sylabs/singularity>`_, choose a pull folder ``${singularity_pull_folder}``, where the `Singularity <https://github.com/sylabs/singularity>`_ images are stored and define an environment variable by adding this in the rc file of your shell (e.g. .bashrc):
+
+..  code-block:: bash
+
+    export SINGULARITY_PULLFOLDER=${WORKSPACE_ROOT}/singularity_images
+
+and run:
+
+..  code-block:: bash
+
+    stimela pull -s
+
+If using `Podman <https://podman.io>`_:
+
+..  code-block:: bash
+
+  stimela pull -p 
+
 
 2. `caratekit.sh` script
 ------------------------
@@ -112,7 +140,7 @@ In the working directory where source is checked out run `poetry install` or to 
 
 ..  code-block:: bash
 
-    poetry install --extras all
+    poetry install
 
 =========================================
 Installation on (ILIFU) slurm environment
@@ -141,8 +169,9 @@ Install the latest release with:
     pip install -U caracal
 
 
-NB: The stimela singularity images needed for CARACal are stored in this location: ``/software/astro/caracal/``
-where you can access the latest version of the images, for example, ``/software/astro/caracal/STIMELA_IMAGES_1.7.0``. 
+NB: The latest version of stimela singularity images needed for CARACal are stored in this location:
+``/idia/software/containers/STIMELA_IMAGES/``. For older versions, refer to the legacy directory:
+``/idia/software/containers/STIMELA_IMAGES_legacy/``. 
 
 =======
 Running
@@ -187,36 +216,7 @@ When opening a new issue, please include your:
   #. CARACal configuration file
   #. CARACal log files.
 
-In case you are *not* carrying out a fresh installation, remove earlier Stimela images with:
 
-..  code-block:: bash
-
-    stimela clean -ac
-
-
-Then, if using `Docker <https://www.docker.com>`_:
-
-..  code-block:: bash
-
-    stimela pull
-
-If using `Singularity <https://github.com/sylabs/singularity>`_, choose a pull folder ``${singularity_pull_folder}``, where the `Singularity <https://github.com/sylabs/singularity>`_ images are stored and define an environment variable by adding this in the rc file of your shell (e.g. .bashrc):
-
-..  code-block:: bash
-
-    export SINGULARITY_PULLFOLDER=${WORKSPACE_ROOT}/singularity_images
-
-and run:
-
-..  code-block:: bash
-
-    stimela pull -s
-
-If using `Podman <https://podman.io>`_:
-
-..  code-block:: bash
-
-  stimela pull -p 
 
 =======
 License

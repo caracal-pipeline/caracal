@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 import sys
 import os
 import glob
@@ -19,7 +18,6 @@ from caracal.workers.utils import remove_output_products
 from caracal.workers.utils import image_contsub
 from caracal.workers.utils import flag_Uzeros
 from casacore.tables import table
-from caracal.utils.requires import extras
 
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
@@ -36,7 +34,6 @@ def add_ms_label(msname, label="mst"):
     return f"{msbase}_{label}{ext}"
 
 
-@extras("astropy")
 def freq_to_vel(filename, reverse):
     from astropy.io import fits
     C = 2.99792458e+8       # m/s
@@ -89,7 +86,6 @@ def freq_to_vel(filename, reverse):
                         'Skipping conversion for {0:s}. Input is not a cube or not in velocity.'.format(filename))
 
 
-@extras("astropy")
 def remove_stokes_axis(filename):
     from astropy.io import fits
     if not os.path.exists(filename):
@@ -112,7 +108,6 @@ def remove_stokes_axis(filename):
                     'Skipping Stokes axis removal for {0:s}. Input cube has less than 4 axis or the 4th axis type is not "STOKES".'.format(filename))
 
 
-@extras("astropy")
 def fix_specsys_ra(filename, specframe):
     from astropy.io import fits
     # Reference frame codes below from from http://www.eso.org/~jagonzal/telcal/Juan-Ramon/SDMTables.pdf, Sec. 2.50 and
@@ -140,7 +135,6 @@ def fix_specsys_ra(filename, specframe):
                 headcube['CRVAL1'] += 360.
 
 
-@extras("astropy")
 def make_pb_cube(filename, apply_corr, typ, dish_size, cutoff):
     from astropy.io import fits
     C = 2.99792458e+8       # m/s
@@ -160,8 +154,8 @@ def make_pb_cube(filename, apply_corr, typ, dish_size, cutoff):
             datacube.resize((1, datacube.shape[0], datacube.shape[1]))
 
             datacube = np.repeat(datacube,
-                                 headcube['naxis3'],
-                                 axis=0) * np.abs(headcube['cdelt1'])
+                                headcube['naxis3'],
+                                axis=0) * np.abs(headcube['cdelt1'])
 
             cdelt3 = float(headcube['cdelt3'])
             crval3 = float(headcube['crval3'])
@@ -176,7 +170,7 @@ def make_pb_cube(filename, apply_corr, typ, dish_size, cutoff):
                 crval3 = restfreq * (1 - crval3 / C)
 
             freq = (crval3 + cdelt3 * (np.arange(headcube['naxis3'], dtype=np.float32) -
-                                       headcube['crpix3'] + 1))
+                                        headcube['crpix3'] + 1))
 
             if typ == 'gauss':
                 sigma_pb = 17.52 / (freq / 1e+9) / dish_size / 2.355
@@ -192,15 +186,14 @@ def make_pb_cube(filename, apply_corr, typ, dish_size, cutoff):
             if headcube['naxis'] == 4:
                 datacube = np.expand_dims(datacube, 0)
             fits.writeto(filename.replace('image.fits', 'pb.fits'),
-                         datacube, header=headcube, overwrite=True)
+                        datacube, header=headcube, overwrite=True)
             if apply_corr:
                 fits.writeto(filename.replace('image.fits', 'pb_corr.fits'),
-                             cube[0].data / datacube, header=headcube, overwrite=True)  # Applying the primary beam correction
+                            cube[0].data / datacube, header=headcube, overwrite=True)  # Applying the primary beam correction
             caracal.log.info('Created primary beam cube FITS {0:s}'.format(
                 filename.replace('image.fits', 'pb.fits')))
 
 
-@extras("astropy")
 def calc_rms(filename, linemaskname):
     from astropy.io import fits
     if linemaskname is None:
@@ -225,7 +218,6 @@ def calc_rms(filename, linemaskname):
         return np.sqrt(np.nansum(y2 * y2, dtype=np.float64) / y2.size)
 
 
-@extras(packages="astropy")
 def worker(pipeline, recipe, config):
     import astropy
     from astropy.io import fits
@@ -420,8 +412,8 @@ def worker(pipeline, recipe, config):
                     if version != available_flagversions[-1]:
                         substep = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, i)
                         manflags.delete_cflags(pipeline, recipe,
-                                               available_flagversions[available_flagversions.index(version) + 1],
-                                               msname, cab_name=substep)
+                                                available_flagversions[available_flagversions.index(version) + 1],
+                                                msname, cab_name=substep)
                     if version != flags_before_worker and flag_main_ms:
                         substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                         manflags.add_cflags(pipeline, recipe, flags_before_worker,
@@ -463,17 +455,17 @@ def worker(pipeline, recipe, config):
 
             step = 'modelsub-ms{:d}'.format(i)
             recipe.add('cab/msutils', step,
-                       {
-                           "command": 'sumcols',
-                           "msname": msname,
-                           "subtract": True,
-                           "col1": 'CORRECTED_DATA',
-                           "col2": 'MODEL_DATA',
-                           "column": 'CORRECTED_DATA'
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Subtract model column'.format(step))
+                        {
+                            "command": 'sumcols',
+                            "msname": msname,
+                            "subtract": True,
+                            "col1": 'CORRECTED_DATA',
+                            "col2": 'MODEL_DATA',
+                            "column": 'CORRECTED_DATA'
+                        },
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label='{0:s}:: Subtract model column'.format(step))
 
             t.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub - 1)
             t.close()
@@ -500,16 +492,16 @@ def worker(pipeline, recipe, config):
 
             step = 'modeladd-ms{:d}'.format(i)
             recipe.add('cab/msutils', step,
-                       {
-                           "command": 'sumcols',
-                           "msname": msname,
-                           "col1": 'CORRECTED_DATA',
-                           "col2": 'MODEL_DATA',
-                           "column": 'CORRECTED_DATA'
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Add model column'.format(step))
+                        {
+                            "command": 'sumcols',
+                            "msname": msname,
+                            "col1": 'CORRECTED_DATA',
+                            "col2": 'MODEL_DATA',
+                            "column": 'CORRECTED_DATA'
+                        },
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label='{0:s}:: Add model column'.format(step))
 
             t.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub + 1)
             t.close()
@@ -591,8 +583,8 @@ def worker(pipeline, recipe, config):
             col = config['mstransform']['col']
             step = 'mstransform-ms{:d}'.format(i)
             recipe.add('cab/casa_mstransform',
-                       step,
-                       {"msname": msname,
+                    step,
+                        {"msname": msname,
                         "outputvis": msname_mst,
                         "regridms": pipeline.enable_task(config['mstransform'], 'doppler'),
                         "mode": config['mstransform']['doppler']['mode'],
@@ -608,9 +600,9 @@ def worker(pipeline, recipe, config):
                         "fitspw": sdm.dismissable(fitspw),
                         "fitorder": config['mstransform']['uvlin']['fitorder'],
                         },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Doppler tracking corrections'.format(step))
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label='{0:s}:: Doppler tracking corrections'.format(step))
 
             substep = 'save-{0:s}-ms{1:d}'.format('caracal_legacy', i)
             manflags.add_cflags(pipeline, recipe, 'caracal_legacy', msname_mst,
@@ -619,15 +611,16 @@ def worker(pipeline, recipe, config):
             if config['mstransform']['obsinfo']:
                 step = 'listobs-ms{:d}'.format(i)
                 recipe.add('cab/casa_listobs',
-                           step,
-                           {"vis": msname_mst,
-                            "listfile": '{0:s}-obsinfo.txt:msfile'.format(msname_mst_base),
-                            "overwrite": True,
+                            step,
+                            {
+                                "vis": msname_mst,
+                                "listfile": '{0:s}-obsinfo.txt:msfile'.format(msname_mst_base),
+                                "overwrite": True,
                             },
-                           input=pipeline.input,
-                           output=pipeline.obsinfo,
-                           label='{0:s}:: Get observation information ms={1:s}'.format(step,
-                                                                                       msname_mst))
+                            input=pipeline.input,
+                            output=pipeline.obsinfo,
+                            label='{0:s}:: Get observation information ms={1:s}'.format(step,
+                                                                                    msname_mst))
 
                 step = 'summary_json-ms{:d}'.format(i)
                 recipe.add(
@@ -674,8 +667,8 @@ def worker(pipeline, recipe, config):
                     if version != available_flagversions[-1]:
                         substep = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, i)
                         manflags.delete_cflags(pipeline, recipe,
-                                               available_flagversions[available_flagversions.index(version) + 1],
-                                               msname_mst, cab_name=substep)
+                                                available_flagversions[available_flagversions.index(version) + 1],
+                                                msname_mst, cab_name=substep)
                     if version != flags_before_worker and flag_mst_ms:
                         substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                         manflags.add_cflags(pipeline, recipe, flags_before_worker,
@@ -697,17 +690,18 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'flag_mst_errors'):
             step = 'flag_mst_errors-ms{0:d}'.format(i)
             recipe.add('cab/autoflagger',
-                       step,
-                       {"msname": msname_mst,
+                    step,
+                    {
+                        "msname": msname_mst,
                         "column": 'DATA',
                         "strategy": config['flag_mst_errors']['strategy'],
                         "indirect-read": True if config['flag_mst_errors']['readmode'] == 'indirect' else False,
                         "memory-read": True if config['flag_mst_errors']['readmode'] == 'memory' else False,
                         "auto-read-mode": True if config['flag_mst_errors']['readmode'] == 'auto' else False,
-                        },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: file ms={1:s}'.format(step, msname_mst))
+                    },
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label='{0:s}:: file ms={1:s}'.format(step, msname_mst))
 
         recipe.run()
         recipe.jobs = []
@@ -729,29 +723,29 @@ def worker(pipeline, recipe, config):
                 msnamesb = msname
             step = 'sunblocker-ms{0:d}'.format(i)
             recipe.add("cab/sunblocker", step,
-                       {
-                           "command": "phazer",
-                           "inset": msnamesb,
-                           "outset": msnamesb,
-                           "imsize": config['sunblocker']['imsize'],
-                           "cell": config['sunblocker']['cell'],
-                           "pol": 'i',
-                           "threshmode": 'mad',
-                           "threshold": config['sunblocker']['thr'],
-                           "mode": 'all',
-                           "radrange": 0,
-                           "angle": 0,
-                           "show": pipeline.prefix + '.sunblocker.svg',
-                           "verb": True,
-                           "dryrun": False,
-                           "uvmax": config['sunblocker']['uvmax'],
-                           "uvmin": config['sunblocker']['uvmin'],
-                           "vampirisms": config['sunblocker']['vampirisms'],
-                           "flagonlyday": config['sunblocker']['flagonlyday'],
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Block out sun'.format(step))
+                        {
+                            "command": "phazer",
+                            "inset": msnamesb,
+                            "outset": msnamesb,
+                            "imsize": config['sunblocker']['imsize'],
+                            "cell": config['sunblocker']['cell'],
+                            "pol": 'i',
+                            "threshmode": 'mad',
+                            "threshold": config['sunblocker']['thr'],
+                            "mode": 'all',
+                            "radrange": 0,
+                            "angle": 0,
+                            "show": pipeline.prefix + '.sunblocker.svg',
+                            "verb": True,
+                            "dryrun": False,
+                            "uvmax": config['sunblocker']['uvmax'],
+                            "uvmin": config['sunblocker']['uvmin'],
+                            "vampirisms": config['sunblocker']['vampirisms'],
+                            "flagonlyday": config['sunblocker']['flagonlyday'],
+                        },
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label='{0:s}:: Block out sun'.format(step))
 
         if flag_main_ms:
             substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, i)
@@ -920,14 +914,13 @@ def worker(pipeline, recipe, config):
                         doProj = False
                         doSpec = False
                         C = 2.99792458e+8  # m/s
-                        femit = [r.strip() for r in re.split('([-+]?\d+\.\d+)|([-+]?\d+)', restfreq.strip()) if r is not None and r.strip() != '']
+                        femit = [r.strip() for r in re.split(r'([-+]?\d+\.\d+)|([-+]?\d+)', restfreq.strip()) if r is not None and r.strip() != '']
                         femit = (eval(femit[0]) * units.Unit(femit[1])).to(units.Hz).value  # Hz
-                        t = summary_file if config['make_cube']['use_mstransform'] else summary_file.replace('_mst', '')
+                        t = mslist[0].replace('.ms', '-summary.json') # first file given to WSClean as input
                         with open('{}/{}'.format(pipeline.msdir, t)) as f:
                             obsDict = json.load(f)
                         raTarget = np.round(obsDict['FIELD']['REFERENCE_DIR'][0][0][0] / np.pi * 180, 5)
                         decTarget = np.round(obsDict['FIELD']['REFERENCE_DIR'][0][0][1] / np.pi * 180, 5)
-
                         cubeHeight = config['make_cube']['npix'][0]
                         cubeWidth = config['make_cube']['npix'][1] if len(config['make_cube']['npix']) == 2 else cubeHeight
 
@@ -941,7 +934,7 @@ def worker(pipeline, recipe, config):
                         caracal.log.info('CubeHeight (px) = {}'.format(cubeHeight))
                         caracal.log.info('CubeWidht (px) = {}'.format(cubeWidth))
 
-                        postGridMask = preGridMask.replace('.fits', '_{}_regrid.fits'.format(pipeline.prefix))
+                        postGridMask = preGridMask.replace('.fits', '_{}_{}_regrid.fits'.format(pipeline.prefix, target))
 
                         with fits.open('{}/{}'.format(pipeline.masking, preGridMask)) as hdul:
 
@@ -966,18 +959,22 @@ def worker(pipeline, recipe, config):
                                 doProj = True
                                 caracal.log.info('CRVAL2')
 
+                            caracal.log.info('MaskLength = {}'.format(hdul[0].header['NAXIS3']))
+                            caracal.log.info('#CHans= {}'.format(nchans))
                             if int(hdul[0].header['NAXIS3']) > int(nchans):
                                 doSpec = True
                             else:
-                                dpSpec = None  # this should work in both a request for a subset, and if the cube is to be binned.
+                                doSpec = None  # this should work in both a request for a subset, and if the cube is to be binned.
 
                             if 'FREQ' in hdul[0].header['CTYPE3']:
-                                cdelt = round(hdul[0].header['CDELT3'], 2)
+                                cdelt = np.round(hdul[0].header['CDELT3'], 5)
                             else:
-                                cdelt = round(hdul[0].header['CDELT3'] * femit / (-C), 2)
+                                cdelt = np.round(hdul[0].header['CDELT3'] * femit / (-C), 5)
 
-                            if np.round(cdelt,1) > np.round(chanwidth[0],1):
+                            caracal.log.info('CDELT = {}'.format(cdelt))
+                            caracal.log.info('ChWidth = {}'.format(chanwidth[0]))
 
+                            if np.round(cdelt,5) > np.round(chanwidth[0]*binchans,5):
                                 doSpec = True
                             elif doProj:
                                 pass
@@ -989,12 +986,10 @@ def worker(pipeline, recipe, config):
                                 for key in ['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']:
                                     ax3param.append(hdul[0].header[key])
 
- 
+
                         caracal.log.info('doSpecProj = {}'.format(doSpec))
                         caracal.log.info('+++++++++++++++++++++++++++++')
-
                         caracal.log.info('doSpaceProj = {}'.format(doProj))
-
                         caracal.log.info('+++++++++++++++++++++++++++++')
 
                         if doProj:
@@ -1033,14 +1028,14 @@ def worker(pipeline, recipe, config):
 
                             step = 'reprojectMask-field{}'.format(tt)
                             recipe.add('cab/mProjectCube', step,
-                                       {
-                                           "in.fits": preGridMask,
-                                           "out.fits": postGridMask,
-                                           "hdr.template": 'tmp.hdr',
-                                       },
-                                       input=pipeline.masking,
-                                       output=pipeline.masking,
-                                       label='{0:s}:: Reprojecting user input mask {1:s} to match the grid of the cube'.format(step, preGridMask))
+                                        {
+                                            "in.fits": preGridMask,
+                                            "out.fits": postGridMask,
+                                            "hdr.template": 'tmp.hdr',
+                                        },
+                                        input=pipeline.masking,
+                                        output=pipeline.masking,
+                                        label='{0:s}:: Reprojecting user input mask {1:s} to match the grid of the cube'.format(step, preGridMask))
 
                             # In order to make sure that we actually find stuff in the images we execute the rec ipe here
                             recipe.run()
@@ -1055,7 +1050,7 @@ def worker(pipeline, recipe, config):
                                 for i, key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):
                                     hdul[0].header[key] = ax3param[i]
                                 axDict = {'1': [2, cubeWidth],
-                                          '2': [1, cubeHeight]}
+                                        '2': [1, cubeHeight]}
                                 for i in ['1', '2']:
                                     cent, nax = hdul[0].header['CRPIX' + i], hdul[0].header['NAXIS' + i]
                                     if cent < axDict[i][1] / 2 + 1:
@@ -1119,8 +1114,19 @@ def worker(pipeline, recipe, config):
                                 crvale = C * (femit - (firstchanfreq[0] + chanwidth[0] * firstchan + nchans * binchans * chanwidth[0])) / femit
 
                             cdelt = chanwidth[0] * binchans  # in Hz
+
                             hdr = hdul[0].header
                             ax3 = np.arange(hdr['CRVAL3'] - hdr['CDELT3'] * (hdr['CRPIX3'] - 1), hdr['CRVAL3'] + hdr['CDELT3'] * (hdr['NAXIS3'] - hdr['CRPIX3'] + 1), hdr['CDELT3'])
+
+                            caracal.log.info('CDELT = {}'.format(cdelt))
+                            caracal.log.info('ChWidth = {}'.format(chanwidth[0]))
+
+                            caracal.log.info('CRVAL = {}'.format(crval))
+                            caracal.log.info('CRVALE = {}'.format(crvale))
+
+                            caracal.log.info('ax3[0] = {}'.format(ax3[0]))
+                            caracal.log.info('ax3[-1] = {}'.format(ax3[-1]))
+
                             if (np.max([crval, crvale]) <= np.max([ax3[0], ax3[-1]])) & (np.min([crval, crvale]) >= np.min([ax3[0], ax3[-1]])):
                                 caracal.log.info("Requested channels are contained in mask {}.".format(gridMask))
 
@@ -1194,33 +1200,33 @@ def worker(pipeline, recipe, config):
                     outmask = '{0:s}_{1:s}_{2:s}_{3:d}.image_clean'.format(
                         pipeline.prefix, field, line_name, j)
                     recipe.add('cab/sofia', step,
-                               {
-                                   "import.inFile": cubename,
-                                   "steps.doFlag": False,
-                                   "steps.doScaleNoise": True,
-                                   "steps.doSCfind": True,
-                                   "steps.doMerge": True,
-                                   "steps.doReliability": False,
-                                   "steps.doParameterise": False,
-                                   "steps.doWriteMask": True,
-                                   "steps.doMom0": False,
-                                   "steps.doMom1": False,
-                                   "steps.doWriteCat": False,
-                                   "flag.regions": [],
-                                   "scaleNoise.statistic": 'mad',
-                                   "SCfind.threshold": 4,
-                                   "SCfind.rmsMode": 'mad',
-                                   "merge.radiusX": 3,
-                                   "merge.radiusY": 3,
-                                   "merge.radiusZ": 3,
-                                   "merge.minSizeX": 2,
-                                   "merge.minSizeY": 2,
-                                   "merge.minSizeZ": 2,
-                                   "writeCat.basename": outmask,
-                               },
-                               input=pipeline.cubes + '/cube_' + str(j - 1),
-                               output=pipeline.output + '/' + cube_dir,
-                               label='{0:s}:: Make SoFiA mask'.format(step))
+                                {
+                                    "import.inFile": cubename,
+                                    "steps.doFlag": False,
+                                    "steps.doScaleNoise": True,
+                                    "steps.doSCfind": True,
+                                    "steps.doMerge": True,
+                                    "steps.doReliability": False,
+                                    "steps.doParameterise": False,
+                                    "steps.doWriteMask": True,
+                                    "steps.doMom0": False,
+                                    "steps.doMom1": False,
+                                    "steps.doWriteCat": False,
+                                    "flag.regions": [],
+                                    "scaleNoise.statistic": 'mad',
+                                    "SCfind.threshold": 4,
+                                    "SCfind.rmsMode": 'mad',
+                                    "merge.radiusX": 3,
+                                    "merge.radiusY": 3,
+                                    "merge.radiusZ": 3,
+                                    "merge.minSizeX": 2,
+                                    "merge.minSizeY": 2,
+                                    "merge.minSizeZ": 2,
+                                    "writeCat.basename": outmask,
+                                },
+                                input=pipeline.cubes + '/cube_' + str(j - 1),
+                                output=pipeline.output + '/' + cube_dir,
+                                label='{0:s}:: Make SoFiA mask'.format(step))
 
                     recipe.run()
                     recipe.jobs = []
@@ -1237,10 +1243,10 @@ def worker(pipeline, recipe, config):
                         del (line_image_opts['auto-mask'])
 
                 recipe.add('cab/wsclean',
-                           step, line_image_opts,
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Image Line'.format(step))
+                            step, line_image_opts,
+                            input=pipeline.input,
+                            output=pipeline.output,
+                            label='{0:s}:: Image Line'.format(step))
                 recipe.run()
                 recipe.jobs = []
 
@@ -1248,6 +1254,7 @@ def worker(pipeline, recipe, config):
                 for mfs in glob.glob('{0:s}/{1:s}/{2:s}_{3:s}_{4:s}_{5:d}-MFS*fits'.format(
                         pipeline.output, cube_dir, pipeline.prefix, field, line_name, j)):
                     os.remove(mfs)
+
 
                 # Stack channels together into cubes and fix spectral frame
                 if config['make_cube']['wscl_make_cube']:
@@ -1267,7 +1274,7 @@ def worker(pipeline, recipe, config):
                             caracal.log.warn('Skipping container {0:s}. Single channels do not exist.'.format(step))
                         else:
                             stacked_cube = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits'.format(cube_dir,
-                                                                                             pipeline.prefix, field, line_name, j, mm)
+                                                                                    pipeline.prefix, field, line_name, j, mm)
                             recipe.add(
                                 'cab/fitstool',
                                 step,
@@ -1306,12 +1313,12 @@ def worker(pipeline, recipe, config):
                         cubename = '{6:s}/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits'.format(
                             cube_dir, pipeline.prefix, field, line_name, j, ss, pipeline.output)
                         recipe.add(fix_specsys_ra,
-                                   'fixspecsysra-{0:s}-cube-field{1:d}-iter{2:d}'.format(ss.replace("_", "-"), tt, j),
-                                   {'filename': cubename,
+                                    'fixspecsysra-{0:s}-cube-field{1:d}-iter{2:d}'.format(ss.replace("_", "-"), tt, j),
+                                    {'filename': cubename,
                                     'specframe': specframe_all, },
-                                   input=pipeline.input,
-                                   output=pipeline.output,
-                                   label='Fix spectral reference frame for cube {0:s}'.format(cubename))
+                                    input=pipeline.input,
+                                    output=pipeline.output,
+                                    label='Fix spectral reference frame for cube {0:s}'.format(cubename))
 
                     recipe.run()
                     recipe.jobs = []
@@ -1401,7 +1408,7 @@ def worker(pipeline, recipe, config):
                     firstchanfreq = [ss[0] for ss in chfr]
                     lastchanfreq = [ss[-1] for ss in chfr]
                     chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1)
-                                 for ss in chfr]
+                                for ss in chfr]
                     caracal.log.info('  CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
                         ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
 
@@ -1413,7 +1420,7 @@ def worker(pipeline, recipe, config):
                 elif pipeline.enable_task(config['mstransform'], 'doppler'):
                     nchans_all[i] = [nchan_dopp for kk in chanw_all[i]]
                     specframe_all.append([{'lsrd': 0, 'lsrk': 1, 'galacto': 2, 'bary': 3, 'geo': 4, 'topo': 5}[
-                                         config['mstransform']['doppler']['frame']] for kk in chanw_all[i]])
+                                        config['mstransform']['doppler']['frame']] for kk in chanw_all[i]])
         else:
             for i, msfile in enumerate(all_msfiles):
                 msinfo = pipeline.get_msinfo(msfile)
@@ -1480,9 +1487,9 @@ def worker(pipeline, recipe, config):
                     "outertaper": config['make_cube']['taper'],
                 })
             recipe.add('cab/casa_clean', step, image_opts,
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Image Line'.format(step))
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label='{0:s}:: Image Line'.format(step))
 
     recipe.run()
     recipe.jobs = []
@@ -1512,16 +1519,17 @@ def worker(pipeline, recipe, config):
             caracal.log.info('Will create primary beam cube for target {0:d}'.format(tt))
             for uu in range(len(image_cube_list)):
                 recipe.add(make_pb_cube,
-                           'make pb_cube-{0:d}'.format(uu),
-                           {'filename': image_cube_list[uu],
-                            'apply_corr': config['pb_cube']['apply_pb'],
-                            'typ': config['pb_cube']['pb_type'],
-                            'dish_size': config['pb_cube']['dish_size'],
-                            'cutoff': config['pb_cube']['cutoff'],
+                            'make pb_cube-{0:d}'.format(uu),
+                            {
+                                'filename': image_cube_list[uu],
+                                'apply_corr': config['pb_cube']['apply_pb'],
+                                'typ': config['pb_cube']['pb_type'],
+                                'dish_size': config['pb_cube']['dish_size'],
+                                'cutoff': config['pb_cube']['cutoff'],
                             },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='Make primary beam cube for {0:s}'.format(image_cube_list[uu]))
+                            input=pipeline.input,
+                            output=pipeline.output,
+                            label='Make primary beam cube for {0:s}'.format(image_cube_list[uu]))
                 cube_list.append(image_cube_list[uu].replace('image.fits', 'pb.fits'))
                 if config['pb_cube']['apply_pb']:
                     cube_list.append(image_cube_list[uu].replace('image.fits', 'pb_corr.fits'))
@@ -1530,11 +1538,11 @@ def worker(pipeline, recipe, config):
             caracal.log.info('Will remove Stokes axis of all cubes/images of target {0:d}'.format(tt))
             for uu in range(len(cube_list)):
                 recipe.add(remove_stokes_axis,
-                           'remove_cube_stokes_axis-{0:d}'.format(uu),
-                           {'filename': cube_list[uu], },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='Remove Stokes axis for cube {0:s}'.format(cube_list[uu]))
+                            'remove_cube_stokes_axis-{0:d}'.format(uu),
+                            {'filename': cube_list[uu], },
+                            input=pipeline.input,
+                            output=pipeline.output,
+                            label='Remove Stokes axis for cube {0:s}'.format(cube_list[uu]))
 
         if pipeline.enable_task(config, 'freq_to_vel'):
             if not config['freq_to_vel']['reverse']:
@@ -1545,12 +1553,12 @@ def worker(pipeline, recipe, config):
                     'Will convert spectral axis of all cubes from radio velocity to frequency for target {0:d}'.format(tt))
             for uu in range(len(cube_list)):
                 recipe.add(freq_to_vel,
-                           'convert-spectral_header-cube{0:d}'.format(uu),
-                           {'filename': cube_list[uu],
+                            'convert-spectral_header-cube{0:d}'.format(uu),
+                            {'filename': cube_list[uu],
                             'reverse': config['freq_to_vel']['reverse'], },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='Convert spectral axis from frequency to radio velocity for cube {0:s}'.format(cube_list[uu]))
+                            input=pipeline.input,
+                            output=pipeline.output,
+                            label='Convert spectral axis from frequency to radio velocity for cube {0:s}'.format(cube_list[uu]))
 
         recipe.run()
         recipe.jobs = []
@@ -1698,14 +1706,14 @@ def worker(pipeline, recipe, config):
                 step = 'continuum-spectral_extraction-{0:d}'.format(uu)
 
                 params = {"enable_spec_ex": True,
-                          "enable_source_catalog": True,
-                          "enable_abs_plot": True,
-                          "enable_source_finder": False,
-                          "cubename": image_cube_list[uu] + ':output',
-                          "channels_per_plot": config['sharpener']['chans_per_plot'],
-                          "workdir": '{0:s}/'.format(stimela.recipe.CONT_IO["output"]),
-                          "label": config['sharpener']['label'],
-                          }
+                            "enable_source_catalog": True,
+                            "enable_abs_plot": True,
+                            "enable_source_finder": False,
+                            "cubename": image_cube_list[uu] + ':output',
+                            "channels_per_plot": config['sharpener']['chans_per_plot'],
+                            "workdir": '{0:s}/'.format(stimela.recipe.CONT_IO["output"]),
+                            "label": config['sharpener']['label'],
+                            }
 
                 runsharp = False
                 if config['sharpener']['catalog'] == 'PYBDSF':
@@ -1730,11 +1738,11 @@ def worker(pipeline, recipe, config):
                         runsharp = True
                         params["catalog"] = "PYBDSF"
                         recipe.add('cab/sharpener',
-                                   step,
-                                   params,
-                                   input='/'.join('{0:s}/{1:s}'.format(pipeline.output, image_cube_list[uu]).split('/')[:-1]),
-                                   output=pipeline.output,
-                                   label='{0:s}:: Continuum Spectral Extraction'.format(step))
+                                    step,
+                                    params,
+                                    input='/'.join('{0:s}/{1:s}'.format(pipeline.output, image_cube_list[uu]).split('/')[:-1]),
+                                    output=pipeline.output,
+                                    label='{0:s}:: Continuum Spectral Extraction'.format(step))
                     else:
                         caracal.log.warn(
                             'No PyBDSM catalogs found. Skipping continuum spectral extraction.')
@@ -1745,11 +1753,11 @@ def worker(pipeline, recipe, config):
                     params["width"] = config['sharpener']['width']
                     params["catalog"] = "NVSS"
                     recipe.add('cab/sharpener',
-                               step,
-                               params,
-                               input='/'.join('{0:s}/{1:s}'.format(pipeline.output, image_cube_list[uu]).split('/')[:-1]),
-                               output=pipeline.output,
-                               label='{0:s}:: Continuum Spectral Extraction'.format(step))
+                                step,
+                                params,
+                                input='/'.join('{0:s}/{1:s}'.format(pipeline.output, image_cube_list[uu]).split('/')[:-1]),
+                                output=pipeline.output,
+                                label='{0:s}:: Continuum Spectral Extraction'.format(step))
 
                 recipe.run()
                 recipe.jobs = []

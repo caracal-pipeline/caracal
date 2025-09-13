@@ -99,8 +99,8 @@ mapping:
             type: int
             required: false
             example: '0'
-          no_verify:
-            desc: Enables setting standard manually [???].
+          unity:
+            desc: Enables setting the calibrator to unity.
             type: bool
             required: false
             example: 'False'

@@ -107,7 +107,7 @@ mapping:
         required: false
         example: 'false'
       img_taper:
-        type: str
+        type: float
         desc: Gaussian taper for imaging (in units of arcsec).
         required: false
         example: '0.'
@@ -173,6 +173,16 @@ mapping:
         desc: Comma-separated integer scales for multiscale cleaning in pixels. If set to an empty string WSClean selects the scales automatically. These include the 0 scale, a scale calculated based on the beam size, and all scales obtained increasing the scale by a factor of 2 until the image size is reached.
         required: false
         example: ''
+      img_multiscale_bias:
+        type: float
+        desc: Comma-separated set of biases for multiscale cleaning. This balances between how sensitive the algorithm is towards large scales compared to smaller scales. Lower values will clean larger scales earlier and deeper. Its default is 0.6, which means something like “if a peak is 0.6 times larger at a 2x larger scale, select the larger scale”
+        required: false
+        example: '0.6'
+      img_nonegative:
+        type: bool
+        desc: Do not allow negative components during cleaning
+        required: false
+        example: ''
       img_nrdeconvsubimg:
         desc: Speed-up deconvolution by splitting the image into a number of subimages, which are deconvolved in parallel. This parameter sets the number of subimages as follows. If set to 1 no parallel deconvolution is performed. If set to 0 the number of subimages is the same as the number of CPUs used by the selfcal worker (see "ncpu" parameter above). If set to a number > 1 , the number of subimages is greater than or equal to the one requested by the user.
         type: int
@@ -211,25 +221,9 @@ mapping:
             example: ''
           inputmask:
             type: str
-            desc: User-provided input-mask that will be supplemented by the SoFiA mask, created through SoFiA source-finding.
+            desc: User-provided input-mask that will be (regridded if needed and) added onto the SoFiA mask.
             required: false
             example: ''
-          fornax_special:
-            desc: Activate masking of Fornax A using SoFiA.
-            type: bool
-            required: false
-            example: 'False'
-          fornax_thr:
-            desc: SoFiA source-finding threshold, in terms of the number of sigma_rms to go down to (i.e. the minimum signal-to-noise ratio).
-            seq:
-              - type: float
-            required: false
-            example: '4.0'
-          fornax_sofia:
-            type: bool
-            desc: Use SoFiA for the mask of Fornax A, instead of that by Fomalont.
-            required: false
-            example: 'False'
       img_breizorro_settings:
         desc: Breizorro settings used for the imaging iterations whose entry in 'image/cleanmask_method' below is 'breizorro'. The resulting clean mask is located in <output>/masking.
         type: map
@@ -356,27 +350,37 @@ mapping:
             type: str
             required: false
             example: ''
-          ragavi_plot:
+          gain_plot:
             type: map
-            desc: Use ragavi to plot diagnostic plots for self-calibration.
+            desc: Use cubical gain-plotter to plot diagnostic plots for self-calibration.
             mapping:
               enable:
                 type: bool
-                desc: Enable the plotting of diagnostics, using ragavi.
+                desc: Enable the plotting of diagnostics, using gain-plotter.
                 required: false
                 example: 'False'
-              gaintype:
-                seq:
-                - type: str
-                desc: List of gain solution types. Options are 'F' (flux-calibration solutions), 'B' (bandpass-calibration solutions), 'K' (delay-calibration solutions), 'G' (gain-calibration solutions), and 'D' (D-Jones leakage-calibration solutions).
+              diag:
+                desc: Plot diagonal elements as real/imag or amp/phase.
+                type: str
                 required: false
-                example: 'G'
-              field:
-                seq:
-                - type: int
-                desc: Fields to plot. Specify by field ID.
+                example: 'ap'
+                enum: ["ri", "ap", "none"]
+              off_diag:
+                desc: Also plot off-diagonal elements as real/imag or amp/phase.
+                type: str
                 required: false
-                example: '0'
+                example: 'none'
+                enum: ["ri", "ap", "none"]
+              nrow:
+                desc: Number of plot rows.
+                type: int
+                required: false
+                example: '6'
+              ncol:
+                desc: Number of plot columns.
+                type: int
+                required: false
+                example: '12'
       cal_meqtrees:
         desc: Parameters that only apply when using MeqTrees for the calibration.
         type: map
@@ -592,13 +596,13 @@ mapping:
               - type: str
             desc: Gain matrix type. 'GainDiagPhase' = phase-only calibration, 'GainDiagAmp' = amplitude only, 'GainDiag' = Amplitude + Phase, 'Gain2x2' = Amplitude + Phase taking non-diagonal terms into account, 'Fslope' = delay selfcal (for which solution intervals should be set to at least twice the values you would use for GainDiagPhase). Note that Fslope does not work with MeqTrees.
             required: false
-            example: 'GainDiagPhase, GainDiag'
+            example: 'Fslope, Fslope'
           gsols_timeslots:
             seq:
               - type: int
             desc: G-Jones time solution interval. The parameter cal_timeslots_chunk above should be a multiple of Gsols_time. 0 entails using a single solution for the full time of the observations.
             required: false
-            example: '1'
+            example: '2'
           gsols_chan:
             seq:
               - type: int

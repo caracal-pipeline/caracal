@@ -5,8 +5,7 @@ import caracal
 import caracal.dispatch_crew.caltables as mkct
 import re
 import codecs
-from caracal.utils.requires import extras
-
+import astropy.io.fits as fitsio
 
 def angular_dist_pos_angle(ra1, dec1, ra2, dec2):
     """Computes the angular distance between the two points on a sphere, and
@@ -78,7 +77,7 @@ def get_field_id(info, field_name):
 
 def select_gcal(info, targets, calibrators, mode='nearest'):
     """
-      Automatically select gain calibrator
+    Automatically select gain calibrator
     """
     if isinstance(info, str):
         with open(info, 'r') as f:
@@ -162,7 +161,7 @@ def observed_longest(info, bpcals):
     return field
 
 
-def field_observation_length(info, field):
+def field_observation_length(info, field, return_scans=False):
     if isinstance(info, str):
         with open(info, 'r') as f:
             info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
@@ -179,8 +178,12 @@ def field_observation_length(info, field):
             raise ValueError("Field cannot be a {0:s}".format(type(field)))
         return idx
     field = str(ids[index(field)])
-
-    return numpy.sum(list(info['SCAN'][field].values()))
+    scans = list(info['SCAN'][field].values())
+    tobs = numpy.sum(scans)
+    if return_scans:
+        return tobs, scans
+    else:
+        return tobs
 
 
 def closeby(radec_1, radec_2, tol=2.9E-3):
@@ -309,6 +312,32 @@ def find_in_casa_calibrators(info, field):
     return db['standards'][int(standard)]
 
 
+def read_taylor_legodi_row(info, field):
+    """
+    Read the model from `taylor_legodi_2024.txt`
+    """
+    if isinstance(info, str):
+        with open(info, 'r') as f:
+            info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+
+    file_path = caracal.pckgdir + '/data/taylor_legodi_2024.txt'
+
+    with open(file_path, mode="r", encoding="utf-8") as file:
+        lines = file.readlines()
+
+        if not lines:
+            raise ValueError(f"File '{file_path}' is empty.")
+
+        headers = lines[0].strip().split()
+        data_rows = [line.strip().split() for line in lines[1:]]
+
+        for row in data_rows:
+            if row[0] == field:
+                head = ['fluxdensity', 'spix', 'reffreq', 'polindex', 'polangle', 'rotmeas']
+                return dict(zip(head, [float(row[1]), float(row[3]), '1.4GHz', float(row[7])/100.,float(row[9])*numpy.pi/180,float(row[13])]))
+        raise ValueError("Field not found in Taylor-Legodi file.")
+
+
 def meerkat_refant(obsinfo):
     """ get reference antenna. Only works for MeerKAT observations downloaded through CARACal"""
 
@@ -317,10 +346,8 @@ def meerkat_refant(obsinfo):
     return info['RefAntenna']
 
 
-@extras("astropy")
 def estimate_solints(msinfo, skymodel, Tsys_eta, dish_diameter, npol, gain_tol=0.05, j=3, save=False):
 
-    import astropy.io.fits as fitsio
 
     if isinstance(skymodel, str):
         skymodel = [skymodel]

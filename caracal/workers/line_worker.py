@@ -1711,7 +1711,7 @@ def worker(pipeline, recipe, config):
                                 restfreq_cube = hdul_cube['RESTFREQ']
                             else:
                                 restfreq_cube = config['imcontsub']['rest-freq']*1e6
-                            hdul_cube['cdelt3'] = -C * float(headcube['cdelt3']) / restfreq_cube
+                            hdul_cube['cdelt3'] = -C * float(hdul_cube['cdelt3']) / restfreq_cube
                             vel_range = abs(hdul_cube['cdelt3'] * hdul_cube['naxis3'] )                  
                         else:
                             vel_range = abs(hdul_cube['cdelt3'] * hdul_cube['naxis3'] )

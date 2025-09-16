@@ -34,11 +34,8 @@ jobs:
         pip install recommonmark
         pip install ruamel.yaml==0.17.21
 
-    - name: Checkout main branch
+    - name: Checkout current branch
       uses: actions/checkout@v4
-      with:
-        ref: master
-        fetch-depth: 0  # Optional: fetch full history if needed for git operations
 
     - name: Make changes to pull request
       run: |

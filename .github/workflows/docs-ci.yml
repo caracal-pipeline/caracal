@@ -54,6 +54,7 @@ jobs:
         author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
         signoff: false
         branch: readthedocs
+        base: master
         delete-branch: true
         title: 'Read the docs updates'
         body: |
@@ -62,5 +63,8 @@ jobs:
         labels: |
           automated pr
         assignees: athanaseus
-        reviewers: paoloserra
+        reviewers: |
+          paoloserra
+          athanaseus
+          SpheMakh
         draft: false

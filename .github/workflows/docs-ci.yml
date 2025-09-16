@@ -42,7 +42,7 @@ jobs:
 
     - name: Make changes to pull request
       run: |
-        python make_caracal_docs.py
+        cd docs && python make_caracal_docs.py
         cd sphinx && make html
         git status
         git add _build/html

@@ -42,7 +42,7 @@ jobs:
         cd docs && python make_caracal_docs.py
         cd sphinx && make html
         git status
-        git add docs/_build/html
+        git add _build/html
 
     - name: Create Pull Request
       id: cpr
@@ -53,7 +53,7 @@ jobs:
         committer: GitHub <noreply@github.com>
         author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
         signoff: false
-        branch: readthedocs-1
+        branch: readthedocs
         delete-branch: true
         title: 'Read the docs updates'
         body: |

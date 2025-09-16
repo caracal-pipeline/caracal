@@ -55,7 +55,6 @@ jobs:
         signoff: false
         branch: readthedocs
         base: master
-        delete-branch: true
         title: 'Read the docs updates'
         body: |
           Update report
@@ -64,4 +63,6 @@ jobs:
           automated pr
         assignees: athanaseus
         reviewers: paoloserra,SpheMakh
+        delete-branch: true
+        reset-branch: true
         draft: false

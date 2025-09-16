@@ -400,10 +400,10 @@ mapping:
            required: false
            example: '0.'
          img_ws_uvtaper:
-           type: str
-           desc: Taper for imaging (in arcsec).
+           type: float
+           desc: Gaussian taper for imaging (in units of arcsec).
            required: false
-           example: '0'
+           example: '0.'
          img_ws_niter:
            type: int
            desc: Number of cleaning iterations.

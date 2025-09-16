@@ -62,5 +62,4 @@ jobs:
         assignees: athanaseus
         reviewers: paoloserra,SpheMakh
         delete-branch: true
-        reset-branch: true
         draft: false

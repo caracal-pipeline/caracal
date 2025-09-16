@@ -9,7 +9,7 @@ on:
   push:
     tags:
     - "*"
-  pull_request:
+  #pull_request:
   schedule:
     - cron: '0 6 * * *' # Every day at 6:00 AM UTC
   workflow_dispatch:

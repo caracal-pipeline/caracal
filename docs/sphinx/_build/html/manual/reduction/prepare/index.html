@@ -1,0 +1,191 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Set up &mdash; CARACal latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=f0ea86f3" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=c6e86fd7"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Flagging and flag versions" href="../flag/index.html" />
+    <link rel="prev" title="CARACal workflow" href="../workflow/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/caracal_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../caracalREADME.html">Installation &amp; Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../intro/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configfile/index.html">Configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../products/index.html">Data products</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Data reduction</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../workflow/index.html">CARACal workflow</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Set up</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#directories-and-input-file-names">Directories and input file names</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#metadata">Metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#additional-info">Additional info</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../flag/index.html">Flagging and flag versions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../crosscal/index.html">Cross-calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../selfcal/index.html">Continuum imaging and self-calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../line/index.html">Spectral line imaging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mosaic/index.html">Mosaicking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../workers/index.html">Workers parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../packages/index.html">Software used by CARACal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../caratekit_utility/index.html">Caratekit utility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits/index.html">Acknowledgements</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CARACal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Manual</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Data reduction</a></li>
+      <li class="breadcrumb-item active">Set up</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/manual/reduction/prepare/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="set-up">
+<h1>Set up<a class="headerlink" href="#set-up" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p><strong>[relevant workers:</strong> <a class="reference internal" href="../../workers/general/index.html#general"><span class="std std-ref">general</span></a>, <a class="reference internal" href="../../workers/getdata/index.html#getdata"><span class="std std-ref">getdata</span></a>, <a class="reference internal" href="../../workers/obsconf/index.html#obsconf"><span class="std std-ref">obsconf</span></a><strong>]</strong></p>
+<section id="directories-and-input-file-names">
+<h2>Directories and input file names<a class="headerlink" href="#directories-and-input-file-names" title="Link to this heading"></a></h2>
+<p>A run of CARACal must always start by setting up a number of directory and file
+names. This is done through the <a class="reference internal" href="../../workers/general/index.html#general"><span class="std std-ref">general</span></a> and <a class="reference internal" href="../../workers/getdata/index.html#getdata"><span class="std std-ref">getdata</span></a> workers.</p>
+<p>In the <a class="reference internal" href="../../workers/general/index.html#general"><span class="std std-ref">general</span></a> worker users give:</p>
+<ul class="simple">
+<li><p>the <em>msdir</em> directory where to find/write .MS files (<a class="reference internal" href="../../workers/general/index.html#general-msdir"><span class="std std-ref">general: msdir</span></a>) with the
+only exception of read-only input .MS files, which can be located at <em>rawdatadir</em> (see below);</p></li>
+<li><p>if necessary, the <em>rawdatadir</em> directory where to find the read-only input .MS files, which
+facilitates the processing of large files on shared machines without having to move them
+(<a class="reference internal" href="../../workers/general/index.html#general-rawdatadir"><span class="std std-ref">general: rawdatadir</span></a>);</p></li>
+<li><p>the <em>output</em> directory where to write all output data products (<a class="reference internal" href="../../workers/general/index.html#general-output"><span class="std std-ref">general: output</span></a>);</p></li>
+<li><p>the <em>input</em> directory where to find various input files, such as AOflagger strategies etc.
+(<a class="reference internal" href="../../workers/general/index.html#general-input"><span class="std std-ref">general: input</span></a>);</p></li>
+<li><p>the prefix for the output data products (<a class="reference internal" href="../../workers/general/index.html#general-prefix"><span class="std std-ref">general: prefix</span></a>).</p></li>
+</ul>
+<p>If they do not exist yet, the directories <em>msdir</em>, <em>input</em> and <em>output</em> can be created by setting
+<a class="reference internal" href="../../workers/general/index.html#general-prep-workspace"><span class="std std-ref">general: prep_workspace</span></a> to <em>true</em>. This also copies
+files from the caracal/data/meerkat_files directory to the <em>input</em> directory set above.</p>
+<p>In the <a class="reference internal" href="../../workers/getdata/index.html#getdata"><span class="std std-ref">getdata</span></a> worker users give the name of the .MS files to be processed
+(<a class="reference internal" href="../../workers/getdata/index.html#getdata-dataid"><span class="std std-ref">getdata: dataid</span></a>). Furthermore, the following optional steps are available:
+Optionally, the input files can be untar-ed (<a class="reference internal" href="../../workers/getdata/index.html#getdata-untar"><span class="std std-ref">getdata: untar</span></a>).</p>
+</section>
+<section id="metadata">
+<h2>Metadata<a class="headerlink" href="#metadata" title="Link to this heading"></a></h2>
+<p>Finally, before starting the actual data processing users need to provide some
+info about the content of the input .MS files through the <a class="reference internal" href="../../workers/obsconf/index.html#obsconf"><span class="std std-ref">obsconf</span></a> worker.
+Target and calibrators name can be set by editing the relevant parameters of
+this worker:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../workers/obsconf/index.html#obsconf-target"><span class="std std-ref">obsconf: target</span></a></p></li>
+<li><p><a class="reference internal" href="../../workers/obsconf/index.html#obsconf-bpcal"><span class="std std-ref">obsconf: bpcal</span></a></p></li>
+<li><p><a class="reference internal" href="../../workers/obsconf/index.html#obsconf-fcal"><span class="std std-ref">obsconf: fcal</span></a></p></li>
+<li><p><a class="reference internal" href="../../workers/obsconf/index.html#obsconf-gcal"><span class="std std-ref">obsconf: gcal</span></a></p></li>
+</ul>
+<p>In fact, CARACal can automatically extract most of these info from the .MS files
+themselves. To do so users should enable the <a class="reference internal" href="../../workers/obsconf/index.html#obsconf-obsinfo"><span class="std std-ref">obsconf: obsinfo</span></a>
+parameter. This writes a .JSON and a .TXT file to disc. Once the .JSON file is
+on disc, the  above parameters can be read automatically from that file.
+Users can, however, set any of the above manually.</p>
+<p>Special attention should be paid to the choice of a reference antenna.
+Users should carefully select a good reference antenna for calibration
+with the <a class="reference internal" href="../../workers/obsconf/index.html#obsconf-refant"><span class="std std-ref">obsconf: refant</span></a>
+parameter.</p>
+</section>
+<section id="additional-info">
+<h2>Additional info<a class="headerlink" href="#additional-info" title="Link to this heading"></a></h2>
+<p>The <a class="reference internal" href="../../workers/obsconf/index.html#obsconf"><span class="std std-ref">obsconf</span></a> worker can also produce a plot showing the elevation track of all
+targets and calibrators, and return the time range during which the data were
+taken with the Sun below the horizon.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../workflow/index.html" class="btn btn-neutral float-left" title="CARACal workflow" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../flag/index.html" class="btn btn-neutral float-right" title="Flagging and flag versions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, CARACal team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

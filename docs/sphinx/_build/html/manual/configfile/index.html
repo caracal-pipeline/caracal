@@ -1,0 +1,181 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuration file &mdash; CARACal latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=f0ea86f3" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=c6e86fd7"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Data products" href="../products/index.html" />
+    <link rel="prev" title="Introduction" href="../intro/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/caracal_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../caracalREADME.html">Installation &amp; Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro/index.html">Introduction</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Configuration file</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../products/index.html">Data products</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reduction/index.html">Data reduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../workers/index.html">Workers parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/index.html">Software used by CARACal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../caratekit_utility/index.html">Caratekit utility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../credits/index.html">Acknowledgements</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">CARACal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Manual</a></li>
+      <li class="breadcrumb-item active">Configuration file</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/manual/configfile/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="configuration-file">
+<span id="configfile"></span><h1>Configuration file<a class="headerlink" href="#configuration-file" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>Users settings are passed to CARACal through a configuration file consisting of a
+sequence of blocks — each corresponding to the run of a CARACal worker. The workers
+are run following the order in which they appear in the configuration file.
+For reference see <a class="reference internal" href="../intro/index.html#workerlist"><span class="std std-ref">List and Brief description of CARACal workers</span></a>.</p>
+<p>The following workers must always run be and, therefore, must always appear in the
+configuration file: <a class="reference internal" href="../workers/general/index.html#general"><span class="std std-ref">general</span></a>, <a class="reference internal" href="../workers/getdata/index.html#getdata"><span class="std std-ref">getdata</span></a> and <a class="reference internal" href="../workers/obsconf/index.html#obsconf"><span class="std std-ref">obsconf</span></a>. All
+other workers are optional.</p>
+<p>Within each worker’s block of the configuration file, the worker’s parameters are arranged
+in a nested structure following the YAML syntax rules (see <a class="reference external" href="https://yaml.readthedocs.io">https://yaml.readthedocs.io</a>).
+As an example, a block of the config file may look like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">worker_name</span><span class="p">:</span>
+  <span class="n">enable</span><span class="p">:</span> <span class="n">true</span>
+  <span class="n">parameter_1</span><span class="p">:</span> <span class="n">value_1</span>
+  <span class="n">parameter_2</span><span class="p">:</span>
+    <span class="n">parameter_2_1</span><span class="p">:</span> <span class="n">value_2_1</span>
+    <span class="n">parameter_2_2</span><span class="p">:</span> <span class="n">value_2_2</span>
+  <span class="n">parameter_3</span><span class="p">:</span> <span class="n">value_3</span>
+  <span class="o">...</span>
+</pre></div>
+</div>
+<p>The complete list of all workers’ parameters is available at <a class="reference internal" href="../workers/index.html#workers"><span class="std std-ref">Workers parameters</span></a>,
+where the parameters’ nesting is also illustrated.</p>
+<p>Workers can be executed more than once in a single run of CARACal. This could be useful,
+for example, if a user wants to flag the data both before and after cross-calibration.
+To indicate a new run of a worker the worker name must be followed by “__&lt;suffix&gt;” in the
+configuration file (note the double underscore). The first run of a worker can also have
+a “__&lt;suffix&gt;” but does not have to. In the example above, the flag
+worker must thus appear twice in the configuration file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">flag__beforecrosscal</span><span class="p">:</span>
+  <span class="n">enable</span><span class="p">:</span> <span class="n">true</span>
+  <span class="n">parameter_1</span><span class="p">:</span> <span class="n">value_1A</span>
+  <span class="o">...</span>
+
+<span class="p">[</span><span class="n">other</span> <span class="n">workers</span><span class="p">]</span>
+
+<span class="n">flag__aftercrosscal</span><span class="p">:</span>
+  <span class="n">enable</span><span class="p">:</span> <span class="n">true</span>
+  <span class="n">parameter_1</span><span class="p">:</span> <span class="n">value_1B</span>
+  <span class="o">...</span>
+</pre></div>
+</div>
+<p>Most parameters are optional and do not need to be included in the configuration file.
+Their default values are set to work in as many cases as possible. A few parameters are
+compulsory. The pages at <a class="reference internal" href="../workers/index.html#workers"><span class="std std-ref">Workers parameters</span></a> indicate whether a parameter is optional, its data
+type, allowed values (if applicable) and default value.</p>
+<p>CARACal comes with a set of sample configuration files. These are available at
+<a class="reference external" href="https://github.com/caracal-pipeline/caracal/tree/master/caracal/sample_configurations">https://github.com/caracal-pipeline/caracal/tree/master/caracal/sample_configurations</a>
+and include, for example:</p>
+<ul class="simple">
+<li><p>minimalConfig.yml, which includes as few parameters as possible and performs a basic
+data reduction including both continuum and spectral line imaging;</p></li>
+<li><p>meerkat-continuum-defaults.yml, which is optimised for the reduction of data taken with
+the MeerKAT telescope for the purpose of total-intensity continuum imaging.</p></li>
+</ul>
+<p>Users could take these sample configuration files as a starting point for their work.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../intro/index.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../products/index.html" class="btn btn-neutral float-right" title="Data products" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, CARACal team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

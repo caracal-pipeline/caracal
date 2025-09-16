@@ -1,0 +1,439 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>polimg &mdash; CARACal latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=f0ea86f3" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=c6e86fd7"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="polcal" href="../polcal/index.html" />
+    <link rel="prev" title="transform" href="../transform/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/caracal_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../caracalREADME.html">Installation &amp; Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../intro/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configfile/index.html">Configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../products/index.html">Data products</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reduction/index.html">Data reduction</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Workers parameters</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../crosscal/index.html">crosscal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ddcal/index.html">ddcal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flag/index.html">flag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../general/index.html">general</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getdata/index.html">getdata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../inspect/index.html">inspect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../line/index.html">line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mask/index.html">mask</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mosaic/index.html">mosaic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../obsconf/index.html">obsconf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../prep/index.html">prep</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../selfcal/index.html">selfcal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../transform/index.html">transform</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">polimg</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#enable"><strong>enable</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#label-in"><strong>label_in</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rewind-flags"><strong>rewind_flags</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#overwrite-flagvers"><strong>overwrite_flagvers</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ncpu"><strong>ncpu</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#stokes"><strong>stokes</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#make-images"><strong>make_images</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#make-extra-images"><strong>make_extra_images</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#flagging-summary"><strong>flagging_summary</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#report"><strong>report</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cabs"><strong>cabs</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../polcal/index.html">polcal</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../packages/index.html">Software used by CARACal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../caratekit_utility/index.html">Caratekit utility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits/index.html">Acknowledgements</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CARACal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Manual</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Workers parameters</a></li>
+      <li class="breadcrumb-item active">polimg</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/manual/workers/polimg/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="polimg">
+<span id="id1"></span><h1>polimg<a class="headerlink" href="#polimg" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>Perform polarization imaging.</p>
+<section id="enable">
+<span id="polimg-enable"></span><h2><strong>enable</strong><a class="headerlink" href="#enable" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em></p>
+<p>Execute the polimg worker.</p>
+</div></blockquote>
+</section>
+<section id="label-in">
+<span id="polimg-label-in"></span><h2><strong>label_in</strong><a class="headerlink" href="#label-in" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = corr</em></p>
+<p>Label of the .MS files to process.</p>
+</div></blockquote>
+</section>
+<section id="rewind-flags">
+<span id="polimg-rewind-flags"></span><h2><strong>rewind_flags</strong><a class="headerlink" href="#rewind-flags" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Rewind flags of the input .MS file(s) to specified version. Note that this is not applied to .MS file(s) you might be running “transfer_apply_gains” on.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Enable segment rewind_flags.</p>
+</div></blockquote>
+<p><strong>mode</strong></p>
+<blockquote>
+<div><p><em>{“reset_worker”, “rewind_to_version”}</em>, <em>optional</em>, <em>default = reset_worker</em></p>
+<p>If mode = ‘reset_worker’ rewind to the flag version before this worker if it exists, or continue if it does not exist; if mode = ‘rewind_to_version’ rewind to the flag version given by ‘version’ and ‘transfer_apply_gains_version’ below.</p>
+</div></blockquote>
+<p><strong>version</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = auto</em></p>
+<p>Flag version to restore. This is applied to the .MS file(s) identified by “label” above. Set to “null” to skip this rewinding step. If ‘auto’ it will rewind to the version prefix_workername_before, where ‘prefix’ is set in the ‘general’ worker, and ‘workername’ is the name of this worker including the suffix ‘__X’ if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="overwrite-flagvers">
+<span id="polimg-overwrite-flagvers"></span><h2><strong>overwrite_flagvers</strong><a class="headerlink" href="#overwrite-flagvers" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Allow CARACal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.</p>
+</div></blockquote>
+</section>
+<section id="ncpu">
+<span id="polimg-ncpu"></span><h2><strong>ncpu</strong><a class="headerlink" href="#ncpu" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Number of CPUs used by WSClean. If set to 0 all available CPUs are used.</p>
+</div></blockquote>
+</section>
+<section id="stokes">
+<span id="polimg-stokes"></span><h2><strong>stokes</strong><a class="headerlink" href="#stokes" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>{“QU”, “QUV”, “IQU”, “IQUV”, “I”, “Q”, “U”, “V”}</em>, <em>optional</em>, <em>default = QUV</em></p>
+<p>Stokes image to create. For this worker the options are “QU”,”QUV”,”IQU”,”IQUV”,”I”,”Q”,”U”,”V”. Before this step, we recomand to perform the I imaging with the selfcal worker and to do the polarization imaging on the self-calibrated MS.</p>
+</div></blockquote>
+</section>
+<section id="make-images">
+<span id="polimg-make-images"></span><h2><strong>make_images</strong><a class="headerlink" href="#make-images" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>make images</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>List of options</p>
+</div></blockquote>
+<p><strong>minuvw_m</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Exclude baselines shorter than this value (given in metres) from the imaging and self-calibration loop.</p>
+</div></blockquote>
+<p><strong>img_npix</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 1800</em></p>
+<p>Number of pixels in output image.</p>
+</div></blockquote>
+<p><strong>img_padding</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 1.3</em></p>
+<p>Padding in WSClean. Set to -1 if you do not want to disable.</p>
+</div></blockquote>
+<p><strong>img_gain</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.10</em></p>
+<p>Fraction of the peak that is cleaned in each minor iteration. Set to -1 if you do not want to disable.</p>
+</div></blockquote>
+<p><strong>img_mgain</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.90</em></p>
+<p>Gain for major iterations in WSClean. I.e., maximum fraction of the image peak that is cleaned in each major iteration. A value of 1 means that all cleaning happens in the image plane and no major cycle is performed.</p>
+</div></blockquote>
+<p><strong>img_cell</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 2.</em></p>
+<p>Image pixel size (in units of arcsec).</p>
+</div></blockquote>
+<p><strong>img_weight</strong></p>
+<blockquote>
+<div><p><em>{“briggs”, “uniform”, “natural”}</em>, <em>optional</em>, <em>default = briggs</em></p>
+<p>Type of image weighting, where the options are ‘briggs’, ‘uniform’, and ‘natural’. If ‘briggs’, set the ‘img_robust’ parameter.</p>
+</div></blockquote>
+<p><strong>img_robust</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.</em></p>
+<p>Briggs robust value.</p>
+</div></blockquote>
+<p><strong>img_mfs_weighting</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = false</em></p>
+<p>Enables MF weighting. Default is enabled.</p>
+</div></blockquote>
+<p><strong>img_taper</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = 0.</em></p>
+<p>Gaussian taper for imaging (in units of arcsec).</p>
+</div></blockquote>
+<p><strong>img_maxuv_l</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.</em></p>
+<p>Taper for imaging (in units of lambda).</p>
+</div></blockquote>
+<p><strong>img_transuv_l</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 10.</em></p>
+<p>Transition length of tukey taper (taper-tukey in WSClean, in % of maxuv).</p>
+</div></blockquote>
+<p><strong>img_niter</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 1000000</em></p>
+<p>Number of cleaning iterations.</p>
+</div></blockquote>
+<p><strong>img_nmiter</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Number of major cycles.</p>
+</div></blockquote>
+<p><strong>img_nchans</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 3</em></p>
+<p>Number of channels in output image.</p>
+</div></blockquote>
+<p><strong>img_chan_range</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Channel range to be imaged. Comma-separated integer values.</p>
+</div></blockquote>
+<p><strong>img_joinchans</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Join channels to create MFS image.</p>
+</div></blockquote>
+<p><strong>img_squared_chansjoin</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Search peaks in the sum of Q^2 and/or U^2 image to clean. If ‘join-polarisations’ will set to True peaks will be search in the sum of Q^2+U^2.</p>
+</div></blockquote>
+<p><strong>img_join_polarizations</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>In combination with ‘img_squared_chansjoin’ will clean the image searching the peaks in the sum of Q^2+U^2.</p>
+</div></blockquote>
+<p><strong>img_specfit_nrcoeff</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 2</em></p>
+<p>Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1. Use 0 to disable spectral fitting. Note that spectral fitting is required if you want to do subsequent continumm subtraction using crystalball.</p>
+</div></blockquote>
+<p><strong>img_multiscale</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Switch on multiscale cleaning.</p>
+</div></blockquote>
+<p><strong>img_multiscale_scales</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Comma-separated integer scales for multiscale cleaning in pixels. If set to an empty string WSClean selects the scales automatically. These include the 0 scale, a scale calculated based on the beam size, and all scales obtained increasing the scale by a factor of 2 until the image size is reached.</p>
+</div></blockquote>
+<p><strong>img_nrdeconvsubimg</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 0</em></p>
+<p>Speed-up deconvolution by splitting the image into a number of subimages, which are deconvolved in parallel. This parameter sets the number of subimages as follows. If set to 1 no parallel deconvolution is performed. If set to 0 the number of subimages is the same as the number of CPUs used by the selfcal worker (see “ncpu” parameter above). If set to a number &gt; 1 , the number of subimages is greater than or equal to the one requested by the user.</p>
+</div></blockquote>
+<p><strong>img_nwlayers_factor</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 3</em></p>
+<p>Use automatic calculation of the number of w-layers, but multiple that number by the given factor. This can e.g. be useful for increasing w-accuracy. In practice, if there are more cores available than the number of w-layers asked for then the number of w-layers used will equal the number of cores available. Set to -1 if you do not want to disable.</p>
+</div></blockquote>
+<p><strong>col</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = DATA, CORRECTED_DATA</em></p>
+<p>Column(s) to image.</p>
+</div></blockquote>
+<p><strong>clean_cutoff</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 0.5</em></p>
+<p>Cleaning threshold to be used by WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the noise level estimated by WSClean from the residual image before the start of every major deconvolution iteration.</p>
+</div></blockquote>
+<p><strong>cleanmask_method</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = wsclean</em></p>
+<p>Method used to create the clean mask. The possible values are 1) ‘wsclean’ to use WSClean’s auto-masking (threshold set by clean_mask_threshold below); 2) a prefix string to use an existing .FITS mask located in output/masking and called name.fits.</p>
+</div></blockquote>
+<p><strong>cleanmask_thr</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 5.0</em></p>
+<p>Threshold used to create the clean mask when WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the (local) noise level. Set to -1 if you do not want to disable.</p>
+</div></blockquote>
+<p><strong>cleanmask_localrms</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Use a local-rms measurement when creating a clean mask with WSClean. This local-rms setting is also used for the clean_threshold above. Otherwise it is only used to define the clean mask, and clean_threshold is in terms of the global noise (rather than the local noise).</p>
+</div></blockquote>
+<p><strong>cleanmask_localrms_window</strong></p>
+<blockquote>
+<div><p><em>int</em>, <em>optional</em>, <em>default = 31</em></p>
+<p>Width of the window used to measure the local rms when creating the clean mask. The window width is in PSFs for clean_mask_method = ‘wsclean’.</p>
+</div></blockquote>
+<p><strong>weighting_rank_filter</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 3.</em></p>
+<p>Filter the weights and set high weights to the local mean. The level parameter specifies the filter level; any value larger than level*localmean will be set to level*localmean.</p>
+</div></blockquote>
+<p><strong>absmem</strong></p>
+<blockquote>
+<div><p><em>float</em>, <em>optional</em>, <em>default = 100.0</em></p>
+<p>Specifies a fixed amount of memory in gigabytes.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="make-extra-images">
+<span id="polimg-make-extra-images"></span><h2><strong>make_extra_images</strong><a class="headerlink" href="#make-extra-images" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>make convolved images and/or PB images.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>List of options</p>
+</div></blockquote>
+<p><strong>schema</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = both</em></p>
+<p>specify if you want single channel images (single), cubes (cube), or both (both).</p>
+</div></blockquote>
+<p><strong>convl_images</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Convolve output images to a common resolution</p>
+</div></blockquote>
+<p><strong>convl_beam</strong></p>
+<blockquote>
+<div><p><em>str</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Target beam for images. If empty the target beam is the channel zero beam. Otherwise set as ‘bmin, bmaj, bpa’ in deg units.</p>
+</div></blockquote>
+<p><strong>make_pb_images</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = True</em></p>
+<p>Make PB images</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="flagging-summary">
+<span id="polimg-flagging-summary"></span><h2><strong>flagging_summary</strong><a class="headerlink" href="#flagging-summary" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Output the flagging summary.</p>
+<p><strong>enable</strong></p>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>Enable the ‘flagging_summary’ segment.</p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="report">
+<span id="polimg-report"></span><h2><strong>report</strong><a class="headerlink" href="#report" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>bool</em>, <em>optional</em>, <em>default = False</em></p>
+<p>(Re)generate a full HTML report at the end of this worker.</p>
+</div></blockquote>
+</section>
+<section id="cabs">
+<span id="polimg-cabs"></span><h2><strong>cabs</strong><a class="headerlink" href="#cabs" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><em>list</em> <em>of map</em>, <em>optional</em>, <em>default = ‘ ‘</em></p>
+<p>Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.</p>
+</div></blockquote>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../transform/index.html" class="btn btn-neutral float-left" title="transform" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../polcal/index.html" class="btn btn-neutral float-right" title="polcal" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, CARACal team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

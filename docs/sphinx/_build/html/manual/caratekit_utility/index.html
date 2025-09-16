@@ -1,0 +1,364 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Caratekit utility &mdash; CARACal latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=f0ea86f3" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=c6e86fd7"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Acknowledgements" href="../../credits/index.html" />
+    <link rel="prev" title="Software used by CARACal" href="../packages/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/caracal_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../caracalREADME.html">Installation &amp; Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configfile/index.html">Configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../products/index.html">Data products</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reduction/index.html">Data reduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../workers/index.html">Workers parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/index.html">Software used by CARACal</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Caratekit utility</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#installing-caratekit-sh">Installing <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#updating-caratekit-sh">Updating <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#installing-and-upgrading-caracal-using-caratekit-sh-for-further-use-with-caratekit-sh">Installing and upgrading CARACal using <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> for further use with <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data-reduction-using-caratekit-sh">Data reduction using caratekit.sh</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#specifying-the-data-to-be-reduced">Specifying the data to be reduced</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#start-and-single-caracal-run">Start and single CARACal run</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../credits/index.html">Acknowledgements</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">CARACal</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Manual</a></li>
+      <li class="breadcrumb-item active">Caratekit utility</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/manual/caratekit_utility/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="caratekit-utility">
+<h1>Caratekit utility<a class="headerlink" href="#caratekit-utility" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> is a shell script originally intended to test CARACal. It has no dependencies other than an existing bash shell installed on your computer system (most UNIX systems use bash as a default). To learn about the full range of options to use caratekit.sh type <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span> <span class="pre">-h</span></code> or <code class="docutils literal notranslate"><span class="pre">caratekit</span> <span class="pre">-v</span></code>
+once it is installed. Here, we restrict the description to two standard use-cases: the installation of CARACal using <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> and three methods to consecutively reduce data with <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code>. The advantage of a data reduction using <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> is that <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> automatically creates some system information that can be used to analyse potential issues and that can be linked in the <a class="reference external" href="https://github.com/ska-sa/caracal/issues">CARACal issue tracker</a>.</p>
+<section id="installing-caratekit-sh">
+<h2>Installing <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code><a class="headerlink" href="#installing-caratekit-sh" title="Link to this heading"></a></h2>
+<p>Choose:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>A workspace directory <code class="docutils literal notranslate"><span class="pre">${workspace}</span></code> to install <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code></p></li>
+<li><p>A target directory <code class="docutils literal notranslate"><span class="pre">${carate_target}</span></code> to install <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> in. By default, this is <code class="docutils literal notranslate"><span class="pre">/usr/local/bin</span></code>. Some of those locations require a sudo password. If you don’t have one, choose a directory to which you have write access.</p></li>
+</ul>
+</div></blockquote>
+<p>Then type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd ${workspace}
+$ git clone https://github.com/ska-sa/caracal.git
+$ caracal/caratekit.sh -i
+</pre></div>
+</div>
+<p>Follow the instructions.</p>
+<p>Finally, type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ rm -rf ./caracal
+</pre></div>
+</div>
+<p>To get a full display of the potential switches and usage of <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ caratekit.sh -h
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ caratekit.sh -v
+</pre></div>
+</div>
+</section>
+<section id="updating-caratekit-sh">
+<h2>Updating <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code><a class="headerlink" href="#updating-caratekit-sh" title="Link to this heading"></a></h2>
+<p>We assume that you have chosen to make <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> visible in the <code class="docutils literal notranslate"><span class="pre">${PATH}</span></code>. Type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ caratekit.sh -i
+</pre></div>
+</div>
+<p>and follow the instructions.</p>
+</section>
+<section id="installing-and-upgrading-caracal-using-caratekit-sh-for-further-use-with-caratekit-sh">
+<h2>Installing and upgrading CARACal using <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> for further use with <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code><a class="headerlink" href="#installing-and-upgrading-caracal-using-caratekit-sh-for-further-use-with-caratekit-sh" title="Link to this heading"></a></h2>
+<p>The syntax is the same for upgrading or installing CARACal. The user chooses:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The location <code class="docutils literal notranslate"><span class="pre">${workspace}</span></code> of a parent directory to a <code class="docutils literal notranslate"><span class="pre">caratekit</span></code> test directory.</p></li>
+<li><p>A name <code class="docutils literal notranslate"><span class="pre">${caracal_testdir}</span></code> of the caracal test directory Installation/upgrade with <a class="reference external" href="https://www.docker.com/">Docker</a> as containerisation technology:</p></li>
+</ul>
+</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ caratekit.sh -ws ${workspace} -cr -di -ct ${caracal_testdir} -rp install -f
+</pre></div>
+</div>
+<p>Installation/upgrade with <a class="reference external" href="https://github.com/sylabs/singularity">Singularity</a> as containerisation technology:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f
+</pre></div>
+</div>
+<p><strong>Do not use -cr until the release</strong>. This installs the current release version of CARACal. Alternatively, the switch <code class="docutils literal notranslate"><span class="pre">-cr</span></code> can be omitted, to install the current master development branch (newest features but no guarantees). This creates the following directory structure:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>${workspace}
+└──${caracal_testdir}
+   ├── caracal (local caracal copy)
+   ├── caracal_venv (virtualenv)
+   ├── home (local home directory)
+   ├── report (report directory)
+   │   └── install
+   │       ├── install.sh.txt (template shell script)
+   │       └── install-sysinfo.txt (system information file)
+   └── (stimela-singularity)
+</pre></div>
+</div>
+<p>caracal is a local copy of CARACal (release branch <strong>currently master branch</strong>), which is installed using the <code class="docutils literal notranslate"><span class="pre">virtualenv</span></code> <code class="docutils literal notranslate"><span class="pre">caracal_venv</span></code>. <code class="docutils literal notranslate"><span class="pre">home</span></code> is a replacement of the <code class="docutils literal notranslate"><span class="pre">${HOME}</span></code> directory, in which currently only one hidden directory, <code class="docutils literal notranslate"><span class="pre">.stimela</span></code> is stored. This can be ignored in nearly all cases, but it is essential to have. The report directory contains automatically generated reports about <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> runs. The example run is called <code class="docutils literal notranslate"><span class="pre">install</span></code> (see switch <code class="docutils literal notranslate"><span class="pre">-rp</span></code>). This is reflected in a sub-directory named <code class="docutils literal notranslate"><span class="pre">install</span></code> in the report directory. This <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> run creates two report files, <code class="docutils literal notranslate"><span class="pre">install.sh.txt</span></code>, a bash-script re-tracing the installation steps (not documenting the creation of the reports), and <code class="docutils literal notranslate"><span class="pre">install-sysinfo.txt</span></code>, a file containing information about the system and the installed software of the machine that is being used. Generally, a <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> run can generate multiple report sub-directories, each of which can contain up to four files and one directory (see next section <a class="reference external" href="#data_reduction_using_caratekit_sh">Data reduction using caratekit.sh</a>).</p>
+</section>
+<section id="data-reduction-using-caratekit-sh">
+<h2>Data reduction using caratekit.sh<a class="headerlink" href="#data-reduction-using-caratekit-sh" title="Link to this heading"></a></h2>
+<p>Multiple variants are possible, here we present three.</p>
+<p>The user uses the same - Workspace directory <code class="docutils literal notranslate"><span class="pre">${workspace}</span></code> as has been used to install <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> - The same target directory <code class="docutils literal notranslate"><span class="pre">${carate_target}</span></code> that <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> has been installed in.</p>
+<dl class="simple">
+<dt>The user chooses:</dt><dd><ul class="simple">
+<li><p>The name <code class="docutils literal notranslate"><span class="pre">${project}</span></code> of the data reduction project</p></li>
+<li><p>The location <code class="docutils literal notranslate"><span class="pre">${configfile}.yml</span></code> of a CARACal configuration file. Templates can be found in the directory <code class="docutils literal notranslate"><span class="pre">${workspace}/${caracal_testdir}/caracal/caracal/sample_configurations</span></code>. A choice to start with is the file <code class="docutils literal notranslate"><span class="pre">minimalConfig.yml</span></code>.</p></li>
+<li><p>The name <code class="docutils literal notranslate"><span class="pre">${rawdata}</span></code> of a directory containing the measurement sets (which have to have the suffix <code class="docutils literal notranslate"><span class="pre">.ms</span></code>) that are supposed to be processed in the data reduction.</p></li>
+</ul>
+</dd>
+</dl>
+<section id="specifying-the-data-to-be-reduced">
+<h3>Specifying the data to be reduced<a class="headerlink" href="#specifying-the-data-to-be-reduced" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> assumes by default, that any measurement sets in the <code class="docutils literal notranslate"><span class="pre">${rawdata}</span></code> file are meant to be processed by the pipeline. A copy of the <code class="docutils literal notranslate"><span class="pre">${configfile}.yml</span></code> configuration file will be modified accordingly before the data reduction process is started. This can be changed by adding the switch <code class="docutils literal notranslate"><span class="pre">--copy-config-data</span></code> or  <code class="docutils literal notranslate"><span class="pre">-cc</span></code> to the <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> calls below. In that case, only measurement sets with the data ids specified in the configuration file will be processed. Alternatively, the user can specify explicityly the ids (the names of the measurement sets removing the suffix <code class="docutils literal notranslate"><span class="pre">.ms</span></code>) using the switch <code class="docutils literal notranslate"><span class="pre">--copy-data-id</span> <span class="pre">ARG</span></code> <code class="docutils literal notranslate"><span class="pre">-ci</span> <span class="pre">ARG</span></code>, where <code class="docutils literal notranslate"><span class="pre">ARG</span></code> is a comma- separated list of the ids to use.</p>
+</section>
+<section id="start-and-single-caracal-run">
+<h3>Start and single CARACal run<a class="headerlink" href="#start-and-single-caracal-run" title="Link to this heading"></a></h3>
+<p>If the user assumes to run CARACal only once but also at the beginning of any other data reduction process the user edits the file <code class="docutils literal notranslate"><span class="pre">${configfile}.yml</span></code> following the CARACal description. Notice that using <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> the default is that the contents of the parameter <code class="docutils literal notranslate"><span class="pre">dataid</span></code> will be replaced to reflect the measurement sets found in the <code class="docutils literal notranslate"><span class="pre">${rawdata}</span></code> directory. This can be overridden by using the <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> <code class="docutils literal notranslate"><span class="pre">-kc</span></code> switch. A (partial) data reduction is then conducted following the command <a class="reference external" href="https://www.docker.com/">Docker</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ caratekit.sh -ws ${workspace} -cd -di -ct ${caracal_testdir} -rp ${project} -cs ${configfile}.yml -td ${rawdata}
+</pre></div>
+</div>
+<p><a class="reference external" href="https://github.com/sylabs/singularity">Singularity</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ caratekit.sh -ws ${workspace} -cd -si -ct ${caracal_testdir} -rp ${project} -cs ${configfile}.yml -td ${rawdata}
+</pre></div>
+</div>
+<p>After that, if everything has gone well, the directory tree of the <code class="docutils literal notranslate"><span class="pre">${project}</span></code> has the following structure:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>${workspace}
+└──${caracal_testdir}
+   ├── caracal (local caracal copy)
+   ├── caracal_venv (virtualenv)
+   ├── home (local home directory)
+   ├── ${project} (CARACal project directory)
+   │   ├── input
+   │   ├── ${configfile}.yml
+   │   ├── msdir
+   │   ├── output
+   │   └── stimela_parameter_files
+   ├── report (report directory)
+   │   └── install
+   │   │     ├── install.sh.txt (template shell script)
+   │   │     └── install-sysinfo.txt (system information file)
+   │   └── ${project}
+   │       ├── ${project}-${configfile}-log-caracal.txt
+   │       ├── ${project}-${configfile}.yml.txt
+   │       ├── ${project}.sh.txt
+   │       └── ${project}-sysinfo.txt
+   └── (stimela-singularity)
+</pre></div>
+</div>
+<p>With above settings, <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> copies the measurement sets found in <code class="docutils literal notranslate"><span class="pre">${rawdata}</span></code> into the newly created directory <code class="docutils literal notranslate"><span class="pre">${project}/msdir</span></code> (see switch <code class="docutils literal notranslate"><span class="pre">-md</span></code> for moving test data instead), and the CARACal configuration file <code class="docutils literal notranslate"><span class="pre">${configfile}</span></code> into the directory <code class="docutils literal notranslate"><span class="pre">${project}</span></code>, to then start CARACal using the <code class="docutils literal notranslate"><span class="pre">${configfile}</span></code> (<code class="docutils literal notranslate"><span class="pre">caracal</span> <span class="pre">-c</span> <span class="pre">${configfile}</span></code>). It also creates a new sub-directory <code class="docutils literal notranslate"><span class="pre">${project}</span></code> to report. Apart from the shell script <code class="docutils literal notranslate"><span class="pre">${project}.sh.txt</span></code> and the system info file <code class="docutils literal notranslate"><span class="pre">${project}-sysinfo.txt</span></code>, this sub-directory contains a copy <code class="docutils literal notranslate"><span class="pre">${project}-${configfile}-log-caracal.txt</span></code> of the CARACal logfile and a copy <code class="docutils literal notranslate"><span class="pre">${project}-${configfile}.yml.txt</span></code> of the CARACal configuration file. Should the data reduction process be interrupted by an error, a further sub-directory <code class="docutils literal notranslate"><span class="pre">${project}-badlogs</span></code> to <code class="docutils literal notranslate"><span class="pre">${caracal_testdir}/report/${project}</span></code> is created containing all logfiles indicating an error (the logfiles are literally parsed for the expression “ERROR” and added if it is found).</p>
+<p><em>Any bug report to the</em> <a class="reference external" href="https://github.com/ska-sa/caracal/issues">CARACal issue tracker</a>* can be substantially improved by submitting the files in the specific <code class="docutils literal notranslate"><span class="pre">report</span></code> directory along with the issue.*</p>
+<section id="follow-up-steps-to-conduct-a-data-reduction-by-method-1-renaming-the-project">
+<h4>Follow-up steps to conduct a data reduction by method 1: renaming the project<a class="headerlink" href="#follow-up-steps-to-conduct-a-data-reduction-by-method-1-renaming-the-project" title="Link to this heading"></a></h4>
+<p>If the data reduction is supposed to be conducted in several steps (e.g. giving the user the chance to inspect intermediate data products), there are two methods that can be used:</p>
+<p>Using method 1, the user defines a set of consecutive configuration files, for simplicity <code class="docutils literal notranslate"><span class="pre">${configfile}_00</span></code>, <code class="docutils literal notranslate"><span class="pre">${configfile}_01</span></code>, … , and a set of consecutive project names <code class="docutils literal notranslate"><span class="pre">${project}_00</span></code>, <code class="docutils literal notranslate"><span class="pre">${project}_01</span></code>, … . The individual names are the user’s choice, but some logical structure is recommended.</p>
+<p>By using the <code class="docutils literal notranslate"><span class="pre">-cf</span> <span class="pre">${project}_jj</span> <span class="pre">-cf</span> <span class="pre">${project}_ii</span></code> switches, the directory <code class="docutils literal notranslate"><span class="pre">${project}_ii</span></code> is re-named into <code class="docutils literal notranslate"><span class="pre">${project}_jj</span></code> and a symbolic link <code class="docutils literal notranslate"><span class="pre">${project}_ii</span></code> is created pointing to directory <code class="docutils literal notranslate"><span class="pre">${project}_jj</span></code>. Then, the data reduction is re-started using the CARACal configuration file provided with switch <code class="docutils literal notranslate"><span class="pre">-cf</span></code>. The purpose of this is to maintain data reduction reports corresponding to the single data reduction steps, which would otherwise be overwritten.</p>
+<p>E.g, invoking (<a class="reference external" href="https://www.docker.com/">Docker</a>)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ caratekit.sh -ws ${workspace} -cd -di -ct ${caracal_testdir} -rp ${project}_00 -cs ${configfile}_00.yml -td ${rawdata}
+$ caratekit.sh -ws ${workspace} -cd -di -ct ${caracal_testdir} -rp ${project}_01 -cf ${project}_00 -cs ${configfile}_01.yml -td ${rawdata}
+$ caratekit.sh -ws ${workspace} -cd -di -ct ${caracal_testdir} -rp ${project}_02 -cf ${project}_01 -cs ${configfile}_02.yml -td ${rawdata}
+...
+</pre></div>
+</div>
+<p>or (<a class="reference external" href="https://github.com/sylabs/singularity">Singularity</a>)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ caratekit.sh -ws ${workspace} -cd -di -ct ${caracal_testdir} -rp ${project}_00 -cs ${configfile}_00.yml -td ${rawdata}
+$ caratekit.sh -ws ${workspace} -cd -di -ct ${caracal_testdir} -rp ${project}_01 -cf ${project}_00 -cs ${configfile}_01.yml -td ${rawdata}
+$ caratekit.sh -ws ${workspace} -cd -di -ct ${caracal_testdir} -rp ${project}_02 -cf ${project}_01 -cs ${configfile}_02.yml -td ${rawdata}
+...
+</pre></div>
+</div>
+<p>creates the directory structure:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>${workspace}
+└──${caracal_testdir}
+   ⋮
+   ├── ${project}_00 (link to ${project}_01)
+   ├── ${project}_01 (link to ${project}_02)
+   ├── ${project}_02
+   │   ⋮
+   ├── report (report directory)
+   │   ├── install
+   │   │   ⋮
+   │   ├── ${project}_00
+   │   │   ⋮
+   |   ├── ${project}_01
+   │   │   ⋮
+   │   └── ${project}_02
+   │       ⋮
+   ⋮
+</pre></div>
+</div>
+<p>such that issues and reports can be tracked by the names.</p>
+</section>
+<section id="follow-up-steps-to-a-data-reduction-by-method-2-using-a-middle-name">
+<h4>Follow-up steps to a data reduction by method 2: using a middle name<a class="headerlink" href="#follow-up-steps-to-a-data-reduction-by-method-2-using-a-middle-name" title="Link to this heading"></a></h4>
+<p>Using method 2, the user defines a set of consecutive configuration files, for simplicity <code class="docutils literal notranslate"><span class="pre">${configfile}_a</span></code>, <code class="docutils literal notranslate"><span class="pre">${configfile}_b</span></code>, … , and a set of consecutive medifixes (middle names), e.g. <code class="docutils literal notranslate"><span class="pre">00</span></code>, <code class="docutils literal notranslate"><span class="pre">01</span></code>, … for report files. The medifixes will then be inserted in the report file names. If the user does not choose the same medifixes (as in the example), a set of report files with different names are created for each <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> call. The individual names are again the user’s choice…</p>
+<p>E.g, invoking</p>
+<p>(<a class="reference external" href="https://www.docker.com/">Docker</a>)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ caratekit.sh -ws ${workspace} -cd -di -ct ${caracal_testdir} -rp ${project} -rm &quot;00&quot; -cs ${configfile}_a.yml -td ${rawdata}
+$ caratekit.sh -ws ${workspace} -cd -di -ct ${caracal_testdir} -rp ${project} -rm &quot;01&quot; -cs ${configfile}_b.yml -td ${rawdata}
+$ caratekit.sh -ws ${workspace} -cd -di -ct ${caracal_testdir} -rp ${project} -rm &quot;02&quot; -cs ${configfile}_c.yml -td ${rawdata}
+...
+</pre></div>
+</div>
+<p>or (<a class="reference external" href="https://github.com/sylabs/singularity">Singularity</a>)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ caratekit.sh -ws ${workspace} -cd -si -ct ${caracal_testdir} -rp ${project} -rm &quot;00&quot; -cs ${configfile}_a.yml -td ${rawdata}
+$ caratekit.sh -ws ${workspace} -cd -si -ct ${caracal_testdir} -rp ${project} -rm &quot;01&quot; -cs ${configfile}_b.yml -td ${rawdata}
+$ caratekit.sh -ws ${workspace} -cd -si -ct ${caracal_testdir} -rp ${project} -rm &quot;02&quot; -cs ${configfile}_c.yml -td ${rawdata}
+...
+</pre></div>
+</div>
+<p>creates the directory structure:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>${workspace}
+└──${caracal_testdir}
+   ⋮
+   ├── ${project}
+   │   ├── ${configfile}_a.yml
+   │   ├── ${configfile}_b.yml
+   |   ├── ${configfile}_c.yml
+   │   ⋮
+   ├── report (report directory)
+   │   ├── install
+   │   ├── ${project}
+   │   │   ├── ${project}-00.sh.txt
+   │   │   ├── ${project}-00-sysinfo.txt
+   │   │   ├── ${project}-00-${configfile}_a.yml.txt
+   |   │   ├── ${project}-00-${configfile}_a-log-caracal.txt
+   │   │   ├── ${project}-01.sh.txt
+   │   │   ├── ${project}-01-sysinfo.txt
+   │   │   ├── ${project}-01-${configfile}_b.yml.txt
+   |   │   ├── ${project}-01-${configfile}_b-log-caracal.txt
+   │   │   ⋮
+   │   ⋮
+   ⋮
+</pre></div>
+</div>
+<p>such that issues and reports can be tracked, again, by the names. This method has the advantage that the ${project} directory keeps its name, but the disadvantage that the report directory might become large. We leave the choice to the user.
+Quickly installing CARACal using <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code>
+————————————————-
+This method is described for the user who does not want to use <code class="docutils literal notranslate"><span class="pre">caratekit.sh</span></code> to reduce their data but want to use it only to install CARACal.</p>
+<p>Download <a class="reference external" href="https://github.com/ska-sa/caracal/blob/master/caratekit.sh">caratekit.sh</a> . Choose the parent directory <code class="docutils literal notranslate"><span class="pre">${workspace}</span></code> and the name of the CARACal directory <code class="docutils literal notranslate"><span class="pre">${caracal_dir}</span></code>.</p>
+<p>If using <a class="reference external" href="https://www.docker.com">Docker</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ caratekit.sh -ws ${workspace} -cr -di -ct ${caracal_dir} -rp install -f -kh
+</pre></div>
+</div>
+<p>If using <a class="reference external" href="https://github.com/sylabs/singularity">Singularity</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f -kh
+</pre></div>
+</div>
+<p>To run CARACal manually, activate the virtual environment with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>source ${workspace}/${caracal_dir}/caracal_venv/bin/activate
+</pre></div>
+</div>
+<p>then type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>caracal - c ${your-configuration-file}
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../packages/index.html" class="btn btn-neutral float-left" title="Software used by CARACal" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../credits/index.html" class="btn btn-neutral float-right" title="Acknowledgements" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, CARACal team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

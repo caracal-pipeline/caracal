@@ -9,7 +9,7 @@ build:
   jobs:
     pre_build:
       - echo "Running CARACal custom doc builder"
-      - python docs/make_caracal_docs.py
+      - cd docs && python make_caracal_docs.py
       - ls -R docs/sphinx/_build/html  # just to verify
 
 python:

@@ -1,10 +1,16 @@
 # .readthedocs.yaml
 version: 2
 
+# Run your preprocessing script before Sphinx
 build:
   os: ubuntu-22.04
   tools:
     python: "3.10"
+  jobs:
+    pre_build:
+      - echo "Running CARACal custom doc builder"
+      - python docs/make_caracal_docs.py
+      - ls -R docs/sphinx/_build/html  # just to verify
 
 python:
   install:
@@ -16,11 +22,3 @@ python:
 sphinx:
   configuration: docs/sphinx/conf.py
   fail_on_warning: false
-
-# Run your preprocessing script before Sphinx
-build:
-  jobs:
-    pre_build:
-      - echo "Running CARACal custom doc builder"
-      - python docs/make_caracal_docs.py
-      - ls -R docs/sphinx/_build/html  # just to verify

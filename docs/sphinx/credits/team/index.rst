@@ -20,7 +20,7 @@ a valuable and significant way to various modules of CARACal at various times du
 * Sphesihle Makhathini
 * Daniel Molnar
 * Simon Perkins
-* Athanseus Ramaila
+* Athanaseus Ramaila
 * Mpati Ramatsoku
 * Paolo Serra
 * Oleg Smirnov

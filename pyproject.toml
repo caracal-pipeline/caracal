@@ -1,22 +1,11 @@
 [project]
 name = "caracal"
-version = "1.2.1"
+version = "1.2.0"
 description = "Containerized Automated Radio Astronomy Calibration"
+authors = [{ name = "The CaraCAL Team", email = "caracal-info@googlegroups.com" }]
+license = "GNU GPL v2"
 readme = "README.rst"
 requires-python = ">=3.9,<3.13"
-authors = [
-    { name = "The CaraCAL Team", email = "caracal-info@googlegroups.com" }
-]
-license = { text = "GNU GPL v2" }
-keywords = ["Astronomy", "Visualisation", "Pipelines"]
-classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
-    "Operating System :: POSIX :: Linux",
-    "Programming Language :: Python",
-    "Topic :: Scientific/Engineering :: Astronomy"
-]
 dependencies = [
     "stimela>=1.8.0",
     "psutil>=5.9.4",
@@ -35,20 +24,28 @@ dependencies = [
     "matplotlib",
     "jinja2"
 ]
+packages = [{ include = "caracal" }]
 
-[project.optional-dependencies]
-astropy = ["astropy"]
-regions = ["regions"]
-astroquery = ["astroquery"]
-all = ["astropy", "regions", "astroquery"]
+[dependency-groups]
+tests = [
+    "pytest>=7.1.3",
+    "flake8>=5.0.0"
+]
+docs = [
+    "Sphinx>=4.0.1",
+    "sphinx-copybutton>=0.5.0",
+    "furo>=2022.9.15"
+]
+
+[tool.uv]
+default-groups = [
+    "tests",
+    "docs"
+]
 
 [project.scripts]
 caracal = "caracal.main:driver"
 
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
-[tool.uv.groups]
-tests = ["pytest>=7.1.3", "flake8>=5.0.0"]
-docs = ["Sphinx>=4.0.1", "sphinx-copybutton>=0.5.0", "furo>=2022.9.15"]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

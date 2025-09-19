@@ -32,12 +32,12 @@ jobs:
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
-          poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          uv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings
-          poetry run flake8 . --count --exit-zero --max-complexity=10 --extend-ignore=E501 --statistics
+          uv run flake8 . --count --exit-zero --max-complexity=10 --extend-ignore=E501 --statistics
 
       - name: Test caracal command
         run: |
-          poetry run caracal --help
-          poetry run caracal -gd test.yml
-          poetry run caracal -gdt meerkat -gd config.yml
+          uv run caracal --help
+          uv run caracal -gd test.yml
+          uv run caracal -gdt meerkat -gd config.yml

@@ -5,9 +5,6 @@ name: Ubuntu CI
 
 on: [push, pull_request]
 
-env:
-  POETRY_VERSION: 2.1.4
-
 jobs:
   test:
     runs-on: ${{ matrix.os }}
@@ -17,25 +14,20 @@ jobs:
         os: [ ubuntu-22.04,  ubuntu-22.04 ]
         python-version: ["3.9", "3.10", "3.11", "3.12"]
     steps:
+      - uses: actions/checkout@v3
+    
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Install Poetry
-        if: steps.cache-installs.outputs.cache-hit != 'true'
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 - --version ${{ env.POETRY_VERSION }}
-      - name: Test poetry
-        run: poetry --version
-
-      - name: Checkout source
-        uses: actions/checkout@v2
+  
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          fetch-depth: 1
+          version: "0.8.11"
 
-      - name: Install caracal
-        run: poetry install --with tests --no-interaction
+      - name: Install Python dependencies with uv
+        run: uv sync --group tests
 
       - name: Lint with flake8
         run: |

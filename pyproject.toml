@@ -1,69 +1,54 @@
-[tool.poetry]
+[project]
 name = "caracal"
-version = "1.2.0"
+version = "1.2.1"
 description = "Containerized Automated Radio Astronomy Calibration"
-authors = ["The CaraCAL Team <caracal-info@googlegroups.com>"]
 readme = "README.rst"
-homepage = "https://github.com/caracal-pipeline/caracal"
-repository = "https://github.com/caracal-pipeline/caracal"
+requires-python = ">=3.9,<3.13"
+authors = [
+    { name = "The CaraCAL Team", email = "caracal-info@googlegroups.com" }
+]
+license = { text = "GNU GPL v2" }
 keywords = ["Astronomy", "Visualisation", "Pipelines"]
 classifiers = [
-        "Development Status :: 5 - Production/Stable",
-        "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
-        "Operating System :: POSIX :: Linux",
-        "Programming Language :: Python",
-        "Topic :: Scientific/Engineering :: Astronomy"
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering :: Astronomy"
 ]
-license = "GNU GPL v2"
-packages = [
-    {include = "caracal"},
+dependencies = [
+    "stimela>=1.8.0",
+    "psutil>=5.9.4",
+    "pykwalify>=1.8.0",
+    "progressbar2>=4.2.0",
+    "ruamel.yaml>=0.17.21",
+    "pyyaml>=6.0.1",
+    "astropy>=5.3.3",
+    "scipy",
+    "regions",
+    "astroquery",
+    "numpy<2.0",
+    "nbconvert",
+    "radiopadre-client",
+    "python-casacore",
+    "matplotlib",
+    "jinja2"
 ]
 
-[tool.poetry.scripts]
-caracal = "caracal.main:driver"
-
-[tool.poetry.dependencies]
-python = ">=3.9,<3.13"
-stimela = "^1.8.0"
-psutil = "^5.9.4"
-pykwalify = "^1.8.0"
-progressbar2 = "^4.2.0"
-"ruamel.yaml" = "^0.17.21"
-pyyaml = "^6.0.1"
-astropy = "^5.3.3"
-scipy = "*"
-regions = "*"
-astroquery = "*"
-numpy = "<2.0"
-
-# These are not essentail for the pipeline to run, so better to not pin the versions.
-nbconvert = "*"
-radiopadre-client = "*"
-python-casacore = "*"
-matplotlib = "*"
-jinja2 = "*"
-
-[build-system]
-requires = ["setuptools", "poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.extras]
+[project.optional-dependencies]
 astropy = ["astropy"]
 regions = ["regions"]
 astroquery = ["astroquery"]
 all = ["astropy", "regions", "astroquery"]
 
+[project.scripts]
+caracal = "caracal.main:driver"
 
-[tool.poetry.group.tests]
-optional = true
-[tool.poetry.group.tests.dependencies]
-pytest = "^7.1.3"
-flake8 = "^5.0.0"
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
-[tool.poetry.group.docs]
-optional = true
-[tool.poetry.group.docs.dependencies]
-Sphinx = "^4.0.1"
-sphinx-copybutton = "^0.5.0"
-furo = "^2022.9.15"
+[tool.uv.groups]
+tests = ["pytest>=7.1.3", "flake8>=5.0.0"]
+docs = ["Sphinx>=4.0.1", "sphinx-copybutton>=0.5.0", "furo>=2022.9.15"]

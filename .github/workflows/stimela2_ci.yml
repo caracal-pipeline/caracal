@@ -34,14 +34,11 @@ jobs:
 
     - name: Install gdown
       run: |
-        uv pip install  --system  gdown stimela cult-cargo
+        uv pip install  --system  gdown git+https://github.com/caracal-pipeline/stimela.git git+https://github.com/caracal-pipeline/cult-cargo.git
         stimela doc cultcargo::wsclean.yml
 
     - name: Download test MS from Google Drive
       run: gdown https://drive.google.com/uc?id=1Hki6i1Hr7Y2IwppnE1i_URHizqF3gtKM
-
-    #- name: Install Python dependencies with uv
-    #  run: uv sync --group tests
 
     - name: caracal stimela2 doc
       run: |

@@ -232,7 +232,7 @@ lib:
           multiscale: =IFSET(recipe.image-multiscale)
           multiscale-scales: =IFSET(recipe.image-multiscale-scales)
           multiscale-scale-bias: =IFSET(recipe.image-multiscale-bais)
-          temp-dir: =recipe.image-temp
+          #temp-dir: =recipe.image-temp
           log-time: true
           no-update-model-required: =recipe.image-no-update-model-required
 

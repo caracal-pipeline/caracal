@@ -34,11 +34,15 @@ jobs:
 
     - name: Install gdown
       run: |
-        uv pip install  --system  gdown git+https://github.com/caracal-pipeline/stimela.git git+https://github.com/caracal-pipeline/cult-cargo.git
+        uv pip install  --system  gdown \
+          git+https://github.com/caracal-pipeline/stimela.git \
+          git+https://github.com/caracal-pipeline/cult-cargo.git
         stimela doc cultcargo::wsclean.yml
 
     - name: Download test MS from Google Drive
-      run: gdown https://drive.google.com/uc?id=1Hki6i1Hr7Y2IwppnE1i_URHizqF3gtKM
+      run: |
+          gdown https://drive.google.com/uc?id=1Hki6i1Hr7Y2IwppnE1i_URHizqF3gtKM
+          unzip T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
 
     - name: caracal stimela2 doc
       run: |
@@ -48,7 +52,21 @@ jobs:
         stimela doc ../caracal/caracal/recipes/caracal.yml caracal-selfcal
     - name: caracal stimela2 run selfcal
       run: |
-        mkdir ~/tmp
-        mkdir mgpls-output
-        unzip T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
-        stimela run ../caracal/caracal/recipes/caracal.yml caracal-selfcal ms=T16R02C02-corr-scan3-chan512-t16-XXYY.ms pa-rotate=false ms-base=. dir-out-base=output
+        stimela run ../caracal/caracal/recipes/caracal.yml caracal-selfcal \
+          ms=T16R02C02-corr-scan3-chan512-t16-XXYY.ms \
+          pa-rotate=false \
+          ms-base=. \
+          dir-out-base=output
+        stimela run ../caracal/caracal/recipes/caracal.yml mosaic-pointings \
+          out-image-num=2 \
+          dir-out-base=output
+
+    - name: Upload Caracal outputs
+      uses: actions/upload-artifact@v4
+      with:
+        name: caracal-output
+        path: |
+          output/
+          *.log
+        if-no-files-found: warn
+        retention-days: 7

@@ -57,6 +57,7 @@ jobs:
           pa-rotate=false \
           ms-base=. \
           dir-out-base=output
+        rm T16R02C02-corr-scan3-chan512-t16-XXYY.ms*
         stimela run ../caracal/caracal/recipes/caracal.yml mosaic-pointings \
           out-image-num=2 \
           dir-out-base=output

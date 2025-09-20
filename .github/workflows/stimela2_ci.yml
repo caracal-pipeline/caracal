@@ -51,4 +51,4 @@ jobs:
         mkdir ~/tmp
         mkdir mgpls-output
         unzip T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
-        stimela run ../caracal/caracal/recipes/caracal.yml caracal-selfcal ms-labels=[T16R02C02] pa-rotate=false ms-base=. dir-out-base=output
+        stimela run ../caracal/caracal/recipes/caracal.yml caracal-selfcal ms=T16R02C02-corr-scan3-chan512-t16-XXYY.ms pa-rotate=false ms-base=. dir-out-base=output

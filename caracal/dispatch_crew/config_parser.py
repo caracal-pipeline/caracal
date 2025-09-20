@@ -161,17 +161,21 @@ class config_parser(object):
             elif _worker in self._schemas:
                 schema_fn, _ = self._schemas[worker] = self._schemas[_worker]
             else:
-                schema_fn = os.path.join(caracal.pckgdir, "schema", "{0:s}_schema.yml".format(_worker))
-
+                schema_fn = os.path.join(
+                    caracal.pckgdir, "schema", f"{_worker}_schema.yml"
+                )
+                
                 if _worker == "worker" or not os.path.exists(schema_fn):
-                    errors[worker] = ["this is not a recognized worker name, or its schema file is missing"]
+                    errors[worker] = [
+                        "this is not a recognized worker name, or its schema file is missing"
+                    ]
                     continue
-
-                with open(schema_fn, 'r') as file:
-                    full_schema = ruamel.yaml.load(file, ruamel.yaml.RoundTripLoader, version=(1, 1))
-
+                
+                with open(schema_fn, "r") as file:
+                    full_schema = yaml.load(file)
+                
                 schema = full_schema["mapping"][_worker]
-                self._schemas[worker] = self._schemas[_worker] = schema_fn, schema
+                self._schemas[worker] = self._schemas[_worker] = (schema_fn, schema)
 
             # validate worker config
             core = Core(source_data={_worker: variables}, schema_files=[schema_fn])

@@ -286,7 +286,7 @@ mapping:
         required: false
         example: 'False'
       cal_quartical:
-        desc: Parameters that only apply when using CubiCal for the calibration.
+        desc: Parameters that only apply when using QuartiCal for the calibration.
         type: map
         mapping:
           max_prior_error:
@@ -640,6 +640,27 @@ mapping:
             desc: Clean model number to use, or combination of clean models. E.g. '1+2' to use the first and second clean models.
             required: false
             example: '3'
+
+      mosaic:
+        type: map
+        desc: Source-finding parameters.
+        mapping:
+          enable:
+            type: bool
+            desc: Enable the mosaicking segment.
+            required: false
+            example: 'False'
+          out_image_num:
+            type: int
+            desc: Set the output image number to mosaic.
+            required: false
+            example: '3'
+          stokes:
+            type: str
+            desc: Set the stokes quantityoutput image number to mosaic. If not set, assumes no polimager was performed.
+            required: false
+            example: ''
+            enum: ["", "I", "Q", "U", "V"]
 
       flagging_summary:
         type: map

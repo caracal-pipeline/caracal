@@ -133,11 +133,12 @@ class config_parser(object):
         Returns tuple of content, version, where content is validated config dict.
         Else raises ConfigErrors.
         """
-        with open(config_file, 'r') as file:
-            try:
-                config_content = ruamel.yaml.load(file, ruamel.yaml.RoundTripLoader, version=(1, 1))
-            except BaseException as exc:
-                raise ConfigErrors(config_file, {'at top level': [str(exc)]})
+        yaml = ruamel.yam.YAML(typ="rt")
+        try:
+            with open(config_file, "r") as f:
+                config_content = yaml.load(f)
+        except BaseException as exc:
+            raise ConfigErrors(config_file, {"at top level": [str(exc)]})
 
         version = None
         # Validate each worker section against the schema and

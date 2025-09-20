@@ -76,6 +76,15 @@ caracal-selfcal:
                                 UNSET, UNSET), UNSET))
         no-update-model-required: =IF(recipe.iter>0, IF(recipe.image-no-update-model-required, true, false), true)
 
+    generate-beam:
+      info: construct mauch beam
+      cab: generate_mauch_beam
+      skip_if_outputs: exist
+      skip: =IF(recipe.image-enable, false, true)
+      params:
+        image: =IF(recipe.selfcal.pa-rotate, steps.image-pol.restored.i.mfs, steps.image-pol.restored.mfs)
+        outfile: =IF(recipe.selfcal.pa-rotate, '{steps.image-pol.prefix}-MFS-I-pb.fits', '{steps.image-pol.prefix}-MFS-pb.fits')
+
     quality-assess:
       info: image quality assessment
       cab: aimfast
@@ -102,6 +111,7 @@ caracal-selfcal:
     source-finder:
       info: automatic source finding
       _use: lib.steps.source-finder.bdsf
+      skip_if_outputs: fresh
       skip: =CASES(not recipe.selfcal.cal-model-mode=='pybdsm_only', true,
                    not recipe.image-enable, true,
                    not recipe.image-aimfast-enable, true, false)
@@ -114,6 +124,7 @@ caracal-selfcal:
     tigger-convert:
       info: convert model to lsm format
       cab: tigger-convert
+      skip_if_outputs: fresh
       skip: =CASES(not recipe.selfcal.cal-model-mode=='pybdsm_only', true,
                    not recipe.image-enable, true,
                    not recipe.image-aimfast-enable, true, false)
@@ -158,6 +169,7 @@ caracal-selfcal:
     upsample:
       info: upsamples model image to higher frequency resolution
       cab: smops
+      skip_if_outputs: fresh
       skip: true
       params:
         ms: =recipe.ms
@@ -194,9 +206,10 @@ caracal-selfcal:
       params:
         niter: =recipe.selfcal._niters
 
-    time_freq_intervals:
+    time-freq-intervals:
       info: Time and frequency intervals for selfcal
       cab: intervals_out
+      skip: =CASES(not recipe.selfcal.enable, true, false)
       params:
         iter: =recipe.iter
         time_intervals: =recipe.selfcal.jones-time
@@ -209,7 +222,7 @@ caracal-selfcal:
       skip: =CASES(not recipe.selfcal.enable, true,
                    recipe.iter==0, true,
                    recipe.iter==steps.max-iter.max-iter, true,
-                   not steps.time_freq_intervals.jones_type=='k', true, false)
+                   not steps.time-freq-intervals.jones_type=='k', true, false)
       params:
         #input_model.recipe: =IF(recipe.selfcal.cal-model-mode, steps.output-model, MODEL_DATA)
         #input_model.recipe: =steps.tigger-convert-*.output-model
@@ -217,8 +230,8 @@ caracal-selfcal:
         output.columns: [CORRECTED_DATA]
         output.gain_directory: "{recipe.dir-out-base}/selfcal_products/K-{recipe.iter}.qc/"
         output.log_directory: "{recipe.dir-out-base}/selfcal_products/K-{recipe.iter}.qc/log/"
-        K.time_interval: =steps.time_freq_intervals.time_int[0]
-        K.freq_interval: =steps.time_freq_intervals.freq_int[0]
+        K.time_interval: =steps.time-freq-intervals.time_int[0]
+        K.freq_interval: =steps.time-freq-intervals.freq_int[0]
 
 
     selfcal-phase:
@@ -227,14 +240,14 @@ caracal-selfcal:
       skip: =CASES(not recipe.selfcal.enable, true,
                    recipe.iter==0, true,
                    recipe.iter==steps.max-iter.max-iter, true,
-                   not steps.time_freq_intervals.jones_type=='p', true, false)
+                   not steps.time-freq-intervals.jones_type=='p', true, false)
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
         output.gain_directory: "{recipe.dir-out-base}/selfcal_products/P-{recipe.iter}.qc/"
         output.log_directory: "{recipe.dir-out-base}/selfcal_products/P-{recipe.iter}.qc/log/"
-        P.time_interval: =steps.time_freq_intervals.time_int[0]
-        P.freq_interval: =steps.time_freq_intervals.freq_int[0]
+        P.time_interval: =steps.time-freq-intervals.time_int[0]
+        P.freq_interval: =steps.time-freq-intervals.freq_int[0]
 
     selfcal-gain:
       info: Round of gain selfcal
@@ -242,14 +255,14 @@ caracal-selfcal:
       skip: =CASES(not recipe.selfcal.enable, true,
                    recipe.iter==0, true,
                    recipe.iter==steps.max-iter.max-iter, true,
-                   not steps.time_freq_intervals.jones_type=='g', true, false)
+                   not steps.time-freq-intervals.jones_type=='g', true, false)
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
         output.gain_directory: "{recipe.dir-out-base}/selfcal_products/G-{recipe.iter}.qc/"
         output.log_directory: "{recipe.dir-out-base}/selfcal_products/G-{recipe.iter}.qc/log/"
-        G.time_interval: =steps.time_freq_intervals.time_int[0]
-        G.freq_interval: =steps.time_freq_intervals.freq_int[0]
+        G.time_interval: =steps.time-freq-intervals.time_int[0]
+        G.freq_interval: =steps.time-freq-intervals.freq_int[0]
 
     selfcal-delay-gain:
       info: Round of delay and gain selfcal
@@ -257,13 +270,13 @@ caracal-selfcal:
       skip: =CASES(not recipe.selfcal.enable, true,
                    recipe.iter==0, true,
                    recipe.iter==steps.max-iter.max-iter, true,
-                   not steps.time_freq_intervals.jones_type=='k-g', true, false)
+                   not steps.time-freq-intervals.jones_type=='k-g', true, false)
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
         output.gain_directory: "{recipe.dir-out-base}/selfcal_products/KG-{recipe.iter}.qc/"
         output.log_directory: "{recipe.dir-out-base}/selfcal_products/KG-{recipe.iter}.qc/log/"
-        K.time_interval: =steps.time_freq_intervals.time_int[0]
-        K.freq_interval: =steps.time_freq_intervals.freq_int[0]
-        G.time_interval: =steps.time_freq_intervals.time_int[-1]
-        G.freq_interval: =steps.time_freq_intervals.freq_int[-1]
+        K.time_interval: =steps.time-freq-intervals.time_int[0]
+        K.freq_interval: =steps.time-freq-intervals.freq_int[0]
+        G.time_interval: =steps.time-freq-intervals.time_int[-1]
+        G.freq_interval: =steps.time-freq-intervals.freq_int[-1]

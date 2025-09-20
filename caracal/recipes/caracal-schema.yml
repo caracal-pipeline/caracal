@@ -161,7 +161,6 @@ image-absmem:
   dtype: float
 image-temp:
   dtype: Directory
-  default: tmp
 
 aimfast.tol:
   info: Relative change in weighted mean of metrics (specified via convergence_criteria below) from aimfast.

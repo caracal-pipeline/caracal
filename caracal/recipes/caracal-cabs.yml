@@ -18,6 +18,50 @@ _include:
     - wsclean.yml
 
 cabs:
+
+  bdsf.catalog:
+    inputs:
+      multichan_opts:
+        dtype: bool
+        required: false
+      frequency:
+        dtype: float
+        required: false
+
+  tigger_convert:
+    command: tigger-convert
+    inputs:
+      input-model:
+        dtype: File
+        required: true
+        policies:
+          positional: true
+      force:
+        dtype: bool
+        default: true
+    outputs:
+      output-model:
+        dtype: File
+        policies:
+          positional: true
+
+  mosaic-queen:
+    command: mosaic-queen
+    inputs:
+      input:
+        info: "The directory that contains the (2D or 3D) images and beams"
+        dtype: Directory
+        writable: true
+      beam-cutoff:
+        dtype: float
+      mosaic-cutoff:
+        dtype: float
+    outputs:
+      outfile:
+        dtype: Union[List[File], List[Directory]]
+        implicit: "=GLOB('{current.name}*')"
+        writable: true
+
   breizorro:
     info: A tool for creating a binary mask and regions given a FITS image (https://github.com/ratt-ru/breizorro)
     inputs:

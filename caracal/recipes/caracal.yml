@@ -39,17 +39,56 @@ caracal-pointings:
         dir-out-base: =recipe.dir-out-base
         ms: =recipe.ms
 
-join-pointings:
-  name: "CARACAL mosaicking"
+mosaic-pointings:
+  name: "CARACal mosaicking"
   info: "Create a mosaic for the pointings or image similar pointings together"
+
   inputs:
     _include: caracal-schema.yml
+    out-image-num:
+      dtype: int
+      default: 3
+      # default: =current.reduce-pointings.out_image_num + 1
+    stokes:
+      default: ""
+      dtype: str
+      choices: ["", "I", "Q", "U", "V"]
+
   steps:
     mosaic-image:
+      info: "Make mosaic image of all imaged pointings"
       cab: mosaic-queen
       params:
-        target_images: ['*MFS-image*']
-        input: "{recipe.dir-out-base}/caracal-imaging-{recipe.worker-id}"
-        output: "{recipe.dir-out-base}/caracal-imaging-{recipe.worker-id}"
-        regrid: True
-        name: CARACAL
+        target_images: ["*MFS-{recipe.stokes}*image.fits"]
+        input: "{recipe.dir-out-base}/image_{recipe.out-image-num}"
+        output: "=current.input"
+        regrid: true
+        # force-regrid: true
+        mosaic-cutoff: 0.05
+        beam-cutoff: 0.05
+        name: CARACal
+
+    source-finder:
+      info: "Runs source finder on mosaic image to make a complete local sky model"
+      cab: bdsf.catalog
+      skip_if_outputs: exist
+      params:
+        image: "{recipe.dir-out-base}/image_{recipe.out-image-num}/{steps.mosaic-image.name}_image.fits"
+        thresh_pix: 4
+        thresh_isl: 3
+        rms_box: [100, 100]
+        rms_map: false
+        multichan_opts: false
+        frequency: 3.120405752 # L=1283895507.81
+        # flagging_opts: true
+        # flag_maxsize_bm: 10
+        catalog_format: ascii
+        outfile_gaul: "{recipe.dir-out-base}/image_{recipe.out-image-num}/{steps.mosaic-image.name}.gaul"
+        outfile_srl: "{recipe.dir-out-base}/image_{recipe.out-image-num}/{steps.mosaic-image.name}.srl"
+
+    tigger-convert:
+      info: "Convert source finder full sky model to lsm"
+      cab: tigger-convert
+      params:
+        input-model: "=steps.source-finder.outfile_gaul"
+        output-model: "=STRIPEXT(steps.source-finder.outfile_gaul) + '.lsm.html'"

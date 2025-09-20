@@ -1,0 +1,55 @@
+name: Stimela2 countinuous integration
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12"] #["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        version: "0.8.11"
+
+    - name: Install Apptainer
+      uses: eWaterCycle/setup-apptainer@v2
+      with:
+        apptainer-version: 1.3.6
+
+    - name: Install gdown
+      run: pip install gdown stimela cult-cargo
+
+    - name: Download test MS from Google Drive
+      run: gdown https://drive.google.com/uc?id=1Hki6i1Hr7Y2IwppnE1i_URHizqF3gtKM
+
+    #- name: Install Python dependencies with uv
+    #  run: uv sync --group tests
+
+    - name: caracal stimela2 doc
+      run: |
+        uv run stimela doc ../caracal/caracal/recipes/caracal.yml
+    - name: caracal stimela2 selfcal doc
+      run: |
+        uv run stimela doc ../caracal/caracal/recipes/caracal.yml caracal-selfcal
+    - name: caracal stimela2 run selfcal
+      run: |
+        mkdir ~/tmp
+        mkdir mgpls-output
+        unzip T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
+        uv run stimela run ../caracal/caracal/recipes/caracal.yml caracal-selfcal ms-labels=[T16R02C02] pa-rotate=false ms-base=. dir-out-base=output

@@ -34,7 +34,7 @@ jobs:
 
     - name: Install gdown
       run: |
-        uv pip install gdown stimela cult-cargo
+        uv pip install  --system  gdown stimela cult-cargo
         uv run stimela doc cultcargo::wsclean.yml
 
     - name: Download test MS from Google Drive

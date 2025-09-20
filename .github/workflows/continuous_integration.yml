@@ -38,6 +38,7 @@ jobs:
 
       - name: Test caracal command
         run: |
+          uv run caracal --version
           uv run caracal --help
           uv run caracal -gd test.yml
           cat test.yml

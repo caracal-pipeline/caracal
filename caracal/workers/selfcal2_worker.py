@@ -1190,10 +1190,9 @@ def worker(pipeline, recipe, config):
             "start_iter": "selfcal.start-iter",
             "overwrite_flagvers": "selfcal.overwrite-flagvers",
             "imodel_pa_rotate": "selfcal.pa-rotate",
-            "gaini_matrix_type": "selfcal.jones",
+            "gain_matrix_type": "selfcal.jones",
             "gasols_timeslots": "selfcal.jones-time",
             "gasols_chan": "selfcal.jones-freq",
-            "flag_madmax": "selfcal.mad-flag",
             "ncpu": "ncpu"
         }
 
@@ -1221,12 +1220,12 @@ def worker(pipeline, recipe, config):
                 params.append(f"breizorro.fill_holes={breiz['fill_holes']}")
 
 
-        # Quartical
-        qcal = config.get("calibrate", {})
-        if qcal:
-            params.append(f"selfcal.enable={qcal['enable']}")
+        # Calibrate
+        cal = config.get("calibrate", {})
+        if cal:
+            params.append(f"selfcal.enable={cal['enable']}")
             # gain_matrix_type → jones
-            gm_types = qcal.get("gain_matrix_type") or []
+            gm_types = cal.get("gain_matrix_type") or []
             if gm_types:
                 jones = [QUARTICAL_MT[g] for g in gm_types if g in QUARTICAL_MT]
                 if jones:
@@ -1234,20 +1233,24 @@ def worker(pipeline, recipe, config):
             # time/freq intervals (align each with corresponding jones)
             times = []
             freqs = []
-            if "gsols_timeslots" in qcal or "gsols_chan" in qcal:
+            if "gsols_timeslots" in cal or "gsols_chan" in cal:
                 for n in range(config["cal_niter"]):
-                    times.append([qcal.get("gsols_timeslots", [0])[n]
-                                           if n < len(qcal.get("gsols_timeslots", []))
-                                           else qcal.get("gsols_timeslots", [0])[-1]])
-                    freqs.append([qcal.get("gsols_chan", [0])[n]
-                                           if n < len(qcal.get("gsols_chan", []))
-                                           else qcal.get("gsols_chan", [0])[-1]])
+                    times.append([cal.get("gsols_timeslots", [0])[n]
+                                           if n < len(cal.get("gsols_timeslots", []))
+                                           else cal.get("gsols_timeslots", [0])[-1]])
+                    freqs.append([cal.get("gsols_chan", [0])[n]
+                                           if n < len(cal.get("gsols_chan", []))
+                                           else cal.get("gsols_chan", [0])[-1]])
 
 
             if times:
                 params.append(f"selfcal.jones-time={repr(times).replace(' ', '')}")
             if freqs:
                 params.append(f"selfcal.jones-freq={repr(freqs).replace(' ', '')}")
+        #Quartical Opts
+        if config.get("calibrate_with") == 'quartical':
+            qcal = config.get("cal_quartical", {})
+            params.append(f"selfcal.mad-flag={qcal.get('flag_madmax')}")
 
         # WSClean
         wsclean = config.get("image", {})
@@ -1295,6 +1298,30 @@ def worker(pipeline, recipe, config):
             input=pipeline.input,
             output=pipeline.output,
             label='{:s}:: Running CARACal selfcal2'.format(step))
+
+    recipe.run()
+    # Empty job que after execution
+    recipe.jobs = []
+
+    if config['mosaic']['enable']:
+        step = 'mosaic2'
+        params = [
+            f"ms=/stimela_mount/msdir/{mslist[0]}",
+            f"image-temp=/stimela_mount/output/tmp",
+            f"image-prefix={pipeline.prefix}_{field}",
+            f"dir-out-base=/stimela_mount/output/continuum",
+            f"ms-base=/stimela_mount/output/msdir",
+            f"out-image-num={config['mosaic']['out_image_num']}"
+        ]
+        recipe.add('cab/stimela2', step,
+            {
+               'recipe': f'recipes/caracal.yml',
+               'recipe-name': 'mosaic-pointings',
+               'params': params
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='{:s}:: Running CARACal mosaic2'.format(step))
 
         recipe.run()
         # Empty job que after execution

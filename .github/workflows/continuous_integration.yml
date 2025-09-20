@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-22.04,  ubuntu-22.04 ]
+        os: [ ubuntu-22.04,  ubuntu-24.04 ]
         python-version: ["3.9", "3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v3
@@ -40,4 +40,6 @@ jobs:
         run: |
           uv run caracal --help
           uv run caracal -gd test.yml
+          cat test.yml
           uv run caracal -gdt meerkat -gd config.yml
+          cat config.yml

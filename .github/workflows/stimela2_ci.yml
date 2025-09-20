@@ -35,7 +35,7 @@ jobs:
     - name: Install gdown
       run: |
         uv pip install  --system  gdown stimela cult-cargo
-        uv run stimela doc cultcargo::wsclean.yml
+        stimela doc cultcargo::wsclean.yml
 
     - name: Download test MS from Google Drive
       run: gdown https://drive.google.com/uc?id=1Hki6i1Hr7Y2IwppnE1i_URHizqF3gtKM
@@ -45,13 +45,13 @@ jobs:
 
     - name: caracal stimela2 doc
       run: |
-        uv run stimela doc ../caracal/caracal/recipes/caracal.yml
+        stimela doc ../caracal/caracal/recipes/caracal.yml
     - name: caracal stimela2 selfcal doc
       run: |
-        uv run stimela doc ../caracal/caracal/recipes/caracal.yml caracal-selfcal
+        stimela doc ../caracal/caracal/recipes/caracal.yml caracal-selfcal
     - name: caracal stimela2 run selfcal
       run: |
         mkdir ~/tmp
         mkdir mgpls-output
         unzip T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
-        uv run stimela run ../caracal/caracal/recipes/caracal.yml caracal-selfcal ms-labels=[T16R02C02] pa-rotate=false ms-base=. dir-out-base=output
+        stimela run ../caracal/caracal/recipes/caracal.yml caracal-selfcal ms-labels=[T16R02C02] pa-rotate=false ms-base=. dir-out-base=output

@@ -133,7 +133,7 @@ class config_parser(object):
         Returns tuple of content, version, where content is validated config dict.
         Else raises ConfigErrors.
         """
-        yaml = ruamel.yam.YAML(typ="rt")
+        yaml = ruamel.yaml.YAML(typ="rt")
         try:
             with open(config_file, "r") as f:
                 config_content = yaml.load(f)

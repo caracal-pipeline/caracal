@@ -27,7 +27,7 @@ jobs:
           version: "0.8.11"
 
       - name: Install Python dependencies with uv
-        run: uv sync --group tests
+        run: uv sync
 
       - name: Lint with flake8
         run: |

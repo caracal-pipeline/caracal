@@ -55,12 +55,13 @@ jobs:
         stimela run ../caracal/caracal/recipes/caracal.yml caracal-selfcal \
           ms=T16R02C02-corr-scan3-chan512-t16-XXYY.ms \
           image-cell=2.5 \
-          pa-rotate=false \
+          selfcal.mad-flag=true \
           ms-base=. \
           dir-out-base=output
         rm -r T16R02C02-corr-scan3-chan512-t16-XXYY.ms*
+        rm -r quay.io-stimela2*
         stimela run ../caracal/caracal/recipes/caracal.yml mosaic-pointings \
-          out-image-num=2 \
+          out-image-num=3 \
           dir-out-base=output
 
     - name: Upload Caracal outputs

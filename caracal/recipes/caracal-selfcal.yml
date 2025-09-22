@@ -228,8 +228,8 @@ caracal-selfcal:
         #input_model.recipe: =steps.tigger-convert-*.output-model
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
-        output.gain_directory: "{recipe.dir-out-base}/selfcal_products/K-{recipe.iter}.qc/"
-        output.log_directory: "{recipe.dir-out-base}/selfcal_products/K-{recipe.iter}.qc/log/"
+        output.gain_directory: ="{recipe.dir-out-base}/selfcal_products/" + STRIPEXT(BASENAME(recipe.ms)) + "K-{recipe.iter}.qc/"
+        output.log_directory: ="{recipe.dir-out-base}/selfcal_products/" + STRIPEXT(BASENAME(recipe.ms)) + "K-{recipe.iter}.qc/log/"
         K.time_interval: =steps.time-freq-intervals.time_int[0]
         K.freq_interval: =steps.time-freq-intervals.freq_int[0]
 
@@ -244,8 +244,8 @@ caracal-selfcal:
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
-        output.gain_directory: "{recipe.dir-out-base}/selfcal_products/P-{recipe.iter}.qc/"
-        output.log_directory: "{recipe.dir-out-base}/selfcal_products/P-{recipe.iter}.qc/log/"
+        output.gain_directory: ="{recipe.dir-out-base}/selfcal_products/" + STRIPEXT(BASENAME(recipe.ms)) + "P-{recipe.iter}.qc/"
+        output.log_directory: ="{recipe.dir-out-base}/selfcal_products/" + STRIPEXT(BASENAME(recipe.ms)) + "P-{recipe.iter}.qc/log/"
         P.time_interval: =steps.time-freq-intervals.time_int[0]
         P.freq_interval: =steps.time-freq-intervals.freq_int[0]
 
@@ -259,8 +259,8 @@ caracal-selfcal:
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
-        output.gain_directory: "{recipe.dir-out-base}/selfcal_products/G-{recipe.iter}.qc/"
-        output.log_directory: "{recipe.dir-out-base}/selfcal_products/G-{recipe.iter}.qc/log/"
+        output.gain_directory: ="{recipe.dir-out-base}/selfcal_products/" + STRIPEXT(BASENAME(recipe.ms)) + "G-{recipe.iter}.qc/"
+        output.log_directory: ="{recipe.dir-out-base}/selfcal_products/" + STRIPEXT(BASENAME(recipe.ms)) + "G-{recipe.iter}.qc/log/"
         G.time_interval: =steps.time-freq-intervals.time_int[0]
         G.freq_interval: =steps.time-freq-intervals.freq_int[0]
 
@@ -274,8 +274,8 @@ caracal-selfcal:
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
-        output.gain_directory: "{recipe.dir-out-base}/selfcal_products/KG-{recipe.iter}.qc/"
-        output.log_directory: "{recipe.dir-out-base}/selfcal_products/KG-{recipe.iter}.qc/log/"
+        output.gain_directory: ="{recipe.dir-out-base}/selfcal_products/" + STRIPEXT(BASENAME(recipe.ms)) + "-KG-{recipe.iter}.qc/"
+        output.log_directory: ="{recipe.dir-out-base}/selfcal_products/" + STRIPEXT(BASENAME(recipe.ms)) + "KG-{recipe.iter}.qc/log/"
         K.time_interval: =steps.time-freq-intervals.time_int[0]
         K.freq_interval: =steps.time-freq-intervals.freq_int[0]
         G.time_interval: =steps.time-freq-intervals.time_int[-1]

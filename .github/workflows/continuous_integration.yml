@@ -36,6 +36,18 @@ jobs:
           # exit-zero treats all errors as warnings
           uv run flake8 . --count --exit-zero --max-complexity=10 --extend-ignore=E501 --statistics --exclude=.venv
 
+      - name: Install Apptainer
+        uses: eWaterCycle/setup-apptainer@v2
+        with:
+          apptainer-version: 1.3.6
+
+      - name: Install gdown and download test data
+        run: |
+          uv pip install  --system  gdown
+          gdown https://drive.google.com/uc?id=1Hki6i1Hr7Y2IwppnE1i_URHizqF3gtKM
+          unzip T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
+          rm T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
+
       - name: Test caracal command
         run: |
           uv run caracal --version
@@ -44,3 +56,4 @@ jobs:
           cat test.yml
           uv run caracal -gdt meerkat -gd config.yml
           cat config.yml
+          uv run caracal -c config.yml -ct singularity -sw obsconf -ew obsconf dataid T16R02C02-corr-scan3-chan512-t16-XXYY.ms

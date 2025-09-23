@@ -56,4 +56,9 @@ jobs:
           cat test.yml
           uv run caracal -gdt meerkat -gd config.yml
           cat config.yml
-          uv run caracal -c config.yml -ct singularity -sw obsconf -ew obsconf --getdata-dataid [T16R02C02-corr-scan3-chan512-t16-XXYY] --general-msdir .
+          uv run caracal -c config.yml -ct singularity -sw obsconf -ew obsconf \
+            --getdata-dataid [T16R02C02-corr-scan3-chan512-t16-XXYY] \
+            --general-msdir . \
+            --obsconf-gcal T16R02C02 \
+            --obsconf-fcal T16R02C02 \
+            --obsconf-bpcal T16R02C02

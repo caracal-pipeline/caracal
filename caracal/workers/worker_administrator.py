@@ -13,6 +13,7 @@ import itertools
 
 import ruamel.yaml
 assert ruamel.yaml.version_info >= (0, 12, 14)
+yaml = ruamel.yaml.YAML(typ="rt") 
 
 
 REPORTS = True
@@ -143,8 +144,8 @@ class WorkerAdministrator(object):
         shutil.copyfile(configFileName, outConfigOrigName)  # original config
 
         log.info(f"Saving full configuration as {outConfigName}")
-        with open(outConfigName, 'w') as outfile:           # config+command line
-            ruamel.yaml.dump(self.config, outfile, Dumper=ruamel.yaml.RoundTripDumper)
+        with open(outConfigName, "w", encoding="utf-8") as outfile:
+            yaml.dump(self.config, outfile)
 
     def init_names(self, dataids):
         """ iniitalize names to be used throughout the pipeline and associated
@@ -197,8 +198,8 @@ class WorkerAdministrator(object):
         # reload cached dict if file on disk is newer
         mtime = os.path.getmtime(msinfo_path)
         if msdict is None or mtime > mtime_cache:
-            with open(msinfo_path, 'r') as f:
-                msdict = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+            with open(msinfo_path, "r", encoding="utf-8") as f:
+                msdict = yaml.load(f)
             self._msinfo_cache[msname] = msdict, mtime
         return msdict
 
@@ -259,13 +260,13 @@ class WorkerAdministrator(object):
         filename = self.get_callib_name(name)
         if not os.path.exists(filename):
             raise IOError(f"Calibration library {filename} doesn't exist")
-        with open(filename, 'r') as f:
-            return ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+        with open(filename, "r", encoding="utf-8") as f:
+            return yaml.load(f)
 
     def save_callib(self, callib, name):
         """Dumps caldict to calibration library specified by name"""
-        with open(self.get_callib_name(name), 'w') as f:
-            ruamel.yaml.dump(callib, f, ruamel.yaml.RoundTripDumper)
+        with open(self.get_callib_name(name), "w", encoding="utf-8") as f:
+            yaml.dump(callib, f)
 
     def parse_cabspec_dict(self, cabspec_seq):
         """Turns sequence of cabspecs into a Stimela cabspec dict"""

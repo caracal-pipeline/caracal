@@ -25,17 +25,20 @@ caracal = "caracal.main:driver"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
-stimela = "^1.8.0"
+stimela = "^1.8.1"
 psutil = "^5.9.4"
 pykwalify = "^1.8.0"
 progressbar2 = "^4.2.0"
 "ruamel.yaml" = "^0.17.21"
 pyyaml = "^6.0.1"
-astropy = "^5.3.3"
+astropy = [
+    { version = "5.3.3", python = ">=3.9,<3.11"},
+    {version= "^7.0", python=">=3.11,<=3.13"}
+]
 scipy = "*"
 regions = "*"
 astroquery = "*"
-numpy = "<2.0"
+numpy = "*"
 
 # These are not essentail for the pipeline to run, so better to not pin the versions.
 nbconvert = "*"
@@ -48,11 +51,11 @@ jinja2 = "*"
 requires = ["setuptools", "poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.extras]
-astropy = ["astropy"]
-regions = ["regions"]
-astroquery = ["astroquery"]
-all = ["astropy", "regions", "astroquery"]
+#[tool.poetry.extras]
+#astropy = ["astropy"]
+#regions = ["regions"]
+#astroquery = ["astroquery"]
+#all = ["astropy", "regions", "astroquery"]
 
 
 [tool.poetry.group.tests]

@@ -1,9 +1,12 @@
 import os
 import glob
-import sys
 import caracal
 import numpy as np
 from caracal.dispatch_crew import utils
+from astropy import units as u
+import astropy.coordinates as coord
+from astropy.io import fits
+from astropy import wcs
 
 NAME = "Mosaic 2D-images or cubes"
 LABEL = 'mosaic'
@@ -11,35 +14,11 @@ LABEL = 'mosaic'
 
 def worker(pipeline, recipe, config):
 
-    from astropy import units as u
-    import astropy.coordinates as coord
-    from astropy.io import fits
-    from astropy import wcs
-
-    wname = pipeline.CURRENT_WORKER
 
     ##########################################
     # Defining functions for the worker
     ##########################################
 
-    # Not using anymore, but might need later
-    def identify_last_selfcal_image(directory_to_check, prefix, field, mfsprefix):
-
-        # Doing this because convergence may have been reached before the user-specified number of iterations
-        matching_files = glob.glob(directory_to_check + '/{0:s}_{1:s}_*{2:s}-image.fits'.format(
-            prefix, field, mfsprefix))  # '*' to pick up the number
-        max_num = 0  # Initialisation
-
-        for filename in matching_files:
-            split_filename = filename.split('_')
-            number = split_filename[-1].split('-')[0]
-            num = int(number)
-            if num > max_num:
-                max_num = num
-
-        filename_of_last_selfcal_image = '{0:s}_{1:s}_{2:s}{3:s}-image.fits'.format(
-            prefix, field, str(max_num), mfsprefix)
-        return filename_of_last_selfcal_image
 
     def identify_last_subdirectory(mosaictype):
 
@@ -146,19 +125,19 @@ def worker(pipeline, recipe, config):
                 cdelt3s.append(cc)
         if len(cdelt3s) > 1:
             if nrdecimals:
-                caracal.log.warn('Not all input cubes have the same CDELT3. Values found:')
-                caracal.log.warn('    {0:}'.format(cdelt3s))
-                caracal.log.warn('Rounding up the CDELT3 values to {0:d} decimals:'.format(nrdecimals))
+                caracal.log.warning('Not all input cubes have the same CDELT3. Values found:')
+                caracal.log.warning('    {0:}'.format(cdelt3s))
+                caracal.log.warning('Rounding up the CDELT3 values to {0:d} decimals:'.format(nrdecimals))
                 cdelt3s_r = []
                 for cc in cdelt3s:
                     if round(cc, nrdecimals) not in cdelt3s_r:
                         cdelt3s_r.append(round(cc, nrdecimals))
-                caracal.log.warn('    {0:}'.format(cdelt3s_r))
+                caracal.log.warning('    {0:}'.format(cdelt3s_r))
                 if len(cdelt3s_r) > 1:
                     caracal.log.error('Rounding was insufficient, cannot proceed.')
                     raise caracal.BadDataError('Inconsistent CDELT3 values in input cubes.')
                 else:
-                    caracal.log.warn('Changing CDELT3 of all input image.fits and pb.fits cubes to {0:}'.format(cdelt3s_r[0]))
+                    caracal.log.warning('Changing CDELT3 of all input image.fits and pb.fits cubes to {0:}'.format(cdelt3s_r[0]))
                     for ff in image_filenames:
                         fits.setval(ff, 'cdelt3', value=cdelt3s_r[0])
                         fits.setval(ff.replace('image.fits', 'pb.fits'), 'cdelt3', value=cdelt3s_r[0])

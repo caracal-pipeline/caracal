@@ -2,7 +2,7 @@ import json
 import numpy as np
 
 
-def get_refant(pipeline, recipe, prefix, msname, fields, min_baseline, max_dist, index):
+def get_refant(pipeline, recipe, prefix, msname, fields, min_baseline, max_dist, index=None):
     """Get reference antenna based on max distances to the array centre,
        min baseline length and amount of flagged data."""
     step = "antenna_flag_summary"

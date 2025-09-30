@@ -17,8 +17,8 @@ pipeline = Pipeline(config_dict=config,
                     container_tech=container_tech,
                     container_image_dir=singularity_image_dir)
 
-#pipeline.add_worker("transform")
-#pipeline.run_worker("transform")
+
+pipeline.run_worker("transform")
 
 pipeline.run_worker("prep")
 
@@ -27,6 +27,8 @@ pipeline.run_worker("flag")
 pipeline.run_worker("crosscal")
 
 pipeline.run_worker("inspect")
+
+
 
 
 

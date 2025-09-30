@@ -131,7 +131,7 @@ def select_gcal(info, targets, calibrators, mode='nearest'):
 
 def observed_longest(info, bpcals):
     """
-      Automatically select bandpass calibrator
+        Automatically select bandpass calibrator
     """
     if isinstance(info, str):
         with open(info, 'r') as f:
@@ -139,7 +139,6 @@ def observed_longest(info, bpcals):
 
     names = info['FIELD']['NAME']
     ids = info['FIELD']['SOURCE_ID']
-    dirs = info['FIELD']['REFERENCE_DIR']
 
     def index(field):
         if isinstance(field, str):

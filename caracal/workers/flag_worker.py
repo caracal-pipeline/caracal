@@ -10,7 +10,6 @@ import fnmatch
 NAME = 'Flag'
 LABEL = 'flag'
 
-
 def worker(pipeline, recipe, config):
     label = config['label_in']
     wname = pipeline.CURRENT_WORKER
@@ -49,8 +48,8 @@ def worker(pipeline, recipe, config):
                 if version != available_flagversions[-1]:
                     substep = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, msiter)
                     manflags.delete_cflags(pipeline, recipe,
-                                           available_flagversions[available_flagversions.index(version) + 1],
-                                           msname, cab_name=substep)
+                                        available_flagversions[available_flagversions.index(version) + 1],
+                                        msname, cab_name=substep)
                 if version != flags_before_worker:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, msiter)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
@@ -95,15 +94,15 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'unflag'):
             step = '{0:s}-unflag-ms{1:d}'.format(wname, msiter)
             recipe.add('cab/casa_flagdata', step,
-                       {
-                           "vis": msname,
-                           "mode": 'unflag',
-                           "field": fields,
-                           "flagbackup": False,
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Unflag ms={1:s}'.format(step, msname))
+                        {
+                            "vis": msname,
+                            "mode": 'unflag',
+                            "field": fields,
+                            "flagbackup": False,
+                        },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Unflag ms={1:s}'.format(step, msname))
 
         # flag antennas automatically based on drifts in the scan average of the
         # auto correlation spectra per field. This doesn't strictly require any calibration. It is also
@@ -114,63 +113,64 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'flag_autopowerspec'):
             step = '{0:s}-autopowerspec-ms{1:d}'.format(wname, msiter)
             recipe.add("cab/politsiyakat_autocorr_amp", step,
-                       {
-                           "msname": msname,
-                           "field": ",".join([str(id) for id in field_ids]),
-                           "cal_field": ",".join([str(id) for id in field_ids]),
-                           "scan_to_scan_threshold": config["flag_autopowerspec"]["scan_thr"],
-                           "antenna_to_group_threshold": config["flag_autopowerspec"]["ant_group_thr"],
-                           "dpi": 300,
-                           "plot_size": 6,
-                           "nproc_threads": config['flag_autopowerspec']['threads'],
-                           "data_column": config['flag_autopowerspec']['col']
-                       },
-                       input=pipeline.input, output=pipeline.output,
-                       label="{0:s}:: Flag out antennas with drifts in autocorrelation powerspectra ms={1:s}".format(step, msname))
+                        {
+                            "msname": msname,
+                            "field": ",".join([str(id) for id in field_ids]),
+                            "cal_field": ",".join([str(id) for id in field_ids]),
+                            "scan_to_scan_threshold": config["flag_autopowerspec"]["scan_thr"],
+                            "antenna_to_group_threshold": config["flag_autopowerspec"]["ant_group_thr"],
+                            "dpi": 300,
+                            "plot_size": 6,
+                            "nproc_threads": config['flag_autopowerspec']['threads'],
+                            "data_column": config['flag_autopowerspec']['col']
+                        },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label="{0:s}:: Flag out antennas with drifts in autocorrelation powerspectra ms={1:s}".format(step, msname))
 
         if pipeline.enable_task(config, 'flag_autocorr'):
             step = '{0:s}-autocorr-ms{1:d}'.format(wname, msiter)
             recipe.add('cab/casa_flagdata', step,
-                       {
-                           "vis": msname,
-                           "mode": 'manual',
-                           "autocorr": True,
-                           "field": fields,
-                           "flagbackup": False,
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Flag auto-correlations ms={1:s}'.format(step, msname))
+                        {
+                            "vis": msname,
+                            "mode": 'manual',
+                            "autocorr": True,
+                            "field": fields,
+                            "flagbackup": False,
+                        },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Flag auto-correlations ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'flag_quack'):
             step = '{0:s}-quack-ms{1:d}'.format(wname, msiter)
             recipe.add('cab/casa_flagdata', step,
-                       {
-                           "vis": msname,
-                           "mode": 'quack',
-                           "quackinterval": config['flag_quack']['interval'],
-                           "quackmode": config['flag_quack']['mode'],
-                           "field": fields,
-                           "flagbackup": False,
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Quack flagging ms={1:s}'.format(step, msname))
+                        {
+                            "vis": msname,
+                            "mode": 'quack',
+                            "quackinterval": config['flag_quack']['interval'],
+                            "quackmode": config['flag_quack']['mode'],
+                            "field": fields,
+                            "flagbackup": False,
+                        },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Quack flagging ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'flag_elevation'):
             step = '{0:s}-elevation-ms{1:d}'.format(wname, msiter)
             recipe.add('cab/casa_flagdata', step,
-                       {
-                           "vis": msname,
-                           "mode": 'elevation',
-                           "lowerlimit": config['flag_elevation']['low'],
-                           "upperlimit": config['flag_elevation']['high'],
-                           "field": fields,
-                           "flagbackup": False,
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Flag elevation ms={1:s}'.format(step, msname))
+                        {
+                            "vis": msname,
+                            "mode": 'elevation',
+                            "lowerlimit": config['flag_elevation']['low'],
+                            "upperlimit": config['flag_elevation']['high'],
+                            "field": fields,
+                            "flagbackup": False,
+                        },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Flag elevation ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'flag_shadow'):
             if config['flag_shadow']['full_mk64']:
@@ -191,17 +191,17 @@ def worker(pipeline, recipe, config):
                 addantennafile = None
             step = '{0:s}-shadow-ms{1:d}'.format(wname, msiter)
             recipe.add('cab/casa_flagdata', step,
-                       {
-                           "vis": msname,
-                           "mode": 'shadow',
-                           "tolerance": config['flag_shadow']['tol'],
-                           "addantenna": addantennafile,
-                           "flagbackup": False,
-                           "field": fields,
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Flag shadowed antennas ms={1:s}'.format(step, msname))
+                        {
+                            "vis": msname,
+                            "mode": 'shadow',
+                            "tolerance": config['flag_shadow']['tol'],
+                            "addantenna": addantennafile,
+                            "flagbackup": False,
+                            "field": fields,
+                        },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Flag shadowed antennas ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'flag_spw'):
             step = '{0:s}-spw-ms{1:d}'.format(wname, msiter)
@@ -250,16 +250,16 @@ def worker(pipeline, recipe, config):
 
             if found_valid_data or not config['flag_spw']['ensure_valid']:
                 recipe.add('cab/casa_flagdata', step,
-                           {
-                               "vis": msname,
-                               "mode": 'manual',
-                               "spw": flagspwselection,
-                               "field": fields,
-                               "flagbackup": False,
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
+                            {
+                                "vis": msname,
+                                "mode": 'manual',
+                                "spw": flagspwselection,
+                                "field": fields,
+                                "flagbackup": False,
+                            },
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'flag_time'):
             step = '{0:s}-time-ms{1:d}'.format(wname, msiter)
@@ -278,30 +278,30 @@ def worker(pipeline, recipe, config):
                         'The following time selection has been made in the flag_time module of the flagging worker: "{1:s}". This selection would result in no valid data in {0:s}. This would lead to the FATAL error " The selected table has zero rows" in CASA/FLAGDATA. To avoid this error the corresponding cab {2:s} will not be added to the Stimela recipe of the flagging worker.'.format(msname, config['flag_time']['timerange'], step))
             if found_valid_data or not config['flag_time']['ensure_valid']:
                 recipe.add('cab/casa_flagdata', step,
-                           {
-                               "vis": msname,
-                               "mode": 'manual',
-                               "timerange": config['flag_time']['timerange'],
-                               "flagbackup": False,
-                               "field": fields,
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
+                            {
+                                "vis": msname,
+                                "mode": 'manual',
+                                "timerange": config['flag_time']['timerange'],
+                                "flagbackup": False,
+                                "field": fields,
+                            },
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'flag_scan'):
             step = '{0:s}-scan-ms{1:d}'.format(wname, msiter)
             recipe.add('cab/casa_flagdata', step,
-                       {
-                           "vis": msname,
-                           "mode": 'manual',
-                           "scan": config['flag_scan']['scans'],
-                           "flagbackup": False,
-                           "field": fields,
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
+                        {
+                            "vis": msname,
+                            "mode": 'manual',
+                            "scan": config['flag_scan']['scans'],
+                            "flagbackup": False,
+                            "field": fields,
+                        },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'flag_antennas'):
             # step = '{0:s}-antennas-ms{1:d}'.format(wname, msiter)
@@ -331,17 +331,17 @@ def worker(pipeline, recipe, config):
                 antstep = 'ant-{0:s}-ms{1:d}-antsel{2:d}'.format(wname, obsid, nn)
                 if found_valid_data[nn] or not ensure:
                     recipe.add('cab/casa_flagdata', antstep,
-                               {
-                                   "vis": msname,
-                                   "mode": 'manual',
-                                   "antenna": antenna,
-                                   "timerange": times[nn],
-                                   "field": fields,
-                                   "flagbackup": False,
-                               },
-                               input=pipeline.input,
-                               output=pipeline.output,
-                               label='{0:s}:: Flagging bad antenna {2:s} ms={1:s}'.format(antstep, msname, antenna))
+                                {
+                                    "vis": msname,
+                                    "mode": 'manual',
+                                    "antenna": antenna,
+                                    "timerange": times[nn],
+                                    "field": fields,
+                                    "flagbackup": False,
+                                },
+                            input=pipeline.input,
+                            output=pipeline.output,
+                            label='{0:s}:: Flagging bad antenna {2:s} ms={1:s}'.format(antstep, msname, antenna))
                 elif ensure and not found_valid_data[nn]:
                     caracal.log.warning(
                         'The following time selection has been made in the flag_antennas module of the flagging worker: "{1:s}". This selection would result in no valid data in {0:s}. This would lead to the FATAL error " The selected table has zero rows" in CASA/FLAGDATA. To avoid this error the corresponding cab {2:s} will not be added to the Stimela recipe of the flagging worker.'.format(msname, times[nn], antstep))
@@ -349,16 +349,16 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'flag_mask'):
             step = '{0:s}-mask-ms{1:d}'.format(wname, msiter)
             recipe.add('cab/rfimasker', step,
-                       {
-                           "msname": msname,
-                           "mask": config['flag_mask']['mask'],
-                           "accumulation_mode": 'or',
-                           "uvrange": sdm.dismissable(config['flag_mask']['uvrange'] or None),
-                           "memory": 4096,
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Apply flag mask ms={1:s}'.format(step, msname))
+                        {
+                            "msname": msname,
+                            "mask": config['flag_mask']['mask'],
+                            "accumulation_mode": 'or',
+                            "uvrange": sdm.dismissable(config['flag_mask']['uvrange'] or None),
+                            "memory": 4096,
+                        },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Apply flag mask ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'flag_manual'):
             rules = config['flag_manual']['rules']
@@ -382,9 +382,9 @@ def worker(pipeline, recipe, config):
                 }
                 args.update(keywords)
                 recipe.add('cab/casa_flagdata', step, args,
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label=f'{step}::Flag ms={msname} using {rule}')
+                            input=pipeline.input,
+                            output=pipeline.output,
+                            label=f'{step}::Flag ms={msname} using {rule}')
 
         if pipeline.enable_task(config, 'flag_rfi'):
             step = '{0:s}-rfi-ms{1:d}'.format(wname, msiter)
@@ -406,23 +406,23 @@ def worker(pipeline, recipe, config):
                         ('xx' in flag_corr and ('XX' not in ms_corr and 'RR' not in ms_corr)) or\
                             ('yy' in flag_corr and ('YY' not in ms_corr and 'LL' not in ms_corr)):
                         raise ValueError("The selected flagging strategy {0:s}/{1:s} will attempt to flag on {2:} but this is"
-                                         " not compatible with the {3:} correlations available in {4:s}. To proceed you can edit the flagging"
-                                         " strategy or, if you know what you are doing, disable aoflagger: ensure_valid.".format(
-                                             pipeline.input, config['flag_rfi']['aoflagger']['strategy'], flag_corr, ms_corr, msname))
+                                        " not compatible with the {3:} correlations available in {4:s}. To proceed you can edit the flagging"
+                                        " strategy or, if you know what you are doing, disable aoflagger: ensure_valid.".format(
+                                            pipeline.input, config['flag_rfi']['aoflagger']['strategy'], flag_corr, ms_corr, msname))
 
                 recipe.add('cab/autoflagger', step,
-                           {
-                               "msname": msname,
-                               "column": config['flag_rfi']['col'],
-                               "fields": ",".join(map(str, field_ids)),
-                               "strategy": config['flag_rfi']['aoflagger']['strategy'],
-                               "indirect-read": True if config['flag_rfi']['aoflagger']['readmode'] == 'indirect' else False,
-                               "memory-read": True if config['flag_rfi']['aoflagger']['readmode'] == 'memory' else False,
-                               "auto-read-mode": True if config['flag_rfi']['aoflagger']['readmode'] == 'auto' else False,
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: AOFlagger auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
+                        {
+                                "msname": msname,
+                                "column": config['flag_rfi']['col'],
+                                "fields": ",".join(map(str, field_ids)),
+                                "strategy": config['flag_rfi']['aoflagger']['strategy'],
+                                "indirect-read": True if config['flag_rfi']['aoflagger']['readmode'] == 'indirect' else False,
+                                "memory-read": True if config['flag_rfi']['aoflagger']['readmode'] == 'memory' else False,
+                                "auto-read-mode": True if config['flag_rfi']['aoflagger']['readmode'] == 'auto' else False,
+                        },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: AOFlagger auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
 
             elif config['flag_rfi']["flagger"] == "tricolour":
                 tricolour_strat = config['flag_rfi']['tricolour']['strategy']
@@ -433,39 +433,156 @@ def worker(pipeline, recipe, config):
                         caracal.log.info("Narrowband data detected, selecting appropriate flagging strategy")
                         tricolour_strat = config['flag_rfi']['tricolour']['strat_narrow']
 
-                caracal.log.info("Flagging strategy in use: {0:}".format(tricolour_strat))
-                recipe.add('cab/tricolour', step,
-                           {
-                               "ms": msname,
-                               "data-column": config['flag_rfi']['col'],
-                               "window-backend": config['flag_rfi']['tricolour']['backend'],
-                               "field-names": fields,
-                               "flagging-strategy": 'polarisation',
-                               "config": tricolour_strat,
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Tricolour auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
+            if pipeline.enable_task(config, 'flag_rfi'):
+                step = '{0:s}-rfi-ms{1:d}'.format(wname, msiter)
+                if config['flag_rfi']["flagger"] == "aoflagger":
+                    if config['flag_rfi']['aoflagger']['ensure_valid']:
+                        ms_corr = msdict['CORR']['CORR_TYPE']
+                        flag_corr = []
+                        with open('{0:s}/{1:s}'.format(pipeline.input, config['flag_rfi']['aoflagger']['strategy'])) as stdr:
+                            for ss in stdr.readlines():
+                                for pp in 'xx,xy,yx,yy,stokes-i,stokes-q,stokes-u,stokes-v'.split(','):
+                                    if '<on-{0:s}>1</on-{0:s}>'.format(pp) in ss:
+                                        flag_corr.append(pp)
+                        if ('stokes-u' in flag_corr and (('XY' not in ms_corr and 'RL' not in ms_corr) or ('YX' not in ms_corr and 'LR' not in ms_corr))) or\
+                            ('stokes-v' in flag_corr and (('XY' not in ms_corr and 'RR' not in ms_corr) or ('YX' not in ms_corr and 'LL' not in ms_corr))) or\
+                            ('stokes-i' in flag_corr and (('XX' not in ms_corr and 'RR' not in ms_corr) or ('YY' not in ms_corr and 'LL' not in ms_corr))) or\
+                            ('stokes-q' in flag_corr and (('XX' not in ms_corr and 'RL' not in ms_corr) or ('YY' not in ms_corr and 'LR' not in ms_corr))) or\
+                            ('xy' in flag_corr and ('XY' not in ms_corr and 'RL' not in ms_corr)) or\
+                            ('yx' in flag_corr and ('YX' not in ms_corr and 'LR' not in ms_corr)) or\
+                            ('xx' in flag_corr and ('XX' not in ms_corr and 'RR' not in ms_corr)) or\
+                                ('yy' in flag_corr and ('YY' not in ms_corr and 'LL' not in ms_corr)):
+                            raise ValueError("The selected flagging strategy {0:s}/{1:s} will attempt to flag on {2:} but this is"
+                                            " not compatible with the {3:} correlations available in {4:s}. To proceed you can edit the flagging"
+                                            " strategy or, if you know what you are doing, disable aoflagger: ensure_valid.".format(
+                                                pipeline.input, config['flag_rfi']['aoflagger']['strategy'], flag_corr, ms_corr, msname))
+
+                    recipe.add('cab/autoflagger', step,
+                            {
+                                    "msname": msname,
+                                    "column": config['flag_rfi']['col'],
+                                    "fields": ",".join(map(str, field_ids)),
+                                    "strategy": config['flag_rfi']['aoflagger']['strategy'],
+                                    "indirect-read": True if config['flag_rfi']['aoflagger']['readmode'] == 'indirect' else False,
+                                    "memory-read": True if config['flag_rfi']['aoflagger']['readmode'] == 'memory' else False,
+                                    "auto-read-mode": True if config['flag_rfi']['aoflagger']['readmode'] == 'auto' else False,
+                            },
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label='{0:s}:: AOFlagger auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
+
+                elif config['flag_rfi']["flagger"] == "tricolour":
+                    tricolour_strat = config['flag_rfi']['tricolour']['strategy']
+                    if config['flag_rfi']['tricolour']['mode'] == 'auto':
+                        bandwidth = msdict['SPW']['TOTAL_BANDWIDTH'][0] / 10.0**6
+                        caracal.log.info("Total Bandwidth = {0:} MHz".format(bandwidth))
+                        if bandwidth <= 20.0:
+                            caracal.log.info("Narrowband data detected, selecting appropriate flagging strategy")
+                            tricolour_strat = config['flag_rfi']['tricolour']['strat_narrow']
+                    args = {
+                                "ms": msname,
+                                "data-column": config['flag_rfi']['col'],
+                                "window-backend": config['flag_rfi']['tricolour']['backend'],
+                                "field-names": fields,
+                                "flagging-strategy": 'polarisation',
+                                "config": tricolour_strat,
+                            }
+                    smc = config['flag_rfi']['tricolour']['subtract_model_column']
+                    args.update({"subtract-model-column": smc} if smc else {})
+                    caracal.log.info("Flagging strategy in use: {0:}".format(tricolour_strat))
+                    recipe.add('cab/tricolour', step, args,
+                                input=pipeline.input,
+                                output=pipeline.output,
+                                label='{0:s}:: Tricolour auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
+
+                elif config['flag_rfi']["flagger"] == "tfcrop":
+                    col = config['flag_rfi']['col'].split("_DATA")[0].lower()
+                    recipe.add('cab/casa_flagdata', step,
+                                {
+                                    "vis": msname,
+                                    "datacolumn": col,
+                                    "mode": "tfcrop",
+                                    "field": fields,
+                                    "usewindowstats": config["flag_rfi"]["tfcrop"]["usewindowstats"],
+                                    "combinescans": config["flag_rfi"]["tfcrop"]["combinescans"],
+                                    "flagdimension": config["flag_rfi"]["tfcrop"]["flagdimension"],
+                                    "flagbackup": False,
+                                    "timecutoff": config["flag_rfi"]["tfcrop"]["timecutoff"],
+                                    "freqcutoff": config["flag_rfi"]["tfcrop"]["freqcutoff"],
+                                    "correlation": config["flag_rfi"]["tfcrop"]["correlation"],
+                                },
+                            input=pipeline.input,
+                            output=pipeline.output,
+                            label='{0:s}:: Tfcrop auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
+                else:
+                    raise RuntimeError(
+                        "Flagger, {0:s} is not available. Options are 'aoflagger, tricolour, tfcrop'.")
+
+            if pipeline.enable_task(config, 'inspect'):
+                step = '{0:s}-inspect-ms{1:d}'.format(wname, msiter)
+                if config['field'] == 'target':
+                    field = '0'
+                else:
+                    field = ",".join(map(str, utils.get_field_id(msdict, manfields.get_field(
+                        pipeline, obsid, config['inspect']['field']).split(","))))
+                for f in field.split(','):
+                    outlabel = '_{0:d}'.format(obsid) if len(field.split(',')) == 1 else '_{0:d}_{1:s}'.format(obsid, f)
+                    recipe.add('cab/rfinder', step,
+                                {
+                                    "msname": msname,
+                                    "field": int(f),
+                                    "plot_noise": "noise",
+                                    "RFInder_mode": "use_flags",
+                                    "outlabel": f"{outlabel}{f}",  # The output will be rfi_<pol>_<outlabel><fid>
+                                    "polarization": config['inspect']['polarization'],
+                                    "spw_width": config['inspect']['spw_width'],
+                                    "time_step": config['inspect']['time_step'],
+                                    "time_enable": config['inspect']['time_enable'],
+                                    "spw_enable": config['inspect']['spw_enable'],
+                                    "1d_gif": config['inspect']['time_enable'],
+                                    "2d_gif": config['inspect']['time_enable'],
+                                    "altaz_gif": config['inspect']['spw_enable'],
+                                    "movies_in_report": config['inspect']['time_enable'] or config['spw_enable']
+                                },
+                            input=pipeline.input,
+                            output=pipeline.output,
+                            label='{0:s}:: Investigate presence of rfi in ms={1:s}'.format(step, msname))
+
+            if pipeline.enable_task(config, 'summary'):
+                step = '{0:s}-summary-ms{1:d}'.format(wname, msiter)
+                recipe.add('cab/flagstats', step, {
+                            "msname": msname,
+                            "plot": True,
+                            "outfile": ('{0:s}-{1:s}-'
+                                        'flagging-summary-{2:d}.json').format(
+                                prefix, wname, obsid),
+                            "htmlfile": ('{0:s}-{1:s}-'
+                                        'flagging-summary-plots-{2:d}.html').format(
+                                prefix, wname, obsid)
+                            },
+                            input=pipeline.input,
+                            output=pipeline.output,
+                            label='{0:s}:: Tricolour auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
 
             elif config['flag_rfi']["flagger"] == "tfcrop":
                 col = config['flag_rfi']['col'].split("_DATA")[0].lower()
                 recipe.add('cab/casa_flagdata', step,
-                           {
-                               "vis": msname,
-                               "datacolumn": col,
-                               "mode": "tfcrop",
-                               "field": fields,
-                               "usewindowstats": config["flag_rfi"]["tfcrop"]["usewindowstats"],
-                               "combinescans": config["flag_rfi"]["tfcrop"]["combinescans"],
-                               "flagdimension": config["flag_rfi"]["tfcrop"]["flagdimension"],
-                               "flagbackup": False,
-                               "timecutoff": config["flag_rfi"]["tfcrop"]["timecutoff"],
-                               "freqcutoff": config["flag_rfi"]["tfcrop"]["freqcutoff"],
-                               "correlation": config["flag_rfi"]["tfcrop"]["correlation"],
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Tfcrop auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
+                            {
+                                "vis": msname,
+                                "datacolumn": col,
+                                "mode": "tfcrop",
+                                "field": fields,
+                                "usewindowstats": config["flag_rfi"]["tfcrop"]["usewindowstats"],
+                                "combinescans": config["flag_rfi"]["tfcrop"]["combinescans"],
+                                "flagdimension": config["flag_rfi"]["tfcrop"]["flagdimension"],
+                                "flagbackup": False,
+                                "timecutoff": config["flag_rfi"]["tfcrop"]["timecutoff"],
+                                "freqcutoff": config["flag_rfi"]["tfcrop"]["freqcutoff"],
+                                "correlation": config["flag_rfi"]["tfcrop"]["correlation"],
+                            },
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label='{0:s}:: Tfcrop auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
             else:
                 raise RuntimeError(
                     "Flagger, {0:s} is not available. Options are 'aoflagger, tricolour, tfcrop'.")
@@ -480,41 +597,41 @@ def worker(pipeline, recipe, config):
             for f in field.split(','):
                 outlabel = '_{0:d}'.format(obsid) if len(field.split(',')) == 1 else '_{0:d}_{1:s}'.format(obsid, f)
                 recipe.add('cab/rfinder', step,
-                           {
-                               "msname": msname,
-                               "field": int(f),
-                               "plot_noise": "noise",
-                               "RFInder_mode": "use_flags",
-                               "outlabel": f"{outlabel}{f}",  # The output will be rfi_<pol>_<outlabel><fid>
-                               "polarization": config['inspect']['polarization'],
-                               "spw_width": config['inspect']['spw_width'],
-                               "time_step": config['inspect']['time_step'],
-                               "time_enable": config['inspect']['time_enable'],
-                               "spw_enable": config['inspect']['spw_enable'],
-                               "1d_gif": config['inspect']['time_enable'],
-                               "2d_gif": config['inspect']['time_enable'],
-                               "altaz_gif": config['inspect']['spw_enable'],
-                               "movies_in_report": config['inspect']['time_enable'] or config['spw_enable']
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Investigate presence of rfi in ms={1:s}'.format(step, msname))
+                            {
+                                "msname": msname,
+                                "field": int(f),
+                                "plot_noise": "noise",
+                                "RFInder_mode": "use_flags",
+                                "outlabel": f"{outlabel}{f}",  # The output will be rfi_<pol>_<outlabel><fid>
+                                "polarization": config['inspect']['polarization'],
+                                "spw_width": config['inspect']['spw_width'],
+                                "time_step": config['inspect']['time_step'],
+                                "time_enable": config['inspect']['time_enable'],
+                                "spw_enable": config['inspect']['spw_enable'],
+                                "1d_gif": config['inspect']['time_enable'],
+                                "2d_gif": config['inspect']['time_enable'],
+                                "altaz_gif": config['inspect']['spw_enable'],
+                                "movies_in_report": config['inspect']['time_enable'] or config['spw_enable']
+                            },
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label='{0:s}:: Investigate presence of rfi in ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'summary'):
             step = '{0:s}-summary-ms{1:d}'.format(wname, msiter)
             recipe.add('cab/flagstats', step, {
-                       "msname": msname,
-                       "plot": True,
-                       "outfile": ('{0:s}-{1:s}-'
-                                   'flagging-summary-{2:d}.json').format(
-                           prefix, wname, obsid),
-                       "htmlfile": ('{0:s}-{1:s}-'
+                    "msname": msname,
+                    "plot": True,
+                    "outfile": ('{0:s}-{1:s}-'
+                                    'flagging-summary-{2:d}.json').format(
+                            prefix, wname, obsid),
+                    "htmlfile": ('{0:s}-{1:s}-'
                                     'flagging-summary-plots-{2:d}.html').format(
-                           prefix, wname, obsid)
-                       },
-                       input=pipeline.input,
-                       output=pipeline.diagnostic_plots,
-                       label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
+                            prefix, wname, obsid)
+                    },
+                input=pipeline.input,
+                output=pipeline.diagnostic_plots,
+                label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
             recipe.run()
             # Empty job que after execution
             recipe.jobs = []

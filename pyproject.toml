@@ -25,7 +25,7 @@ caracal = "caracal.main:driver"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<=3.13"
-stimela = {git="https://github.com/ratt-ru/Stimela-classic@master"}
+stimela = "<2.0"
 psutil = "*"
 pykwalify = "*"
 progressbar2 = "*"
@@ -53,12 +53,10 @@ jinja2 = "*"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.extras]
-astropy = ["astropy"]
-regions = ["regions"]
-astroquery = ["astroquery"]
-all = ["astropy", "regions", "astroquery"]
-
+[tool.poetry.group.dev]
+optional = true
+[tool.poetry.group.dev.dependencies]
+jupyter = "*"
 
 [tool.poetry.group.tests]
 optional = true

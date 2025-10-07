@@ -100,6 +100,7 @@ def caracal2scabha(schema_file, outfile=None):
         elif OmegaConf.is_dict(options):
             return caracal2scabha_option(options)
     
+    
     for section, options in worker_opts.items():
         new_worker.inputs[section] = convert_schema(section, options)
 

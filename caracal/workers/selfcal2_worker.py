@@ -1189,7 +1189,7 @@ def worker(pipeline, recipe, config):
             "cal_niter": "selfcal.niter",
             "start_iter": "selfcal.start-iter",
             "overwrite_flagvers": "selfcal.overwrite-flagvers",
-            "imodel_pa_rotate": "selfcal.pa-rotate",
+            "model_pa_rotate": "selfcal.pa-rotate",
             "gain_matrix_type": "selfcal.jones",
             "gasols_timeslots": "selfcal.jones-time",
             "gasols_chan": "selfcal.jones-freq",

@@ -1189,7 +1189,6 @@ def worker(pipeline, recipe, config):
             "cal_niter": "selfcal.niter",
             "start_iter": "selfcal.start-iter",
             "overwrite_flagvers": "selfcal.overwrite-flagvers",
-            "model_pa_rotate": "selfcal.pa-rotate",
             "gain_matrix_type": "selfcal.jones",
             "gasols_timeslots": "selfcal.jones-time",
             "gasols_chan": "selfcal.jones-freq",
@@ -1251,6 +1250,7 @@ def worker(pipeline, recipe, config):
         if config.get("calibrate_with") == 'quartical':
             qcal = config.get("cal_quartical", {})
             params.append(f"selfcal.mad-flag={qcal.get('flag_madmax')}")
+            params.append(f"selfcal.pa-rotate={qcal.get('model_pa_rotate')}")
 
         # WSClean
         wsclean = config.get("image", {})

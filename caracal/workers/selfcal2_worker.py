@@ -1258,6 +1258,7 @@ def worker(pipeline, recipe, config):
             params.append(f"image-enable={wsclean['enable']}")
             params.append(f"image-use-wgridder={wsclean['use_wgridder']}")
             params.append(f"image-absmem={wsclean['absmem']}")
+            params.append(f"image-col={wsclean['col'][0]}")
             params.append(f"image-clean-cutoff={repr(wsclean['clean_cutoff']).replace(' ', '')}")
             params.append(f"image-cleanmask-thr={repr(wsclean['cleanmask_thr']).replace(' ', '')}")
 

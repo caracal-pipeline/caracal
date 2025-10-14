@@ -268,8 +268,7 @@ lib:
         _use: lib.steps.wsclean.image
         info: "wsclean step for IQUV imaging"
         params:
-                #join-polarizations: true
-          fit-spectral-pol: =UNSET
+          join-polarizations: true
           pol: IQUV
 
       predict:

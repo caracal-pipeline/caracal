@@ -19,7 +19,7 @@ Installation & Run
 ==================
 
 Usage and publication policy
--------------------------------
+----------------------------
 
 When using CARACal please be aware of and adhere to the `CARACal publication policy <https://docs.google.com/document/d/e/2PACX-1vTqZoKhdewnWvxvEI4C9DxI-IHP1FTCoC5Iqz_MqlX63q8UnnpcqoZvVf-sSfqACu8sA_nufkXICUH6/pub>`_.
 
@@ -73,7 +73,7 @@ And CARACal developer version which is not recommended for users:
 *Ignore any error messages concerning `pyregion`.*
 
 1.1 container configuration 
-------------------------
+---------------------------
 
 In case you are *not* carrying out a fresh installation, remove earlier Stimela images with:
 

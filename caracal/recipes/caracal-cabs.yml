@@ -93,6 +93,8 @@ cabs:
         dtype: List[List[str]]
       jones_types:
         dtype: List[str]
+      overwrite:
+        dtype: bool
     outputs:
       time_int:
         dtype: List[str]

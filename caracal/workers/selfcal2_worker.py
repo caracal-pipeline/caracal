@@ -42,7 +42,7 @@ QUARTICAL_MT = {
     "GainDiag": 'g',
     "GainDiagAmp": 'g',
     "GainDiagPhase": 'p',
-    "ComplexDiag": 'g-diag',
+    "ComplexDiag": 'k-g-diag',
     "Fslope": 'k',
 }
 
@@ -1223,6 +1223,12 @@ def worker(pipeline, recipe, config):
         cal = config.get("calibrate", {})
         if cal:
             params.append(f"selfcal.enable={cal['enable']}")
+            #Quartical Opts
+            if config.get("calibrate_with") == 'quartical':
+                qcal = config.get("cal_quartical", {})
+                params.append(f"selfcal.mad-flag={qcal.get('flag_madmax')}")
+                params.append(f"selfcal.pa-rotate={qcal.get('model_pa_rotate')}")
+                params.append(f"selfcal.overwrite={qcal.get('overwrite')}")
             # gain_matrix_type → jones
             gm_types = cal.get("gain_matrix_type") or []
             if gm_types:
@@ -1234,23 +1240,35 @@ def worker(pipeline, recipe, config):
             freqs = []
             if "gsols_timeslots" in cal or "gsols_chan" in cal:
                 for n in range(config["cal_niter"]):
-                    times.append([cal.get("gsols_timeslots", [0])[n]
-                                           if n < len(cal.get("gsols_timeslots", []))
-                                           else cal.get("gsols_timeslots", [0])[-1]])
-                    freqs.append([cal.get("gsols_chan", [0])[n]
-                                           if n < len(cal.get("gsols_chan", []))
-                                           else cal.get("gsols_chan", [0])[-1]])
+                    if not qcal.get('overwrite'):
+                        gsols_times = cal.get("gsols_timeslots", [0])
+                        gsols_freqs = cal.get("gsols_chan", [0])
+
+                        # Ensure the arrays have at least 1 element
+                        t_prev = gsols_times[n-1] if n > 0 and n < len(gsols_times) else gsols_times[-1]
+                        f_prev = gsols_freqs[n-1] if n > 0 and n < len(gsols_freqs) else gsols_freqs[-1]
+                        t_curr = gsols_times[n] if n < len(gsols_times) else gsols_times[-1]
+                        f_curr = gsols_freqs[n] if n < len(gsols_freqs) else gsols_freqs[-1]
+
+                        if n == 0:
+                            times.append([t_curr])
+                            freqs.append([f_curr])
+                        else:
+                            times.append([t_prev, t_curr])
+                            freqs.append([f_prev, f_curr])
+                    else:
+                        times.append([cal.get("gsols_timeslots", [0])[n]
+                                               if n < len(cal.get("gsols_timeslots", []))
+                                               else cal.get("gsols_timeslots", [0])[-1]])
+                        freqs.append([cal.get("gsols_chan", [0])[n]
+                                              if n < len(cal.get("gsols_chan", []))
+                                               else cal.get("gsols_chan", [0])[-1]])
 
 
             if times:
                 params.append(f"selfcal.jones-time={repr(times).replace(' ', '')}")
             if freqs:
                 params.append(f"selfcal.jones-freq={repr(freqs).replace(' ', '')}")
-        #Quartical Opts
-        if config.get("calibrate_with") == 'quartical':
-            qcal = config.get("cal_quartical", {})
-            params.append(f"selfcal.mad-flag={qcal.get('flag_madmax')}")
-            params.append(f"selfcal.pa-rotate={qcal.get('model_pa_rotate')}")
 
         # WSClean
         wsclean = config.get("image", {})

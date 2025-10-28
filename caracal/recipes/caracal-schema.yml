@@ -243,7 +243,7 @@ selfcal.minuvw-m:
 selfcal.jones:
   default: ['k', 'k-g']
   dtype: List[str]
-  element_choices: ['k', 'g', 'p', 'k-g']
+  element_choices: ['k', 'g', 'p', 'k-g', 'k-g-diag']
 selfcal.jones-time:
   default: [[1], [1, 1]]
   dtype: List[List[str]]
@@ -256,6 +256,9 @@ selfcal.subtract-model:
   default: false
   dtype: bool
 selfcal.mad-flag:
+  default: false
+  dtype: bool
+selfcal.overwrite:
   default: false
   dtype: bool
 

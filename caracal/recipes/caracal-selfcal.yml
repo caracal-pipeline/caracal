@@ -69,6 +69,9 @@ caracal-selfcal:
         prefix: ="{recipe.dir-out-base}/image_{recipe.iter}/{recipe.image-prefix}_{recipe.iter}"
         column: =IF(recipe.iter>1, "CORRECTED_DATA", IF(recipe.selfcal.pa-rotate, steps.pa-correction.out.column, recipe.image-col))
         auto-threshold: =recipe.image-clean-cutoff[0]
+        #auto-threshold: =IF(VALID(recipe.image-clean-cutoff[1+recipe.iter]),
+        #                  recipe.image-clean-cuttoff[1+recipe.iter],
+        #                  recipe.image-clean-cuttoff[-1])
         auto-mask: =IF(recipe.iter==0, recipe.image-cleanmask-thr[0], UNSET)
         fits-mask: =IFSET(recipe.image-fits-mask, recipe.image-fits-mask,
                           IFSET(recipe.image-cleanmask-method,
@@ -102,10 +105,9 @@ caracal-selfcal:
       params:
         restored-image: =steps.image*.restored.mfs
         outfile: '{steps.image*.prefix}-MFS-mask.fits'
-        threshold: =recipe.image-cleanmask-thr[-1]
-          #threshold: =IF(VALID(recipe.image-cleanmask-thr[1+recipe.iter]),
-          #             recipe.image-cleanmask-thr[1+recipe.iter],
-          #             recipe.image-cleanmask-thr[-1])
+        threshold: =IF(VALID(recipe.image-cleanmask-thr[1+recipe.iter]),
+                     recipe.image-cleanmask-thr[1+recipe.iter],
+                     recipe.image-cleanmask-thr[-1])
         dilate: 1
 
     source-finder:
@@ -211,6 +213,7 @@ caracal-selfcal:
       cab: intervals_out
       skip: =CASES(not recipe.selfcal.enable, true, false)
       params:
+        overwrite: =recipe.selfcal.overwrite
         iter: =recipe.iter
         time_intervals: =recipe.selfcal.jones-time
         freq_intervals: =recipe.selfcal.jones-freq
@@ -264,9 +267,25 @@ caracal-selfcal:
         G.time_interval: =steps.time-freq-intervals.time_int[0]
         G.freq_interval: =steps.time-freq-intervals.freq_int[0]
 
+    selfcal-gain-diag:
+      info: Round of gain selfcal
+      _use: lib.steps.quartical.k-g-diag
+      skip: =CASES(not recipe.selfcal.enable, true,
+                   recipe.iter==0, true,
+                   recipe.iter==steps.max-iter.max-iter, true,
+                   not steps.time-freq-intervals.jones_type=='k-g-diag', true,
+                   not recipe.selfcal.overwrite, true, false)
+      params:
+        input_model.recipe: MODEL_DATA
+        output.columns: [CORRECTED_DATA]
+        output.gain_directory: ="{recipe.dir-out-base}/selfcal_products/" + STRIPEXT(BASENAME(recipe.ms)) + "-G-{recipe.iter}.qc/"
+        output.log_directory: ="{recipe.dir-out-base}/selfcal_products/" + STRIPEXT(BASENAME(recipe.ms)) + "-G-{recipe.iter}.qc/log/"
+        G.time_interval: =steps.time-freq-intervals.time_int[0]
+        G.freq_interval: =steps.time-freq-intervals.freq_int[0]
+
     selfcal-delay-gain:
       info: Round of delay and gain selfcal
-      _use: lib.steps.quartical.k-g
+      _use: lib.steps.quartical.k-g-solver
       skip: =CASES(not recipe.selfcal.enable, true,
                    recipe.iter==0, true,
                    recipe.iter==steps.max-iter.max-iter, true,
@@ -278,5 +297,24 @@ caracal-selfcal:
         output.log_directory: ="{recipe.dir-out-base}/selfcal_products/" + STRIPEXT(BASENAME(recipe.ms)) + "-KG-{recipe.iter}.qc/log/"
         K.time_interval: =steps.time-freq-intervals.time_int[0]
         K.freq_interval: =steps.time-freq-intervals.freq_int[0]
+        G.time_interval: =steps.time-freq-intervals.time_int[-1]
+        G.freq_interval: =steps.time-freq-intervals.freq_int[-1]
+
+    selfcal-chain-delay-gain:
+      info: Round of delay and gain selfcal
+      _use: lib.steps.quartical.k-g-diag
+      skip: =CASES(not recipe.selfcal.enable, true,
+                   recipe.iter==0, true,
+                   recipe.iter==steps.max-iter.max-iter, true,
+                   not steps.time-freq-intervals.jones_type=='k-g-diag', true,
+                   recipe.selfcal.overwrite, true, false)
+      params:
+        input_model.recipe: MODEL_DATA
+        output.columns: [CORRECTED_DATA]
+        output.gain_directory: ="{recipe.dir-out-base}/selfcal_products/" + STRIPEXT(BASENAME(recipe.ms)) + "-KG-{recipe.iter}.qc/"
+        output.log_directory: ="{recipe.dir-out-base}/selfcal_products/" + STRIPEXT(BASENAME(recipe.ms)) + "-KG-{recipe.iter}.qc/log/"
+        K.time_interval: =steps.time-freq-intervals.time_int[0]
+        K.freq_interval: =steps.time-freq-intervals.freq_int[0]
+        K.load_from: "{steps.selfcal-delay.output.gain_directory}/K"
         G.time_interval: =steps.time-freq-intervals.time_int[-1]
         G.freq_interval: =steps.time-freq-intervals.freq_int[-1]

@@ -332,7 +332,7 @@ mapping:
             required: false
             example: '50, 50, 50'
           overwrite:
-            desc: Allow CubiCal to overwrite the existing gain_tables and other CubiCal output for self-calibration that were produced in a previous run of the selfcal worker with the same prefix.
+            desc: Allow QuartiCal to overwrite the existing gain_tables and other QuartiCal output for self-calibration that were produced in a previous run of the selfcal worker with the same prefix. Otherwise, they will be re-applied as a chain.
             type: bool
             required: false
             example: 'True'

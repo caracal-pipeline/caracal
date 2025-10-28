@@ -156,7 +156,7 @@ lib:
             type: diag_complex
             initial_estimate: false
 
-      k-g:
+      k-g-solver:
         _use: lib.steps.quartical.k
         params:
           solver:
@@ -169,8 +169,11 @@ lib:
             initial_estimate: false
 
       k-g-diag:
-        _use: lib.steps.quartical.k-g
+        _use: lib.steps.quartical.k-g-solver
         params:
+          solver:
+            terms: [K,G]
+            iter_recipe: [0,50,0,50,0,50]
           G:
             type: diag_complex
 
@@ -192,7 +195,7 @@ lib:
             type: complex
 
       k-g-de:
-        _use: lib.steps.quartical.k-g
+        _use: lib.steps.quartical.k-g-solver
         params:
           input_model:
             recipe: MODEL{info.suffix}_DATA~DIR1_DATA:DIR1_DATA
@@ -219,7 +222,7 @@ lib:
           nchan: =recipe.image-nchans
           abs-threshold: =IFSET(recipe.image-threshold)
           threads: =IFSET(recipe.ncpu)
-          niter: 100000 #=IFSET(recipe.image-niter)
+          niter: 200000 #=IFSET(recipe.image-niter)
           nmiter: =IFSET(recipe.image-nmiter)
           column: =IFSET(recipe.image-col)
           use-wgridder: =IFSET(recipe.image-use-wgridder)

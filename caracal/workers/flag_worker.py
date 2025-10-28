@@ -491,7 +491,7 @@ def worker(pipeline, recipe, config):
                                    "msname": msname,
                                    "field": int(f),
                                    "plot_noise": "noise",
-                                   "RFInder_mode": "use_flags",
+                                   "RFInder_mode": "rms_clip",
                                    "outlabel": f"{outlabel}{f}",  # The output will be rfi_<pol>_<outlabel><fid>
                                    "polarization": config['inspect']['polarization'],
                                    "spw_width": config['inspect']['spw_width'],

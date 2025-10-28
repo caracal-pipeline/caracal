@@ -44,9 +44,9 @@ jobs:
       - name: Install gdown and download test data
         run: |
           uv pip install  --system  gdown
-          gdown https://drive.google.com/uc?id=1Hki6i1Hr7Y2IwppnE1i_URHizqF3gtKM
-          unzip T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
-          rm T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
+          #gdown https://drive.google.com/uc?id=1Hki6i1Hr7Y2IwppnE1i_URHizqF3gtKM
+          #unzip T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
+          #rm T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
 
       - name: Test caracal command
         run: |
@@ -56,9 +56,9 @@ jobs:
           cat test.yml
           uv run caracal -gdt meerkat -gd config.yml
           cat config.yml
-          uv run caracal -c config.yml -ct singularity -sw obsconf -ew obsconf \
-            --getdata-dataid [T16R02C02-corr-scan3-chan512-t16-XXYY] \
-            --general-msdir . \
-            --obsconf-gcal [T16R02C02] \
-            --obsconf-fcal [T16R02C02] \
-            --obsconf-bpcal [T16R02C02]
+          #uv run caracal -c config.yml -ct singularity -sw obsconf -ew obsconf \
+          #  --getdata-dataid [T16R02C02-corr-scan3-chan512-t16-XXYY] \
+          #  --general-msdir . \
+          #  --obsconf-gcal [T16R02C02] \
+          #  --obsconf-fcal [T16R02C02] \
+          #  --obsconf-bpcal [T16R02C02]

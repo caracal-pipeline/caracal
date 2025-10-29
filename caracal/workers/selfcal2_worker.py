@@ -58,10 +58,6 @@ def check_config(config, name):
     Optional function to check consistency of config, invoked before the pipeline runs.
     its purpose is to log warnings, or raise exceptions on bad errors.
     """
-    # First let' check that we are not using transfer gains with meqtrees or not starting at the start with meqtrees
-    if int(config['start_iter']) != 1:
-        raise caracal.ConfigurationError(
-                "We cannot reapply Quartical calibration at a given step. Hence you will need to do a full selfcal loop.")
     # First check we are actually running a calibrate
     if config['calibrate']['enable']:
         # Running with a model shorter than the output type is dengerous with 'CORR_RES'

@@ -222,7 +222,6 @@ lib:
           nchan: =recipe.image-nchans
           abs-threshold: =IFSET(recipe.image-threshold)
           threads: =IFSET(recipe.ncpu)
-          niter: 200000 #=IFSET(recipe.image-niter)
           nmiter: =IFSET(recipe.image-nmiter)
           column: =IFSET(recipe.image-col)
           use-wgridder: =IFSET(recipe.image-use-wgridder)

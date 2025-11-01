@@ -415,6 +415,20 @@ mapping:
             type: int
             required: False
             example: '5'
+          mode:
+            desc: Uses RFI clip method or simply reads the FLAG column.
+            type: str
+            enum: [rms_clip, use_flags]
+            example: 'rms_clip'
+          sigma_clip:
+            desc: Threshold for RFI identification.
+            type: int
+            example: '5'
+          noise_freq:
+            desc: Minimum and maximum frequency (Hz) where to measure average std of visibilities.
+            seq:
+              - type: float
+            example: '1.400e9, 1.420e9'
       summary:
         desc: Use CASA FLAGDATA in 'summary' mode to write flagging summary at the end of the pre-calibration flagging.
         type: map

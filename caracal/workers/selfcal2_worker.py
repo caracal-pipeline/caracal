@@ -1214,6 +1214,27 @@ def worker(pipeline, recipe, config):
             if "fill_holes" in breiz:
                 params.append(f"breizorro.fill_holes={breiz['fill_holes']}")
 
+        # Aimfast
+        afast = config.get("aimfast", {})
+        if afast:
+            if "enable" in  afast:
+                params.append(f"image-aimfast-enable={afast['enable']}")
+            if "plot" in afast:
+                params.append(f"aimfast.plot={afast['plot']}")
+            if "radius" in afast:
+                params.append(f"aimfast.radius={afast['radius']}")
+
+        # PYBDSF
+        bdsf = config.get("extract_sources", {})
+        if bdsf:
+            if "enable" in  bdsf:
+                params.append(f"extract-sources.enable={bdsf['enable']}")
+            if "sourcefinder" in bdsf:
+                params.append(f"extract-sources.sourcefinder={bdsf['sourcefinder']}")
+            if "thr_pix" in bdsf:
+                params.append(f"extract-sources.thr-pix={repr(bdsf['thr_pix']).replace(' ', '')}")
+            if "thr_isl" in bdsf:
+                params.append(f"extract-sources.thr-isl={repr(bdsf['thr_isl']).replace(' ', '')}")
 
         # Calibrate
         cal = config.get("calibrate", {})

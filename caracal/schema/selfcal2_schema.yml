@@ -510,10 +510,10 @@ mapping:
             example: 'False'
           sourcefinder:
             type: str
-            enum: ["pybdsm", "sofia"]
+            enum: ["pybdsf", "pybdsm", "sofia"]
             desc: Set the source finder to be used. Options are 'pybdsm' (i.e. pybdsf) and 'sofia'.
             required: false
-            example: 'pybdsm'
+            example: 'pybdsf'
           local_rms:
             type: bool
             desc: Use a local-rms estimate when applying the source-finding detection threshold.
@@ -526,13 +526,13 @@ mapping:
             example: 'False'           # if not specified no spi will be determined
           thr_pix:
             seq:
-              - type: int
+              - type: float
             desc: Pixel threshold to be used for the source finder. I.e. the minimum number of contiguous pixels for emission to be classed as a 'source'.
             required: false
             example: '5'
           thr_isl:
             seq:
-              - type: int
+              - type: float
             desc: Threshold to be used by the source finder to set the island boundary, given in the number of sigma above the mean. This determines the extent of the island used for fitting.
             required: false
             example: '3'

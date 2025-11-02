@@ -69,8 +69,8 @@ caracal-selfcal:
         prefix: ="{recipe.dir-out-base}/image_{recipe.iter}/{recipe.image-prefix}_{recipe.iter}"
         column: =IF(recipe.iter>1, "CORRECTED_DATA", IF(recipe.selfcal.pa-rotate, steps.pa-correction.out.column, recipe.image-col))
         auto-threshold: =IF(recipe.iter>1, recipe.image-clean-cutoff[-1], recipe.image-clean-cutoff[0])
-        #niter: 100000
-        niter: =IFSET(recipe.image-niter)
+        niter: 100000
+        #niter: =IFSET(recipe.image-niter)
         #auto-threshold: =IF(VALID(recipe.image-clean-cutoff[1+recipe.iter]),
         #                  recipe.image-clean-cuttoff[1+recipe.iter],
         #                  recipe.image-clean-cuttoff[-1])

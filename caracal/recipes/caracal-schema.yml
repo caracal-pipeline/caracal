@@ -179,6 +179,23 @@ aimfast.plot:
   default: false
   dtype: bool
 
+#  PyBDSF settings
+extract-sources.enable:
+  info: Enable the 'extract_sources' segment.
+  default: false
+  dtype: bool
+extract-sources.sourcefinder:
+  info: Set the source finder to be used. Options are 'pybdsf' and 'sofia'.
+  default: pybdsf
+  dtype: str
+  choices: [pybdsf,sofia]
+extract-sources.thr-pix:
+  info: Pixel threshold to be used for the source finder. I.e. the minimum number of contiguous pixels for emission to be classed as a 'source'
+  dtype: List[float]
+extract-sources.thr-isl:
+  info: Threshold to be used by the source finder to set the island boundary, given in the number of sigma above the mean. This determines the extent of the island used for fitting.
+  dtype: List[float]
+
 #  SoFiA source finder settings used for the imaging iterations
 sofia.kernels:
   info: FWHM of spatial Gaussian kernels in pixels.

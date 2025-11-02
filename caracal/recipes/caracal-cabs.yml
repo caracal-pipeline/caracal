@@ -18,6 +18,12 @@ _include:
     - wsclean.yml
 
 cabs:
+  aimfast:
+    inputs:
+      compare_models:
+        dtype: List[File]
+        policies:
+          repeat: list
 
   bdsf.catalog:
     inputs:

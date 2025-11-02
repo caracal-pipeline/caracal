@@ -25,6 +25,11 @@ caracal-selfcal:
     display_status: "{var}={value} {index1}/{total}"
 
   steps:
+    max-iter:
+      info: Maximum number of iterations
+      cab: maximum_iter
+      params:
+        niter: =recipe.selfcal._niters
 
     restore-flags:
       info: restore flags to a specific version
@@ -107,6 +112,7 @@ caracal-selfcal:
       params:
         restored-image: =steps.image*.restored.mfs
         outfile: '{steps.image*.prefix}-MFS-mask.fits'
+        outregion: '{steps.image*.prefix}-MFS-mask.rgn'
         threshold: =IF(VALID(recipe.image-cleanmask-thr[1+recipe.iter]),
                      recipe.image-cleanmask-thr[1+recipe.iter],
                      recipe.image-cleanmask-thr[-1])
@@ -115,40 +121,46 @@ caracal-selfcal:
     source-finder:
       info: automatic source finding
       _use: lib.steps.source-finder.bdsf
-      skip_if_outputs: fresh
-      skip: =CASES(not recipe.selfcal.cal-model-mode=='pybdsm_only', true,
+      skip_if_outputs: exist
+      skip: =CASES(not recipe.extract-sources.sourcefinder=='pybdsf', true,
                    not recipe.image-enable, true,
-                   not recipe.image-aimfast-enable, true, false)
+                   not recipe.extract-sources.enable, true, false)
       params:
         image: =steps.image-*.restored.mfs
         advanced_opts: true
+        thresh_pix: =IF(recipe.iter>1, recipe.extract-sources.thr-pix[-1], recipe.extract-sources.thr-pix[0])
+        thresh_isl: =IF(recipe.iter>1, recipe.extract-sources.thr-isl[-1], recipe.extract-sources.thr-isl[0])
         outfile_gaul: =steps.image-*.prefix + '.gaul'
         outfile_srl: =steps.image-*.prefix + '.srl'
 
     tigger-convert:
       info: convert model to lsm format
       cab: tigger-convert
-      skip_if_outputs: fresh
-      skip: =CASES(not recipe.selfcal.cal-model-mode=='pybdsm_only', true,
+      skip_if_outputs: exist
+      skip: =CASES(not recipe.extract-sources.sourcefinder=='pybdsf', true,
                    not recipe.image-enable, true,
-                   not recipe.image-aimfast-enable, true, false)
+                   not recipe.extract-sources.enable, true, false)
       params:
         input-model: =steps.source-finder.outfile_gaul
         output-type: Tigger
         output-model: =STRIPEXT(steps.source-finder.outfile_gaul) + '.lsm.html'
 
     cross-assess:
-      info: image quality assessment
+      info: image fidelity assessment
       cab: aimfast
-      skip: true
+      skip: =CASES(not recipe.aimfast.plot, true,
+                   not recipe.image-enable, true,
+                   recipe.iter==0, true, false)
       params:
-        residual_image: =steps.image-*.residual.mfs
-        outfile: '{steps.image-*.prefix}-im-{info.suffix}.json'
+        compare_models: =LIST("{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}.lsm.html", steps.tigger-convert.output-model)
+        tolerance: =recipe.aimfast.radius
+        html_prefix: "{recipe.dir-out-base}/../reports/{recipe.image-prefix}"
+        outfile: =steps.image-*.prefix + 'model-compare.json'
 
     flagsummary-stats:
       info: report flagging statistics after calibration
       cab: casa.flagsummary
-      skip: =IF(recipe.iter==0, false, true)
+      skip: =IF(recipe.iter==steps.max-iter.max-iter, false, true)
       params:
         ms: =recipe.ms
 
@@ -203,12 +215,6 @@ caracal-selfcal:
         tocol: =IFSET(recipe.upsample-model-channels,
                       'MODEL{info.suffix}_{recipe.upsample-model-channels}_DATA',
                       'MODEL{info.suffix}_DATA')
-
-    max-iter:
-      info: Maximum number of iterations
-      cab: maximum_iter
-      params:
-        niter: =recipe.selfcal._niters
 
     time-freq-intervals:
       info: Time and frequency intervals for selfcal

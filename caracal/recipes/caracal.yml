@@ -79,7 +79,7 @@ mosaic-pointings:
         rms_box: [100, 100]
         rms_map: false
         multichan_opts: false
-        frequency: 3.120405752 # L=1283895507.81
+        #frequency: 3.120405752 # L=1283895507.81
         # flagging_opts: true
         # flag_maxsize_bm: 10
         catalog_format: ascii

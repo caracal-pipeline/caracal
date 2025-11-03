@@ -216,12 +216,10 @@ breizorro.boxsize:
   dtype: int
 breizorro.dilate:
   info: Apply dilation with a radius of R pixels
-  default: 0
   dtype: int
 breizorro.fill_holes:
   info: Fill holes (i.e. entirely closed regions) in mask
   dtype: bool
-  default: true
 
 # Self-calibrating the data
 selfcal.enable:

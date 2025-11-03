@@ -73,12 +73,8 @@ caracal-selfcal:
       params:
         prefix: ="{recipe.dir-out-base}/image_{recipe.iter}/{recipe.image-prefix}_{recipe.iter}"
         column: =IF(recipe.iter>1, "CORRECTED_DATA", IF(recipe.selfcal.pa-rotate, steps.pa-correction.out.column, recipe.image-col))
+        niter: 100000 #=IFSET(recipe.image-niter)
         auto-threshold: =IF(recipe.iter>1, recipe.image-clean-cutoff[-1], recipe.image-clean-cutoff[0])
-        niter: 100000
-        #niter: =IFSET(recipe.image-niter)
-        #auto-threshold: =IF(VALID(recipe.image-clean-cutoff[1+recipe.iter]),
-        #                  recipe.image-clean-cuttoff[1+recipe.iter],
-        #                  recipe.image-clean-cuttoff[-1])
         auto-mask: =IF(recipe.iter==0, recipe.image-cleanmask-thr[0], UNSET)
         fits-mask: =IFSET(recipe.image-fits-mask, recipe.image-fits-mask,
                           IFSET(recipe.image-cleanmask-method,
@@ -113,10 +109,11 @@ caracal-selfcal:
         restored-image: =steps.image*.restored.mfs
         outfile: '{steps.image*.prefix}-MFS-mask.fits'
         outregion: '{steps.image*.prefix}-MFS-mask.rgn'
-        threshold: =IF(VALID(recipe.image-cleanmask-thr[1+recipe.iter]),
-                     recipe.image-cleanmask-thr[1+recipe.iter],
+        threshold: =IF(VALID(recipe.image-cleanmask-thr[recipe.iter]),
+                     recipe.image-cleanmask-thr[recipe.iter],
                      recipe.image-cleanmask-thr[-1])
-        dilate: 1
+        dilate: =IFSET(recipe.breizorro.dilate)
+        fill-holes: =IFSET(recipe.breizorro.fill_holes)
 
     source-finder:
       info: automatic source finding
@@ -128,8 +125,10 @@ caracal-selfcal:
       params:
         image: =steps.image-*.restored.mfs
         advanced_opts: true
-        thresh_pix: =IF(recipe.iter>1, recipe.extract-sources.thr-pix[-1], recipe.extract-sources.thr-pix[0])
-        thresh_isl: =IF(recipe.iter>1, recipe.extract-sources.thr-isl[-1], recipe.extract-sources.thr-isl[0])
+        thresh_pix: =IF(recipe.iter>1, recipe.extract-sources.thr-pix[-1],
+                                       recipe.extract-sources.thr-pix[0])
+        thresh_isl: =IF(recipe.iter>1, recipe.extract-sources.thr-isl[-1],
+                                       recipe.extract-sources.thr-isl[0])
         outfile_gaul: =steps.image-*.prefix + '.gaul'
         outfile_srl: =steps.image-*.prefix + '.srl'
 

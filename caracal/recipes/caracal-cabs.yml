@@ -181,3 +181,35 @@ cabs:
     outputs:
       outfile:
         dtype: File
+  add_freq_units:
+    info: Add the missing unit line.
+    flavour:
+      kind: python-code
+      input_vars: true
+    command: |
+      from astropy.io import fits
+      hdu = fits.open(image, mode='update')
+      hdr = hdu[0].header
+      # Add missing frequency unit if not defined
+      if 'CUNIT3' not in hdr:
+          hdr['CUNIT3'] = 'Hz'
+      if 'RESTFRQ' not in hdr:
+          hdr['RESTFRQ'] = hdr['CRVAL3']
+      if not hdr['CTYPE3'].strip().startswith('FREQ'):
+          hdr['CTYPE3'] = 'FREQ'
+      hdr.comments['CTYPE3'] = 'Observed frequency'
+      hdr['CRVAL3'] = rest_freq = abs(float(hdr['CRVAL3']))  # ensure positive spacing
+      hdr['CTYPE3']  = 'FREQ-OBS'
+      hdr['SPECSYS'] = 'TOPOCENT'
+      hdu.flush()
+      hdu.close()
+    inputs:
+      image:
+        dtype: File
+        required: true
+    outputs:
+      rest-freq:
+        dtype: float
+      outfile:
+        dtype: File
+        implicit: "{current.image}"

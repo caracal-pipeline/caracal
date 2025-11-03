@@ -58,6 +58,7 @@ mosaic-pointings:
     mosaic-image:
       info: "Make mosaic image of all imaged pointings"
       cab: mosaic-queen
+      skip_if_outputs: exist
       params:
         target_images: ["*MFS-{recipe.stokes}*image.fits"]
         input: "{recipe.dir-out-base}/image_{recipe.out-image-num}"
@@ -68,27 +69,31 @@ mosaic-pointings:
         beam-cutoff: 0.05
         name: CARACal
 
+    add-units:
+      info: "Add the missing header frequency unit line."
+      cab: add_freq_units
+      params:
+        image: "{recipe.dir-out-base}/image_{recipe.out-image-num}/{steps.mosaic-image.name}_image.fits"
+
     source-finder:
       info: "Runs source finder on mosaic image to make a complete local sky model"
       cab: bdsf.catalog
       skip_if_outputs: exist
       params:
-        image: "{recipe.dir-out-base}/image_{recipe.out-image-num}/{steps.mosaic-image.name}_image.fits"
+        image: =steps.add-units.outfile
         thresh_pix: 4
         thresh_isl: 3
-        rms_box: [100, 100]
-        rms_map: false
+        rms_box: [100, 50]
+        rms_map: true
+        frequency: =steps.add-units.rest-freq
         multichan_opts: false
-        #frequency: 3.120405752 # L=1283895507.81
-        # flagging_opts: true
-        # flag_maxsize_bm: 10
-        catalog_format: ascii
         outfile_gaul: "{recipe.dir-out-base}/image_{recipe.out-image-num}/{steps.mosaic-image.name}.gaul"
         outfile_srl: "{recipe.dir-out-base}/image_{recipe.out-image-num}/{steps.mosaic-image.name}.srl"
 
     tigger-convert:
       info: "Convert source finder full sky model to lsm"
       cab: tigger-convert
+      skip_if_outputs: exist
       params:
         input-model: "=steps.source-finder.outfile_gaul"
         output-model: "=STRIPEXT(steps.source-finder.outfile_gaul) + '.lsm.html'"

@@ -239,7 +239,6 @@ lib:
         init:
           cab: pfb.init
           info: 'Initialise imaging data products'
-          skip_if_outputs: exist
           params:
             ms: =recipe.ms
             gain-table: =IFSET(recipe.gains)

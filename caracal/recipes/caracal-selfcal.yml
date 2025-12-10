@@ -65,20 +65,39 @@ caracal-selfcal:
       params:
         iter: =recipe.iter
 
-    image-pol:
-      info: image and construct initial model image using the PA_CORRECTED_DATA column using a mask
-      skip: =IF(recipe.image-enable, false, true)
+    image-pfb:
+      info: image and construct initial model image using the DATA/CORRECTED_DATA column
+      skip: =IF(recipe.image-enable, IF(recipe.image-algo=="pfb", false, true), true)
+      recipe: sara
+      params:
+        ms: =recipe.ms
+        base-dir: "{recipe.dir-out-base}/image_{recipe.iter}"
+        image-name: ="{recipe.image-prefix}_{recipe.iter}"
+        data-column: =IF(recipe.iter>1, "CORRECTED_DATA",
+                   IF(recipe.selfcal.pa-rotate, steps.pa-correction.out.column, recipe.image-col))
+        robustness: =recipe.image-robust
+        cell-size: =recipe.image-cell
+        nx: =recipe.image-npix
+        ny: =recipe.image-npix
+        niter: =IFSET(recipe.image-nmiter)
+        channels-per-image: 256
+        rmsfactor: =IF(recipe.iter>1, recipe.image-clean-cutoff[-1], recipe.image-clean-cutoff[0])
+
+    image-wsclean:
+      info: image and construct initial model image using the DATA/CORRECTED_DATA column using a mask
+      skip: =IF(recipe.image-enable, IF(recipe.image-algo=="wsclean", false, true), true)
       _use: lib.steps.wsclean.image
       skip_if_outputs: exist
       params:
         prefix: ="{recipe.dir-out-base}/image_{recipe.iter}/{recipe.image-prefix}_{recipe.iter}"
-        column: =IF(recipe.iter>1, "CORRECTED_DATA", IF(recipe.selfcal.pa-rotate, steps.pa-correction.out.column, recipe.image-col))
-        niter: 100000 #=IFSET(recipe.image-niter)
+        column: =IF(recipe.iter>1, "CORRECTED_DATA",
+                   IF(recipe.selfcal.pa-rotate, steps.pa-correction.out.column, recipe.image-col))
+        #niter: 100000 #=IFSET(recipe.image-niter)
         auto-threshold: =IF(recipe.iter>1, recipe.image-clean-cutoff[-1], recipe.image-clean-cutoff[0])
         auto-mask: =IF(recipe.iter==0, recipe.image-cleanmask-thr[0], UNSET)
         fits-mask: =IFSET(recipe.image-fits-mask, recipe.image-fits-mask,
-                          IFSET(recipe.image-cleanmask-method,
-                                IF(recipe.iter>0, "{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}-MFS-mask.fits",
+                      IFSET(recipe.image-cleanmask-method,
+                        IF(recipe.iter>0, "{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}-MFS-mask.fits",
                                 UNSET, UNSET), UNSET))
         no-update-model-required: =IF(recipe.iter>0, IF(recipe.image-no-update-model-required, true, false), true)
 
@@ -86,7 +105,7 @@ caracal-selfcal:
       info: construct mauch beam
       cab: generate_mauch_beam
       skip_if_outputs: exist
-      skip: =IF(recipe.image-enable, false, true)
+      skip: =IF(recipe.image-enable, IF(recipe.image-algo=="wsclean", false, true), true)
       params:
         image: =IF(recipe.selfcal.pa-rotate, steps.image-pol.restored.i.mfs, steps.image-pol.restored.mfs)
         outfile: =IF(recipe.selfcal.pa-rotate, '{steps.image-pol.prefix}-MFS-I-pb.fits', '{steps.image-pol.prefix}-MFS-pb.fits')
@@ -97,7 +116,8 @@ caracal-selfcal:
       skip_if_outputs: fresh
       skip: =IF(recipe.image-enable, IF(recipe.image-aimfast-enable, false, true), true)
       params:
-        residual_image: =steps.image*.residual.mfs
+        residual_image: =IF(recipe.image-algo=="wsclean", steps.image*.residual.mfs,
+          '{steps.image-pfb.base-dir}/{steps.image-pfb.image-name}_I_residual_time0000_mfs.fits')
         outfile: '{steps.image*.prefix}-im-{info.suffix}.json'
 
     masking:
@@ -106,7 +126,8 @@ caracal-selfcal:
       skip_if_outputs: fresh
       skip: =IF(recipe.image-enable, IF(recipe.image-cleanmask-method=="breizorro", false, true), true)
       params:
-        restored-image: =steps.image*.restored.mfs
+        restored-image: =IF(recipe.image-algo=="wsclean", steps.image*.restored.mfs,
+          '{steps.image-pfb.base-dir}/{steps.image-pfb.image-name}_I_main_image_time0000_mfs.fits')
         outfile: '{steps.image*.prefix}-MFS-mask.fits'
         outregion: '{steps.image*.prefix}-MFS-mask.rgn'
         threshold: =IF(VALID(recipe.image-cleanmask-thr[recipe.iter]),
@@ -123,7 +144,8 @@ caracal-selfcal:
                    not recipe.image-enable, true,
                    not recipe.extract-sources.enable, true, false)
       params:
-        image: =steps.image-*.restored.mfs
+        image: =IF(recipe.image-algo=="wsclean", steps.image*.restored.mfs,
+          '{steps.image-pfb.base-dir}/{steps.image-pfb.image-name}_I_main_image_time0000_mfs.fits')
         advanced_opts: true
         thresh_pix: =IF(recipe.iter>1, recipe.extract-sources.thr-pix[-1],
                                        recipe.extract-sources.thr-pix[0])

@@ -1291,6 +1291,7 @@ def worker(pipeline, recipe, config):
         wsclean = config.get("image", {})
         if wsclean:
             params.append(f"image-enable={wsclean['enable']}")
+            params.append(f"image-algo={wsclean['with']}")
             params.append(f"image-use-wgridder={wsclean['use_wgridder']}")
             params.append(f"image-absmem={wsclean['absmem']}")
             params.append(f"image-col={wsclean['col'][0]}")

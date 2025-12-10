@@ -71,6 +71,249 @@ lib:
             images: =LIST(recipe.mask, recipe.image)
             prod: true
             output: =DIRNAME(recipe.image) + '/{recipe.output-prefix}' + STRIPEXT(BASENAME(recipe.image)) + '.fits'
+    sara:
+      name: pfb-sara
+      info: Imaging recipe using the SARA algorithm.
+
+      inputs:
+        ms:
+          dtype: List[URI]
+          required: true
+        base-dir:
+          dtype: Directory
+          required: true
+          mkdir: true
+          must_exist: false
+          info:
+            Base output directory in which to place all output data products.
+        image-name:
+          dtype: str
+          required: true
+          info:
+            A descriptive name for the outputs to be placed in base-dir.
+        data-column:
+          dtype: str
+          default: DATA
+          info:
+            Column to image.
+            Simple arithmatic is supported e.g. one can use CORRECTED_DATA-MODEL_DATA to image residuals.
+        model-column:
+          dtype: str
+          default: MODEL_DATA
+          info:
+            Column to write model visibilities to
+        weight-column:
+          dtype: str
+          info:
+            Weight column
+        sigma-column:
+          dtype: str
+          info:
+            Sigma column (preferred over weight-column if provided)
+        fields:
+          dtype: List[int]
+          info:
+            Which fields to image
+        scans:
+          dtype: List[int]
+          info:
+            List of scans to image
+        gains:
+          dtype: List[URI]
+          info:
+            Gain tables to apply (must match the order in which MS's are passed in)
+        robustness:
+          dtype: float
+          default: -0.3
+          info:
+            Briggs robustness level.
+            Less than -2 corresponds to uniform, larger than 2 or None to natural.
+        field-of-view:
+          dtype: float
+          default: 1.8
+        super-resolution-factor:
+          dtype: float
+          default: 2.0
+          info:
+            How much to oversample Nyquist by at the highest frequency.
+        psf-oversize:
+          dtype: float
+          default: 1.6
+          info:
+            Relative size of the PSF compared to the image.
+        cell-size:
+          dtype: float
+          info:
+            Cell size in arcseconds.
+            Preferred over fov and srf if set.
+        nx:
+          dtype: int
+          info:
+            Number of pixels in x direction.
+        ny:
+          dtype: int
+          info:
+            Number of pixels in y direction.
+        channels-per-image:
+          dtype: int
+          default: 128
+          info:
+            Number of channels to combine into an imaging band
+        integrations-per-image:
+          dtype: int
+          default: -1
+          info:
+            Number of time integrations per dataset
+        rmsfactor:
+          dtype: float
+          default: 1.0
+          info:
+            Multiple of the rms to threshold by
+        chan-average:
+          dtype: int
+          default: 4
+          info:
+            How many channels to average together
+        freq-range:
+          dtype: str
+          info:
+            Channel range to image passed as a numpy slice.
+        bda-decorr:
+          dtype: float
+          default: 0.98
+          info:
+            Amount of amplitude loss that can be tolerated at edge of field
+        niter:
+          dtype: int
+          default: 3
+          info:
+            Number of major cycles
+        l1-reweight-from:
+          dtype: int
+          default: 5
+        l2-reweight-dof:
+          dtype: float
+        alpha:
+          dtype: float
+          default: 2.0
+          info:
+            Alpha parameter for the l1 reweighting
+        overwrite:
+          default: false
+          aliases: ['*.overwrite']
+        output-filename:
+          default: '{current.base-dir}/{current.image-name}'
+          aliases: ['*.output-filename']
+        fits-output-folder:
+          default: =current.base-dir
+          aliases: ['*.fits-output-folder']
+        log-directory:
+          default: '{current.base-dir}/logs'
+          aliases: ['*.log-directory']
+        transfer-model-from:
+          dtype: str
+          info:
+            Model to start from
+        nworkers:
+          dtype: int
+          default: 4
+          info:
+            Number of workers.
+            This controls the level of horizontal scaling.
+            More workers mean a larger memory footprint.
+            Set to the expected number of imaging bands if unsure.
+        nthreads:
+          dtype: int
+          default: 16
+          info:
+            Number of threads per worker.
+            This controls the degree of vertical parallelism.
+            The total number of threads used during imaging will be nworkers * nthreads.
+        product:
+          default: I
+          aliases: ['*.product']
+          info:
+            Imaging products to produce.
+
+      steps:
+        init:
+          cab: pfb.init
+          info: 'Initialise imaging data products'
+          skip_if_outputs: exist
+          params:
+            ms: =recipe.ms
+            gain-table: =IFSET(recipe.gains)
+            nthreads: =recipe.nthreads
+            nworkers: =recipe.nworkers
+            data-column: =recipe.data-column
+            weight-column: =IFSET(recipe.weight-column)
+            sigma-column: =IFSET(recipe.sigma-column)
+            channels-per-image: =recipe.channels-per-image
+            integrations-per-image: =recipe.integrations-per-image
+            chan-average: =recipe.chan-average
+            max-field-of-view: =recipe.field-of-view
+            bda-decorr: =recipe.bda-decorr
+            freq-range: =IFSET(recipe.freq-range)
+            overwrite: =recipe.overwrite
+            check-ants: false
+            fields: =IFSET(recipe.fields)
+            scans: =IFSET(recipe.scans)
+            product: =recipe.product
+        grid:
+          cab: pfb.grid
+          info: 'Setup grid for imaging'
+          params:
+            super-resolution-factor: =IFSET(recipe.super-resolution-factor)
+            field-of-view: =IFSET(recipe.field-of-view)
+            cell-size: =IFSET(recipe.cell-size)
+            nx: =IFSET(recipe.nx)
+            ny: =IFSET(recipe.ny)
+            robustness: =recipe.robustness
+            nthreads: =recipe.nthreads
+            nworkers: =recipe.nworkers
+            psf-oversize: =recipe.psf-oversize
+            overwrite: =recipe.overwrite
+            l2-reweight-dof: =IFSET(recipe.l2-reweight-dof)
+            # product: =recipe.product
+            transfer-model-from: =IFSET(recipe.transfer-model-from)
+        sara:
+          cab: pfb.sara
+          info: Deconvolution step
+          params:
+            niter: =recipe.niter
+            bases: 'self,db1,db2,db3'
+            nlevels: 2
+            l1-reweight-from: =recipe.l1-reweight-from
+            pd-tol: [1.5e-4]
+            pd-maxit: 450
+            pd-verbose: 2
+            pd-report-freq: 50
+            tol: 5e-4
+            gamma: 0.99
+            rmsfactor: =recipe.rmsfactor
+            alpha: =recipe.alpha
+            eta: 5e-4
+            positivity: =IF( recipe.product == 'I', 1, 0)
+            nthreads: =recipe.nworkers * recipe.nthreads
+            init-factor: =IFSET(recipe.transfer-model-from, 1.0, 0.5)
+            # product: =recipe.product
+        restore:
+          cab: pfb.restore
+          info: Produce restored image.
+          params:
+            nworkers: =recipe.nworkers
+            nthreads: =recipe.nthreads
+            outputs: iI
+            # product: =recipe.product
+        degrid:
+          cab: pfb.degrid
+          info: Render model to visibilities
+          params:
+            ms: =recipe.ms
+            model-column: =recipe.model-column
+            nworkers: =recipe.nworkers
+            nthreads: =recipe.nthreads
+            freq-range: =IFSET(recipe.freq-range)
 
 
   steps:

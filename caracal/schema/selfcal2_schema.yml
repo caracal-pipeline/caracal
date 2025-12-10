@@ -442,6 +442,11 @@ mapping:
             desc: Enable the 'image' segment.
             required: false
             example: 'False'
+          with:
+            type: str
+            desc: Imaging algorithm to use.
+            enum: ["wsclean", "pfb", "ddfacet"]
+            example: 'wsclean'
           col:
             seq:
               - type: str

@@ -48,6 +48,10 @@ flag-tricolour-enable:
 image-enable:
   default: true
   dtype: bool
+image-algo:
+  dtype: str
+  choices: ["wsclean", "pfb", "ddfacet"]
+  default: "wsclean"
 image-prefix:
   default: "mypipeline"
   dtype: str
@@ -58,6 +62,7 @@ image-niter:
   info: Number of cleaning iterations.
   default: 100000
   dtype: int
+  aliases: ['*.niter']
 image-mniter:
   info: Number of major cycles.
   dtype: int

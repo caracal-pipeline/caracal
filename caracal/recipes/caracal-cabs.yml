@@ -9,6 +9,7 @@ _include:
     - fitstool.yml
     - mosaic-queen.yml
     - msutils.yml
+    - pfb-imaging.yml
     - quartical.yml
     - rfinder.yml
     - smops.yml
@@ -18,6 +19,12 @@ _include:
     - wsclean.yml
 
 cabs:
+
+  quartical:
+    inputs:
+      input_ms.path:
+        skip_freshness_checks: true
+
   aimfast:
     inputs:
       compare_models:

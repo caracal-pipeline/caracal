@@ -107,8 +107,8 @@ caracal-selfcal:
       skip_if_outputs: exist
       skip: =IF(recipe.image-enable, IF(recipe.image-algo=="wsclean", false, true), true)
       params:
-        image: =IF(recipe.selfcal.pa-rotate, steps.image-pol.restored.i.mfs, steps.image-pol.restored.mfs)
-        outfile: =IF(recipe.selfcal.pa-rotate, '{steps.image-pol.prefix}-MFS-I-pb.fits', '{steps.image-pol.prefix}-MFS-pb.fits')
+        image: =IF(recipe.selfcal.pa-rotate, steps.image*.restored.i.mfs, steps.image*.restored.mfs)
+        outfile: =IF(recipe.selfcal.pa-rotate, '{steps.image*.prefix}-MFS-I-pb.fits', '{steps.image*.prefix}-MFS-pb.fits')
 
     quality-assess:
       info: image quality assessment
@@ -177,7 +177,7 @@ caracal-selfcal:
         compare_models: =LIST("{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}.lsm.html", steps.tigger-convert.output-model)
         tolerance: =recipe.aimfast.radius
         html_prefix: "{recipe.dir-out-base}/../reports/{recipe.image-prefix}"
-        outfile: =steps.image-*.prefix + 'model-compare.json'
+        outfile: =steps.image*.prefix + 'model-compare.json'
 
     flagsummary-stats:
       info: report flagging statistics after calibration

@@ -20,10 +20,10 @@ _include:
 
 cabs:
 
-  quartical:
-    inputs:
-      input_ms.path:
-        skip_freshness_checks: true
+#  quartical:
+#    inputs:
+#      input_ms.path:
+#        skip_freshness_checks: true
 
   aimfast:
     inputs:

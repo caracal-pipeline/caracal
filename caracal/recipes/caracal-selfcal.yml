@@ -117,7 +117,7 @@ caracal-selfcal:
       skip: =IF(recipe.image-enable, IF(recipe.image-aimfast-enable, false, true), true)
       params:
         residual_image: =IF(recipe.image-algo=="wsclean", steps.image*.residual.mfs,
-          '{steps.image-pfb.base-dir}/{steps.image-pfb.image-name}_I_residual_time0000_mfs.fits')
+          '{steps.image-pfb.base-dir}/{steps.image-pfb.image-name}_I_main_residual_time0000_mfs.fits')
         outfile: '{steps.image*.prefix}-im-{info.suffix}.json'
 
     masking:

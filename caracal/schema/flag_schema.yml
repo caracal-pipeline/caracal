@@ -265,6 +265,21 @@ mapping:
             required: false
             desc: Sequence of flagging rules, of the form "ms_pattern key:value key:value". e.g.  ['antenna:XX scan:X', 'antenna:xxx timerange:YYYY/MM/DD/HH:MM:SS~YYYY/MM/DD/HH:MM:SS']
             example: ''
+      flag_list:
+        desc: Flag according to the data selection and flag commands specified in the input list. The input list may come from a text file, a list of text files or from a Python list of strings. Each input line may contain data selection parameters and any parameter specific to the mode given in the line. Default values will be used for the parameters that are not present in the line. Each line will be taken as a command to the task. If data is pre-selected using any of the selection parameters, then flagging will apply only to that subset of the MS. If using a list of files, they must be placed in the input folder.
+        type: map
+        mapping:
+          enable:
+            desc: Enable this sectiion 
+            type: bool
+            required: false
+            example: 'False'
+          rules:
+            seq:
+              - type: str
+            required: false
+            desc: List of rules to pass to CASA's flagdata task. For example, [rule1.txt, rule2.txt] or ["scan='1~3' mode='manual'", "mode='clip' clipminmax=[0,2] correlation='ABS_XX' clipoutside=False"]
+            example: ''
       flag_rfi:
         desc: Flag RFI using AOFlagger, Tricolour, or CASA FLAGDATA with tfcrop.
         type: map

@@ -392,6 +392,20 @@ def worker(pipeline, recipe, config):
                                output=pipeline.output,
                                label=f'{step}::Flag ms={msname} using {rule}')
 
+            if pipeline.enable_task(config, 'flag_list'):
+                rules = config['flag_list']['rules']
+                step = f'{wname}-ms{msiter}'
+                recipe.add('cab/casa_flagdata', step,
+                           {    
+                               "vis": msname,
+                               "mode": "list",
+                               "inpfile": rules,
+                           },
+                            input=pipeline.input,
+                            output=pipeline.output,
+                            label=f'{step}::Flag ms={msname} using list suplied list of rules')
+
+
             if pipeline.enable_task(config, 'flag_rfi'):
                 step = '{0:s}-rfi-ms{1:d}'.format(wname, msiter)
                 if config['flag_rfi']["flagger"] == "aoflagger":

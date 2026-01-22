@@ -184,11 +184,13 @@ def xcal_model_fcal_leak(
             "spw": "",
         }
         if caltablelist:
-            gain_opts.update({
-                "gaintable": ["%s:output" % ct for ct in caltablelist],
-                "gainfield": gainfieldlist,
-                "interp": interplist,
-            })
+            gain_opts.update(
+                {
+                    "gaintable": ["%s:output" % ct for ct in caltablelist],
+                    "gainfield": gainfieldlist,
+                    "interp": interplist,
+                }
+            )
 
         # Phaseup diagonal of crosshand cal if available
         recipe.add(
@@ -539,11 +541,13 @@ def xcal_model_xcal_leak(
             "spw": "",
         }
         if caltablelist:
-            gain_opts.update({
-                "gaintable": ["%s:output" % ct for ct in caltablelist],
-                "gainfield": gainfieldlist,
-                "interp": interplist,
-            })
+            gain_opts.update(
+                {
+                    "gaintable": ["%s:output" % ct for ct in caltablelist],
+                    "gainfield": gainfieldlist,
+                    "interp": interplist,
+                }
+            )
 
         recipe.add(
             "cab/casa_gaincal",
@@ -827,11 +831,13 @@ def xcal_from_pa_xcal_leak(
             "smodel": ["1", "0", "0", "0"],
         }
         if caltablelist:
-            gain_opts.update({
-                "gaintable": ["%s:output" % ct for ct in caltablelist],
-                "gainfield": gainfieldlist,
-                "interp": interplist,
-            })
+            gain_opts.update(
+                {
+                    "gaintable": ["%s:output" % ct for ct in caltablelist],
+                    "gainfield": gainfieldlist,
+                    "interp": interplist,
+                }
+            )
 
         recipe.add(
             "cab/casa_gaincal",
@@ -1002,11 +1008,13 @@ def xcal_from_pa_xcal_leak(
             "smodel": S2,
         }
         if caltablelist:
-            gain2_opts.update({
-                "gaintable": ["%s:output" % ct for ct in caltablelist],
-                "gainfield": gainfieldlist,
-                "interp": interplist,
-            })
+            gain2_opts.update(
+                {
+                    "gaintable": ["%s:output" % ct for ct in caltablelist],
+                    "gainfield": gainfieldlist,
+                    "interp": interplist,
+                }
+            )
         recipe.add(
             "cab/casa_gaincal",
             "gain_xcal_2",
@@ -1369,13 +1377,17 @@ def plotgains(recipe, pipeline, plotdir, field_id, gtab, i, term):
         "field": field_id,
     }
     if term in ["Xf", "Df0gen", "Dffls"]:
-        opts.update({
-            "xaxis": "channel",
-        })
+        opts.update(
+            {
+                "xaxis": "channel",
+            }
+        )
     elif term == "Dref":
-        opts.update({
-            "xaxis": "antenna1",
-        })
+        opts.update(
+            {
+                "xaxis": "antenna1",
+            }
+        )
     recipe.add(
         "cab/ragavi",
         step,

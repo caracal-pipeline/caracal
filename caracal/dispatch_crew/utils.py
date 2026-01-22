@@ -3,7 +3,7 @@ import os.path
 import re
 from dataclasses import dataclass
 from dataclasses import field as dc_field
-from typing import List
+from typing import List, Union
 
 import astropy.io.fits as fitsio
 import numpy
@@ -22,7 +22,7 @@ class Fields:
     names: List[str]
     dirs: List[NDArray] = dc_field(default_factory=np.ndarray)
 
-    def index(self, field_val: str | int) -> int:
+    def index(self, field_val: Union[str, int]) -> int:
         if isinstance(field_val, str):
             return self.names.index(field_val)
         else:

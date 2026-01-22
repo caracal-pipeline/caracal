@@ -28,26 +28,28 @@ class catalog_parser:
     def __str__(self):
         """Return multiline string describing the calibrator database"""
         lines = [""]
-        lines.extend([
-            "\t%s\tEpoch:%d\tRA:%3.2f\tDEC:%3.2f\t"
-            "S_v0:%.4f\tv0:%.4e\ta:%.4f\tb:%.4f\tc:%.4f\td:%.4f\t"
-            "lsm:%s\tlsm epoch:%d"
-            % (
-                str(name).ljust(15),
-                db["epoch"],
-                db["ra"],
-                db["decl"],
-                db["S_v0"],
-                db["v0"],
-                db["a_casa"],
-                db["b_casa"],
-                db["c_casa"],
-                db["d_casa"],
-                db.get("lsm", "<none>").ljust(30),
-                db.get("lsm_epoch", db["epoch"]),
-            )
-            for name, db in self._cat.items()
-        ])
+        lines.extend(
+            [
+                "\t%s\tEpoch:%d\tRA:%3.2f\tDEC:%3.2f\t"
+                "S_v0:%.4f\tv0:%.4e\ta:%.4f\tb:%.4f\tc:%.4f\td:%.4f\t"
+                "lsm:%s\tlsm epoch:%d"
+                % (
+                    str(name).ljust(15),
+                    db["epoch"],
+                    db["ra"],
+                    db["decl"],
+                    db["S_v0"],
+                    db["v0"],
+                    db["a_casa"],
+                    db["b_casa"],
+                    db["c_casa"],
+                    db["d_casa"],
+                    db.get("lsm", "<none>").ljust(30),
+                    db.get("lsm_epoch", db["epoch"]),
+                )
+                for name, db in self._cat.items()
+            ]
+        )
         return "\n".join(lines)
 
     @classmethod

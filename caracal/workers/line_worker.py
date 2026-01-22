@@ -677,8 +677,7 @@ def worker(pipeline, recipe, config):
                         del userfitchans[1]
                     userfitchans = [list(map(int, qq.split("~"))) for qq in userfitchans[0]]
                     userfitchans = (
-                        np
-                        .array([(chanids >= qq[0]) * (chanids <= qq[1]) for qq in userfitchans])
+                        np.array([(chanids >= qq[0]) * (chanids <= qq[1]) for qq in userfitchans])
                         .sum(axis=0)
                         .astype("bool")
                     )
@@ -1069,9 +1068,9 @@ def worker(pipeline, recipe, config):
             "make-psf-only": config["make_cube"]["wscl_onlypsf"],
         }
         if config["make_cube"]["wscl_multiscale_scales"]:
-            line_image_opts.update({
-                "multiscale-scales": list(map(int, config["make_cube"]["wscl_multiscale_scales"].split(",")))
-            })
+            line_image_opts.update(
+                {"multiscale-scales": list(map(int, config["make_cube"]["wscl_multiscale_scales"].split(",")))}
+            )
 
         if config["make_cube"]["wscl_beam"] != [0, 0, 0]:
             line_image_opts.update({"beamshape": config["make_cube"]["wscl_beam"]})
@@ -1095,10 +1094,14 @@ def worker(pipeline, recipe, config):
                     os.mkdir(cube_path)
                 cube_dir = "{0:s}/cube_{1:d}".format(get_relative_path(pipeline.cubes, pipeline), j)
 
-                line_image_opts.update({
-                    "msname": mslist,
-                    "prefix": "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}".format(cube_dir, pipeline.prefix, field, line_name, j),
-                })
+                line_image_opts.update(
+                    {
+                        "msname": mslist,
+                        "prefix": "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}".format(
+                            cube_dir, pipeline.prefix, field, line_name, j
+                        ),
+                    }
+                )
 
                 if j == 1:
                     own_line_clean_mask = config["make_cube"]["wscl_user_clean_mask"]
@@ -1291,19 +1294,23 @@ def worker(pipeline, recipe, config):
                                     pass
                                 hdul.flush()
 
-                            line_image_opts.update({
-                                "fitsmask": "{0:s}/{1:s}:output".format(
-                                    get_relative_path(pipeline.masking, pipeline), postGridMask.split("/")[-1]
-                                )
-                            })
+                            line_image_opts.update(
+                                {
+                                    "fitsmask": "{0:s}/{1:s}:output".format(
+                                        get_relative_path(pipeline.masking, pipeline), postGridMask.split("/")[-1]
+                                    )
+                                }
+                            )
 
                         else:
                             if not doSpec:
-                                line_image_opts.update({
-                                    "fitsmask": "{0:s}/{1:s}:output".format(
-                                        get_relative_path(pipeline.masking, pipeline), preGridMask.split("/")[-1]
-                                    )
-                                })
+                                line_image_opts.update(
+                                    {
+                                        "fitsmask": "{0:s}/{1:s}:output".format(
+                                            get_relative_path(pipeline.masking, pipeline), preGridMask.split("/")[-1]
+                                        )
+                                    }
+                                )
                             else:
                                 pass
 
@@ -1375,12 +1382,14 @@ def worker(pipeline, recipe, config):
                                     hdul[0].header["CDELT3"] = hdul[0].header["CDELT3"] * binchans
                                     if binchans > 1:
                                         if (nchans % binchans) > 0:
-                                            rdata = (hdul[0].data[: -(nchans % binchans)]).reshape((
-                                                nchans - 1 * (nchans % binchans),
-                                                binchans,
-                                                hdul[0].header["NAXIS1"],
-                                                hdul[0].header["NAXIS2"],
-                                            ))
+                                            rdata = (hdul[0].data[: -(nchans % binchans)]).reshape(
+                                                (
+                                                    nchans - 1 * (nchans % binchans),
+                                                    binchans,
+                                                    hdul[0].header["NAXIS1"],
+                                                    hdul[0].header["NAXIS2"],
+                                                )
+                                            )
                                             rdata = np.nansum(rdata, axis=1)
                                             rdata = np.concatenate(
                                                 (rdata, np.nansum(hdul[0].data[-(nchans % binchans) :])), axis=0
@@ -1413,21 +1422,25 @@ def worker(pipeline, recipe, config):
                                 else:
                                     hdul.writeto("{}/{}".format(pipeline.masking, postGridMask))
 
-                                line_image_opts.update({
-                                    "fitsmask": "{0:s}/{1:s}:output".format(
-                                        get_relative_path(pipeline.masking, pipeline), gridMask.split("/")[-1]
-                                    )
-                                })
+                                line_image_opts.update(
+                                    {
+                                        "fitsmask": "{0:s}/{1:s}:output".format(
+                                            get_relative_path(pipeline.masking, pipeline), gridMask.split("/")[-1]
+                                        )
+                                    }
+                                )
                             else:
                                 raise IOError("Requested channels are not contained in mask {}.".format(gridMask))
 
                         else:
                             if not doProj:
-                                line_image_opts.update({
-                                    "fitsmask": "{0:s}/{1:s}:output".format(
-                                        get_relative_path(pipeline.masking, pipeline), preGridMask.split("/")[-1]
-                                    )
-                                })
+                                line_image_opts.update(
+                                    {
+                                        "fitsmask": "{0:s}/{1:s}:output".format(
+                                            get_relative_path(pipeline.masking, pipeline), preGridMask.split("/")[-1]
+                                        )
+                                    }
+                                )
                             else:
                                 pass
 
@@ -1569,12 +1582,14 @@ def worker(pipeline, recipe, config):
                                     if mm == "dirty":
                                         tobeblanked = (
                                             cubedata
-                                            == np.nanmean(cubedata, axis=(0, 2, 3)).reshape((
-                                                1,
-                                                cubedata.shape[1],
-                                                1,
-                                                1,
-                                            ))
+                                            == np.nanmean(cubedata, axis=(0, 2, 3)).reshape(
+                                                (
+                                                    1,
+                                                    cubedata.shape[1],
+                                                    1,
+                                                    1,
+                                                )
+                                            )
                                         ).all(axis=(0, 2, 3))
                                     cubedata[:, tobeblanked] = np.nan
                                     fits.writeto(
@@ -1725,12 +1740,14 @@ def worker(pipeline, recipe, config):
 
                 elif pipeline.enable_task(config["mstransform"], "doppler"):
                     nchans_all[i] = [nchan_dopp for kk in chanw_all[i]]
-                    specframe_all.append([
-                        {"lsrd": 0, "lsrk": 1, "galacto": 2, "bary": 3, "geo": 4, "topo": 5}[
-                            config["mstransform"]["doppler"]["frame"]
+                    specframe_all.append(
+                        [
+                            {"lsrd": 0, "lsrk": 1, "galacto": 2, "bary": 3, "geo": 4, "topo": 5}[
+                                config["mstransform"]["doppler"]["frame"]
+                            ]
+                            for kk in chanw_all[i]
                         ]
-                        for kk in chanw_all[i]
-                    ])
+                    )
         else:
             for i, msfile in enumerate(all_msfiles):
                 msinfo = pipeline.get_msinfo(msfile)
@@ -1789,10 +1806,12 @@ def worker(pipeline, recipe, config):
                 "restfreq": restfreq,
             }
             if config["make_cube"]["taper"] != "":
-                image_opts.update({
-                    "uvtaper": True,
-                    "outertaper": config["make_cube"]["taper"],
-                })
+                image_opts.update(
+                    {
+                        "uvtaper": True,
+                        "outertaper": config["make_cube"]["taper"],
+                    }
+                )
             recipe.add(
                 "cab/casa_clean",
                 step,
@@ -1966,10 +1985,12 @@ def worker(pipeline, recipe, config):
                         mask_name = input_cube.split(".image")[0] + ".image_mask.fits"
                         if os.path.exists("{0:s}/cube_{1:d}/{2:s}".format(pipeline.cubes, maxcube_dir, mask_name)):
                             caracal.log.info("Using the mask produced by SoFiA within the CARACal line-worker loop")
-                            imcontsub_opts.update({
-                                "mask-image": "{0:s}/cube_{1:d}/{2:s}".format(cube_dir, maxcube_dir, mask_name)
-                                + ":input"
-                            })
+                            imcontsub_opts.update(
+                                {
+                                    "mask-image": "{0:s}/cube_{1:d}/{2:s}".format(cube_dir, maxcube_dir, mask_name)
+                                    + ":input"
+                                }
+                            )
                         else:
                             caracal.log.info(
                                 "Mask generated by SoFiA not found, using automasking method."
@@ -1978,11 +1999,13 @@ def worker(pipeline, recipe, config):
                     else:
                         caracal.log.info("Using mask defined by user {0:s}".format(config["imcontsub"]["mask_image"]))
                         if os.path.exists("{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"])):
-                            imcontsub_opts.update({
-                                "mask-image": "{0:s}/{1:s}".format(
-                                    get_relative_path(pipeline.masking, pipeline), config["imcontsub"]["mask_image"]
-                                )
-                            })
+                            imcontsub_opts.update(
+                                {
+                                    "mask-image": "{0:s}/{1:s}".format(
+                                        get_relative_path(pipeline.masking, pipeline), config["imcontsub"]["mask_image"]
+                                    )
+                                }
+                            )
                         else:
                             caracal.log.info("Mask datacube not found in output/masking")
                             caracal.log.info("Will proceed with automasking")
@@ -2010,9 +2033,9 @@ def worker(pipeline, recipe, config):
                         ]
                     imcontsub_opts.update({"segments": config["imcontsub"]["segments"]})
 
-                    imcontsub_opts.update({
-                        "infits": "{0:s}/cube_{1:d}/{2:s}".format(cube_dir, maxcube_dir, input_cube) + ":input"
-                    })
+                    imcontsub_opts.update(
+                        {"infits": "{0:s}/cube_{1:d}/{2:s}".format(cube_dir, maxcube_dir, input_cube) + ":input"}
+                    )
                     print(imcontsub_opts)
                     recipe.add(
                         "cab/imcontsub",
@@ -2084,11 +2107,13 @@ def worker(pipeline, recipe, config):
                     )
 
                     if os.path.exists("{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"])):
-                        imcontsub_opts.update({
-                            "mask-image": "{0:s}/{1:s}".format(
-                                get_relative_path(pipeline.masking, pipeline), config["imcontsub"]["mask_image"]
-                            )
-                        })
+                        imcontsub_opts.update(
+                            {
+                                "mask-image": "{0:s}/{1:s}".format(
+                                    get_relative_path(pipeline.masking, pipeline), config["imcontsub"]["mask_image"]
+                                )
+                            }
+                        )
                     else:
                         caracal.log.info("Mask datacube not found in output/masking")
                         caracal.log.info("Will proceed with automasking")

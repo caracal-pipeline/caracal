@@ -314,10 +314,12 @@ def _process_shadems_plot_list(plot_args, basesubst, plotlist, defaults, descrip
                 continue
             # all other keys go into new defaults (with substitutions done)
             new_defaults = defaults.copy()
-            new_defaults.update(**{
-                "--" + key.replace("_", "-"): val.format(**basesubst) if isinstance(val, str) else val
-                for key, val in entry.items()
-            })
+            new_defaults.update(
+                **{
+                    "--" + key.replace("_", "-"): val.format(**basesubst) if isinstance(val, str) else val
+                    for key, val in entry.items()
+                }
+            )
             # and ecurse into new plot list
             _process_shadems_plot_list(
                 plot_args, basesubst, plots, new_defaults, f"{description}: {desc or comment}", extras=extras
@@ -459,10 +461,12 @@ def shadems(pipeline, recipe, basic, extras=None):
         iterate = basic["iterate"]
 
         if iterate and (iterate in iter_axes):
-            shadems_keys.update({
-                f"iter-{iterate}": True,
-                "png": f"{basic['output']}-corr-{_corr}{iter_axes[iterate]}.png",
-            })
+            shadems_keys.update(
+                {
+                    f"iter-{iterate}": True,
+                    "png": f"{basic['output']}-corr-{_corr}{iter_axes[iterate]}.png",
+                }
+            )
 
         if shadems_keys["colour-by"] == "baseline":
             shadems_keys["colour-by"] = "UV"
@@ -589,15 +593,17 @@ def worker(pipeline, recipe, config):
             # for the newer plots to shadems
             if pipeline.enable_task(config, "shadems"):
                 shade_cfg = config["shadems"]
-                shade_cfg.update({
-                    "ms": ms,
-                    "iobs": iobs,
-                    "label": label,
-                    "corrs": corrs,
-                    "fields": fields,
-                    "ms_base": ms_base,
-                    "output_dir": output_dir,
-                })
+                shade_cfg.update(
+                    {
+                        "ms": ms,
+                        "iobs": iobs,
+                        "label": label,
+                        "corrs": corrs,
+                        "fields": fields,
+                        "ms_base": ms_base,
+                        "output_dir": output_dir,
+                    }
+                )
                 direct_shadems(pipeline, recipe, shade_cfg)
 
             # the older plots
@@ -611,21 +617,23 @@ def worker(pipeline, recipe, config):
                     plot_args = get_xy(axes)
 
                     for fname, ftype in fields.items():
-                        plot_args.update({
-                            "ms": ms,
-                            "data": check_data(plot_axes[axes].get("col")),
-                            "corr": corrs,
-                            "iterate": "corr",
-                            # "colour": "scan",
-                            "num_cores": plotter_params.num_cores,
-                            "mem_limit": plotter_params.mem_limit,
-                            "uvrange": plotter_params.uvrange,
-                            "field": fname,
-                            "output": f"{label}-{ms_base}-{ftype[0]}-{fname}-{axes}",
-                            "output_dir": output_dir,
-                            "step": f"plot-{axes}-{iobs}-{ftype[0]}",
-                            "label": label,
-                            **plot_axes[axes],
-                        })
+                        plot_args.update(
+                            {
+                                "ms": ms,
+                                "data": check_data(plot_axes[axes].get("col")),
+                                "corr": corrs,
+                                "iterate": "corr",
+                                # "colour": "scan",
+                                "num_cores": plotter_params.num_cores,
+                                "mem_limit": plotter_params.mem_limit,
+                                "uvrange": plotter_params.uvrange,
+                                "field": fname,
+                                "output": f"{label}-{ms_base}-{ftype[0]}-{fname}-{axes}",
+                                "output_dir": output_dir,
+                                "step": f"plot-{axes}-{iobs}-{ftype[0]}",
+                                "label": label,
+                                **plot_axes[axes],
+                            }
+                        )
 
                         globals()[plotter](pipeline, recipe, plot_args, extras=None)

@@ -4,6 +4,7 @@ import pdb
 import shutil
 import sys
 import traceback
+import warnings
 
 import stimela
 
@@ -13,6 +14,8 @@ from caracal import log, utils
 from caracal.dispatch_crew import config_parser, worker_help
 from caracal.schema import SCHEMA_VERSION
 from caracal.workers.worker_administrator import WorkerAdministrator
+
+warnings.filterwarnings("ignore", category=SyntaxWarning)
 
 __version__ = caracal.__version__
 pckgdir = caracal.PCKGDIR

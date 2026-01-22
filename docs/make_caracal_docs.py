@@ -190,7 +190,8 @@ def writeWorkersIndex(srtWrks, wrkDr, schms, schDr):
         print("        {0:s}{1:s}".format(schDr, matchingSchema))
 
         # write worker description
-        schm = yaml.load(schDr + matchingSchema)
+        with open(schDr + matchingSchema) as stdr:
+            schm = yaml.load(stdr)["mapping"][wrk]
         f.write("{0:s}\n\n".format(schm["desc"]))
 
         # the initial type must be 'map'

@@ -1,19 +1,21 @@
 import json
+
 import numpy as np
 
 
 def get_refant(pipeline, recipe, prefix, msname, fields, min_baseline, max_dist, index):
     """Get reference antenna based on max distances to the array centre,
-       min baseline length and amount of flagged data."""
+    min baseline length and amount of flagged data."""
     step = "antenna_flag_summary"
     filename = "{0:s}-flag-{1:s}.json".format(prefix, step)
-    recipe.add('cab/flagstats', step, {
-        "msname": msname,
-        "outfile": filename
-    },
+    recipe.add(
+        "cab/flagstats",
+        step,
+        {"msname": msname, "outfile": filename},
         input=pipeline.input,
         output=pipeline.msdir,
-        label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
+        label="{0:s}:: Flagging summary  ms={1:s}".format(step, msname),
+    )
     recipe.run()
     recipe.jobs = []
 
@@ -41,22 +43,22 @@ def _prioritised_antennas(sorted_ants):
     elif len(sorted_ants) > 0:
         ref_ants_info = sorted_ants[:1]
     else:
-        return ''
+        return ""
     ref_ants = [ref_ant[1][0] for ref_ant in ref_ants_info]
-    return ','.join(ref_ants)
+    return ",".join(ref_ants)
 
 
 def _get_core_antennas(flag_stats, min_baseline, max_dist):
     """Select antenna with a array centre distance less than max_dist
-       and baseline lengths greater than min_baseline"""
+    and baseline lengths greater than min_baseline"""
     core_ants = {}
     min_base_ants = {}
-    antenna_stats = flag_stats['Flag stats'][1]['antennas']
+    antenna_stats = flag_stats["Flag stats"][1]["antennas"]
     for i, ant in antenna_stats.items():
-        name = ant['name']
-        flagged = ant['frac']
-        array_centre_dist = ant['array_centre_dist']
-        position = ant['position']
+        name = ant["name"]
+        flagged = ant["frac"]
+        array_centre_dist = ant["array_centre_dist"]
+        position = ant["position"]
         if array_centre_dist <= max_dist:
             core_ants[i] = (name, flagged, position, array_centre_dist)
     for i, ant in core_ants.items():
@@ -79,8 +81,8 @@ def _baseline_calculator(flag_stats, ant_id):
         return d
 
     baselines = []
-    ant1_pos = flag_stats[ant_id]['position']
+    ant1_pos = flag_stats[ant_id]["position"]
     for i, ant in flag_stats.items():
         if i != ant_id:
-            baselines.append(distance(ant1_pos, ant['position']))
+            baselines.append(distance(ant1_pos, ant["position"]))
     return baselines

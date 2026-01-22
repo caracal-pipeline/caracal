@@ -1,18 +1,17 @@
-import caracal.dispatch_crew.catalog_parser as cp
-import caracal
 import os
 
-__DB_FILENAME = os.path.join(
-    caracal.pckgdir, "data/southern_calibrators.txt")
-__DB_CASA_FILENAME = os.path.join(
-    caracal.pckgdir, "data/casa_calibrators.txt")
+import caracal
+import caracal.dispatch_crew.catalog_parser as cp
+
+__DB_FILENAME = os.path.join(caracal.pckgdir, "data/southern_calibrators.txt")
+__DB_CASA_FILENAME = os.path.join(caracal.pckgdir, "data/casa_calibrators.txt")
 
 __CALIBRATOR_DB = None
 __CASA_CALIBRATOR_DB = None
 
 
 def calibrator_database():
-    """ Return the Southern standard calibrator database """
+    """Return the Southern standard calibrator database"""
 
     global __CALIBRATOR_DB
 
@@ -32,7 +31,7 @@ def calibrator_database():
 
 
 def casa_calibrator_database():
-    """ Return the CASA standard calibrator database """
+    """Return the CASA standard calibrator database"""
 
     # same as in calibrator_database
     global __CASA_CALIBRATOR_DB

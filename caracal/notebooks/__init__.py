@@ -1,14 +1,14 @@
-import os.path
 import glob
+import os.path
 import shutil
-import jinja2
-import traceback
 import time
+import traceback
+
+import jinja2
+from stimela.utils import StimelaCabRuntimeError, xrun
 
 import caracal
 from caracal import log
-
-from stimela.utils import xrun, StimelaCabRuntimeError
 
 _j2env = None
 
@@ -36,8 +36,10 @@ def setup_default_notebooks(notebooks, output_dir, prefix, config):
             if os.path.getmtime(nbsrc) > dest_mtime:
                 global _j2env
                 if _j2env is None:
-                    _j2env = jinja2.Environment(loader=jinja2.PackageLoader('caracal', 'notebooks'),
-                                                autoescape=jinja2.select_autoescape(['html', 'xml']))
+                    _j2env = jinja2.Environment(
+                        loader=jinja2.PackageLoader("caracal", "notebooks"),
+                        autoescape=jinja2.select_autoescape(["html", "xml"]),
+                    )
 
                 template = _j2env.get_template(nbfile + ".j2")
                 log.info("Creating standard notebook {} from template".format(nbdest))
@@ -83,7 +85,7 @@ def generate_report_notebooks(notebooks, output_dir, prefix, container_tech):
         return
 
     if caracal.DEBUG:
-        opts += ['-v', '2', '--container-debug']
+        opts += ["-v", "2", "--container-debug"]
 
     # disabling as per https://github.com/caracal-pipeline/caracal/issues/1161
     # # first time run with -u

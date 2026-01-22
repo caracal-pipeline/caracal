@@ -1,18 +1,18 @@
-from caracal import log
-import caracal
-import os
-import sys
-import ruamel.yaml
-import pdb
-import traceback
 import logging
+import os
+import pdb
 import shutil
-from caracal.dispatch_crew import config_parser
-from caracal.dispatch_crew import worker_help
-import caracal.dispatch_crew.caltables as mkct
-from caracal.workers.worker_administrator import WorkerAdministrator
+import sys
+import traceback
+
 import stimela
+
+import caracal
+import caracal.dispatch_crew.caltables as mkct
+from caracal import log, utils
+from caracal.dispatch_crew import config_parser, worker_help
 from caracal.schema import SCHEMA_VERSION
+from caracal.workers.worker_administrator import WorkerAdministrator
 
 __version__ = caracal.__version__
 pckgdir = caracal.PCKGDIR
@@ -45,8 +45,7 @@ def print_worker_help(worker):
     if not os.path.exists(schema):
         return None
 
-    with open(schema, "r") as f:
-        worker_dict = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1, 1))
+    worker_dict = utils.load_yaml(schema)
 
     helper = worker_help.worker_options(worker, worker_dict["mapping"][worker])
 
@@ -58,41 +57,12 @@ def get_default(sample, to):
     """
     Get default parset copy
     """
-    log.info(
-        "Dumping default configuration to {0:s} as requested. Goodbye!".format(to))
-    sample_config = os.path.join(pckgdir, "sample_configurations",
-                                 SAMPLE_CONFIGS[sample])
-    os.system('cp {0:s} {1:s}'.format(sample_config, to))
+    log.info("Dumping default configuration to {0:s} as requested. Goodbye!".format(to))
+    sample_config = os.path.join(pckgdir, "sample_configurations", SAMPLE_CONFIGS[sample])
+    os.system("cp {0:s} {1:s}".format(sample_config, to))
 
 
 def log_logo():
-    # print("WWWWWWWWMMWMMWWMMWWWWWMWWWWMMMMWWWWWWWWWWWWWWWWWWWWMMMMWWWWWWWWWWWWWWWWWWWWWWWWWMMMWWWWWMWWWWWWWWWWWWWNNNNWWMMWWMWWWWWWW")
-    # print("WWWWWWWMMWWWWWWMMWWWWWWWWWWMMWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWMMMMMMMWWWWWWWWWWWWWWWWWWWWWWWWMWWWWXkO0KWWWWWWWWWWWWW")
-    # print("WWMWWWWWWWWWWWKOxdollcok00KKXWWWWMMMMWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWNXKKXXXXXNWWWWWWWN0d::ckWMWWMMWWWWWWW")
-    # print("WMWWMWWWWWN0dc;'....',cxOOkkkO0XWMWWMMWWWWWX0xolllccc::::cllooddxxxxdddoooooooollcc;,,,;;;;;:cldxO0Ol,'.'lKWWWWMWWWWWWWW")
-    # print("MWWWWWWWXkc'.''...,ckKNWWWNXKOkk0XWWWWWWKxc,.....................................................',''''.,xNWWWWWWWWWWWWW")
-    # print("MWWWWWNk:'',;,'.,l0NWWWWWWMWWNKOkkKWWKxc'........................................................'''''''',dXWWMMWWWWWWWW")
-    # print("WWWWW0c'',;:;'.:kNWWWMWWWWWMWWWN0kdoc'....,ll'.....................................................''''''',kWWWMMWWWWWWW")
-    # print("MWWWO;.';cc,''cKWWWWWMMMMWWWWWWXx:.....:dkkx:...................................................';::;'.''''oNWWWWWWWWWWW")
-    # print("WWWO;.';cc;'.cKWWWWMMWWWWWWWWW0;...'..':l;.....................................................,oKNNKOd:,,:xXWWWWWWWWWWW")
-    # print("WWKc.';cc:'.;0WWWWWMMMWMMWWWWW0odOOc..........................',,'...................'.........cKWWWWWWN0KNWWWWWWWWWWWWW")
-    # print("MWx'.,:cc,.'dWMWWWWWWWMWMMMWMMWWWWk'....................;cdkO0KXXOxdoc,''''',;;:lokOOkc........,cxXWWWWWWWMWWWMMWWWWWWWW")
-    # print("MNl.';cc:'.;OWWWWWMWWWWWMWWMWWWWWO;...''.............:dOXWWMMWWWWMMWWNX0KK00KXXNWWWWWWXkl:,'.....':x0NWWWWMMWWMMMWWWWWWW")
-    # print("WKc.';cc:'.:KWWWWWWWMWWMWWMWWWWWO;...,x0kdoloolc:cox0NMWWWWMMWMMWWWMWWMWWWWMMWWWWWWWWWWWWNKOxoc:,'..,lONWWWWWMMMWWWWWWWW")
-    # print("WKc.';cc:'.:KWWMWWWWMMMWMMWWWMXo'....l0NWWWWWMWWWWMWWWMWMMWMMMMWWWWWMMWWMWWWWWWMWWWWWWMWWWWWWWWNk;.''.,xNWWWMMWWWWWWWWWW")
-    # print("WXl.';cc:'.;0MWWWWWWWWWWWMMWWWx.....:x0NWWWMMMWWWWMWWMWWWWMWWWMMMWWWMWWMMMWWMWWWWMWWMMMWWWWMWMWWNk:'''.;OWWWWWWMMWWWWWWW")
-    # print("WWd'.,ccc,.'xWMWWWWWWWWMWWMWWNo..;loxkKWWWMMWWMMMWWWMWWMWWWWWWWMMWWWWWMMMWWWWMWWMMWWMMWWMWWMWMMWMWX00OdxXWWWWMWWWWWWWWWW")
-    # print("WW0:.';cc;'.cKMWWWWWWWWWWWWWWWNOdxxdxOXWWMXOkkkkkkOKNWWMMWWMMN0kkOXWMWMMMWWN0kxxxk0XWMWWMWN0kkONWWWWMNOkkKWWWWWWWWWWWWWW")
-    # print("WWWk,.':cc,''oXWWWWWWWWWWWWWWWXo'..'cOWMWWO;..''''',:dKWWWWNNx,..'lXMWMMWKd:'.''''';dXMWMNd'..'oNMWWW0;..lNWWMMWWWWWWWWW")
-    # print("MWWNx,.';c:,.'oXWWMWWWMWWMMWWNd'.,,.'dNWWWO;..cO0Od,.'oNMWWkc,.,;''oXMMW0:..;dO00kooONWWNx,.,;.'dNMWW0;..lNWWWWMWWMWWWWW")
-    # print("WWWWNk;.',::,.'lKWWWWMWWWWWWNx,.,ol,.,xWWWO;..lXNXk;..cXWWO;..,xO:.'dNMNo..,kWWWWWWWWWWWk,.;kk;.,xWWW0;..lNWWWWWWMMMWWMW")
-    # print("WWWWWWKo,.';;,'.;xXWWWWMMWWWk,.';ll;'.;kWMO;..,:::,.'c0WW0:...:dkc'.,dNNl..;OWWWWWWWWWWk;.':xxc'.,kWW0;..lNWWWWWMWWWWMMM")
-    # print("WMWWMWWNOl,.',''.':d0NWWWWWO;.'',,,,,'.;OWO;..;ol;..:0WWKc.'',,,,,,'.,xNO:.';d0K0kod0NO;.',,,,,,'.;OW0;..cO0000KNMWWWWWW")
-    # print("WMWWMWWWWWKxc,'.....,cdOK0x;.'cOKKKKOc..:0O;..oNW0c'':OKl..:dOKKKK0o'.,kNKd:'.',''';dk:..l0KKKK0c'.;O0;..'''''':0MWWWWWW")
-    # print("WWWWWWWMWWWWNKkdlc:;;,:dOOxdxOXWWWWWWKkkkKXOkkKWWWXOkk0KOkkKWWWWWWWXOkk0NMWX0kxxxk0XWKkkOXWWWWWWXOkkKXOkkkkkkkkONMWWWMMW")
-    # print("WWWWWWWMMWWWWWWWWWNXKKXNNWWWMWWWWMWWWWWMWWWWMMWWWWWWWWMMMWMMWWWWWWWWMMWWWWWWMMWWWWWWMMMWWMWWMWWWWMMMMWMMMMWWMWWMMWWWWWWW")
-    # print("WWWWWWWMMWWMWWWWMMWWWWWWWWWWWWWWMWWWWWWWWMWWWWMWWWMWWWWMWWWMMWWWMWWWWMMWWWWWWWMMMMWWMMMWMWWMWWMWMMWWMWWMMWMWWMWWWWMMMWWW")
-
     print("""
 ........................................................................................................................
 ..........................................................................................................Z.~...........
@@ -130,60 +100,36 @@ def log_logo():
 ........................................................................................................................
 """)
 
-#     print("""
-# ................................................................................
-# ........................................................................?.......
-# ..............:~~:,....................................................Z$.......
-# ..........ZOOOOOO+==+=...........+7O88OOOI,......,+7~+?OOZZOZZZZZ=...ZZZZ.......
-# ........OOOOOOO.....,==+.....:88888OOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZZZZZ........
-# ......OOOIOOO.........+=+..88888888OOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZZZZZZ,......
-# .....ZOOIOOO...........==88888+I888OOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZZZZZZZ......
-# ....OOZI$OO............8888I.$DO888OOOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZ..ZZZZZ .....
-# ...$OO7IOO............88.+888888888OOOOOOOOOOOOOOOOOOOOOOZZZZZZZZO..............
-# ...OO7I$OO...............8888888888OOOOO8....I,OOOOOOOOO?=.OZZZZZZO.............
-# ...OOIIOO=..............D888888888OOOO......................,ZZZZZZZ:...........
-# ...OOIIOO..............I888+..:...Z..............................OZZZZ:.........
-# ...OOIIOO.............8888==.......................................ZZZZ.........
-# ...OOIIOO7............8888==........................................ZZZZ........
-# ...OOII7OO...............+=.....................................................
-# ....OOIIOO.............OOO=...$OOOOOO+.....OOO.....~OOOOOO....8OOZ....OOO.......
-# ....ZOZIIOO...........OOOOO...$OO...OOI...OOOOO...ZOO,..=O...,OOOO....OOO.......
-# .....OOOI$OO.........OOO=OO:..$OO...OOZ..OOO.OO,..OO~........OO.:OO...OOO.......
-# ......=OOO7OO?......:OOOOOOO..$OOOOOOO..=OOOOZOO..OOZ.......OOOOOOOO..OOO.......
-# ........ZOOOOOO+....OOZ$$$OOO.$OZ.,OO7..OO$$$$OOO.,OOOZOOO~$OO$$$$OO=.OOZOOOO...
-# ...........OOOOOO+=OOO.....OO$$OO...OOOZOO.....ZO?..:OOOO..OO,....~OO.OOOOOOO...
-# ................................................................................
-# ................................................................................
-#     """)
-
     log.info("Version {1:s} installed at {0:s}".format(pckgdir, str(__version__)))
 
 
-def execute_pipeline(options, config, block):
+def execute_pipeline(options, config):
     # setup piping infractructure to send messages to the parent
     workers_directory = os.path.join(caracal.pckgdir, "workers")
-    backend = config['general']['backend']
-    if options.container_tech and options.container_tech != 'default':
+    backend = config["general"]["backend"]
+    if options.container_tech and options.container_tech != "default":
         backend = options.container_tech
 
     def __run(debug=False):
-        """ Executes pipeline """
-#        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well -- nah
+        """Executes pipeline"""
+        #        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well -- nah
 
         try:
-            pipeline = WorkerAdministrator(config,
-                                           workers_directory,
-                                           add_all_first=False, prefix=options.general_prefix,
-                                           configFileName=options.config, singularity_image_dir=options.singularity_image_dir,
-                                           container_tech=backend, start_worker=options.start_worker,
-                                           end_worker=options.end_worker, generate_reports=not options.no_reports)
+            pipeline = WorkerAdministrator(
+                config,
+                workers_directory,
+                prefix=options.general_prefix,
+                configFileName=options.config,
+                singularity_image_dir=options.singularity_image_dir,
+                container_tech=backend,
+                start_worker=options.start_worker,
+                end_worker=options.end_worker,
+                generate_reports=not options.no_reports,
+            )
 
             if options.report:
                 pipeline.regenerate_reports()
             else:
-                # OMS: I don't think this is necessary, as it is not used here directly, and loaded on-demand
-                # # Obtain some divine knowledge
-                # cdb = mkct.calibrator_database()
                 pipeline.run_workers()
         except SystemExit as e:
             # if e.code != 0:
@@ -210,6 +156,7 @@ def execute_pipeline(options, config, block):
             sys.exit(1)  # indicate failure
 
     return __run(debug=options.debug)
+
 
 ############################################################################
 # Driver entrypoint
@@ -249,9 +196,11 @@ def main(argv):
             parser = config_parser.config_parser()
             _, version = parser.validate_config(sample_config_path)
             if version != SCHEMA_VERSION:
-                log.warning("Sample config file {} version is {}, current CARACal version is {}.".format(sample_config,
-                                                                                                         SCHEMA_VERSION,
-                                                                                                         version))
+                log.warning(
+                    "Sample config file {} version is {}, current CARACal version is {}.".format(
+                        sample_config, SCHEMA_VERSION, version
+                    )
+                )
                 log.warning("Proceeding anyway, but please notify the CARACal team to ship a newer sample config!")
         except config_parser.ConfigErrors as exc:
             log.error("{}, list of errors follows:".format(exc))
@@ -260,8 +209,11 @@ def main(argv):
                 for err in errors:
                     print("    - {}".format(err))
             sys.exit(1)  # indicate failure
-        log.info("Initializing {1} from config template '{0}' (schema version {2})".format(options.get_default_template,
-                                                                                           options.get_default, version))
+        log.info(
+            "Initializing {1} from config template '{0}' (schema version {2})".format(
+                options.get_default_template, options.get_default, version
+            )
+        )
         shutil.copyfile(sample_config_path, options.get_default)
         return
 
@@ -281,10 +233,14 @@ def main(argv):
         parser = config_parser.config_parser()
         config, version = parser.validate_config(config_file)
         if version != SCHEMA_VERSION:
-            log.warning("Config file {} schema version is {}, current CARACal version is {}".format(config_file,
-                                                                                                    SCHEMA_VERSION,
-                                                                                                    version))
-            log.warning("Will try to proceed anyway, but please be advised that configuration options may have changed.")
+            log.warning(
+                "Config file {} schema version is {}, current CARACal version is {}".format(
+                    config_file, SCHEMA_VERSION, version
+                )
+            )
+            log.warning(
+                "Will try to proceed anyway, but please be advised that configuration options may have changed."
+            )
         # populate parser with items from config
         parser.populate_parser(config)
         # reparse arguments
@@ -314,4 +270,4 @@ def main(argv):
     # Very good idea to print user options into the log before running:
     parser.log_options(config)
 
-    execute_pipeline(options, config, block=True)
+    execute_pipeline(options, config)

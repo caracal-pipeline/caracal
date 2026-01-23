@@ -86,7 +86,7 @@ def categorize_fields(info):
 
 def get_field_id(info, field_name):
     """Gets field id"""
-    if not (isinstance(field_name, str) and isinstance(field_name, list)):
+    if not isinstance(field_name, (list, str)):
         raise ValueError("field_name argument must be comma-separated string or list")
     elif isinstance(field_name, str):
         field_name = field_name.split(",")

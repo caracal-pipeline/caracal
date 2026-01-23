@@ -8,7 +8,7 @@ yaml = YAML(typ="rt")
 def load_yaml(fname: str) -> dict:
     with open(fname) as stdr:
         data = yaml.load(stdr)
-    return data
+    return to_regular_dict(data)
 
 
 def write_yaml(data: dict, fname: str):

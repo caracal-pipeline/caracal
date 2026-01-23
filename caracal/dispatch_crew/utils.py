@@ -3,11 +3,10 @@ import os.path
 import re
 from dataclasses import dataclass
 from dataclasses import field as dc_field
-from typing import List, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import astropy.io.fits as fitsio
 import numpy
-from numpy.typing import NDArray
 
 import caracal
 import caracal.dispatch_crew.caltables as mkct
@@ -20,7 +19,11 @@ np = numpy
 class Fields:
     ids: List[int]
     names: List[str]
-    dirs: List[NDArray] = dc_field(default_factory=np.ndarray)
+    dirs: List[Any] = dc_field(default_factory=list)
+    nfields: int = dc_field(init=False)
+
+    def __post_init__(self):
+        self.nfields = len(self.ids)
 
     def index(self, field_val: Union[str, int]) -> int:
         if isinstance(field_val, str):
@@ -83,15 +86,19 @@ def categorize_fields(info):
 
 def get_field_id(info, field_name):
     """Gets field id"""
-    if not isinstance(field_name, str) and not isinstance(field_name, list):
+    if not (isinstance(field_name, str) and isinstance(field_name, list)):
         raise ValueError("field_name argument must be comma-separated string or list")
+    elif isinstance(field_name, str):
+        field_name = field_name.split(",")
+
     if isinstance(info, str):
         info = utils.load_yaml(info)
+
     names = info["FIELD"]["NAME"]
     results = []
-    for fn in field_name.split(",") if isinstance(field_name, str) else field_name:
+    for fn in field_name:
         if fn not in names:
-            raise KeyError("Could not find field '{0:s}' in the field list {1:}".format(fn, names))
+            raise KeyError(f"Could not find field '{fn}' in the field list {names}")
         else:
             results.append(names.index(fn))
     return results
@@ -147,10 +154,17 @@ def select_gcal(info, targets, calibrators, mode="nearest"):
     return gcal
 
 
-def observed_longest(info, bpcals):
+def observed_longest(info: Dict, calfields: List[Union[str, int]]):
     """
-    Automatically select bandpass calibrator
+    Select field with longest observation length from a
+    MSUtils.summary() dictionary
+
+    :param info: Dictionary with information about the fields
+    :type info: Dict
+    :param calfields: List of fields
+    :type calfields: List[Union[str, int]]
     """
+
     if isinstance(info, str):
         info = utils.load_yaml(info)
 
@@ -162,10 +176,10 @@ def observed_longest(info, bpcals):
 
     most_time = 0
     field = None
-    for bpcal in bpcals:
-        idx = fields.index(bpcal)
-        bpcal = str(fields.ids[idx])
-        total_time = numpy.sum(list(info["SCAN"][bpcal].values()))
+    for calfield in calfields:
+        idx = fields.index(calfield)
+        _calfield = str(fields.ids[idx])
+        total_time = numpy.sum(list(info["SCAN"][_calfield].values()))
         if total_time > most_time:
             most_time = total_time
             field = fields.names[idx]
@@ -173,7 +187,21 @@ def observed_longest(info, bpcals):
     return field
 
 
-def field_observation_length(info, field, return_scans=False):
+def field_observation_length(
+    info: Dict, field: Union[str, int], return_scans: bool = False
+) -> Union[Tuple[float, List], float]:
+    """
+    Calculate observation for a field from a MSUtils.summary() dictionary
+
+    :param info: Dictionarty with field information
+    :type info: Dict
+    :param field: Field name or ID
+    :type field: Union[str, int]
+    :param return_scans: Return scans corresponding to field
+    :type return_scans: bool
+    :return: observation length in seconds or the observation length and the scan lengths
+    :rtype: Tuple[float, List] | float
+    """
     if isinstance(info, str):
         info = utils.load_yaml(info)
 
@@ -191,20 +219,21 @@ def field_observation_length(info, field, return_scans=False):
         return tobs
 
 
-def closeby(radec_1, radec_2, tol=2.9e-3):
+def closeby(radec_1: List[float], radec_2: List[float], tol: float = 2.9e-3) -> bool:
     """
-    Rough estimate whether two points on celestial sphere are closeby
+    Estimate whether two points on celestial sphere are to each other
 
-    Parameters:
-    radec_1 (pair of float): Right ascension and Declination of point 1 in rad
-    radec_2 (pair of float): Right ascension and Declination of point 2 in rad
-    tol: Tolerance in rad (default: 10 arcmin)
+    :param radec_1: Right ascension and Declination of point 1 in rad
+    :param radec_2: Right ascension and Declination of point 2 in rad
+    :param tol : Tolerance in rad (default: 10 arcmin)
+    :return: True | False
     """
-    if numpy.power((radec_1[0] - radec_2[0]) * numpy.cos((radec_1[0] - radec_2[0]) / 2), 2) + numpy.power(
-        radec_1[1] - radec_2[1], 2
-    ) < numpy.power(tol, 2):
+    ang_dist = angular_dist_pos_angle(radec_1[0], radec_1[1], radec_2[0], radec_2[1])[0]
+
+    if ang_dist < tol:
         return True
-    return False
+    else:
+        return False
 
 
 def hetfield(info, field, db, tol=2.9e-3):

@@ -30,7 +30,6 @@ psutil = "^5.9.4"
 pykwalify = "^1.8.0"
 progressbar2 = "^4.2.0"
 "ruamel.yaml" = "^0.17.21"
-pyyaml = "^6.0.1"
 astropy = [
     { version = "5.3.3", python = ">=3.9,<3.11"},
     {version= "^7.0", python=">=3.11,<=3.13"}
@@ -51,17 +50,12 @@ jinja2 = "*"
 requires = ["setuptools", "poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-#[tool.poetry.extras]
-#astropy = ["astropy"]
-#regions = ["regions"]
-#astroquery = ["astroquery"]
-#all = ["astropy", "regions", "astroquery"]
-
 [tool.poetry.group.dev]
 optional = true
 [tool.poetry.group.dev.dependencies]
 jupyter = "*"
 ruff = ">=0.12.9"
+pre-commit = ">=4.3.0"
 
 [tool.poetry.group.tests]
 optional = true

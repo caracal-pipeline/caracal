@@ -313,8 +313,7 @@ def find_in_casa_calibrators(info, field):
 
     if isinstance(info, str):
         info = utils.load_yaml(info)
-
-    db = utils._load(os.path.join(caracal.pckgdir, "/data/casa_calibrators.yml"))
+    db = utils.load_yaml(os.path.join(caracal.pckgdir, "data/casa_calibrators.yml"))
 
     dbc = mkct.casa_calibrator_database()
 

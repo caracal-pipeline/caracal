@@ -29,7 +29,8 @@ stimela = "^1.8.1"
 psutil = "^5.9.4"
 pykwalify = "^1.8.0"
 progressbar2 = "^4.2.0"
-"ruamel.yaml" = "^0.17.21"
+"ruamel.yaml" = ">=0.17.21"
+"ruamel.yaml.string" = ">=0.1" 
 astropy = [
     { version = "5.3.3", python = ">=3.9,<3.11"},
     {version= "^7.0", python=">=3.11,<=3.13"}

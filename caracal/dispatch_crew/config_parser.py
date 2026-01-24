@@ -4,10 +4,12 @@ import logging
 import os
 
 from pykwalify.core import Core
-from ruamel.yaml import safe_dump, safe_load
+from ruamel.yaml import YAML
 
 import caracal
 from caracal import utils
+
+string_yaml = YAML(typ=["rt", "string"], pure=True)
 
 pykwalify_logger = logging.getLogger("pykwalify.core")
 pykwalify_logger.propagate = False
@@ -325,7 +327,7 @@ class config_parser(object):
                     # optval is always a string, so...
                     # ...parse lists or dicts as yaml objects
                     if isinstance(optval, str) and (is_list or dtype is dict):
-                        optval = safe_load(optval)
+                        optval = string_yaml.load(optval)
                     # ...and typecast to expected type
                     option_value = typecast(optval)
                     if option_value != default_value:
@@ -336,7 +338,10 @@ class config_parser(object):
                 # lists and dicts expressed via yaml, except the any-type lists
                 if (is_list and dtype is not any) or dtype is dict:
                     self._parser.add_argument(
-                        "--" + option_name, help=argparse.SUPPRESS, type=str, default=safe_dump(default_value)
+                        "--" + option_name,
+                        help=argparse.SUPPRESS,
+                        type=str,
+                        default=string_yaml.dump_to_string(default_value),
                     )
                 # booleans have a choice
                 elif dtype is bool:

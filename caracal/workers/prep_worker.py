@@ -141,7 +141,7 @@ def worker(pipeline, recipe, config):
                     if version not in available_flagversions:
                         caracal.log.info(
                             f"The file {msname} does not yet have a flag version called 'caracal_legacy'."
-                            'Saving the current FLAG column to "caracal_legacy".'
+                            "Saving the current FLAG column to 'caracal_legacy'."
                         )
                         step = "save-legacy-{0:s}-ms{1:d}".format(wname, i)
                         manflags.add_cflags(pipeline, recipe, version, msname, cab_name=step)

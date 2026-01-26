@@ -147,7 +147,7 @@ def worker(pipeline, recipe, config):
                         manflags.add_cflags(pipeline, recipe, version, msname, cab_name=step)
                     else:
                         caracal.log.info(
-                            'The file {0:s} already has a flag version called "caracal_legacy". Restoring it.'.format(
+                            "The file {0:s} already has a flag version called 'caracal_legacy'. Restoring it.".format(
                                 msname
                             )
                         )

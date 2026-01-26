@@ -187,7 +187,7 @@ def worker(pipeline, recipe, config):
                         )
                         if version == "caracal_legacy":
                             caracal.log.error(
-                                'You may actually want to create that "caracal legacy" flag version with:'
+                                "You may actually want to create that 'caracal legacy' flag version with:"
                             )
                             caracal.log.error("    prepare_data: manage_flags: mode: save_legacy_flags")
                         raise RuntimeError("Flag version conflicts")

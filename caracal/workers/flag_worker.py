@@ -442,7 +442,7 @@ def worker(pipeline, recipe, config):
                     elif ensure and not found_valid_data[nn]:
                         caracal.log.warning(
                             "The following time selection has been made in the flag_antennas module of the "
-                            f'flagging worker: "{times[nn]}". This selection would result in no valid data in {msname}.'
+                            f"flagging worker: '{times[nn]}'. This selection would result in no valid data in {msname}."
                             " This would lead to the FATAL error ' The selected table has zero rows' in CASA/FLAGDATA."
                             f" To avoid this error the corresponding cab {antstep} will not be added to the "
                             "Stimela recipe of the flagging worker."

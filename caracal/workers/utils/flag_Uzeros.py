@@ -653,7 +653,7 @@ class UzeroFlagger:
         stdev = np.nanstd(inFFTData)
 
         if average == np.nan:
-            caracal.log.info("\tCannot calculate average, returing no flags.")
+            caracal.log.info("\tCannot calculate average, returning no flags.")
             return np.zeros(av.shape, dtype=bool)
 
         if stdev == np.nan:

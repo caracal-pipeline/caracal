@@ -406,7 +406,7 @@ def worker(pipeline, recipe, config):
                 )
             )
             caracal.log.error(
-                'Expected "nchan,chan0,chanw" (note the commas) where nchan is an'
+                "Expected 'nchan,chan0,chanw' (note the commas) where nchan is an"
                 " integer, and chan0 and chanw must include units appropriate for the chosen mstransform:mode"
             )
             raise caracal.ConfigurationError("can't parse mstransform:doppler:changrid setting")

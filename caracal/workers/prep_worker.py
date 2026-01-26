@@ -140,7 +140,7 @@ def worker(pipeline, recipe, config):
                     version = "caracal_legacy"
                     if version not in available_flagversions:
                         caracal.log.info(
-                            f'The file {msname} does not yet have a flag version called "caracal_legacy".'
+                            f"The file {msname} does not yet have a flag version called 'caracal_legacy'."
                             'Saving the current FLAG column to "caracal_legacy".'
                         )
                         step = "save-legacy-{0:s}-ms{1:d}".format(wname, i)

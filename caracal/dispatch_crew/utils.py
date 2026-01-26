@@ -221,7 +221,7 @@ def field_observation_length(
 
 def closeby(radec_1: List[float], radec_2: List[float], tol: float = 2.9e-3) -> bool:
     """
-    Estimate whether two points on celestial sphere are to each other
+    Estimate whether two points on the celestial sphere are close to each other
 
     :param radec_1: Right ascension and Declination of point 1 in rad
     :param radec_2: Right ascension and Declination of point 2 in rad

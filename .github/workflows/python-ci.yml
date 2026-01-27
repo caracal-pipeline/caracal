@@ -44,6 +44,8 @@ jobs:
           # exit-zero treats all errors as warnings
           poetry run flake8 . --count --exit-zero --max-complexity=10 --extend-ignore=E501 --statistics
 
+      - name: Test with Pytest
+        run: poetry run pytest tests/
       - name: Test caracal command
         run: |
           poetry run caracal --help

@@ -1,4 +1,5 @@
 import importlib
+
 from caracal import ExtraDependencyError
 
 
@@ -23,5 +24,7 @@ def extras(packages):
                 if not checkimport(package):
                     raise ExtraDependencyError(extra=package)
             return func(*args, **kw)
+
         return inner_func
+
     return mydecorator

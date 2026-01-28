@@ -173,6 +173,7 @@ caracal-selfcal:
                    not recipe.image-enable, true,
                    not recipe.extract-sources.enable, true,
                    recipe.iter==0, true, false)
+      skip_if_outputs: fresh
       params:
         compare_models: =LIST("{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}.lsm.html", steps.tigger-convert.output-model)
         tolerance: =recipe.aimfast.radius

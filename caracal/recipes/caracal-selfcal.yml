@@ -308,6 +308,7 @@ caracal-selfcal:
                    recipe.iter==steps.max-iter.max-iter, true,
                    not steps.time-freq-intervals.jones_type=='k-g-diag', true,
                    not recipe.selfcal.overwrite, true, false)
+      skip_if_outputs: fresh
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]

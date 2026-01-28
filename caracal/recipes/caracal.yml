@@ -58,7 +58,7 @@ mosaic-pointings:
     mosaic-image:
       info: "Make mosaic image of all imaged pointings"
       cab: mosaic-queen
-      skip_if_output: fresh
+      skip_if_outputs: fresh
       params:
         target_images: ["*MFS-{recipe.stokes}*image.fits"]
         input: "{recipe.dir-out-base}/image_{recipe.out-image-num}"

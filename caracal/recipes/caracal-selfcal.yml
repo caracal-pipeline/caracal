@@ -117,7 +117,7 @@ caracal-selfcal:
       skip: =IF(recipe.image-enable, IF(recipe.image-aimfast-enable, false, true), true)
       params:
         residual_image: =IF(recipe.image-algo=="wsclean", steps.image*.residual.mfs,
-          '{steps.image-pfb.base-dir}/{steps.image-pfb.image-name}_I_residual_time0000_mfs.fits')
+          '{steps.image-pfb.base-dir}/{steps.image-pfb.image-name}_I_main_residual_time0000_mfs.fits')
         outfile: '{steps.image*.prefix}-im-{info.suffix}.json'
 
     masking:
@@ -252,6 +252,7 @@ caracal-selfcal:
     selfcal-delay:
       info: Round of delay selfcal
       _use: lib.steps.quartical.k
+      skip_if_outputs: fresh
       skip: =CASES(not recipe.selfcal.enable, true,
                    recipe.iter==0, true,
                    recipe.iter==steps.max-iter.max-iter, true,
@@ -274,6 +275,7 @@ caracal-selfcal:
                    recipe.iter==0, true,
                    recipe.iter==steps.max-iter.max-iter, true,
                    not steps.time-freq-intervals.jones_type=='p', true, false)
+      skip_if_outputs: fresh
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
@@ -289,6 +291,7 @@ caracal-selfcal:
                    recipe.iter==0, true,
                    recipe.iter==steps.max-iter.max-iter, true,
                    not steps.time-freq-intervals.jones_type=='g', true, false)
+      skip_if_outputs: fresh
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
@@ -320,6 +323,7 @@ caracal-selfcal:
                    recipe.iter==0, true,
                    recipe.iter==steps.max-iter.max-iter, true,
                    not steps.time-freq-intervals.jones_type=='k-g', true, false)
+      skip_if_outputs: fresh
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
@@ -338,6 +342,7 @@ caracal-selfcal:
                    recipe.iter==steps.max-iter.max-iter, true,
                    not steps.time-freq-intervals.jones_type=='k-g-diag', true,
                    recipe.selfcal.overwrite, true, false)
+      skip_if_outputs: fresh
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]

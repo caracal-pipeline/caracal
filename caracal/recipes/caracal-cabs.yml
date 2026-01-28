@@ -24,6 +24,31 @@ cabs:
     inputs:
       input_ms.path:
         skip_freshness_checks: true
+      output.gain_directory:
+        dtype: Directory
+        writable: true
+        must_exist: false
+        path_policies:
+          write_parent: true
+      output.log_directory:
+        dtype: Directory
+        writable: true
+        must_exist: false
+    outputs:
+      gain_directory:
+        dtype: Directory
+        implicit: "{current.output.gain_directory}"
+        policies:
+          skip: true
+        must_exist: false
+        mkdir: true
+      log_directory:
+        dtype: Directory
+        implicit: "{current.output.log_directory}"
+        policies:
+          skip: true
+        must_exist: false
+        mkdir: true
 
   aimfast:
     inputs:

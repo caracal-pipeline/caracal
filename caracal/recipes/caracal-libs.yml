@@ -106,6 +106,7 @@ lib:
           dtype: str
           info:
             Weight column
+          default: WEIGHT_SPECTRUM
         sigma-column:
           dtype: str
           info:
@@ -199,7 +200,7 @@ lib:
           info:
             Alpha parameter for the l1 reweighting
         overwrite:
-          default: false
+          default: true
           aliases: ['*.overwrite']
         output-filename:
           default: '{current.base-dir}/{current.image-name}'

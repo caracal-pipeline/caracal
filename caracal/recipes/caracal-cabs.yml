@@ -28,12 +28,10 @@ cabs:
         dtype: Directory
         writable: true
         must_exist: false
+        mkdir: false
+        required: true
         path_policies:
           write_parent: true
-      output.log_directory:
-        dtype: Directory
-        writable: true
-        must_exist: false
     outputs:
       gain_directory:
         dtype: Directory
@@ -41,14 +39,8 @@ cabs:
         policies:
           skip: true
         must_exist: false
-        mkdir: true
-      log_directory:
-        dtype: Directory
-        implicit: "{current.output.log_directory}"
-        policies:
-          skip: true
-        must_exist: false
-        mkdir: true
+        mkdir: false
+        required: false
 
   aimfast:
     inputs:

@@ -67,7 +67,9 @@ caracal-selfcal:
 
     image-pfb:
       info: image and construct initial model image using the DATA/CORRECTED_DATA column
-      skip: =IF(recipe.image-enable, IF(recipe.image-algo=="pfb", false, true), true)
+      skip: =CASES(not recipe.image-enable, true,
+                  not recipe.image-algo=="pfb", true,
+                  recipe.iter==0, true, false)
       recipe: sara
       params:
         ms: =recipe.ms
@@ -114,7 +116,9 @@ caracal-selfcal:
       info: image quality assessment
       cab: aimfast
       skip_if_outputs: fresh
-      skip: =IF(recipe.image-enable, IF(recipe.image-aimfast-enable, false, true), true)
+      skip: =CASES(not recipe.image-enable, true,
+                  not recipe.image-aimfast-enable, true,
+                  recipe.image-algo=="pfb", recipe.iter==0, false)
       params:
         residual_image: =IF(recipe.image-algo=="wsclean", steps.image*.residual.mfs,
           '{steps.image-pfb.base-dir}/{steps.image-pfb.image-name}_I_main_residual_time0000_mfs.fits')
@@ -124,7 +128,9 @@ caracal-selfcal:
       info: generate a mask
       cab: breizorro
       skip_if_outputs: fresh
-      skip: =IF(recipe.image-enable, IF(recipe.image-cleanmask-method=="breizorro", false, true), true)
+      skip: =CASES(not recipe.image-enable, true,
+                  not recipe.image-cleanmask-method=="breizorro", true,
+                  recipe.image-algo=="pfb", recipe.iter==0, false)
       params:
         restored-image: =IF(recipe.image-algo=="wsclean", steps.image*.restored.mfs,
           '{steps.image-pfb.base-dir}/{steps.image-pfb.image-name}_I_main_image_time0000_mfs.fits')
@@ -142,7 +148,8 @@ caracal-selfcal:
       skip_if_outputs: exist
       skip: =CASES(not recipe.extract-sources.sourcefinder=='pybdsf', true,
                    not recipe.image-enable, true,
-                   not recipe.extract-sources.enable, true, false)
+                   not recipe.extract-sources.enable, true,
+                   recipe.image-algo=="pfb", recipe.iter==0, false)
       params:
         image: =IF(recipe.image-algo=="wsclean", steps.image*.restored.mfs,
           '{steps.image-pfb.base-dir}/{steps.image-pfb.image-name}_I_main_image_time0000_mfs.fits')
@@ -172,7 +179,8 @@ caracal-selfcal:
       skip: =CASES(not recipe.aimfast.plot, true,
                    not recipe.image-enable, true,
                    not recipe.extract-sources.enable, true,
-                   recipe.iter==0, true, false)
+                   recipe.iter==0, true,
+                   recipe.image-algo=="pfb", recipe.iter==1, false)
       skip_if_outputs: fresh
       params:
         compare_models: =LIST("{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}.lsm.html", steps.tigger-convert.output-model)
@@ -253,7 +261,6 @@ caracal-selfcal:
     selfcal-delay:
       info: Round of delay selfcal
       _use: lib.steps.quartical.k
-      skip_if_outputs: fresh
       skip: =CASES(not recipe.selfcal.enable, true,
                    recipe.iter==0, true,
                    recipe.iter==steps.max-iter.max-iter, true,
@@ -276,7 +283,6 @@ caracal-selfcal:
                    recipe.iter==0, true,
                    recipe.iter==steps.max-iter.max-iter, true,
                    not steps.time-freq-intervals.jones_type=='p', true, false)
-      skip_if_outputs: fresh
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
@@ -292,7 +298,6 @@ caracal-selfcal:
                    recipe.iter==0, true,
                    recipe.iter==steps.max-iter.max-iter, true,
                    not steps.time-freq-intervals.jones_type=='g', true, false)
-      skip_if_outputs: fresh
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
@@ -309,7 +314,6 @@ caracal-selfcal:
                    recipe.iter==steps.max-iter.max-iter, true,
                    not steps.time-freq-intervals.jones_type=='k-g-diag', true,
                    not recipe.selfcal.overwrite, true, false)
-      skip_if_outputs: fresh
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
@@ -325,7 +329,6 @@ caracal-selfcal:
                    recipe.iter==0, true,
                    recipe.iter==steps.max-iter.max-iter, true,
                    not steps.time-freq-intervals.jones_type=='k-g', true, false)
-      skip_if_outputs: fresh
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]
@@ -344,7 +347,6 @@ caracal-selfcal:
                    recipe.iter==steps.max-iter.max-iter, true,
                    not steps.time-freq-intervals.jones_type=='k-g-diag', true,
                    recipe.selfcal.overwrite, true, false)
-      skip_if_outputs: fresh
       params:
         input_model.recipe: MODEL_DATA
         output.columns: [CORRECTED_DATA]

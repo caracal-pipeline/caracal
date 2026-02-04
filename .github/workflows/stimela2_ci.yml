@@ -54,6 +54,7 @@ jobs:
       run: |
         stimela run ../caracal/caracal/recipes/caracal.yml caracal-selfcal \
           ms=T16R02C02-corr-scan3-chan512-t16-XXYY.ms \
+          image-nchans=3 \
           image-cell=2.5 \
           selfcal.mad-flag=true \
           ms-base=. \

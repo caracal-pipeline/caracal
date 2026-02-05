@@ -781,12 +781,6 @@ mapping:
                 type: bool
                 required: false
                 example: 'True'
-              fluxRange:
-                desc: Flux range to be used in the noise measurement. If set to negative or positive, only pixels with negative or positive flux will be used, respectively. This can be useful to prevent real emission or artefacts from affecting the noise measurement. If set to full, all pixels will be used in the noise measurement irrespective of their flux.
-                type: str
-                enum: ['positive', 'negative', 'full']
-                required: false
-                example: 'negative'
               kernelsXY:
                 desc: Comma-separated list of spatial Gaussian kernel sizes to apply. The individual kernel sizes must be floating-point values and denote the full width at half maximum (FWHM) of the Gaussian used to smooth the data in the spatial domain. A value of 0 means that no spatial smoothing will be applied.
                 seq:
@@ -799,17 +793,23 @@ mapping:
                   - type: int
                 required: false
                 example: '[0, 3, 7, 15]'
+              threshold:
+                desc: Flux threshold to be used by the S+C finder relative to the measured noise level in each smoothing iteration. In practice, values in the range of about 3 to 5 have proven to be usef$
+                type: float
+                required: false
+                example: '4.0'
               statistic:
                 desc: Standard deviation, median absolute deviation and Gaussian fitting to the flux histogram, respectively. Standard deviation is by far the fastest algorithm, but it is also the least robust one with respect to emission and artefacts in the data. Median absolute deviation and Gaussian fitting are far more robust in the presence of strong, extended emission or artefacts, but will usually take longer.
                 type: str
                 enum: ['std', 'mad', 'gauss']
                 required: false 
                 example: 'mad'
-              threshold:
-                desc: Flux threshold to be used by the S+C finder relative to the measured noise level in each smoothing iteration. In practice, values in the range of about 3 to 5 have proven to be useful in most situations, with lower values in that range requiring use of the reliability filter to reduce the number of false detections.
-                type: float
-                required: false 
-                example: '4.0'
+              fluxRange:
+                desc: Flux range to be used in the noise measurement. If set to negative or positive, only pixels with negative or positive flux will be used, respectively. This can be useful to prevent $
+                type: str
+                enum: ['positive', 'negative', 'full']
+                required: false
+                example: 'negative'
           linker:
             desc: The linker will be run to merge the pixels detected by the source finder into coherent detections that can then be parameterised and catalogued. If false, the pipeline will be terminated after source finding, and no catalogue or source products will be created. Disabling the linker can be useful if only the raw mask from the source finder is needed.
             type: map

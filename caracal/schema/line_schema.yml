@@ -734,34 +734,24 @@ mapping:
                 type: bool
                 required: false
                 example: 'True'
+              mode:
+                desc: If set to spectral, the noise level will be determined for each spectral channel by measuring the noise within each image plane. This is useful for data cubes where the noise varies$
+                type: str
+                enum: ['spectral', 'local']
+                required: false
+                example: 'spectral'
+              statistic:
+                desc: Standard deviation, median absolute deviation and Gaussian fitting to the flux histogram, respectively. Standard deviation is by far the fastest algorithm, but it is also the least $
+                type: str
+                enum: ['std', 'mad', 'gauss']
+                required: false
+                example: 'mad'
               fluxRange:
                 desc: Flux range to be used in the noise measurement. If set to negative or positive, only pixels with negative or positive flux will be used, respectively. This can be useful to prevent real emission or artefacts from affecting the noise measurement. If set to full, all pixels will be used in the noise measurement irrespective of their flux.
                 type: str
                 enum: ['positive', 'negative', 'full']
                 required: false
                 example: 'negative'
-              interpolate:
-                desc: If set to true, linear interpolation will be used to interpolate the measured local noise values in between grid points. If set to false, the entire grid cell will instead be filled with the measured noise value.
-                type: bool
-                required: false
-                example: 'False'
-              mode:
-                desc: If set to spectral, the noise level will be determined for each spectral channel by measuring the noise within each image plane. This is useful for data cubes where the noise varies with frequency. If set to local, the noise level will be measured locally in window running across the entire cube in all three dimensions. This is useful for data cubes with more complex noise variations, such as interferometric images with primary-beam correction applied.
-                type: str
-                enum: ['spectral', 'local']
-                required: false
-                example: 'spectral'
-              scfind:
-                desc: If true and global or local noise scaling is enabled, then noise scaling will additionally be applied after each smoothing operation in the S+C finder. This might be useful in certain situations where large-scale artefacts are present in interferometric data. However, this feature should be used with great caution, as it has the potential to do more harm than good.
-                type: bool
-                required: false 
-                example: 'False'
-              statistic:
-                desc: Standard deviation, median absolute deviation and Gaussian fitting to the flux histogram, respectively. Standard deviation is by far the fastest algorithm, but it is also the least robust one with respect to emission and artefacts in the data. Median absolute deviation and Gaussian fitting are far more robust in the presence of strong, extended emission or artefacts, but will usually take longer.
-                type: str
-                enum: ['std', 'mad', 'gauss']
-                required: false 
-                example: 'mad'
               windowXY:
                 desc: Standard deviation, median absolute deviation and Gaussian fitting to the flux histogram, respectively. Standard deviation is by far the fastest algorithm, but it is also the least robust one with respect to emission and artefacts in the data. Median absolute deviation and Gaussian fitting are far more robust in the presence of strong, extended emission or artefacts, but will usually take longer.
                 type: int
@@ -772,6 +762,16 @@ mapping:
                 type: int
                 required: false 
                 example: '15'
+              interpolate:
+                desc: If set to true, linear interpolation will be used to interpolate the measured local noise values in between grid points. If set to false, the entire grid cell will instead be filled$
+                type: bool
+                required: false
+                example: 'False'
+              scfind:
+                desc: If true and global or local noise scaling is enabled, then noise scaling will additionally be applied after each smoothing operation in the S+C finder. This might be useful in certa$
+                type: bool
+                required: false
+                example: 'False'
           scfind:
             desc: The S+C finder operates by iteratively smoothing the data cube with a user-defined set of smoothing kernels, measuring the noise level on each smoothing scale, and adding all pixels with an absolute flux above a user-defined relative threshold to the source detection mask. 
             type: map

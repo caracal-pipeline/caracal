@@ -735,13 +735,13 @@ mapping:
                 required: false
                 example: 'True'
               mode:
-                desc: If set to spectral, the noise level will be determined for each spectral channel by measuring the noise within each image plane. This is useful for data cubes where the noise varies$
+                desc: If set to spectral, the noise level will be determined for each spectral channel by measuring the noise within each image plane. This is useful for data cubes where the noise varies with frequency. If set to local, the noise level will be measured locally in window running across the entire cube in all three dimensions. This is useful for data cubes with more complex noise variations, such as interferometric images with primary-beam correction applied.
                 type: str
                 enum: ['spectral', 'local']
                 required: false
                 example: 'spectral'
               statistic:
-                desc: Standard deviation, median absolute deviation and Gaussian fitting to the flux histogram, respectively. Standard deviation is by far the fastest algorithm, but it is also the least $
+                desc: Standard deviation, median absolute deviation and Gaussian fitting to the flux histogram, respectively. Standard deviation is by far the fastest algorithm, but it is also the least robust one with respect to emission and artefacts in the data. Median absolute deviation and Gaussian fitting are far more robust in the presence of strong, extended emission or artefacts, but will usually take longer.
                 type: str
                 enum: ['std', 'mad', 'gauss']
                 required: false
@@ -763,12 +763,12 @@ mapping:
                 required: false 
                 example: '15'
               interpolate:
-                desc: If set to true, linear interpolation will be used to interpolate the measured local noise values in between grid points. If set to false, the entire grid cell will instead be filled$
+                desc: If set to true, linear interpolation will be used to interpolate the measured local noise values in between grid points. If set to false, the entire grid cell will instead be filled with the measured noise value.
                 type: bool
                 required: false
                 example: 'False'
               scfind:
-                desc: If true and global or local noise scaling is enabled, then noise scaling will additionally be applied after each smoothing operation in the S+C finder. This might be useful in certa$
+                desc: If true and global or local noise scaling is enabled, then noise scaling will additionally be applied after each smoothing operation in the S+C finder. This might be useful in certain situations where large-scale artefacts are present in interferometric data. However, this feature should be used with great caution, as it has the potential to do more harm than good.
                 type: bool
                 required: false
                 example: 'False'
@@ -794,7 +794,7 @@ mapping:
                 required: false
                 example: '[0, 3, 7, 15]'
               threshold:
-                desc: Flux threshold to be used by the S+C finder relative to the measured noise level in each smoothing iteration. In practice, values in the range of about 3 to 5 have proven to be usef$
+                desc: Flux threshold to be used by the S+C finder relative to the measured noise level in each smoothing iteration. In practice, values in the range of about 3 to 5 have proven to be useful in most situations, with lower values in that range requiring use of the reliability filter to reduce the number of false detections.
                 type: float
                 required: false
                 example: '4.0'
@@ -805,7 +805,7 @@ mapping:
                 required: false 
                 example: 'mad'
               fluxRange:
-                desc: Flux range to be used in the noise measurement. If set to negative or positive, only pixels with negative or positive flux will be used, respectively. This can be useful to prevent $
+                desc: Flux range to be used in the noise measurement. If set to negative or positive, only pixels with negative or positive flux will be used, respectively. This can be useful to prevent real emission or artefacts from affecting the noise measurement. If set to full, all pixels will be used in the noise measurement irrespective of their flux.
                 type: str
                 enum: ['positive', 'negative', 'full']
                 required: false
@@ -858,6 +858,21 @@ mapping:
                 type: bool
                 required: false
                 example: 'False'
+              threshold:
+                desc: Reliability threshold in the range of 0 to 1. Sources with a reliability below this threshold will be discarded.
+                type: float
+                required: false
+                example: '0.9'
+              scaleKernel:
+                desc: When estimating the density of positive and negative detections in parameter space, the size of the Gaussian kernel used in this process is determined from the covariance of the distribution of negative detections in parameter space. This parameter setting can be used to scale that kernel by a constant factor.
+                type: float
+                required: false
+                example: '0.4'
+              autoKernel:
+                desc: If set to true, SoFiA-2 will try to automatically determine the optimal reliability kernel scale factor. If the algorithm fails to converge, then the default value of scaleKernel will be used instead.
+                type: bool
+                required: false
+                example: 'False'
               minPixels:
                 desc: Minimum total number of spatial and spectral pixels within the source mask for detections to be considered reliable. The reliability of any detection with fewer pixels will be set to zero by default.
                 type: int
@@ -873,21 +888,6 @@ mapping:
                 type: bool
                 required: false
                 example: 'True'
-              scaleKernel:
-                desc: When estimating the density of positive and negative detections in parameter space, the size of the Gaussian kernel used in this process is determined from the covariance of the distribution of negative detections in parameter space. This parameter setting can be used to scale that kernel by a constant factor.
-                type: float
-                required: false
-                example: '0.4'
-              autoKernel:
-                desc: If set to true, SoFiA-2 will try to automatically determine the optimal reliability kernel scale factor. If the algorithm fails to converge, then the default value of scaleKernel will be used instead.
-                type: bool
-                required: false
-                example: 'False'
-              threshold:
-                desc: Reliability threshold in the range of 0 to 1. Sources with a reliability below this threshold will be discarded.
-                type: float
-                required: false
-                example: '0.9'
           dilation:
             desc: Source mask dilation whereby the mask of each source will be grown outwards until the resulting increase in integrated flux drops below a given threshold or the maximum number of iterations is reached.
             type: map

@@ -819,26 +819,6 @@ mapping:
                 type: bool
                 required: false
                 example: 'True'
-              maxSizeXY:
-                desc: Maximum size of sources in the spatial dimension in pixels. Sources that exceed this limit will be discarded by the linker. If the value is set to 0, maximum size filtering will be disabled.
-                type: int
-                required: false
-                example: '0'
-              maxSizeZ:
-                desc: Maximum size of sources in the spectral dimension in pixels. Sources that exceed this limit will be discarded by the linker. If the value is set to 0, maximum size filtering will be disabled.
-                type: int
-                required: false
-                example: '0'
-              minSizeXY:
-                desc: Minimum size of sources in the spatial dimension in pixels. Sources that fall below this limit will be discarded by the linker.
-                type: int
-                required: false
-                example: '2'
-              minSizeZ:
-                desc: Minimum size of sources in the spectral dimension in pixels. Sources that fall below this limit will be discarded by the linker.
-                type: int
-                required: false
-                example: '2'
               radiusXY:
                 desc: Maximum merging length in the spatial dimension. Pixels with a separation of up to this value will be merged into the same source.
                 type: int
@@ -849,6 +829,26 @@ mapping:
                 type: int
                 required: false
                 example: '3'
+              minSizeXY:
+                desc: Minimum size of sources in the spatial dimension in pixels. Sources that fall below this limit will be discarded by the linker.
+                type: int
+                required: false
+                example: '2'
+              minSizeZ:
+                desc: Minimum size of sources in the spectral dimension in pixels. Sources that fall below this limit will be discarded by the linker.
+                type: int
+                required: false
+                example: '2'
+              maxSizeXY:
+                desc: Maximum size of sources in the spatial dimension in pixels. Sources that exceed this limit will be discarded by the linker. If the value is set to 0, maximum size filtering will be disabled.
+                type: int
+                required: false
+                example: '0'
+              maxSizeZ:
+                desc: Maximum size of sources in the spectral dimension in pixels. Sources that exceed this limit will be discarded by the linker. If the value is set to 0, maximum size filtering will be disabled.
+                type: int
+                required: false
+                example: '0'
           reliability:
             desc: Determine the reliability of each detection with positive total flux by comparing the density of positive and negative detections in a three-dimensional parameter space. Sources below the specified reliability threshold will then be discarded. Note that this will require a sufficient number of negative detections, which can usually be achieved by setting the source finding threshold to somewhere around 3 to 4 times the noise level.
             type: map

@@ -1809,7 +1809,7 @@ def worker(pipeline, recipe, config):
                 image_opts.update(
                     {
                         "uvtaper": True,
-                        "outertaper": config["make_cube"]["taper"],
+                        "outertaper": str(config["make_cube"]["taper"]),
                     }
                 )
             recipe.add(

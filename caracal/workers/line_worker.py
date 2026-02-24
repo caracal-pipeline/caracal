@@ -1960,14 +1960,13 @@ def worker(pipeline, recipe, config):
                 "order": config["imcontsub"]["order"],
                 "sigma-clip": config["imcontsub"]["sigma_clip"],
             }
-
+            C = 2.99792458e8  # m/s
+            HI = 1.4204057517667e9  # Hz
             caracal.log.info("Image-plane continuum subtraction")
-
             # find where cubes generally are
-
+            
             dirlist = glob.glob("{0:s}/{1:s}/cube_*".format(pipeline.output, cube_dir))
             maxcube_dir = max([int(gi[-1]) for gi in dirlist])
-
             # Here starts the loop within the logic of the line worker.
             # Imcontsub will use subtract into the datacube in the cubes directory of maximum order.
             # caracal will look for the corresponding mask saved by sofia, if this does not exist
@@ -2019,7 +2018,7 @@ def worker(pipeline, recipe, config):
                             if "RESTFREQ" in hdul_cube:
                                 restfreq_cube = hdul_cube["RESTFREQ"]
                             else:
-                                restfreq_cube = config["imcontsub"]["rest-freq"] * 1e6
+                                restfreq_cube = config["imcontsub"]["rest_freq"] * 1e6
                             hdul_cube["cdelt3"] = -C * float(hdul_cube["cdelt3"]) / restfreq_cube
                             vel_range = abs(hdul_cube["cdelt3"] * hdul_cube["naxis3"] / 1e3)
                         else:
@@ -2062,8 +2061,7 @@ def worker(pipeline, recipe, config):
                     ),
                 ]
                 cubepath = next((path for path in cubepaths_to_check if os.path.exists(path)), None)
-                cubepath = cubepath.split("output/")[-1]
-
+                cubepath = cubepath.split(pipeline.output)[-1]
                 if cubepath:
                     caracal.log.info(
                         "Continum subtraction in the image plage on datacube {0:s} provided by user ".format(
@@ -2080,7 +2078,7 @@ def worker(pipeline, recipe, config):
                             if "RESTFREQ" in hdul_cube:
                                 restfreq_cube = hdul_cube["RESTFREQ"]
                             else:
-                                restfreq_cube = config["imcontsub"]["rest-freq"] * 1e6
+                                restfreq_cube = config["imcontsub"]["rest_freq"] * 1e6
                             hdul_cube["cdelt3"] = -C * float(hdul_cube["cdelt3"]) / restfreq_cube
                             vel_range = abs(hdul_cube["cdelt3"] * hdul_cube["naxis3"])
                         else:
@@ -2106,7 +2104,7 @@ def worker(pipeline, recipe, config):
                         "Mask provided by user, continuum subtraction will exclude the masked pixels from fitting."
                     )
 
-                    if os.path.exists("{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"])):
+                    if os.path.exists("{0:s}/masking/{1:s}".format(pipeline.output, config["imcontsub"]["mask_image"])):
                         imcontsub_opts.update(
                             {
                                 "mask-image": "{0:s}/{1:s}".format(

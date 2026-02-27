@@ -23,7 +23,7 @@ mapping:
             type: bool
             required: false
             example: 'False'
-          rewing_flags:
+          rewind_flags:
             desc: Rweind flags to state before selfcal. Not advised since the resumption must assume all previous steps were were done, some which will update the flags.
             type: bool
             example: 'False'

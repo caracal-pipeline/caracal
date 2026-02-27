@@ -68,7 +68,7 @@ def check_config(config, name):
             f"Selfcal will resume from iteration {config['start_iter']}."
             "This will be done without checking the products from preceeding steps"
         )
-        if resume_opts["rewind_flags"] is False and config["rewind_flags"]["enbale"]:
+        if resume_opts["rewind_flags"] is False and config["rewind_flags"]["enable"]:
             config["rewind_flags"]["enable"] = False
             caracal.log.warning(f"Unsetting {name}.rewind_flags.enable as requested in {name}.resume.rewind_flags")
     else:

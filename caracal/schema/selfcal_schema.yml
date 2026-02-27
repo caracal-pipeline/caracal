@@ -14,6 +14,19 @@ mapping:
         desc: Label of the .MS files to process.
         required: false
         example: 'corr'
+      resume:
+        type: map
+        desc: "Resume selfcal at given iteration. WARNING: This will not re-apply gains it assumes that the MS is ready for the relevant processing. Handle with care!"
+        mapping:
+          enable:
+            desc: Enable resume
+            type: bool
+            required: false
+            example: 'False'
+          rewing_flags:
+            desc: Rweind flags to state before selfcal. Not advised since the resumption must assume all previous steps were were done, some which will update the flags.
+            type: bool
+            example: 'False'
       rewind_flags:
         desc: Rewind flags of the input .MS file(s) to specified version. Note that this is not applied to .MS file(s) you might be running "transfer_apply_gains" on.
         type: map

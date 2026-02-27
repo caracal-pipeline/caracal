@@ -61,25 +61,32 @@ def check_config(config, name):
     Optional function to check consistency of config, invoked before the pipeline runs.
     its purpose is to log warnings, or raise exceptions on bad errors.
     """
-    # First let' check that we are not using transfer gains with meqtrees or not starting at the start with meqtrees
+    resume_opts = config["resume"]
+
+    if resume_opts["enable"] and int(config["start_iter"]) > 1:
+        caracal.log.warning(
+            f"Selfcal will resume from iteration {config['start_iter']}."
+            "This will be done without checking the products from preceeding steps"
+        )
+        if resume_opts["rewind_flags"] is False and config["rewind_flags"]:
+            config["rewind_flags"] = False
+            caracal.log.warning(f"Unsetting {name}.rewind_flags as requested in {name}.resume.rewind_flags")
+    else:
+        raise caracal.ConfigurationError(
+            "We cannot reapply Cubical calibration at a given step. Hence you will need to do a full selfcal loop."
+        )
+
+    # check that we are not using transfer gains with meqtrees or not starting at the start with meqtrees
     if config["calibrate_with"].lower() == "meqtrees":
         if config["transfer_apply_gains"]["enable"]:
             raise caracal.ConfigurationError(
                 "Gains cannot be interpolated with MeqTrees, please switch to CubiCal. Exiting."
             )
-        if int(config["start_iter"]) != 1:
-            raise caracal.ConfigurationError(
-                "We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop."
-            )
         if int(config["cal_cubical"]["chan_chunk"]) != -1:
             caracal.log.info("The channel chunk has no effect on MeqTrees.")
         if "Fslope" in config["calibrate"]["gain_matrix_type"]:
             caracal.log.info("Delay selfcal does not work with MeqTrees, please switch to Cubical. Exiting.")
-    else:
-        if int(config["start_iter"]) != 1:
-            raise caracal.ConfigurationError(
-                "We cannot reapply Cubical calibration at a given step. Hence you will need to do a full selfcal loop."
-            )
+
     # First check we are actually running a calibrate
     if config["calibrate"]["enable"]:
         # Running with a model shorter than the output type is dengerous with 'CORR_RES'

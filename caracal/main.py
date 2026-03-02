@@ -1,6 +1,6 @@
 import logging
 import os
-import pdb
+import pdb  # noqa: T100
 import shutil
 import sys
 import traceback
@@ -28,10 +28,6 @@ SAMPLE_CONFIGS = caracal.SAMPLE_CONFIGS = {
     "mosaic_basic": "mosaic_basic_config.yml",
 }
 SCHEMA = caracal.SCHEMA
-
-# x = lambda a: a**2
-
-bb = map(lambda x: x**2, range(10))  # Si!
 
 # Create the log object
 
@@ -142,7 +138,7 @@ def execute_pipeline(options, config):
             # if e.code != 0:
             log.error(f"A pipeline worker initiated sys.exit({e.code}). This is likely a bug, please report.")
             log.info(f"  More information can be found in the logfile at {caracal.CARACAL_LOG:s}")
-            log.info(f"  You are running version {__version__!s:s}", extra=dict(logfile_only=True))
+            log.info(f"  You are running version {__version__!s:s}", extra={"logfile_only": True})
             if debug:
                 log.warning("you are running with -debug enabled, dropping you into pdb. Use Ctrl+D to exit.")
                 pdb.post_mortem(sys.exc_info()[2])
@@ -150,12 +146,12 @@ def execute_pipeline(options, config):
 
         except KeyboardInterrupt:
             log.error("Ctrl+C received from user, shutting down. Goodbye!")
-        except Exception as exc:
-            log.error(f"{exc} [{type(exc).__name__}]", extra=dict(boldface=True))
+        except Exception as exc:  # noqa: BLE001
+            log.error(f"{exc} [{type(exc).__name__}]", extra={"boldface": True})
             log.info(f"  More information can be found in the logfile at {caracal.CARACAL_LOG:s}")
-            log.info(f"  You are running version {__version__!s:s}", extra=dict(logfile_only=True))
+            log.info(f"  You are running version {__version__!s:s}", extra={"logfile_only": True})
             for line in traceback.format_exc().splitlines():
-                log.error(line, extra=dict(traceback_report=True))
+                log.error(line, extra={"traceback_report": True})
             if debug:
                 log.warning("you are running with -debug enabled, dropping you into pdb. Use Ctrl+D to exit.")
                 pdb.post_mortem(sys.exc_info()[2])
@@ -247,7 +243,7 @@ def main(argv):
         # populate parser with items from config
         parser.populate_parser(config)
         # reparse arguments
-        caracal.log.info(f"Loading pipeline configuration from {config_file}", extra=dict(color="GREEN"))
+        caracal.log.info(f"Loading pipeline configuration from {config_file}", extra={"color": "GREEN"})
         options, config = parser.update_config_from_args(config, argv)
         # raise warning on schema version
     except config_parser.ConfigErrors as exc:
@@ -257,7 +253,7 @@ def main(argv):
             for err in errors:
                 print(f"    - {err}")
         sys.exit(1)  # indicate failure
-    except Exception as exc:
+    except Exception as exc:  # noqa BLE001
         traceback.print_exc()
         log.error(f"Error parsing arguments or configuration: {exc}")
         if options.debug:

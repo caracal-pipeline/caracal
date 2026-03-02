@@ -1997,11 +1997,11 @@ def worker(pipeline, recipe, config):
                             )
                     else:
                         caracal.log.info("Using mask defined by user {0:s}".format(config["imcontsub"]["mask_image"]))
-                        if os.path.exists("{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"])):
+                        if os.path.exists("{0:s}/masking/{1:s}".format(pipeline.output, config["imcontsub"]["mask_image"])):
                             imcontsub_opts.update(
                                 {
-                                    "mask-image": "{0:s}/{1:s}".format(
-                                        get_relative_path(pipeline.masking, pipeline), config["imcontsub"]["mask_image"]
+                                    "mask-image": "{0:s}/masking/{1:s}".format(
+                                        get_relative_path(pipeline.output, pipeline), config["imcontsub"]["mask_image"]
                                     )
                                 }
                             )

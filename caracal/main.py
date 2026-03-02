@@ -62,7 +62,7 @@ def get_default(sample, to):
     """
     log.info(f"Dumping default configuration to {to:s} as requested. Goodbye!")
     sample_config = os.path.join(pckgdir, "sample_configurations", SAMPLE_CONFIGS[sample])
-    os.system(f"cp {sample_config:s} {to:s}")
+    shutil.copyfile(sample_config, to)
 
 
 def log_logo():

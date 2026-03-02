@@ -103,9 +103,7 @@ def worker(pipeline, recipe, config):
                     )
             else:
                 if flags_before_worker in available_flagversions and not config["overwrite_flagvers"]:
-                    manflags.conflict(
-                        "would_overwrite_bw", pipeline, wname, msname, config, flags_before_worker, flags_after_worker
-                    )
+                    manflags.conflict("would_overwrite_bw", pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                 else:
                     substep = "save-{0:s}-ms{1:d}".format(flags_before_worker, msiter)
                     manflags.add_cflags(
@@ -180,9 +178,7 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label="{0:s}:: Flag out antennas with drifts in autocorrelation powerspectra ms={1:s}".format(
-                        step, msname
-                    ),
+                    label="{0:s}:: Flag out antennas with drifts in autocorrelation powerspectra ms={1:s}".format(step, msname),
                 )
 
             if pipeline.enable_task(config, "flag_autocorr"):
@@ -307,11 +303,7 @@ def worker(pipeline, recipe, config):
                             ]
                         edges = [edges for uu in range(len(spws))]
                         for ss in spws:
-                            if (
-                                found_units
-                                and ss < nspws
-                                and min(edges[ss][1], lasts[ss]) - max(edges[ss][0], firsts[ss]) > 0
-                            ):
+                            if found_units and ss < nspws and min(edges[ss][1], lasts[ss]) - max(edges[ss][0], firsts[ss]) > 0:
                                 found_valid_data = 1
                             elif not found_units and ss < nspws and edges[ss][0] >= 0 and edges[ss][1] < nrs[ss]:
                                 found_valid_data = 1
@@ -351,9 +343,7 @@ def worker(pipeline, recipe, config):
                         if (flag_start <= pipeline.enddate[i]) and (pipeline.startdate[i] <= flag_end):
                             found_valid_data = 1
                     else:
-                        raise ValueError(
-                            "You wanted to ensure a valid time range but we could not find a start and end time"
-                        )
+                        raise ValueError("You wanted to ensure a valid time range but we could not find a start and end time")
                     if not found_valid_data:
                         caracal.log.warning(
                             "The following time selection has been made in the flag_time module of the "
@@ -418,9 +408,7 @@ def worker(pipeline, recipe, config):
                             if (flag_start <= pipeline.enddate[i]) and (pipeline.startdate[i] <= flag_end):
                                 found_valid_data[nn] = 1
                     else:
-                        raise ValueError(
-                            "You wanted to ensure a valid time range but we could not find a start and end time"
-                        )
+                        raise ValueError("You wanted to ensure a valid time range but we could not find a start and end time")
                 for nn, antenna in enumerate(antennas):
                     antstep = "ant-{0:s}-ms{1:d}-antsel{2:d}".format(wname, i, nn)
                     if found_valid_data[nn] or not ensure:
@@ -501,42 +489,16 @@ def worker(pipeline, recipe, config):
                     if config["flag_rfi"]["aoflagger"]["ensure_valid"]:
                         ms_corr = msdict["CORR"]["CORR_TYPE"]
                         flag_corr = []
-                        with open(
-                            "{0:s}/{1:s}".format(pipeline.input, config["flag_rfi"]["aoflagger"]["strategy"])
-                        ) as stdr:
+                        with open("{0:s}/{1:s}".format(pipeline.input, config["flag_rfi"]["aoflagger"]["strategy"])) as stdr:
                             for ss in stdr.readlines():
                                 for pp in "xx,xy,yx,yy,stokes-i,stokes-q,stokes-u,stokes-v".split(","):
                                     if "<on-{0:s}>1</on-{0:s}>".format(pp) in ss:
                                         flag_corr.append(pp)
                         if (
-                            (
-                                "stokes-u" in flag_corr
-                                and (
-                                    ("XY" not in ms_corr and "RL" not in ms_corr)
-                                    or ("YX" not in ms_corr and "LR" not in ms_corr)
-                                )
-                            )
-                            or (
-                                "stokes-v" in flag_corr
-                                and (
-                                    ("XY" not in ms_corr and "RR" not in ms_corr)
-                                    or ("YX" not in ms_corr and "LL" not in ms_corr)
-                                )
-                            )
-                            or (
-                                "stokes-i" in flag_corr
-                                and (
-                                    ("XX" not in ms_corr and "RR" not in ms_corr)
-                                    or ("YY" not in ms_corr and "LL" not in ms_corr)
-                                )
-                            )
-                            or (
-                                "stokes-q" in flag_corr
-                                and (
-                                    ("XX" not in ms_corr and "RL" not in ms_corr)
-                                    or ("YY" not in ms_corr and "LR" not in ms_corr)
-                                )
-                            )
+                            ("stokes-u" in flag_corr and (("XY" not in ms_corr and "RL" not in ms_corr) or ("YX" not in ms_corr and "LR" not in ms_corr)))
+                            or ("stokes-v" in flag_corr and (("XY" not in ms_corr and "RR" not in ms_corr) or ("YX" not in ms_corr and "LL" not in ms_corr)))
+                            or ("stokes-i" in flag_corr and (("XX" not in ms_corr and "RR" not in ms_corr) or ("YY" not in ms_corr and "LL" not in ms_corr)))
+                            or ("stokes-q" in flag_corr and (("XX" not in ms_corr and "RL" not in ms_corr) or ("YY" not in ms_corr and "LR" not in ms_corr)))
                             or ("xy" in flag_corr and ("XY" not in ms_corr and "RL" not in ms_corr))
                             or ("yx" in flag_corr and ("YX" not in ms_corr and "LR" not in ms_corr))
                             or ("xx" in flag_corr and ("XX" not in ms_corr and "RR" not in ms_corr))
@@ -563,17 +525,13 @@ def worker(pipeline, recipe, config):
                             "column": config["flag_rfi"]["col"],
                             "fields": ",".join(map(str, field_ids)),
                             "strategy": config["flag_rfi"]["aoflagger"]["strategy"],
-                            "indirect-read": True
-                            if config["flag_rfi"]["aoflagger"]["readmode"] == "indirect"
-                            else False,
+                            "indirect-read": True if config["flag_rfi"]["aoflagger"]["readmode"] == "indirect" else False,
                             "memory-read": True if config["flag_rfi"]["aoflagger"]["readmode"] == "memory" else False,
                             "auto-read-mode": True if config["flag_rfi"]["aoflagger"]["readmode"] == "auto" else False,
                         },
                         input=pipeline.input,
                         output=pipeline.output,
-                        label="{0:s}:: AOFlagger auto-flagging flagging pass ms={1:s} fields={2:s}".format(
-                            step, msname, fields
-                        ),
+                        label="{0:s}:: AOFlagger auto-flagging flagging pass ms={1:s} fields={2:s}".format(step, msname, fields),
                     )
 
                 elif config["flag_rfi"]["flagger"] == "tricolour":
@@ -601,9 +559,7 @@ def worker(pipeline, recipe, config):
                         args,
                         input=pipeline.input,
                         output=pipeline.output,
-                        label="{0:s}:: Tricolour auto-flagging flagging pass ms={1:s} fields={2:s}".format(
-                            step, msname, fields
-                        ),
+                        label="{0:s}:: Tricolour auto-flagging flagging pass ms={1:s} fields={2:s}".format(step, msname, fields),
                     )
 
                 elif config["flag_rfi"]["flagger"] == "tfcrop":
@@ -626,9 +582,7 @@ def worker(pipeline, recipe, config):
                         },
                         input=pipeline.input,
                         output=pipeline.output,
-                        label="{0:s}:: Tfcrop auto-flagging flagging pass ms={1:s} fields={2:s}".format(
-                            step, msname, fields
-                        ),
+                        label="{0:s}:: Tfcrop auto-flagging flagging pass ms={1:s} fields={2:s}".format(step, msname, fields),
                     )
                 else:
                     raise RuntimeError("Flagger, {0:s} is not available. Options are 'aoflagger, tricolour, tfcrop'.")
@@ -641,9 +595,7 @@ def worker(pipeline, recipe, config):
                     field = ",".join(
                         map(
                             str,
-                            utils.get_field_id(
-                                msdict, manfields.get_field(pipeline, i, config["inspect"]["field"]).split(",")
-                            ),
+                            utils.get_field_id(msdict, manfields.get_field(pipeline, i, config["inspect"]["field"]).split(",")),
                         )
                     )
                 for f in field.split(","):
@@ -693,7 +645,5 @@ def worker(pipeline, recipe, config):
                 recipe.jobs = []
 
             substep = "save-{0:s}-ms{1:d}".format(flags_after_worker, msiter)
-            manflags.add_cflags(
-                pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config["overwrite_flagvers"]
-            )
+            manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config["overwrite_flagvers"])
             msiter += 1

@@ -31,11 +31,7 @@ def report_version():
     path = os.path.dirname(os.path.abspath(__file__))
     try:
         # work round possible unavailability of git -C
-        result = (
-            subprocess.check_output("cd %s; git describe --tags" % path, shell=True, stderr=subprocess.STDOUT)
-            .rstrip()
-            .decode()
-        )
+        result = subprocess.check_output("cd %s; git describe --tags" % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()
     except subprocess.CalledProcessError:
         result = None
     if result is not None and "fatal" not in result:
@@ -44,13 +40,7 @@ def report_version():
     else:
         # perhaps we are in a github without tags? Cook something up if so
         try:
-            result = (
-                subprocess.check_output(
-                    "cd %s; git rev-parse --short HEAD" % path, shell=True, stderr=subprocess.STDOUT
-                )
-                .rstrip()
-                .decode()
-            )
+            result = subprocess.check_output("cd %s; git rev-parse --short HEAD" % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()
         except subprocess.CalledProcessError:
             result = None
         if result is not None and "fatal" not in result:
@@ -90,9 +80,7 @@ class DelayedFileHandler(logging.handlers.MemoryHandler):
     and from then on logs continuously. This allows the log file to be switched at startup."""
 
     def __init__(self, filename=None, delay=True):
-        logging.handlers.MemoryHandler.__init__(
-            self, 100000, target=filename and logging.FileHandler(filename, delay=True)
-        )
+        logging.handlers.MemoryHandler.__init__(self, 100000, target=filename and logging.FileHandler(filename, delay=True))
         self._delay = delay
 
     def shouldFlush(self, record):
@@ -129,9 +117,7 @@ def create_logger():
 
     # init stimela logger as a sublogger
     if stimela.is_logger_initialized():
-        raise RuntimeError(
-            "Stimela logger already initialized. This is a bug: you must have an incompatible version of Stimela."
-        )
+        raise RuntimeError("Stimela logger already initialized. This is a bug: you must have an incompatible version of Stimela.")
 
     stimela.logger(STIMELA_LOGGER_NAME, propagate=True, console=False)
 

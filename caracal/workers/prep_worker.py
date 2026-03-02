@@ -78,16 +78,10 @@ def worker(pipeline, recipe, config):
                         caracal.log.info("Checking the CASA database of calibrators.")
                         fielddb, ra_corr, dec_corr = getfield_coords(msdict, f, dbc, tol=tol, tol_diff=tol_diff)
                     if fielddb is not None:
-                        caracal.log.info(
-                            f"The coordinates of calibrator {f} in the MS are offset. This is a known problem for"
-                            " some vintage MeerKAT MSs."
-                        )
+                        caracal.log.info(f"The coordinates of calibrator {f} in the MS are offset. This is a known problem for some vintage MeerKAT MSs.")
 
                         if pipeline.enable_task(config, "fixcalcoords"):
-                            caracal.log.info(
-                                "We will now attempt to fix this by rephasing the visibilities"
-                                " using the CASA fixvis task."
-                            )
+                            caracal.log.info("We will now attempt to fix this by rephasing the visibilities using the CASA fixvis task.")
                             ra_corr = float(ra_corr * 180.0 / np.pi)
                             dec_corr = float(dec_corr * 180.0 / np.pi)
 
@@ -139,18 +133,11 @@ def worker(pipeline, recipe, config):
                 if mode == "legacy":
                     version = "caracal_legacy"
                     if version not in available_flagversions:
-                        caracal.log.info(
-                            f"The file {msname} does not yet have a flag version called 'caracal_legacy'."
-                            "Saving the current FLAG column to 'caracal_legacy'."
-                        )
+                        caracal.log.info(f"The file {msname} does not yet have a flag version called 'caracal_legacy'.Saving the current FLAG column to 'caracal_legacy'.")
                         step = "save-legacy-{0:s}-ms{1:d}".format(wname, i)
                         manflags.add_cflags(pipeline, recipe, version, msname, cab_name=step)
                     else:
-                        caracal.log.info(
-                            "The file {0:s} already has a flag version called 'caracal_legacy'. Restoring it.".format(
-                                msname
-                            )
-                        )
+                        caracal.log.info("The file {0:s} already has a flag version called 'caracal_legacy'. Restoring it.".format(msname))
                         version = "caracal_legacy"
                         step = "restore-flags-{0:s}-ms{1:d}".format(wname, i)
                         manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=step)
@@ -180,15 +167,9 @@ def worker(pipeline, recipe, config):
                                 cab_name=step,
                             )
                     else:
-                        caracal.log.error(
-                            "The flag version {0:s} you asked to restore does not exist for {1:s}.".format(
-                                version, msname
-                            )
-                        )
+                        caracal.log.error("The flag version {0:s} you asked to restore does not exist for {1:s}.".format(version, msname))
                         if version == "caracal_legacy":
-                            caracal.log.error(
-                                "You may actually want to create that 'caracal legacy' flag version with:"
-                            )
+                            caracal.log.error("You may actually want to create that 'caracal legacy' flag version with:")
                             caracal.log.error("    prepare_data: manage_flags: mode: save_legacy_flags")
                         raise RuntimeError("Flag version conflicts")
 
@@ -213,8 +194,7 @@ def worker(pipeline, recipe, config):
                         step,
                         {
                             "vis": msname,
-                            "script": "vis = os.path.join(os.environ['MSDIR'], '{:s}')\n"
-                            "initweights(vis=vis, wtmode='ones', dowtsp=True)".format(msname),
+                            "script": "vis = os.path.join(os.environ['MSDIR'], '{:s}')\ninitweights(vis=vis, wtmode='ones', dowtsp=True)".format(msname),
                         },
                         input=pipeline.input,
                         output=pipeline.output,

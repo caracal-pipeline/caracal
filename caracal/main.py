@@ -199,10 +199,7 @@ def main(argv):
             parser = config_parser.config_parser()
             _, version = parser.validate_config(sample_config_path)
             if version != SCHEMA_VERSION:
-                log.warning(
-                    f"Sample config file {sample_config} version is {SCHEMA_VERSION},"
-                    " current CARACal version is {version}."
-                )
+                log.warning(f"Sample config file {sample_config} version is {SCHEMA_VERSION}, current CARACal version is {{version}}.")
                 log.warning("Proceeding anyway, but please notify the CARACal team to ship a newer sample config!")
         except config_parser.ConfigErrors as exc:
             log.error(f"{exc}, list of errors follows:")
@@ -211,10 +208,7 @@ def main(argv):
                 for err in errors:
                     print(f"    - {err}")
             sys.exit(1)  # indicate failure
-        log.info(
-            f"Initializing {options.get_default} from config template '{options.get_default_template}'"
-            " (schema version {version})"
-        )
+        log.info(f"Initializing {options.get_default} from config template '{options.get_default_template}' (schema version {{version}})")
         shutil.copyfile(sample_config_path, options.get_default)
         return
 
@@ -234,12 +228,8 @@ def main(argv):
         parser = config_parser.config_parser()
         config, version = parser.validate_config(config_file)
         if version != SCHEMA_VERSION:
-            log.warning(
-                f"Config file {config_file} schema version is {SCHEMA_VERSION}, current CARACal version is {version}"
-            )
-            log.warning(
-                "Will try to proceed anyway, but please be advised that configuration options may have changed."
-            )
+            log.warning(f"Config file {config_file} schema version is {SCHEMA_VERSION}, current CARACal version is {version}")
+            log.warning("Will try to proceed anyway, but please be advised that configuration options may have changed.")
         # populate parser with items from config
         parser.populate_parser(config)
         # reparse arguments

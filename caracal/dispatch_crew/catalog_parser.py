@@ -115,10 +115,7 @@ class catalog_parser:
                             )
 
                             if not valset:
-                                raise RuntimeError(
-                                    "Illegal line encountered while parsing"
-                                    "southern standard at line %d:'%s'" % (ln_no, line)
-                                )
+                                raise RuntimeError("Illegal line encountered while parsingsouthern standard at line %d:'%s'" % (ln_no, line))
                             else:
                                 cmd = "crystal"
                         else:
@@ -139,15 +136,7 @@ class catalog_parser:
                         r"(?P<s>[0-9]+(?:.[0-9]+)?)s$",
                         ra,
                     )
-                    ra = np.deg2rad(
-                        (
-                            float(valset_ra.group("h"))
-                            + float(valset_ra.group("m")) / 60.0
-                            + float(valset_ra.group("s")) / 3600
-                        )
-                        / 24.0
-                        * 360
-                    )
+                    ra = np.deg2rad((float(valset_ra.group("h")) + float(valset_ra.group("m")) / 60.0 + float(valset_ra.group("s")) / 3600) / 24.0 * 360)
                     decl = valset.group("decl")
                     valset_decl = re.match(
                         r"^(?P<d>[+\-]?[0-9]+)d"
@@ -159,11 +148,7 @@ class catalog_parser:
                     signum = 1.0
                     if decl[0] == "-":
                         signum = -1.0
-                    decl = np.deg2rad(
-                        float(valset_decl.group("d"))
-                        + signum * float(valset_decl.group("m")) / 60.0
-                        + signum * float(valset_decl.group("s")) / 3600.0
-                    )
+                    decl = np.deg2rad(float(valset_decl.group("d")) + signum * float(valset_decl.group("m")) / 60.0 + signum * float(valset_decl.group("s")) / 3600.0)
 
                     a = float(valset.group("a"))
                     b = float(valset.group("b"))
@@ -202,18 +187,14 @@ class catalog_parser:
                     src = valset.group("src")
                     dest = valset.group("dest")
                     if src not in calibrator_db:
-                        raise RuntimeError(
-                            "%s has not been defined. Cannot alias %s to %s in line %d" % (src, dest, src, ln_no)
-                        )
+                        raise RuntimeError("%s has not been defined. Cannot alias %s to %s in line %d" % (src, dest, src, ln_no))
                     calibrator_db[dest] = calibrator_db[src]
                 elif cmd == "lsm":
                     src = valset.group("src")
                     epoch = valset.group("epoch")
                     lsm = valset.group("lsmname")
                     if src not in calibrator_db:
-                        raise RuntimeError(
-                            f"{src} has not been defined. Cannot link lsm {lsm} to {dest} in line {ln_no}"
-                        )
+                        raise RuntimeError(f"{src} has not been defined. Cannot link lsm {lsm} to {dest} in line {ln_no}")
                     calibrator_db[name]["lsm"] = lsm
                     calibrator_db[name]["lsm_epoch"] = int(epoch)
                 elif cmd == "crystal":
@@ -221,10 +202,7 @@ class catalog_parser:
                     epoch = valset.group("epoch")
                     crystal = valset.group("lsmname")
                     if src not in calibrator_db:
-                        raise RuntimeError(
-                            "%s has not been defined. Cannot link to crystalball model"
-                            "%s to %s in line %d" % (src, crystal, dest, ln_no)
-                        )
+                        raise RuntimeError("%s has not been defined. Cannot link to crystalball model%s to %s in line %d" % (src, crystal, dest, ln_no))
                     calibrator_db[name]["crystal"] = crystal
                     calibrator_db[name]["lsm_epoch"] = int(epoch)
                 else:

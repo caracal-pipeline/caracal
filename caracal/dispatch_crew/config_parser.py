@@ -83,8 +83,7 @@ then edit the file to suit your needs.
         "--container-tech",
         choices=["default", "docker", "udocker", "singularity", "podman"],
         default="default",
-        help='Containerization backend to use. Default falls back on "general: backend" config setting, '
-        "or docker if not set.",
+        help='Containerization backend to use. Default falls back on "general: backend" config setting, or docker if not set.',
     )
 
     add("-wh", "--worker-help", metavar="WORKER", help="prints help for a particular worker, then exits")
@@ -200,9 +199,7 @@ class config_parser(object):
         config = {}
 
         for worker, variables in config_content.items():
-            config[worker] = self._process_subparser_tree(
-                variables, self._schemas[worker][1], base_section=worker, options=options
-            )
+            config[worker] = self._process_subparser_tree(variables, self._schemas[worker][1], base_section=worker, options=options)
         return options, config
 
     def _process_subparser_tree(
@@ -307,10 +304,7 @@ class config_parser(object):
                         if isinstance(default_value, str):
                             default_value = str2list(default_value)
                         if not isinstance(default_value, list):
-                            raise TypeError(
-                                f"default value for '{option_name}' is not configured correctly."
-                                " This is a bug, please report!"
-                            )
+                            raise TypeError(f"default value for '{option_name}' is not configured correctly. This is a bug, please report!")
             else:
                 # for int, float, bool, str
                 dtype = __builtins__[subVars["type"]]
@@ -353,9 +347,7 @@ class config_parser(object):
                     )
                 # all others passed with native dtype
                 else:
-                    self._parser.add_argument(
-                        "--" + option_name, help=argparse.SUPPRESS, type=dtype, default=default_value
-                    )
+                    self._parser.add_argument("--" + option_name, help=argparse.SUPPRESS, type=dtype, default=default_value)
 
         return groups
 

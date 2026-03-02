@@ -133,9 +133,7 @@ def worker(pipeline, recipe, config):
             ra_deg[i] = ra2deg(tab["RAJ2000"][i])
             tab["DEJ2000"][i] = tab["DEJ2000"][i].replace(" ", ":")
             dec_deg[i] = dec2deg(tab["DEJ2000"][i])
-            flux_corr[i], pix_x[i], pix_y[i] = nvss_pbcorr(
-                ra_deg[i], dec_deg[i], centre, cell, imsize, obs_freq, tab["S1.4"][i]
-            )
+            flux_corr[i], pix_x[i], pix_y[i] = nvss_pbcorr(ra_deg[i], dec_deg[i], centre, cell, imsize, obs_freq, tab["S1.4"][i])
 
         ra_deg = Column(ra_deg)
         dec_deg = Column(dec_deg)

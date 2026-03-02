@@ -1828,14 +1828,6 @@ def worker(pipeline, recipe, config):
                     input='/'.join(simage_cube_list[uu].split('/')[:-1]),
                     output='/'.join(simage_cube_list[uu].split('/')[:-1]) + '/sofia',
                     label='{0:s}:: Make SoFiA-2 mask and images for cube {1:s}'.format(step, simage_cube_list[uu]))
-       # Again, in some cases this should run once
-        if rancsonce:
-            pass
-        else:
-            if pipeline.enable_task(config, 'imcontsub'):
-
-        recipe.run()
-        recipe.jobs = []
 
         if pipeline.enable_task(config, "imcontsub"):
             imcontsub_opts = {
@@ -1920,8 +1912,7 @@ def worker(pipeline, recipe, config):
                 cubepaths_to_check = [
                     "{0:s}/{1:s}".format(pipeline.output, config["imcontsub"]["input_cube"]),
                     "{0:s}/cubes/{1:s}".format(pipeline.output, config["imcontsub"]["input_cube"]),
-                    "{0:s}/cubes/cube_{1:d}/{2:s}".format(pipeline.output, maxcube_dir, config["imcontsub"]["input_cube"]),
-                ]
+                    "{0:s}/cubes/cube_{1:d}/{2:s}".format(pipeline.output, maxcube_dir, config["imcontsub"]["input_cube"]),]
                 cubepath = next((path for path in cubepaths_to_check if os.path.exists(path)), None)
                 cubepath = cubepath.split("output/")[-1]
 

@@ -1,59 +1,24 @@
+import logging
 import logging.handlers
 import os
 import subprocess
-import logging
-from time import gmtime, strftime
+from importlib.metadata import PackageNotFoundError, version
+
 import stimela
-import stimela.utils
-from importlib.metadata import version, PackageNotFoundError
+
+from caracal import exceptions
+
+CaracalException = exceptions.CaracalException
+PlayingWithFire = exceptions.PlayingWithFire
+UserInputError = exceptions.UserInputError
+ConfigurationError = exceptions.ConfigurationError
+BadDataError = exceptions.BadDataError
+ExtraDependencyError = exceptions.ExtraDependencyError
+
 
 ##############################################################################
 # Globals
 ##############################################################################
-
-
-class CaracalException(RuntimeError):
-    """Base class for pipeline logic errors"""
-    pass
-
-
-class PlayingWithFire(RuntimeError):
-    """Silly settings chosen."""
-    pass
-
-
-class UserInputError(CaracalException):
-    """Something wrong with user input"""
-    pass
-
-
-class ConfigurationError(CaracalException):
-    """Something wrong with the configuration"""
-    pass
-
-
-class BadDataError(CaracalException):
-    """Something wrong with the data"""
-    pass
-
-
-class ExtraDependencyError(Exception):
-    """Optional dependencies are missing"""
-
-    def __init__(self, message=None, extra=None):
-        
-        default_message = "Pipeline run requires optional dependencies, please re-install caracal as: \n 'pip install caracal[all]'"
-        if extra:
-            extra = f"or, install the missing package as: \n 'pip install caracal[{extra}]'" 
-        else:
-            extra = ""
-
-        if message:
-            self.message = message
-        else:
-            self.message = default_message + extra
-
-        super().__init__(self.message)
 
 
 def report_version():
@@ -66,22 +31,20 @@ def report_version():
     path = os.path.dirname(os.path.abspath(__file__))
     try:
         # work round possible unavailability of git -C
-        result = subprocess.check_output(
-            'cd %s; git describe --tags' % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()
+        result = subprocess.check_output("cd %s; git describe --tags" % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()
     except subprocess.CalledProcessError:
         result = None
-    if result is not None and 'fatal' not in result:
+    if result is not None and "fatal" not in result:
         # will succeed if tags exist
         return result
     else:
         # perhaps we are in a github without tags? Cook something up if so
         try:
-            result = subprocess.check_output(
-                'cd %s; git rev-parse --short HEAD' % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()
+            result = subprocess.check_output("cd %s; git rev-parse --short HEAD" % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()
         except subprocess.CalledProcessError:
             result = None
-        if result is not None and 'fatal' not in result:
-            return __version__ + '-' + result
+        if result is not None and "fatal" not in result:
+            return __version__ + "-" + result
         else:
             # we are probably in an installed version
             return __version__
@@ -94,10 +57,8 @@ PCKGDIR = pckgdir = os.path.dirname(os.path.abspath(__file__))
 # this gets renamed once the config is read in
 CARACAL_LOG = "log-caracal.txt"
 
-DEFAULT_CONFIG = os.path.join(
-    PCKGDIR, "sample_configurations", "minimalConfig.yml")
-SCHEMA = os.path.join(
-    PCKGDIR, "schema", "schema-{0:s}.yml".format(__version__))
+DEFAULT_CONFIG = os.path.join(PCKGDIR, "sample_configurations", "minimalConfig.yml")
+SCHEMA = os.path.join(PCKGDIR, "schema", "schema-{0:s}.yml".format(__version__))
 
 
 SAMPLE_CONFIGS = {
@@ -125,7 +86,7 @@ class DelayedFileHandler(logging.handlers.MemoryHandler):
     def shouldFlush(self, record):
         return not self._delay
 
-    def setFilename(self, filename, delay=False):
+    def setFilename(self, filename, delay=False):  # noqa: C0116,C0103
         self._delay = delay
         target = logging.FileHandler(filename)
         target.setFormatter(self.formatter)
@@ -148,7 +109,7 @@ log_filehandler = log_console_handler = log_console_formatter = None
 
 
 def create_logger():
-    """ Creates logger and associated objects. Called upon import"""
+    """Creates logger and associated objects. Called upon import"""
     global log, log_filehandler
 
     log.setLevel(logging.DEBUG)
@@ -170,10 +131,10 @@ def create_logger():
 
 def init_console_logging(boring=False, debug=False):
     """Sets up console logging"""
-    global log_console_handler, log_console_formatter, log_filehandler, DEBUG
+    global log_console_handler, log_console_formatter, log_filehandler, DEBUG  # noqa: W062
 
     DEBUG = debug
-    log_filehandler.setLevel(logging.DEBUG if debug else logging.INFO)
+    log_filehandler.setLevel(logging.DEBUG if debug else logging.INFO)  # noqa
 
     log_console_formatter = stimela.log_boring_formatter if boring else stimela.log_colourful_formatter
 
@@ -184,28 +145,30 @@ def init_console_logging(boring=False, debug=False):
     # add filter to console handler:
     # (the logfile still gets all the messages)
     if not debug:
+
         def _console_filter(rec):
             # traceback dumps don't go to cosnole
-            if getattr(rec, 'traceback_report', None) or getattr(rec, 'logfile_only', None):
+            if getattr(rec, "traceback_report", None) or getattr(rec, "logfile_only", None):
                 return False
             # for Stimela messages at level <=INFO, only allow through subprocess  output and job state
             if rec.name.startswith(STIMELA_LOGGER_NAME) and rec.levelno <= logging.INFO:
-                if hasattr(rec, 'stimela_subprocess_output') and rec.stimela_subprocess_output[1] != 'start':
+                if hasattr(rec, "stimela_subprocess_output") and rec.stimela_subprocess_output[1] != "start":
                     return True
-                elif hasattr(rec, 'stimela_job_state'):
+                elif hasattr(rec, "stimela_job_state"):
                     return True
                 return False
             return True
+
         log_console_handler.addFilter(_console_filter)
 
     log.addHandler(log_console_handler)
 
 
-def remove_log_handler(hndl):
+def remove_log_handler(hndl):  # noqa: C0116
     log.removeHandler(hndl)
 
 
-def add_log_handler(hndl):
+def add_log_handler(hndl):  # noqa: C0116
     log.addHandler(hndl)
 
 

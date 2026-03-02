@@ -1,5 +1,5 @@
-import sys
 import logging
+import sys
 from io import StringIO
 
 
@@ -18,12 +18,19 @@ class stream_director(object):
 
             def is_not_log(self, line):
                 # avoid recursive writeout by checking for a tag
-                return line.find("caracal -") < 0 and line.find("INFO -") < 0 and \
-                    line.find("ERROR -") < 0 and line.find("WARNING -") < 0 and \
-                    line.find("DEBUG -") < 0 and line.find("CRITICAL -") < 0 and \
-                    line.find("INFO:caracal") < 0 and line.find("ERROR:caracal") < 0 and \
-                    line.find("WARNING:caracal") < 0 and line.find("DEBUG:caracal") < 0 and \
-                    line.find("CRITICAL:caracal") < 0
+                return (
+                    line.find("caracal -") < 0
+                    and line.find("INFO -") < 0
+                    and line.find("ERROR -") < 0
+                    and line.find("WARNING -") < 0
+                    and line.find("DEBUG -") < 0
+                    and line.find("CRITICAL -") < 0
+                    and line.find("INFO:caracal") < 0
+                    and line.find("ERROR:caracal") < 0
+                    and line.find("WARNING:caracal") < 0
+                    and line.find("DEBUG:caracal") < 0
+                    and line.find("CRITICAL:caracal") < 0
+                )
 
             def writelines(self, lines):
                 StringIO.writelines(self, lines)
@@ -38,10 +45,8 @@ class stream_director(object):
                     if self.is_not_log(line):
                         self.logger.log(self.log_level, line.rstrip())
 
-        self.__stdout_logger = stream_logger(
-            logger, logging.INFO, fileno=sys.stdout.fileno())
-        self.__stderr_logger = stream_logger(
-            logger, logging.CRITICAL, fileno=sys.stderr.fileno())
+        self.__stdout_logger = stream_logger(logger, logging.INFO, fileno=sys.stdout.fileno())
+        self.__stderr_logger = stream_logger(logger, logging.CRITICAL, fileno=sys.stderr.fileno())
 
     def __enter__(self):
         self.old_stdout, self.old_stderr = sys.stdout, sys.stderr
@@ -51,6 +56,6 @@ class stream_director(object):
         sys.stdout = self.__stdout_logger
         sys.stderr = self.__stderr_logger
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self):
         sys.stdout = self.old_stdout
         sys.stderr = self.old_stderr

@@ -1,69 +1,73 @@
-[tool.poetry]
+[project]
 name = "caracal"
-version = "1.2.0"
+version = "1.2.1"
 description = "Containerized Automated Radio Astronomy Calibration"
-authors = ["The CaraCAL Team <caracal-info@googlegroups.com>"]
+authors = [
+    { name = "The CaraCAL Team", email = "caracal-info@googlegroups.com" },
+]
+requires-python = ">=3.9,<3.13"
 readme = "README.rst"
-homepage = "https://github.com/caracal-pipeline/caracal"
-repository = "https://github.com/caracal-pipeline/caracal"
+license = "GPL-2.0"
+license-files = ["LICENSE"]
 keywords = ["Astronomy", "Visualisation", "Pipelines"]
 classifiers = [
-        "Development Status :: 5 - Production/Stable",
-        "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
-        "Operating System :: POSIX :: Linux",
-        "Programming Language :: Python",
-        "Topic :: Scientific/Engineering :: Astronomy"
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering :: Astronomy",
 ]
-license = "GNU GPL v2"
-packages = [
-    {include = "caracal"},
+dependencies = [
+    "stimela>=1.8.1,<2",
+    "psutil>=5.9.4,<6",
+    "pykwalify>=1.8.0,<2",
+    "progressbar2>=4.2.0,<5",
+    "ruamel.yaml>=0.17.21,<1",
+    "ruamel.yaml.string>=0.1,<1",
+    "astropy==5.3.3; python_version >= '3.9' and python_version < '3.11'",
+    "astropy>=7.0,<8; python_version >= '3.11' and python_version < '3.13'",
+    "scipy>=1.10,<2",
+    "regions>=0.7,<1",
+    "astroquery>=0.4,<1",
+    "numpy>=1.23,<3",
+    "nbconvert>=6,<8",
+    "radiopadre-client>=1,<2",
+    "python-casacore>=3,<4",
+    "matplotlib>=3.7,<4",
+    "jinja2>=3.1,<4",
 ]
 
-[tool.poetry.scripts]
+[project.urls]
+Homepage = "https://github.com/caracal-pipeline/caracal"
+Repository = "https://github.com/caracal-pipeline/caracal"
+
+[project.scripts]
 caracal = "caracal.main:driver"
 
-[tool.poetry.dependencies]
-python = ">=3.9,<3.13"
-stimela = "^1.8.0"
-psutil = "^5.9.4"
-pykwalify = "^1.8.0"
-progressbar2 = "^4.2.0"
-"ruamel.yaml" = "^0.17.21"
-pyyaml = "^6.0.1"
-astropy = "^5.3.3"
-scipy = "*"
-regions = "*"
-astroquery = "*"
-numpy = "<2.0"
+[dependency-groups]
+dev = [
+    "jupyter",
+    "ruff>=0.12.9",
+    "pre-commit>=4.3.0",
+]
+tests = [
+    "pytest>=7.1.3,<8",
+    "flake8>=5.0.0,<6",
+    "ruff>=0.12.9",
+]
+docs = [
+    "Sphinx>=4.0.1,<5",
+    "sphinx-copybutton>=0.5.0,<0.6",
+    "furo>=2022.9.15,<2023",
+]
 
-# These are not essentail for the pipeline to run, so better to not pin the versions.
-nbconvert = "*"
-radiopadre-client = "*"
-python-casacore = "*"
-matplotlib = "*"
-jinja2 = "*"
+[tool.hatch.build.targets.sdist]
+include = ["caracal"]
+
+[tool.hatch.build.targets.wheel]
+include = ["caracal"]
 
 [build-system]
-requires = ["setuptools", "poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.extras]
-astropy = ["astropy"]
-regions = ["regions"]
-astroquery = ["astroquery"]
-all = ["astropy", "regions", "astroquery"]
-
-
-[tool.poetry.group.tests]
-optional = true
-[tool.poetry.group.tests.dependencies]
-pytest = "^7.1.3"
-flake8 = "^5.0.0"
-
-[tool.poetry.group.docs]
-optional = true
-[tool.poetry.group.docs.dependencies]
-Sphinx = "^4.0.1"
-sphinx-copybutton = "^0.5.0"
-furo = "^2022.9.15"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

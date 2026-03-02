@@ -1,14 +1,8 @@
 import os
-import sys
+from collections import namedtuple
 from collections.abc import Mapping, Sequence
-from collections import OrderedDict, namedtuple
-import itertools
-import yaml
-from stimela.dismissable import dismissable as sdm
-from caracal import log, ConfigurationError
-import caracal.dispatch_crew.utils as utils
-import numpy as np
-import json
+
+from caracal import ConfigurationError, log
 
 
 def check_config(config, name):
@@ -32,8 +26,7 @@ def l2d(ins):
     if not isinstance(ins, list):
         ins = ins.split()
 
-    keys = [(i, _) for i, _ in enumerate(ins)
-            if _.startswith("-") and not _.lstrip("-").isdigit()]
+    keys = [(i, _) for i, _ in enumerate(ins) if _.startswith("-") and not _.lstrip("-").isdigit()]
     test = {}
 
     for i, (kidx, key) in enumerate(keys, start=1):
@@ -67,8 +60,7 @@ def check_params(params):
     params = {k: v for k, v in params.items() if v not in (None, "", " ")}
 
     # if any values are python lists, convert them to comma separated list
-    params = {k: (",".join(v) if isinstance(v, list) else v)
-              for k, v in params.items()}
+    params = {k: (",".join(v) if isinstance(v, list) else v) for k, v in params.items()}
 
     return params
 
@@ -113,16 +105,22 @@ def group_configs(configs):
         plot_type: contains the types of plots available and their settings
         plot_params: contains the plotting tools' parameters
     """
-    general = ["enable", "label_in", "label_plot", "dirname",
-               "standard_plotter"]
+    general = ["enable", "label_in", "label_plot", "dirname", "standard_plotter"]
     general = create_param_group("general", general, configs)
 
-    plot_type = ["amp_ant", "amp_chan", "amp_phase", "amp_scan", "amp_uvwave",
-                 "phase_chan", "phase_uvwave", "real_imag"]
+    plot_type = [
+        "amp_ant",
+        "amp_chan",
+        "amp_phase",
+        "amp_scan",
+        "amp_uvwave",
+        "phase_chan",
+        "phase_uvwave",
+        "real_imag",
+    ]
     plot_type = create_param_group("plot_type", plot_type, configs)
 
-    plot_params = ["field", "correlation", "mem_limit", "num_cores",
-                   "uvrange"]
+    plot_params = ["field", "correlation", "mem_limit", "num_cores", "uvrange"]
     plot_params = create_param_group("plot_params", plot_params, configs)
 
     return (general, plot_type, plot_params)
@@ -159,50 +157,23 @@ def check_data(col):
         "data": "DATA",
         "model": "MODEL_DATA",
         "scan": "SCAN_NUMBER",
-        "antenna1": "ANTENNA1"
+        "antenna1": "ANTENNA1",
     }
     return cols.get(col, col)
 
 
 def get_xy(plot_name):
-    """ Return x and y axis names given a plot name e.g amp_scan"""
+    """Return x and y axis names given a plot name e.g amp_scan"""
 
     basic = {
-        "amp_ant": {
-            "xaxis": "antenna1",
-            "yaxis": "amp"
-        },
-        "amp_chan": {
-            "xaxis": "chan",
-            "yaxis": "amp"
-        },
-        "amp_phase": {
-            "xaxis": "phase",
-            "yaxis": "amp"
-        },
-        "amp_scan": {
-            "xaxis": "scan",
-            "yaxis": "amp"
-        },
-        "amp_uvwave": {
-            "xaxis": "uvwave",
-            "yaxis": "amp",
-            "colour": "scan"
-        },
-        "phase_chan": {
-            "xaxis": "chan",
-            "yaxis": "phase"
-        },
-        "phase_uvwave": {
-            "xaxis": "uvwave",
-            "yaxis": "phase",
-            "colour": "scan"
-        },
-        "real_imag": {
-            "xaxis": "imag",
-            "yaxis": "real",
-            "colour": "scan"
-        }
+        "amp_ant": {"xaxis": "antenna1", "yaxis": "amp"},
+        "amp_chan": {"xaxis": "chan", "yaxis": "amp"},
+        "amp_phase": {"xaxis": "phase", "yaxis": "amp"},
+        "amp_scan": {"xaxis": "scan", "yaxis": "amp"},
+        "amp_uvwave": {"xaxis": "uvwave", "yaxis": "amp", "colour": "scan"},
+        "phase_chan": {"xaxis": "chan", "yaxis": "phase"},
+        "phase_uvwave": {"xaxis": "uvwave", "yaxis": "phase", "colour": "scan"},
+        "real_imag": {"xaxis": "imag", "yaxis": "real", "colour": "scan"},
     }
 
     return basic[plot_name]
@@ -231,18 +202,14 @@ def get_cfg_fields(pipeline, iobs, cfg_field, label_in):
         A dictionary of form field_name: (repr_name, field_id) or None if the
         selected fields were invalid/not available
     """
-    cases = {
-        "calibrators": ['bpcal', 'gcal', 'fcal', 'xcal'],
-        "target": ["target"]
-    }
+    cases = {"calibrators": ["bpcal", "gcal", "fcal", "xcal"], "target": ["target"]}
 
     f_types = cases.get(cfg_field, None)
 
     if f_types is None:
         # meaning the field specified were comma separated
         cfg_field = set(cfg_field.split())
-        f_types = (cfg_field if cfg_field.issubset(cases["calibrators"])
-                   else [])
+        f_types = cfg_field if cfg_field.issubset(cases["calibrators"]) else []
     # convert field types to field names and field IDs
     fields = {}
     for f_type in f_types:
@@ -255,10 +222,10 @@ def get_cfg_fields(pipeline, iobs, cfg_field, label_in):
 
 
 def get_cfg_corrs(cfg_corr, ms_corrs):
-    """ Convert correlations specified to actual corr labels"""
-    if cfg_corr in ['auto', 'all']:
-        cfg_corr = ','.join(ms_corrs)
-    elif cfg_corr in ['diag', 'parallel']:
+    """Convert correlations specified to actual corr labels"""
+    if cfg_corr in ["auto", "all"]:
+        cfg_corr = ",".join(ms_corrs)
+    elif cfg_corr in ["diag", "parallel"]:
         # the corr list has the order XX,XY,YX,YY or RR,RL,LR,LL
         # collect first and last regardless if list is size 2 or 4
         cfg_corr = ",".join([ms_corrs[0], ms_corrs[-1]])
@@ -303,10 +270,10 @@ def plotms(pipeline, recipe, basic, extras=None):
         "iteraxis": basic["iterate"],
         "coloraxis": basic.get("colour", None),
         "plotfile": basic["output"],
-        "expformat": 'png',
-        "exprange": 'all',
+        "expformat": "png",
+        "exprange": "all",
         "overwrite": True,
-        "showgui": False
+        "showgui": False,
     }
 
     if extras:
@@ -315,9 +282,16 @@ def plotms(pipeline, recipe, basic, extras=None):
     # remove any empties or none
     plotms_keys = check_params(plotms_keys)
 
-    recipe.add("cab/casa_plotms", step, plotms_keys,
-                input=pipeline.input, output=output_dir,
-                label=label, memory_limit=None, cpus=None)
+    recipe.add(
+        "cab/casa_plotms",
+        step,
+        plotms_keys,
+        input=pipeline.input,
+        output=output_dir,
+        label=label,
+        memory_limit=None,
+        cpus=None,
+    )
 
 
 def _process_shadems_plot_list(plot_args, basesubst, plotlist, defaults, description, extras=None):
@@ -340,8 +314,7 @@ def _process_shadems_plot_list(plot_args, basesubst, plotlist, defaults, descrip
                 continue
             # all other keys go into new defaults (with substitutions done)
             new_defaults = defaults.copy()
-            new_defaults.update(**{"--" + key.replace("_", "-"): val.format(**basesubst) if isinstance(val, str) else val
-                                    for key, val in entry.items()})
+            new_defaults.update(**{"--" + key.replace("_", "-"): val.format(**basesubst) if isinstance(val, str) else val for key, val in entry.items()})
             # and ecurse into new plot list
             _process_shadems_plot_list(plot_args, basesubst, plots, new_defaults, f"{description}: {desc or comment}", extras=extras)
         elif isinstance(entry, str):
@@ -379,26 +352,20 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
     fields = shade_cfg["fields"]
 
     # some user facing substitutions for fields, corrs, and base MS name
-    basesubst = dict(
-        msbase=msbase,
-        all_fields=",".join(fields.keys()),
-        all_corrs=shade_cfg["corrs"]
-    )
+    basesubst = dict(msbase=msbase, all_fields=",".join(fields.keys()), all_corrs=shade_cfg["corrs"])
     for _f in fields.keys():
         for _ft in fields[_f]:
             basesubst[_ft] = _f
 
     # groups of plots available
     plot_cats = {
-        "plots_by_field": {"--iter-field": "",
-                            "--field": basesubst["all_fields"]},
+        "plots_by_field": {"--iter-field": "", "--field": basesubst["all_fields"]},
         "plots_by_corr": {"--iter-corr": ""},
-        "plots": {}
+        "plots": {},
     }
 
     # remove the keys enable and ignore_errors
-    bares = {k: v for k, v in shade_cfg.items()
-                if k in ("plots_by_field", "plots_by_corr", "plots")}
+    bares = {k: v for k, v in shade_cfg.items() if k in ("plots_by_field", "plots_by_corr", "plots")}
 
     # # remove plot categories that have not been specified
     # bares = {k: v for k, v in bares.items() if len(v) > 1 or (v and v[0])}
@@ -414,20 +381,23 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
             "--col": shade_cfg["default_column"],
             "--png": f"{label}-{msbase}-{{field}}{{_Spw}}{{_Scan}}{{_Ant}}-{{label}}{{_alphalabel}}{{_colorlabel}}{{_suffix}}.png",
             "--corr": shade_cfg["corrs"],
-            ** plot_cats[plot_cat]
+            **plot_cats[plot_cat],
         }
         _process_shadems_plot_list(plot_args, basesubst, plotlist, category_defaults, plot_cat)
 
     if len(plot_args) == 0:
-        log.warning(
-            "The shadems section doesn't contain any enabled 'plot_by_field' or 'plot_by_corr' or 'plots' entries.")
+        log.warning("The shadems section doesn't contain any enabled 'plot_by_field' or 'plot_by_corr' or 'plots' entries.")
     else:
-        recipe.add("cab/shadems_direct", step,
-                    dict(ms=shade_cfg["ms"],
-                        args=plot_args,
-                        ignore_errors=shade_cfg["ignore_errors"]),
-                    input=pipeline.input, output=shade_cfg["output_dir"],
-                    label=f"{step}:: Plotting", memory_limit=None, cpus=None)
+        recipe.add(
+            "cab/shadems_direct",
+            step,
+            dict(ms=shade_cfg["ms"], args=plot_args, ignore_errors=shade_cfg["ignore_errors"]),
+            input=pipeline.input,
+            output=shade_cfg["output_dir"],
+            label=f"{step}:: Plotting",
+            memory_limit=None,
+            cpus=None,
+        )
 
 
 def shadems(pipeline, recipe, basic, extras=None):
@@ -440,22 +410,24 @@ def shadems(pipeline, recipe, basic, extras=None):
     output_dir = basic.pop("output_dir")
 
     # contains the var names to be used as the suffix in case of iteration
-    iter_axes = {"field": "{_field}",
-                "spw": "{_Spw}",
-                "scan": "{_Scan}",
-                "baseline": "{_Baseline}",
-                "ant": "{_Ant}"}
+    iter_axes = {"field": "{_field}", "spw": "{_Spw}", "scan": "{_Scan}", "baseline": "{_Baseline}", "ant": "{_Ant}"}
 
     col_names = {
-        "antenna1": "ANTENNA1", "scan": "SCAN_NUMBER",
-        "chan": "CHAN", "freq": "FREQ",
-        "amp": "amp", "phase": "phase",
-        "real": "real", "imag": " imag",
-        "uvwave": "UV", "baseline": "UV"
+        "antenna1": "ANTENNA1",
+        "scan": "SCAN_NUMBER",
+        "chan": "CHAN",
+        "freq": "FREQ",
+        "amp": "amp",
+        "phase": "phase",
+        "real": "real",
+        "imag": " imag",
+        "uvwave": "UV",
+        "baseline": "UV",
     }
 
     # get a name conforming to those allowed in shadems
-    def shade_cols(_c, names): return names.get(_c, _c.upper())
+    def shade_cols(_c, names):
+        return names.get(_c, _c.upper())
 
     # get the correlation names for the args
     corrs = basic["corr"].split(",")
@@ -473,15 +445,18 @@ def shadems(pipeline, recipe, basic, extras=None):
             "colour-by": shade_cols(basic.get("colour", None), col_names),
             "png": f"{basic['output']}-corr-{_corr}.png",
             # "mem_limit": basic["mem_limit"],
-            "num-parallel": basic["num_cores"]
+            "num-parallel": basic["num_cores"],
         }
 
         iterate = basic["iterate"]
 
         if iterate and (iterate in iter_axes):
             shadems_keys.update(
-                {f"iter-{iterate}": True,
-                "png": f"{basic['output']}-corr-{_corr}{iter_axes[iterate]}.png"})
+                {
+                    f"iter-{iterate}": True,
+                    "png": f"{basic['output']}-corr-{_corr}{iter_axes[iterate]}.png",
+                }
+            )
 
         if shadems_keys["colour-by"] == "baseline":
             shadems_keys["colour-by"] = "UV"
@@ -492,9 +467,16 @@ def shadems(pipeline, recipe, basic, extras=None):
         # remove any empties or none
         shadems_keys = check_params(shadems_keys)
 
-        recipe.add("cab/shadems", step, shadems_keys,
-                    input=pipeline.input, output=output_dir,
-                    label=label, memory_limit=None, cpus=None)
+        recipe.add(
+            "cab/shadems",
+            step,
+            shadems_keys,
+            input=pipeline.input,
+            output=output_dir,
+            label=label,
+            memory_limit=None,
+            cpus=None,
+        )
 
 
 def ragavi_vis(pipeline, recipe, basic, extras=None):
@@ -521,7 +503,7 @@ def ragavi_vis(pipeline, recipe, basic, extras=None):
         "canvas-width": 1080,
         "canvas-height": 720,
         "mem-limit": basic["mem_limit"],
-        "num-cores": basic["num_cores"]
+        "num-cores": basic["num_cores"],
     }
 
     if extras:
@@ -530,9 +512,16 @@ def ragavi_vis(pipeline, recipe, basic, extras=None):
     # remove any empties or none
     ragavi_keys = check_params(ragavi_keys)
 
-    recipe.add("cab/ragavi_vis", step, ragavi_keys,
-                input=pipeline.input, output=output_dir,
-                label=label, memory_limit=None, cpus=None)
+    recipe.add(
+        "cab/ragavi_vis",
+        step,
+        ragavi_keys,
+        input=pipeline.input,
+        output=output_dir,
+        label=label,
+        memory_limit=None,
+        cpus=None,
+    )
 
 
 # main function
@@ -567,8 +556,7 @@ def worker(pipeline, recipe, config):
         output_dir = pipeline.diagnostic_plots
 
     for iobs in range(nobs):
-        mslist = pipeline.get_mslist(iobs, label_in,
-                                    target=(config['field'] == 'target'))
+        mslist = pipeline.get_mslist(iobs, label_in, target=(config["field"] == "target"))
 
         for ms in mslist:
             if not ms_exists(pipeline.msdir, ms):
@@ -584,8 +572,7 @@ def worker(pipeline, recipe, config):
 
             corrs = get_cfg_corrs(plotter_params.correlation, ms_corrs)
 
-            fields = get_cfg_fields(pipeline, iobs, plotter_params.field,
-                                    label_in)
+            fields = get_cfg_fields(pipeline, iobs, plotter_params.field, label_in)
 
             if fields is None:
                 raise ValueError(f"""
@@ -596,14 +583,17 @@ def worker(pipeline, recipe, config):
             # for the newer plots to shadems
             if pipeline.enable_task(config, "shadems"):
                 shade_cfg = config["shadems"]
-                shade_cfg.update({
-                    "ms": ms,
-                    "iobs": iobs,
-                    "label": label,
-                    "corrs": corrs,
-                    "fields": fields,
-                    "ms_base": ms_base,
-                    "output_dir": output_dir})
+                shade_cfg.update(
+                    {
+                        "ms": ms,
+                        "iobs": iobs,
+                        "label": label,
+                        "corrs": corrs,
+                        "fields": fields,
+                        "ms_base": ms_base,
+                        "output_dir": output_dir,
+                    }
+                )
                 direct_shadems(pipeline, recipe, shade_cfg)
 
             # the older plots
@@ -617,20 +607,23 @@ def worker(pipeline, recipe, config):
                     plot_args = get_xy(axes)
 
                     for fname, ftype in fields.items():
-                        plot_args.update({
-                            "ms": ms,
-                            "data": check_data(plot_axes[axes].get("col")),
-                            "corr": corrs,
-                            "iterate": "corr",
-                            # "colour": "scan",
-                            "num_cores": plotter_params.num_cores,
-                            "mem_limit": plotter_params.mem_limit,
-                            "uvrange": plotter_params.uvrange,
-                            "field": fname,
-                            "output": f"{label}-{ms_base}-{ftype[0]}-{fname}-{axes}",
-                            "output_dir": output_dir,
-                            "step": f"plot-{axes}-{iobs}-{ftype[0]}",
-                            "label": label,
-                            **plot_axes[axes]})
+                        plot_args.update(
+                            {
+                                "ms": ms,
+                                "data": check_data(plot_axes[axes].get("col")),
+                                "corr": corrs,
+                                "iterate": "corr",
+                                # "colour": "scan",
+                                "num_cores": plotter_params.num_cores,
+                                "mem_limit": plotter_params.mem_limit,
+                                "uvrange": plotter_params.uvrange,
+                                "field": fname,
+                                "output": f"{label}-{ms_base}-{ftype[0]}-{fname}-{axes}",
+                                "output_dir": output_dir,
+                                "step": f"plot-{axes}-{iobs}-{ftype[0]}",
+                                "label": label,
+                                **plot_axes[axes],
+                            }
+                        )
 
                         globals()[plotter](pipeline, recipe, plot_args, extras=None)

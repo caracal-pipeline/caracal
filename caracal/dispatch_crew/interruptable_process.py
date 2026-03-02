@@ -1,6 +1,6 @@
-from multiprocessing import Process
 import os
 import signal
+from multiprocessing import Process
 
 
 class interruptable_process(Process):
@@ -16,6 +16,7 @@ class interruptable_process(Process):
         def __run(target_proc):
             self.__pid = os.getpid()
             target_proc()
+
         Process.__init__(self, target=lambda: __run(target))
 
     def interrupt(self):

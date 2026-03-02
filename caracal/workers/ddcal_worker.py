@@ -362,9 +362,7 @@ def worker(pipeline, recipe, config):
                     "data-time-chunk": ddsols_t * int(min(1, config[key]["dist_nworker"]))
                     if (ddsols_f == 0 or config[key]["dd_g_chan_int"] == 0)
                     else ddsols_t * int(min(1, np.sqrt(config[key]["dist_nworker"]))),
-                    "data-freq-chunk": 0
-                    if (ddsols_f == 0 or config[key]["dd_g_chan_int"] == 0)
-                    else ddsols_f * int(min(1, np.sqrt(config[key]["dist_nworker"]))),
+                    "data-freq-chunk": 0 if (ddsols_f == 0 or config[key]["dd_g_chan_int"] == 0) else ddsols_f * int(min(1, np.sqrt(config[key]["dist_nworker"]))),
                     "sol-term-iters": "[50,90,50,90]",
                     "madmax-plot": False,
                     "out-plots": True,

@@ -132,18 +132,14 @@ def imcontsub(
             polyorder = length
 
         # Flatten and fit
-        incubus_data_flat = incubus_data_masked.reshape(
-            (incubus_data.shape[0], incubus_data.shape[1] * incubus_data.shape[2])
-        )
+        incubus_data_flat = incubus_data_masked.reshape((incubus_data.shape[0], incubus_data.shape[1] * incubus_data.shape[2]))
         x = np.ma.masked_array(np.arange(incubus_data.shape[0]), False)
 
         printime("Fitting polynomial of order {}".format(polyorder))
         fitpars = np.array(np.flip(np.ma.polyfit(x, incubus_data_flat, polyorder)))
 
         printime("Creating continuum cube")
-        fit = np.flip(np.polynomial.polynomial.polyval(np.flip(np.array(x), 0), fitpars).transpose()).reshape(
-            (incubus_data.shape[0], incubus_data.shape[1], incubus_data.shape[2])
-        )
+        fit = np.flip(np.polynomial.polynomial.polyval(np.flip(np.array(x), 0), fitpars).transpose()).reshape((incubus_data.shape[0], incubus_data.shape[1], incubus_data.shape[2]))
         # Make sure that the fit cube can be convolved
         if np.nanmax(incubus_data) > 0.0:
             maxincube = np.nanmax(incubus_data) * 10.0
@@ -212,9 +208,7 @@ def imcontsub(
     if kersiz > 0:
         printime("Spatially convolving continuum cube")
         if kertyp == "gauss":
-            kernel = scipy_signal.gaussian(
-                int(10.0 * kersiz / np.sqrt(np.log(256.0))) // 2 * 2 + 1, kersiz / np.sqrt(np.log(256.0))
-            )
+            kernel = scipy_signal.gaussian(int(10.0 * kersiz / np.sqrt(np.log(256.0))) // 2 * 2 + 1, kersiz / np.sqrt(np.log(256.0)))
         else:
             klength = int(10.0 * kersiz) // 2 * 2 + 1
             coordinates = np.arange(klength, dtype=int) - int(klength) // 2
@@ -232,9 +226,7 @@ def imcontsub(
     if not isinstance(confit, type(None)):
         printime("Writing convolved continuum cube")
         if stokes:
-            hdul_incubus[0].data = convolved.astype("float32").reshape(
-                (1, convolved.shape[0], convolved.shape[1], convolved.shape[2])
-            )
+            hdul_incubus[0].data = convolved.astype("float32").reshape((1, convolved.shape[0], convolved.shape[1], convolved.shape[2]))
         else:
             hdul_incubus[0].data = convolved.astype("float32")
         hdul_incubus[0].header["DATAMAX"] = np.nanmax(hdul_incubus[0].data)
@@ -245,9 +237,7 @@ def imcontsub(
     subtracted = incubus_data - convolved
 
     if stokes:
-        hdul_incubus[0].data = subtracted.astype("float32").reshape(
-            (1, subtracted.shape[0], subtracted.shape[1], subtracted.shape[2])
-        )
+        hdul_incubus[0].data = subtracted.astype("float32").reshape((1, subtracted.shape[0], subtracted.shape[1], subtracted.shape[2]))
     else:
         hdul_incubus[0].data = subtracted.astype("float32")
     printime("Writing subtracted cube.")
@@ -324,9 +314,7 @@ def parsing():
         type=str,
     )
     parser.add_argument("--sgiters", "-s", help="Number of Savitzky-Golay filter iterations", type=int)
-    parser.add_argument(
-        "--kertyp", "-t", help="Kernel type to convolve the polynomial fit with ('gauss', 'tophat')", type=str
-    )
+    parser.add_argument("--kertyp", "-t", help="Kernel type to convolve the polynomial fit with ('gauss', 'tophat')", type=str)
     parser.add_argument("--kersiz", "-k", help="Kernel size to convolve the polynomial fit with (pixel)", type=str)
     parser.add_argument("--fitted", help="Name of fitted continuum cube (optinal output)", type=str)
     parser.add_argument("--confit", help="Name of fitted and convolved continuum cube (optional output)", type=str)

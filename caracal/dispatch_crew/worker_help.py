@@ -43,9 +43,7 @@ class worker_options(object):
                 else:
                     args["action"] = "store_true"
                     ptype = "bool"
-                desc = segment.get(
-                    "desc", "!!! option %s missing schema description. Please file this bug !!!" % name
-                ).replace("%", "%%")
+                desc = segment.get("desc", "!!! option %s missing schema description. Please file this bug !!!" % name).replace("%", "%%")
                 desc = desc + " [type: %s]" % ptype
                 self.parser.add_argument("--{0:s}".format(_lineage), help=desc, **args)
         else:

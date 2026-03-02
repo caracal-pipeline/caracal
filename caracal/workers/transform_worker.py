@@ -53,9 +53,7 @@ def get_fields_to_split(config, name):
         diff = fields_to_split.difference(_cal_fields)
         if diff:
             raise caracal.ConfigurationError(
-                "'{}: field: expected 'target', 'calibrators', or one or more of {}. Got '{}'".format(
-                    name, ", ".join([f"'{f}'" for f in _cal_fields]), ",".join(diff)
-                )
+                "'{}: field: expected 'target', 'calibrators', or one or more of {}. Got '{}'".format(name, ", ".join([f"'{f}'" for f in _cal_fields]), ",".join(diff))
             )
         return fields_to_split
 
@@ -74,9 +72,7 @@ def worker(pipeline, recipe, config):
     field_to_split = get_fields_to_split(config, wname)
     # are we splitting calibrators
     splitting_cals = field_to_split.intersection(_cal_fields)
-    if (
-        pipeline.enable_task(config, "split_field") or pipeline.enable_task(config, "changecentre")
-    ) and pipeline.enable_task(config, "concat"):
+    if (pipeline.enable_task(config, "split_field") or pipeline.enable_task(config, "changecentre")) and pipeline.enable_task(config, "concat"):
         raise ValueError(
             "split_field/changecentre and concat cannot be enabled in the same run of the transform worker. "
             "The former need a single-valued label_in, the latter multiple comma-separated values."
@@ -129,19 +125,15 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config["split_field"], "otfcal"):
             if dcol != "corrected":
-                caracal.log.warning(
-                    f"split_field: col set to '{dcol}' but OTF calibration is enabled. Forcing to 'corrected'"
-                )
+                caracal.log.warning(f"split_field: col set to '{dcol}' but OTF calibration is enabled. Forcing to 'corrected'")
                 dcol = "corrected"
-            crosscal_lib, (caltablelist, gainfieldlist, interplist, calwtlist, applyfield) = (
-                resolve_calibration_library(
-                    pipeline,
-                    prefix_msbase,
-                    config["split_field"]["otfcal"]["callib"],
-                    config["split_field"]["otfcal"]["label_cal"],
-                    output_fields=output_fields,
-                    default_interpolation_types=config["split_field"]["otfcal"]["interpolation"],
-                )
+            crosscal_lib, (caltablelist, gainfieldlist, interplist, calwtlist, applyfield) = resolve_calibration_library(
+                pipeline,
+                prefix_msbase,
+                config["split_field"]["otfcal"]["callib"],
+                config["split_field"]["otfcal"]["label_cal"],
+                output_fields=output_fields,
+                default_interpolation_types=config["split_field"]["otfcal"]["interpolation"],
             )
             if crosscal_lib:
                 caracal.log.info(f"applying OTF cross-cal from {os.path.basename(crosscal_lib)}")
@@ -149,15 +141,13 @@ def worker(pipeline, recipe, config):
                 caracal.log.info("no cross-cal lib specified for OTF, ignoring")
 
             # load/export if specified -- otherwise will be empty lists. Also converts to full filename.
-            polcal_lib, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplyfield) = (
-                resolve_calibration_library(
-                    pipeline,
-                    prefix_msbase,
-                    config["split_field"]["otfcal"]["pol_callib"],
-                    config["split_field"]["otfcal"]["label_pcal"],
-                    output_fields=output_fields,
-                    default_interpolation_types=config["split_field"]["otfcal"]["interpolation"],
-                )
+            polcal_lib, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplyfield) = resolve_calibration_library(
+                pipeline,
+                prefix_msbase,
+                config["split_field"]["otfcal"]["pol_callib"],
+                config["split_field"]["otfcal"]["label_pcal"],
+                output_fields=output_fields,
+                default_interpolation_types=config["split_field"]["otfcal"]["interpolation"],
             )
             if polcal_lib:
                 caracal.log.info(f"applying OTF polcal from {os.path.basename(polcal_lib)}")
@@ -206,9 +196,7 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, "split_field"):
                 step = "split_field-ms{0:d}-{1:d}".format(i, target_iter)
                 # If the output of this run of mstransform exists, delete it first
-                remove_output_products(
-                    (to_ms, tmp_ms, flagv, tmpflagv, summary_file, obsinfo_file), directory=pipeline.msdir, log=log
-                )
+                remove_output_products((to_ms, tmp_ms, flagv, tmpflagv, summary_file, obsinfo_file), directory=pipeline.msdir, log=log)
                 if not polcal_lib:
                     recipe.add(
                         "cab/casa_mstransform",
@@ -243,10 +231,7 @@ def worker(pipeline, recipe, config):
                     if output_pcal_ms == "intermediate":
                         tmp_ms = to_ms
                         tmpflagv = flagv
-                        log.warning(
-                            "otfcal: output_pcal_ms is 'intermediate', output will be an intermediate "
-                            "MS only with DATA and CORRECTED_DATA columns. This is experimenatal."
-                        )
+                        log.warning("otfcal: output_pcal_ms is 'intermediate', output will be an intermediate MS only with DATA and CORRECTED_DATA columns. This is experimenatal.")
 
                     recipe.add(
                         "cab/casa_mstransform",
@@ -362,15 +347,8 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, "changecentre"):
                 if config["changecentre"]["ra"] == "" or config["changecentre"]["dec"] == "":
-                    caracal.log.error(
-                        "Wrong format for RA and/or Dec you want to change to. "
-                        "Check your settings of split_target:changecentre:ra and split_target:changecentre:dec"
-                    )
-                    caracal.log.error(
-                        "Current settings for ra,dec are {0:s},{1:s}".format(
-                            config["changecentre"]["ra"], config["changecentre"]["dec"]
-                        )
-                    )
+                    caracal.log.error("Wrong format for RA and/or Dec you want to change to. Check your settings of split_target:changecentre:ra and split_target:changecentre:dec")
+                    caracal.log.error("Current settings for ra,dec are {0:s},{1:s}".format(config["changecentre"]["ra"], config["changecentre"]["dec"]))
                     sys.exit(1)
                 step = "changecentre-ms{0:d}-{1:d}".format(i, target_iter)
                 recipe.add(
@@ -379,9 +357,7 @@ def worker(pipeline, recipe, config):
                     {
                         "msname": to_ms,
                         "outputvis": to_ms,
-                        "phasecenter": "J2000 {0:s} {1:s}".format(
-                            config["changecentre"]["ra"], config["changecentre"]["dec"]
-                        ),
+                        "phasecenter": "J2000 {0:s} {1:s}".format(config["changecentre"]["ra"], config["changecentre"]["dec"]),
                     },
                     input=pipeline.input,
                     output=pipeline.output,
@@ -406,9 +382,7 @@ def worker(pipeline, recipe, config):
                 )
 
                 # If the output of this run of mstransform exists, delete it first
-                if os.path.exists("{0:s}/{1:s}".format(pipeline.msdir, to_ms)) or os.path.exists(
-                    "{0:s}/{1:s}".format(pipeline.msdir, flagv)
-                ):
+                if os.path.exists("{0:s}/{1:s}".format(pipeline.msdir, to_ms)) or os.path.exists("{0:s}/{1:s}".format(pipeline.msdir, flagv)):
                     os.system("rm -rf {0:s}/{1:s} {0:s}/{2:s}".format(pipeline.msdir, to_ms, flagv))
 
                 step = "singlespw-ms{0:d}-{1:d}".format(i, target_iter)
@@ -476,7 +450,5 @@ def worker(pipeline, recipe, config):
                         },
                         input=pipeline.input,
                         output=pipeline.obsinfo,
-                        label="{0:s}:: Get observation information as a json file ms={1:s}".format(
-                            step, obsinfo_msname
-                        ),
+                        label="{0:s}:: Get observation information as a json file ms={1:s}".format(step, obsinfo_msname),
                     )

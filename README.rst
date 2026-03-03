@@ -250,8 +250,7 @@ Ensuring Correctness and Reproducibility
 
 These practices are what separate a "script" from a reliable "software package."
 
-**Testing**
-The code may (or will be) wrong. Testing is how we find out where and when.
+**Testing**: The code may (or will be) wrong. Testing is how we find out where and when.
 
 What to do:
   #. Unit Tests: Use a framework like pytest. These are small, fast tests that check a single function or class in isolation. (e.g., "Does my calculate_uvw function return the correct coordinates for a known antenna position?").

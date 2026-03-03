@@ -1328,7 +1328,7 @@ def worker(pipeline, recipe, config):
                         cube_path, pipeline.prefix, field, line_name, j - 1)
                     outmask = '{0:s}_{1:s}_{2:s}_{3:d}.image_clean'.format(
                         pipeline.prefix, field, line_name, j)                    
-# new
+
                     sofia2_opts = {
                             "pipeline.threads": 0,
                             "input.data": cubename, 

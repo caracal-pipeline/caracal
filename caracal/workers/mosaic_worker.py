@@ -174,9 +174,6 @@ def worker(pipeline, recipe, config):
     while "" in specified_images:
         del specified_images[specified_images.index("")]
 
-    caracal.log.info(specified_images)
-    sys.exit()
-
     # If nothing is passed via the config file, then specified_images[0] adopts this via the schema
     if not len(specified_images):
         caracal.log.info("No image names were specified via the config file, so they are going to be selected automatically.")
@@ -209,6 +206,8 @@ def worker(pipeline, recipe, config):
 
     caracal.log.info("PLEASE CHECK -- Images to be mosaicked are:")
     caracal.log.info(specified_images)
+    sys.exit()
+
 
     found_stokes = (np.array([fits.getval(ff, "naxis") for ff in specified_images]) == 4).sum()
     if found_stokes:

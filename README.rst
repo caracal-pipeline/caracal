@@ -126,32 +126,37 @@ If using `Singularity <https://github.com/sylabs/singularity>`_:
     caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f -kh
 
 
-3. Poetry (For developers)
+3. Dev Installation (For developers)
 --------------------------
 
-Installation from source using `poetry`. First, install poetry:
+Installation from source using `uv`. First, install poetry:
 
 ..  code-block:: bash
 
-    pip install poetry
+    pip install uv
 
 
-In the working directory where source is checked out run `poetry install` or to include all optional dependencies:
+In the working directory where source is checked out run `uv sync` or to include all optional dependencies:
 
 ..  code-block:: bash
 
-    poetry install
+    uv sync
+
+..  code-block:: bash
+
+   uv add --group dev
+
 
 =========================================
 Installation on (ILIFU) slurm environment
 =========================================
 
-The installation of CARACal on ilifu has been tried and tested on the Ubuntu 20.0 operating system, although, it should also work on other OS versions. On the login node, follow these instructions:
+The installation of CARACal on ilifu has been tried and tested on the Ubuntu 22.04.5 LTS operating system, although, it should also work on other OS versions. On the login node, follow these instructions:
 
 ..  code-block:: bash
 
     cd /path/to/working/area
-    module add python/3.9.4
+    module add python/3.10.4
     python3 -m venv <venv-name>
     source <venv-name>/bin/activate
     pip install -U pip setuptools wheel
@@ -167,7 +172,6 @@ Install the latest release with:
 ..  code-block:: bash
 
     pip install -U caracal
-
 
 NB: The latest version of stimela singularity images needed for CARACal are stored in this location:
 ``/idia/software/containers/STIMELA_IMAGES/``. For older versions, refer to the legacy directory:
@@ -216,8 +220,6 @@ When opening a new issue, please include your:
   #. CARACal configuration file
   #. CARACal log files.
 
-
-
 =======
 License
 =======
@@ -230,6 +232,55 @@ Contribute
 
 Contributions are always welcome! Please ensure that you adhere to our coding
 standards pep8_.
+
+Code Review
+-----------
+A Pull Request (PR) is the formal moment to request a review. This is the single best way to share knowledge, catch bugs, and enforce standards.
+
+What to do:
+  #. Require all changes to the main to go through a Pull Request.
+  #. Require at least one other team member to review and approve the PR before it can be merged.
+The review should check for:
+  #. **Correctness**: Does this code do what it claims to do?
+  #. **Readability**: Can I understand this code?
+  #. **Standards**: Does it follow the group's testing and documentation rules?
+  #. **Side Effects**: Does this accidentally break something else?
+
+Ensuring Correctness and Reproducibility
+----------------------------------------
+
+These practices are what separate a "script" from a reliable "software package."
+
+**Testing**
+The code may (or will be) wrong. Testing is how we find out where and when.
+
+What to do:
+  #. Unit Tests: Use a framework like pytest. These are small, fast tests that check a single function or class in isolation. (e.g., "Does my calculate_uvw function return the correct coordinates for a known antenna position?").
+  #. Integration Tests: These check that multiple components work together. (e.g., "Can I run my calibrate function and then my image function on a small, simulated dataset and get a non-empty image?").
+Continuous Integration (CI) automates our best practices. It's a service (like GitHub Actions or Jenkins CI) that automatically runs a set of commands every time we push code or open a PR.
+
+What to do:
+Set up a CI pipeline that automatically:
+  #. Checks out the code.
+  #. Installs the dependencies.
+  #. Runs a linter/formatter (see below).
+  #. Runs your entire test suite (pytest).
+
+NB: Pull Requests are blocked from being merged if the CI tests fail.
+
+Code "Linting" (Style and Error Checking)
+-----------------------------------------
+
+A linter is a static checker that flags bugs and style errors.
+
+**Tool**: ruff (This is the new standard. It's incredibly fast and has replaced older tools like flake8 and isort).
+
+What it does: It finds things like unused variables, undefined names, overly complex functions, and imports that are not sorted.
+
+How to use it: Run ``uv run ruff check`` in the CI pipeline and in your editor.
+
+Lint and code format with: ``uv run ruff format``
+
 
 .. |Doc Status| image:: https://readthedocs.org/projects/caracal/badge/?version=latest
                 :target: http://caracal.readthedocs.io/en/latest

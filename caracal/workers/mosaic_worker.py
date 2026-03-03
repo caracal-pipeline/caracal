@@ -228,6 +228,7 @@ def worker(pipeline, recipe, config):
 
     # Although montage_mosaic checks whether pb.fits files are present, we need to do this earlier in the worker,
     # so that we can create simple Gaussian (or Mauchian) primary beams if need be
+    caracal.log.info("Checking for *pb.fits.")
     for image_name in specified_images:
         pb_name = image_name.replace("image.fits", "pb.fits")
 
@@ -298,12 +299,11 @@ def worker(pipeline, recipe, config):
             caracal.log.info("Primary beam {0:s} created.".format(pb_name))
 
     caracal.log.info("Checking for *pb.fits files now complete.")
-    sys.exit()
 
     # Will need it later, unless Sphe has a more elegant method
     original_working_directory = os.getcwd()
 
-    caracal.log.info("Now creating symlinks to images and beams, in case they are distributed across multiple subdirectories")
+    caracal.log.info("Now creating symlinks to images and beams, in case they are distributed across multiple subdirectories.")
     # To get the symlinks created in the correct directory
     input_directory = pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes
     os.chdir(input_directory)
@@ -334,6 +334,9 @@ def worker(pipeline, recipe, config):
 
     # To get back to where we were before symlink creation
     os.chdir(original_working_directory)
+
+    caracal.log.info("Symlinks created.")
+    sys.exit()
 
     # Prefix of the output files should be either the default
     # (pipeline.prefix) or that specified by the user via the config file

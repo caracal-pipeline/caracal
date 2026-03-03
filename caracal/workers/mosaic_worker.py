@@ -39,7 +39,6 @@ def worker(pipeline, recipe, config):
             # In case there is one or more '_' in the directory name, want to get the last portion
             number = split_subdirectory[-1]
             num = int(number)
-            caracal.log.info((num, glob.glob("{0:s}/{1:s}*.fits".format(subdirectory, prfx))))
             if num > max_num and len(glob.glob("{0:s}/{1:s}*.fits".format(subdirectory, prfx))):
                 max_num = num
 
@@ -188,8 +187,6 @@ def worker(pipeline, recipe, config):
 
         # Where the targets are in the output directory
         max_num, last_subdirectory = identify_last_subdirectory(specified_mosaictype, prefix)
-        caracal.log.info((max_num, last_subdirectory))
-        sys.exit()
 
         # Expecting the same prefix and mfsprefix to apply for all fields to be mosaicked together
         for target in all_targets:

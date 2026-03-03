@@ -1516,8 +1516,8 @@ def worker(pipeline, recipe, config):
                 # is no longer improving the cube and we can stop
                 if len(rms_values) > 1 and wscl_tol and rms_values[-2] / rms_values[-1] <= wscl_tol:
                     caracal.log.info(
-                        "The cube RMS noise has decreased by a factor <= {0:.3f} compared to the previous WSclean iteration. Noise convergence achieved.".format(
-                        wscl_tol))
+                        "The cube RMS noise has decreased by a factor <= {0:.3f} compared to the previous WSclean iteration. "
+                        "Noise convergence achieved.".format(wscl_tol))
                     break
 
                 # If the RMS has decreased by a factor > wscl_tol compared to the previous cube then cleaning
@@ -1525,8 +1525,8 @@ def worker(pipeline, recipe, config):
                 elif len(rms_values) > 1 and wscl_tol and rms_values[-2] / rms_values[-1] > wscl_tol:
                     # rms_old = rms_new
                     caracal.log.info(
-                        "The cube RMS noise has decreased by a factor > {0:.3f} compared to the previous WSclean iteration. The noise has not converged yet and we should continue iterating SoFiA-2 + WSclean.".format(
-                        wscl_tol))
+                        "The cube RMS noise has decreased by a factor > {0:.3f} compared to the previous WSclean iteration. "
+                        "The noise has not converged yet and we should continue iterating SoFiA-2 + WSclean.".format(wscl_tol))
                     if j == wscl_niter:
                         caracal.log.info('Stopping anyway. Maximum number of SoFiA-2 + WSclean iterations reached.')
                     else:

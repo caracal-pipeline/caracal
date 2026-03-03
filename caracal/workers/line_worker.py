@@ -1881,7 +1881,7 @@ def worker(pipeline, recipe, config):
                     if os.path.exists(path_mask):
                         imcontsub_opts.update(
                             {
-                                "mask-image": "masking/{1:s}".format(config["imcontsub"]["mask_image"])
+                                "mask-image": "masking/{0:s}".format(config["imcontsub"]["mask_image"])
                             }
                         )
                     else:

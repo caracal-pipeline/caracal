@@ -176,14 +176,18 @@ def worker(pipeline, recipe, config):
 
     # If nothing is passed via the config file, then specified_images[0] adopts this via the schema
     if not len(specified_images):
-        caracal.log.info("No image names were specified via the config file, so they are going to be selected automatically.")
         if specified_mosaictype == "continuum":
-            caracal.log.info("It is assumed that they are all in the highest-numbered subdirectory of {0:s} that contains {1:s} "
-                             " starting with prefix {2:s}".format(pipeline.continuum, 'images', prefix))
+            caracal.log.info("No image names were specified via the config file, so they are going to be selected automatically.")
+            caracal.log.info("It is assumed that they are all in the highest-numbered subdirectory of {0:s} that contains images "
+                             "starting with the prefix {2:s}".format(pipeline.continuum, prefix))
+            caracal.log.info("You should check the selected image names. If unhappy with the selection, "
+                             "please specify the correct ones to use with mosaic:target_images.")
         elif specified_mosaictype == "spectral":
-            caracal.log.info("It is assumed that they are all in the highest-numbered subdirectory of {0:s} that contains {1:s} "
-                             " starting with prefix {2:s}".format(pipeline.cubes, 'cubes', prefix))
-        caracal.log.info("You should check the selected image names. If unhappy with the selection, please specify the correct ones to use with mosaic:target_images.")
+            caracal.log.info("No cube names were specified via the config file, so they are going to be selected automatically.")
+            caracal.log.info("It is assumed that they are all in the highest-numbered subdirectory of {0:s} that contains cubes "
+                             "starting with the prefix {2:s}".format(pipeline.cubes, prefix))
+            caracal.log.info("You should check the selected cube names. If unhappy with the selection, "
+                             "please specify the correct ones to use with mosaic:target_images.")
 
         # Needed for working out the field names for the targets, so that the correct files can be selected
         all_targets = pipeline.get_target_mss(label)[0]

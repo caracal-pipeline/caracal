@@ -1835,6 +1835,9 @@ def worker(pipeline, recipe, config):
                     label='{0:s}:: Make SoFiA-2 mask and images for cube {1:s}'.format(step, simage_cube_list[uu]))
 
         if pipeline.enable_task(config, "imcontsub"):
+            caracal.log.info('*********************************')
+            caracal.log.info(config["imcontsub"])
+            caracal.log.info('*********************************')
             imcontsub_opts = {
                 "output-prefix": config["imcontsub"]["label_out"],
                 "order": config["imcontsub"]["order"],

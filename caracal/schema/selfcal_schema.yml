@@ -220,7 +220,8 @@ mapping:
             required: false
             example: ''
           inputmask:
-            type: str
+            seq:
+              - type: str
             desc: User-provided input-mask that will be (regridded if needed and) added onto the SoFiA mask.
             required: false
             example: ''

@@ -808,6 +808,15 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
     def sofia_mask(trg, num, img_dir, field):
+        def merge_regrided_masks(masks, xdim, ydim, hdr, output):
+            master_mask = np.empty((xdim, ydim))
+            for mask in masks:
+                master_mask = np.logical_or(master_mask, fits.getdata(mask))
+            master_mask = master_mask.astype(np.int16)
+            fits.writeto(output, master_mask, hdr, overwrite=True)
+            caracal.log.info(f"New merged mask {output} was created")
+            return
+
         step = "make-sofia_mask-field{0:d}-iter{1:d}".format(trg, num)
         key = "img_sofia_settings"
 
@@ -868,101 +877,114 @@ def worker(pipeline, recipe, config):
             sofia_opts.update({"flag.regions": flags_sof})
 
         # check if inputmask is provided by input
-        preGridMask = config[key]["inputmask"]
-        postGridMask = preGridMask.replace(".fits", "_{}_regrid.fits".format(pipeline.prefix))
+        preGridMasks = config[key]["inputmask"]
+        
+        # Accepts multiple input masks as list
+        postGridMask = preGridMasks[0].replace(".fits", "_{}_regrid.fits".format(pipeline.prefix))
 
-        if num == 0 and preGridMask:
-            caracal.log.info("Inputmask {} found in Cycle-0. Checking if regridding is needed, and proceed if true".format(preGridMask))
+        if num == 0 and len(preGridMasks)>0:
+            output_masks = []
+            for mask_i, preGridMask in enumerate(preGridMasks):
+                caracal.log.info("Inputmask {} found in Cycle-0. Checking if regridding is needed, and proceed if true".format(preGridMask))
 
-            doProj = False
+                doProj = False
 
-            msname_base = os.path.splitext(mslist[0])[0]
+                msname_base = os.path.splitext(mslist[0])[0]
 
-            t = f"{msname_base}-summary.json"
+                t = f"{msname_base}-summary.json"
 
-            with open("{}/{}".format(pipeline.msdir, t)) as f:
-                obsDict = json.load(f)
+                with open("{}/{}".format(pipeline.msdir, t)) as f:
+                    obsDict = json.load(f)
 
-            raTarget = obsDict["FIELD"]["REFERENCE_DIR"][0][0][0] / np.pi * 180
-            decTarget = obsDict["FIELD"]["REFERENCE_DIR"][0][0][1] / np.pi * 180
-            with fits.open("{}/{}".format(pipeline.masking, preGridMask)) as hdul:
-                imgHeight = config["img_npix"]
-                imgWidth = config["img_npix"]
-
-                doProj = True if (hdul[0].header["NAXIS1"] != imgWidth) | (hdul[0].header["NAXIS2"] != imgHeight) else None
-                if not doProj:
-                    doProj = True if (hdul[0].header["CRVAL1"] != raTarget) | (hdul[0].header["CRVAL2"] != decTarget) else None
-
-            if doProj:
-                # MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
-
-                caracal.log.info("Regridding input {} mask".format(preGridMask))
-                caracal.log.info("Write header for new mask {} to match the grid of the image".format(postGridMask))
-                hduImage = fits.getheader("{}/{}".format(pipeline.output, imagename))
-
-                with open("{}/tmp.hdr".format(pipeline.masking), "w") as file:
-                    file.write("SIMPLE  =   T\n")
-                    file.write("BITPIX  =   -64\n")
-                    file.write("NAXIS   =   {}\n".format(hduImage["NAXIS"]))
-                    file.write("NAXIS1  =   {}\n".format(hduImage["NAXIS1"]))
-                    file.write("CTYPE1  =   'RA---SIN'\n")
-                    file.write("CRVAL1  =   {}\n".format(hduImage["CRVAL1"]))
-                    file.write("CRPIX1  =   {}\n".format(hduImage["CRPIX1"]))
-                    file.write("CDELT1  =   {}\n".format(hduImage["CDELT1"]))
-                    file.write("NAXIS2  =   {}\n".format(hduImage["NAXIS2"]))
-                    file.write("CTYPE2  =   'DEC--SIN'\n")
-                    file.write("CRVAL2  =   {}\n".format(hduImage["CRVAL2"]))
-                    file.write("CRPIX2  =   {}\n".format(hduImage["CRPIX2"]))
-                    file.write("CDELT2  =   {}\n".format(hduImage["CDELT2"]))
-                    file.write("EXTEND  =   T\n")
-                    file.write("EQUINOX =   2000.0\n")
-                    file.write("SPECSYS =   TOPOCENT\n")
-                    file.write("END\n")
-
-                if os.path.exists("{}/{}".format(pipeline.masking, postGridMask)):
-                    os.remove("{}/{}".format(pipeline.masking, postGridMask))
-
-                # turn mask into zeros and ones
+                raTarget = obsDict["FIELD"]["REFERENCE_DIR"][0][0][0] / np.pi * 180
+                decTarget = obsDict["FIELD"]["REFERENCE_DIR"][0][0][1] / np.pi * 180
                 with fits.open("{}/{}".format(pipeline.masking, preGridMask)) as hdul:
-                    if np.amax(hdul[0].data) > 1:
-                        mask = np.where(hdul[0].data > 0)
-                        hdul[0].data[mask] = 1
+                    imgHeight = config["img_npix"]
+                    imgWidth = config["img_npix"]
 
-                    preGridMaskNew = preGridMask.replace(".fits", "_01.fits")
-                    hdul.writeto("{}/{}".format(pipeline.masking, preGridMaskNew), overwrite=True)
+                    doProj = True if (hdul[0].header["NAXIS1"] != imgWidth) | (hdul[0].header["NAXIS2"] != imgHeight) else None
+                    if not doProj:
+                        doProj = True if (hdul[0].header["CRVAL1"] != raTarget) | (hdul[0].header["CRVAL2"] != decTarget) else None
 
-                caracal.log.info("Reprojecting mask {} to match the grid of the image.".format(preGridMask))
+                if doProj:
+                    # MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
 
-                # REPROJECT user supplied mask
-                step = "reprojectMask-img-{}-field-{}".format(trg, num)
-                recipe.add(
-                    "cab/mProject",
-                    step,
-                    {
-                        "in.fits": preGridMaskNew,
-                        "out.fits": postGridMask,
-                        "hdr.template": "tmp.hdr",
-                        "f": True,
-                    },
-                    input=pipeline.masking,
-                    output=pipeline.masking,
-                    label="{0:s}:: Reprojecting user input mask {1:s} to match the grid of the image".format(step, preGridMaskNew),
-                )
+                    caracal.log.info("Regridding input {} mask".format(preGridMask))
+                    caracal.log.info("Write header for new mask {} to match the grid of the image".format(postGridMask))
+                    hduImage = fits.getheader("{}/{}".format(pipeline.output, imagename))
 
-                recipe.run()
-                recipe.jobs = []
+                    with open("{}/tmp.hdr".format(pipeline.masking), "w") as file:
+                        file.write("SIMPLE  =   T\n")
+                        file.write("BITPIX  =   -64\n")
+                        file.write("NAXIS   =   {}\n".format(hduImage["NAXIS"]))
+                        file.write("NAXIS1  =   {}\n".format(hduImage["NAXIS1"]))
+                        file.write("CTYPE1  =   'RA---SIN'\n")
+                        file.write("CRVAL1  =   {}\n".format(hduImage["CRVAL1"]))
+                        file.write("CRPIX1  =   {}\n".format(hduImage["CRPIX1"]))
+                        file.write("CDELT1  =   {}\n".format(hduImage["CDELT1"]))
+                        file.write("NAXIS2  =   {}\n".format(hduImage["NAXIS2"]))
+                        file.write("CTYPE2  =   'DEC--SIN'\n")
+                        file.write("CRVAL2  =   {}\n".format(hduImage["CRVAL2"]))
+                        file.write("CRPIX2  =   {}\n".format(hduImage["CRPIX2"]))
+                        file.write("CDELT2  =   {}\n".format(hduImage["CDELT2"]))
+                        file.write("EXTEND  =   T\n")
+                        file.write("EQUINOX =   2000.0\n")
+                        file.write("SPECSYS =   TOPOCENT\n")
+                        file.write("END\n")
 
-                # turn nans of regridded mask into zeros
-                datTmp = fits.getdata("{}/{}".format(pipeline.masking, postGridMask))
-                headTmp = fits.getheader("{}/{}".format(pipeline.masking, postGridMask))
+                    if os.path.exists("{}/{}".format(pipeline.masking, postGridMask)):
+                        os.remove("{}/{}".format(pipeline.masking, postGridMask))
 
-                idxNan = np.isnan(datTmp)
-                datTmp[idxNan] = 0.0
-                datNew = np.around(datTmp.astype(np.float32)).astype(np.int16)
+                    # turn mask into zeros and ones
+                    with fits.open("{}/{}".format(pipeline.masking, preGridMask)) as hdul:
+                        if np.amax(hdul[0].data) > 1:
+                            mask = np.where(hdul[0].data > 0)
+                            hdul[0].data[mask] = 1
 
-                postGridMaskSof = preGridMask.replace(".fits", "_{}_regridSof.fits".format(pipeline.prefix))
+                        preGridMaskNew = preGridMask.replace(".fits", "_01.fits")
+                        hdul.writeto("{}/{}".format(pipeline.masking, preGridMaskNew), overwrite=True)
 
-                fits.writeto("{}/{}".format(pipeline.masking, postGridMaskSof), datNew, headTmp, overwrite=True)
+                    caracal.log.info("Reprojecting mask {} to match the grid of the image.".format(preGridMask))
+
+                    # REPROJECT user supplied mask
+                    step = "reprojectMask-img-{}-field-{}".format(trg, num)
+                    recipe.add(
+                        "cab/mProject",
+                        step,
+                        {
+                            "in.fits": preGridMaskNew,
+                            "out.fits": postGridMask,
+                            "hdr.template": "tmp.hdr",
+                            "f": True,
+                        },
+                        input=pipeline.masking,
+                        output=pipeline.masking,
+                        label="{0:s}:: Reprojecting user input mask {1:s} to match the grid of the image".format(step, preGridMaskNew),
+                    )
+
+                    recipe.run()
+                    recipe.jobs = []
+
+                    # turn nans of regridded mask into zeros
+                    datTmp = fits.getdata("{}/{}".format(pipeline.masking, postGridMask))
+                    headTmp = fits.getheader("{}/{}".format(pipeline.masking, postGridMask))
+
+                    idxNan = np.isnan(datTmp)
+                    datTmp[idxNan] = 0.0
+                    datNew = np.around(datTmp.astype(np.float32)).astype(np.int16)
+
+                    postGridMaskSof = preGridMask.replace(".fits", "_{}_regridSof_{}.fits".format(pipeline.prefix, mask_i))
+
+                    fits.writeto("{}/{}".format(pipeline.masking, postGridMaskSof), datNew, headTmp, overwrite=True)
+
+                    output_masks.append("{}/{}".format(pipeline.masking, postGridMaskSof))
+                
+            postGridMaskSof = preGridMask.split("image")[0] + \
+                    "image_mask_{}_regridSof.fits".format((pipeline.prefix))
+
+            merge_regrided_masks(
+                output_masks, imgWidth, imgHeight, headTmp,
+                "{}/{}".format(pipeline.masking, postGridMaskSof))
 
         elif num > 0 and preGridMask:
             caracal.log.info("Cycle > 0 and user provided inputmask")

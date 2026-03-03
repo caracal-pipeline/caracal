@@ -138,6 +138,26 @@ def worker(pipeline, recipe, config):
                 caracal.log.error("This will overwrite CDELT3 in the input cubes.")
                 raise caracal.BadDataError("Inconsistent CDELT3 values in input cubes.")
 
+    def remove_stokes_axis(filename):
+        from astropy.io import fits
+
+        if not os.path.exists(filename):
+            caracal.log.warn("Skipping Stokes axis removal for {0:s}. File does not exist.".format(filename))
+        else:
+            with fits.open(filename, mode="update") as cube:
+                headcube = cube[0].header
+                if (headcube["naxis"] == 4) and (headcube["ctype4"] == "STOKES"):
+                    caracal.log.info("Working on {}".format(filename))
+                    cube[0].data = cube[0].data[0]
+                    del headcube["cdelt4"]
+                    del headcube["crpix4"]
+                    del headcube["crval4"]
+                    del headcube["ctype4"]
+                    if "cunit4" in headcube:
+                        del headcube["cunit4"]
+                else:
+                    caracal.log.warning(f'Skipping Stokes axis removal for {filename}. Input cube has less than 4 axis or the 4th axis type is not "STOKES".')
+
     ##########################################
     # Main part of the worker
     ##########################################
@@ -201,7 +221,9 @@ def worker(pipeline, recipe, config):
 
     caracal.log.info("PLEASE CHECK -- Images to be mosaicked are:")
     caracal.log.info(specified_images)
-
+    # remove stokes
+    for image_name in specified_images:
+        remove_stokes_axis(image_name)
     found_stokes = (np.array([fits.getval(ff, "naxis") for ff in specified_images]) == 4).sum()
     if found_stokes:
         caracal.log.error("At least one of the input cubes has 4 axis. Mosaic Steward will not work.")

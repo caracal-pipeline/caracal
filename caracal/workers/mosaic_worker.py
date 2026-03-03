@@ -181,6 +181,9 @@ def worker(pipeline, recipe, config):
         caracal.log.info("You should check the selected image names. If unhappy with the selection, please specify the correct ones to use with mosaic:target_images.")
 
         # Needed for working out the field names for the targets, so that the correct files can be selected
+        print(pipeline.get_target_mss(label))
+        sys.exit()
+
         all_targets, _ = pipeline.get_target_mss(label)
         n_targets = len(all_targets)
         caracal.log.info("The number of targets to be mosaicked is {0:d}".format(n_targets))

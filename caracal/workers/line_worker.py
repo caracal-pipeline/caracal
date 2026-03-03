@@ -5,10 +5,12 @@ import json
 import os
 import re
 import shutil
+
 import numpy as np
 import psutil
 import stimela.dismissable as sdm
 import stimela.recipe
+from astropy.io import fits
 from casacore.tables import table
 
 import caracal
@@ -16,7 +18,6 @@ from caracal import log
 from caracal.dispatch_crew import noisy, utils
 from caracal.workers.utils import flag_Uzeros, remove_output_products
 from caracal.workers.utils import manage_flagsets as manflags
-
 
 C = 2.99792458e8  # m/s
 HI = 1.4204057517667e9  # Hz
@@ -37,9 +38,6 @@ def add_ms_label(msname, label="mst"):
 
 
 def freq_to_vel(filename, reverse):
-    from astropy.io import fits
-
-
     if not os.path.exists(filename):
         caracal.log.warn("Skipping conversion for {0:s}. File does not exist.".format(filename))
     else:
@@ -1761,7 +1759,7 @@ def worker(pipeline, recipe, config):
             # HI = 1.4204057517667e9  # Hz
             caracal.log.info("Image-plane continuum subtraction")
             # find where cubes generally are
-            
+
             dirlist = glob.glob("{0:s}/{1:s}/cube_*".format(pipeline.output, cube_dir))
             maxcube_dir = max([int(gi[-1]) for gi in dirlist])
             # Here starts the loop within the logic of the line worker.
@@ -1788,13 +1786,7 @@ def worker(pipeline, recipe, config):
                         caracal.log.info("Using mask defined by user {0:s}".format(config["imcontsub"]["mask_image"]))
 
                         if os.path.exists("{0:s}/../masking/{1:s}".format(pipeline.cubes, config["imcontsub"]["mask_image"])):
-                            imcontsub_opts.update(
-                                {
-                                    "mask-image": "{0:s}/../masking/{1:s}".format(
-                                        get_relative_path(pipeline.output, pipeline), config["imcontsub"]["mask_image"]
-                                    )
-                                }
-                            )
+                            imcontsub_opts.update({"mask-image": "{0:s}/../masking/{1:s}".format(get_relative_path(pipeline.output, pipeline), config["imcontsub"]["mask_image"])})
                         else:
                             caracal.log.info("Mask datacube not found in output/masking")
                             caracal.log.info("Will proceed with automasking")
@@ -1880,11 +1872,7 @@ def worker(pipeline, recipe, config):
                     path_mask = "{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"])
 
                     if os.path.exists(path_mask):
-                        imcontsub_opts.update(
-                            {
-                                "mask-image": "masking/{0:s}".format(config["imcontsub"]["mask_image"])
-                            }
-                        )
+                        imcontsub_opts.update({"mask-image": "masking/{0:s}".format(config["imcontsub"]["mask_image"])})
                     else:
                         caracal.log.info("Mask datacube {0:s} not found".format(path_mask))
                         caracal.log.info("Will proceed with automasking")

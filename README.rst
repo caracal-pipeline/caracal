@@ -129,7 +129,7 @@ If using `Singularity <https://github.com/sylabs/singularity>`_:
 3. Dev Installation (For developers)
 --------------------------
 
-Installation from source using `uv`. First, install poetry:
+Installation from source using `uv`. First, install uv:
 
 ..  code-block:: bash
 

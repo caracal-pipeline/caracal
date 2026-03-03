@@ -116,7 +116,7 @@ line:
     enable: true
     npix: [1800]
     cell: 2
-    nchans: 10
+    nchans: 20
     firstchan: 20
   mstransform: 
     enable: true

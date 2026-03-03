@@ -369,7 +369,7 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
     caracal.log.info("Ready to run MosaicQueen!")
-    caracal.log.info(image_filanames)
+    caracal.log.info(image_filenames)
     sys.exit()
 
     if pipeline.enable_task(config, "domontage"):

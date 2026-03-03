@@ -25,9 +25,7 @@ def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
     flags_before_worker = "{0:s}_{1:s}_before".format(pipeline.prefix, wname)
     flags_after_worker = "{0:s}_{1:s}_after".format(pipeline.prefix, wname)
-    rewind_main_ms = config["rewind_flags"]["enable"] and (
-        config["rewind_flags"]["mode"] == "reset_worker" or config["rewind_flags"]["version"] != "null"
-    )
+    rewind_main_ms = config["rewind_flags"]["enable"] and (config["rewind_flags"]["mode"] == "reset_worker" or config["rewind_flags"]["version"] != "null")
 
     label = config["label_in"]
     ncpu = config["ncpu"]
@@ -65,9 +63,7 @@ def worker(pipeline, recipe, config):
                         and available_flagversions.index(flags_before_worker) < available_flagversions.index(version)
                         and not config["overwrite_flagvers"]
                     ):
-                        manflags.conflict(
-                            "rewind_too_little", pipeline, wname, m, config, flags_before_worker, flags_after_worker
-                        )
+                        manflags.conflict("rewind_too_little", pipeline, wname, m, config, flags_before_worker, flags_after_worker)
                     substep = "version-{0:s}-ms{1:d}".format(version, i)
                     manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
                     if version != available_flagversions[-1]:
@@ -90,18 +86,14 @@ def worker(pipeline, recipe, config):
                             overwrite=config["overwrite_flagvers"],
                         )
                 elif stop_if_missing:
-                    manflags.conflict(
-                        "rewind_to_non_existing", pipeline, wname, m, config, flags_before_worker, flags_after_worker
-                    )
+                    manflags.conflict("rewind_to_non_existing", pipeline, wname, m, config, flags_before_worker, flags_after_worker)
                 # elif flag_main_ms:
                 #     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                 #     manflags.add_cflags(pipeline, recipe, flags_before_worker,
                 #         m, cab_name=substep, overwrite=config['overwrite_flagvers'])
             else:
                 if flags_before_worker in available_flagversions and not config["overwrite_flagvers"]:
-                    manflags.conflict(
-                        "would_overwrite_bw", pipeline, wname, m, config, flags_before_worker, flags_after_worker
-                    )
+                    manflags.conflict("would_overwrite_bw", pipeline, wname, m, config, flags_before_worker, flags_after_worker)
                 else:
                     substep = "save-{0:s}-ms{1:d}".format(flags_before_worker, i)
                     manflags.add_cflags(
@@ -180,9 +172,7 @@ def worker(pipeline, recipe, config):
         image_opts = {
             "msname": mslist,
             "column": config["make_images"]["col"],
-            "weight": config["make_images"]["img_weight"]
-            if not config["make_images"]["img_weight"] == "briggs"
-            else "briggs {}".format(config["make_images"]["img_robust"]),
+            "weight": config["make_images"]["img_weight"] if not config["make_images"]["img_weight"] == "briggs" else "briggs {}".format(config["make_images"]["img_robust"]),
             "nmiter": sdm.dismissable(config["make_images"]["img_nmiter"]),
             "npix": config["make_images"]["img_npix"],
             "scale": config["make_images"]["img_cell"],
@@ -269,8 +259,9 @@ def worker(pipeline, recipe, config):
             fits_mask = "masking/{0:s}.fits".format(mask_key)
             if not os.path.isfile("{0:s}/{1:s}".format(pipeline.output, fits_mask)):
                 raise caracal.ConfigurationError(
-                    "Clean mask {0:s}/{1:s} not found. Please make sure that you have given the correct mask label"
-                    " in cleanmask_method, and that the mask exists.".format(pipeline.output, fits_mask)
+                    "Clean mask {0:s}/{1:s} not found. Please make sure that you have given the correct mask label in cleanmask_method, and that the mask exists.".format(
+                        pipeline.output, fits_mask
+                    )
                 )
             image_opts.update(
                 {
@@ -299,21 +290,13 @@ def worker(pipeline, recipe, config):
             ang_offset = np.indices((headimage["naxis2"], headimage["naxis1"]), dtype=np.float32)
             ang_offset[0] -= headimage["crpix2"] - 1
             ang_offset[1] -= headimage["crpix1"] - 1
-            ang_offset = np.sqrt(
-                (ang_offset**2).sum(axis=0)
-            )  # Using offset in x and y direction to calculate the total offset from the pointing centre
+            ang_offset = np.sqrt((ang_offset**2).sum(axis=0))  # Using offset in x and y direction to calculate the total offset from the pointing centre
             ang_offset = ang_offset * np.abs(headimage["cdelt1"])  # Now offset is in units of deg
-            FWHM_pb = (57.5 / 60) * (
-                freq / 1.5e9
-            ) ** -1  # Eqn 4 of Mauch et al. (2020), but in deg   # freq is just a float for the 2D case
-            pb_image = (
-                np.cos(1.189 * np.pi * (ang_offset / FWHM_pb)) / (1 - 4 * (1.189 * ang_offset / FWHM_pb) ** 2)
-            ) ** 2  # Eqn 3 of Mauch et al. (2020)
+            FWHM_pb = (57.5 / 60) * (freq / 1.5e9) ** -1  # Eqn 4 of Mauch et al. (2020), but in deg   # freq is just a float for the 2D case
+            pb_image = (np.cos(1.189 * np.pi * (ang_offset / FWHM_pb)) / (1 - 4 * (1.189 * ang_offset / FWHM_pb) ** 2)) ** 2  # Eqn 3 of Mauch et al. (2020)
             pb_image = np.expand_dims(pb_image, axis=0)
             fits.writeto(filename.replace("image.fits", "pb.fits"), pb_image, header=headimage, overwrite=True)
-            caracal.log.info(
-                "Created Mauchian primary-beam  FITS {0:s}".format(filename.replace("image.fits", "pb.fits"))
-            )
+            caracal.log.info("Created Mauchian primary-beam  FITS {0:s}".format(filename.replace("image.fits", "pb.fits")))
 
     for target in all_targets:
         mslist = ms_dict[target]
@@ -335,11 +318,7 @@ def worker(pipeline, recipe, config):
             multiscale_scales = config["make_images"]["img_multiscale_scales"]
             min_uvw = config["make_images"]["minuvw_m"]
             nwlayers_factor = config["make_images"]["img_nwlayers_factor"]
-            nrdeconvsubimg = (
-                ncpu
-                if config["make_images"]["img_nrdeconvsubimg"] == 0
-                else config["make_images"]["img_nrdeconvsubimg"]
-            )
+            nrdeconvsubimg = ncpu if config["make_images"]["img_nrdeconvsubimg"] == 0 else config["make_images"]["img_nrdeconvsubimg"]
             if nrdeconvsubimg == 1:
                 wscl_parallel_deconv = None
             else:
@@ -377,9 +356,7 @@ def worker(pipeline, recipe, config):
                         make_mauchian_pb(im_name, freq)
                     # make convolved images
                     if do_convl and config["make_extra_images"]["schema"] != "cube":
-                        im_name = "{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits".format(
-                            img_path, prefix, field, ch, stokes
-                        )
+                        im_name = "{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits".format(img_path, prefix, field, ch, stokes)
                         bmaj = max(tar_beam.split(",")[0], tar_beam.split(",")[1])
                         header = fits.open(im_name)[0].header
                         # skip and make a nan image if beam is larger
@@ -395,14 +372,10 @@ def worker(pipeline, recipe, config):
                         # do convl if tar beam is larger than image beam
                         else:
                             step = "make-convolved-{0:s}-images".format(stokes)
-                            inp_name = "{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits:output".format(
-                                img_dir, prefix, field, ch, stokes
-                            )
+                            inp_name = "{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits:output".format(img_dir, prefix, field, ch, stokes)
                             convl_opt = {
                                 "image": inp_name,
-                                "output-filename": inp_name.replace(
-                                    "image.fits", str(tar_beam.replace(",", "_")) + "_image"
-                                ),
+                                "output-filename": inp_name.replace("image.fits", str(tar_beam.replace(",", "_")) + "_image"),
                                 "psf-pars": [float(x) for x in tar_beam.split(",")],
                                 "nthreads": ncpu,
                                 # "circ-psf": config['make_extra_images']['circular_beam'],
@@ -437,14 +410,10 @@ def worker(pipeline, recipe, config):
                         # do convl if tar beam is larger than image beam
                         else:
                             step = "make-convolved-MFS-{0:s}-images".format(stokes)
-                            inp_name = "{0:s}/{1:s}_{2:s}-MFS-{3:s}-image.fits:output".format(
-                                img_dir, prefix, field, stokes
-                            )
+                            inp_name = "{0:s}/{1:s}_{2:s}-MFS-{3:s}-image.fits:output".format(img_dir, prefix, field, stokes)
                             convl_opt = {
                                 "image": inp_name,
-                                "output-filename": inp_name.replace(
-                                    "image.fits", str(tar_beam.replace(",", "_")) + "_image"
-                                ),
+                                "output-filename": inp_name.replace("image.fits", str(tar_beam.replace(",", "_")) + "_image"),
                                 "psf-pars": [float(x) for x in tar_beam.split(",")],
                                 "nthreads": ncpu,
                                 # "circ-psf": config['make_extra_images']['circular_beam'],
@@ -463,8 +432,7 @@ def worker(pipeline, recipe, config):
 
                 if do_convl and config["make_extra_images"]["schema"] != "cube" and skipped_ch > 0:
                     caracal.log.info(
-                        "%d %s channel images out of %d are now nan because target beam is larger than bmaj"
-                        % (skipped_ch, stokes, int(config["make_images"]["img_nchans"]))
+                        "%d %s channel images out of %d are now nan because target beam is larger than bmaj" % (skipped_ch, stokes, int(config["make_images"]["img_nchans"]))
                     )
 
                 if config["make_extra_images"]["schema"] == "both" or config["make_extra_images"]["schema"] == "cube":
@@ -473,11 +441,7 @@ def worker(pipeline, recipe, config):
                         pb_im_name = "{0:s}/{1:s}_{2:s}-0*-{3:s}-pb.fits:output".format(img_dir, prefix, field, stokes)
                         pb_out_cube = "{0:s}/{1:s}_{2:s}-{3:s}-pb.fits:output".format(img_dir, prefix, field, stokes)
                         caracal.log.info("Using the following image to make a PB cube:")
-                        caracal.log.info(
-                            os.system(
-                                "ls -1 {0:s}/{1:s}_{2:s}-0*-{3:s}-pb.fits".format(img_path, prefix, field, stokes)
-                            )
-                        )
+                        caracal.log.info(os.system("ls -1 {0:s}/{1:s}_{2:s}-0*-{3:s}-pb.fits".format(img_path, prefix, field, stokes)))
                         step = "make-pb-cube-{0:s}".format(stokes)
                         recipe.add(
                             "cab/fitstool",
@@ -498,9 +462,7 @@ def worker(pipeline, recipe, config):
                     im_names = "{0:s}/{1:s}_{2:s}-0*-{3:s}-image.fits:output".format(img_dir, prefix, field, stokes)
                     cube_name = "{0:s}/{1:s}_{2:s}-{3:s}-image.fits:output".format(img_dir, prefix, field, stokes)
                     caracal.log.info("Using the following image to make a {0:s} cube:".format(stokes))
-                    caracal.log.info(
-                        os.system("ls -1 {0:s}/{1:s}_{2:s}-0*-{3:s}-image.fits".format(img_path, prefix, field, stokes))
-                    )
+                    caracal.log.info(os.system("ls -1 {0:s}/{1:s}_{2:s}-0*-{3:s}-image.fits".format(img_path, prefix, field, stokes)))
                     step = "make-cube-{0:s}".format(stokes)
                     recipe.add(
                         "cab/fitstool",
@@ -526,13 +488,9 @@ def worker(pipeline, recipe, config):
                         head = fits.open(inp_cube_name)[0].header
                         data = fits.open(inp_cube_name)[0].data
                         bvec = head["bmaj*"]
-                        bvect = [
-                            float(bvec[x]) < float(max(tar_beam.split(",")[0], tar_beam.split(",")[1]))
-                            for x in range(0, len(bvec))
-                        ]
+                        bvect = [float(bvec[x]) < float(max(tar_beam.split(",")[0], tar_beam.split(",")[1])) for x in range(0, len(bvec))]
                         caracal.log.info(
-                            "%d channels out of %d in the %s cube are now nan because target beam is larger than bmaj"
-                            % (len(bvect) - sum(bvect), int(len(bvect) - 1), stokes)
+                            "%d channels out of %d in the %s cube are now nan because target beam is larger than bmaj" % (len(bvect) - sum(bvect), int(len(bvect) - 1), stokes)
                         )
                         for x in range(1, len(bvect)):
                             head["bmaj" + str(x)] = head["bmaj" + str(x)] * bvect[x]
@@ -548,9 +506,7 @@ def worker(pipeline, recipe, config):
                             step,
                             {
                                 "image": cube_name,
-                                "output-filename": cube_name.replace(
-                                    "image.fits", str(tar_beam.replace(",", "-")) + "_image"
-                                ),
+                                "output-filename": cube_name.replace("image.fits", str(tar_beam.replace(",", "-")) + "_image"),
                                 "nthreads": ncpu,
                                 "psf-pars": [float(x) for x in tar_beam.split(",")],
                                 # "circ-psf": config['make_extra_images']['circular_beam'],

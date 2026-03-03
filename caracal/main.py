@@ -1,6 +1,6 @@
 import logging
 import os
-import pdb
+import pdb  # noqa: T100
 import shutil
 import sys
 import traceback
@@ -44,7 +44,7 @@ def print_worker_help(worker):
     """
     worker help
     """
-    schema = os.path.join(pckgdir, "schema", "{0:s}_schema.yml".format(worker))
+    schema = os.path.join(pckgdir, "schema", f"{worker:s}_schema.yml")
     if not os.path.exists(schema):
         return None
 
@@ -60,9 +60,9 @@ def get_default(sample, to):
     """
     Get default parset copy
     """
-    log.info("Dumping default configuration to {0:s} as requested. Goodbye!".format(to))
+    log.info(f"Dumping default configuration to {to:s} as requested. Goodbye!")
     sample_config = os.path.join(pckgdir, "sample_configurations", SAMPLE_CONFIGS[sample])
-    os.system("cp {0:s} {1:s}".format(sample_config, to))
+    shutil.copyfile(sample_config, to)
 
 
 def log_logo():
@@ -103,7 +103,7 @@ def log_logo():
 ........................................................................................................................
 """)
 
-    log.info("Version {1:s} installed at {0:s}".format(pckgdir, str(__version__)))
+    log.info(f"Version {__version__!s:s} installed at {pckgdir:s}")
 
 
 def execute_pipeline(options, config):
@@ -136,9 +136,9 @@ def execute_pipeline(options, config):
                 pipeline.run_workers()
         except SystemExit as e:
             # if e.code != 0:
-            log.error("A pipeline worker initiated sys.exit({0:}). This is likely a bug, please report.".format(e.code))
-            log.info("  More information can be found in the logfile at {0:s}".format(caracal.CARACAL_LOG))
-            log.info("  You are running version {0:s}".format(str(__version__)), extra=dict(logfile_only=True))
+            log.error(f"A pipeline worker initiated sys.exit({e.code}). This is likely a bug, please report.")
+            log.info(f"  More information can be found in the logfile at {caracal.CARACAL_LOG:s}")
+            log.info(f"  You are running version {__version__!s:s}", extra={"logfile_only": True})
             if debug:
                 log.warning("you are running with -debug enabled, dropping you into pdb. Use Ctrl+D to exit.")
                 pdb.post_mortem(sys.exc_info()[2])
@@ -146,12 +146,12 @@ def execute_pipeline(options, config):
 
         except KeyboardInterrupt:
             log.error("Ctrl+C received from user, shutting down. Goodbye!")
-        except Exception as exc:
-            log.error("{} [{}]".format(exc, type(exc).__name__), extra=dict(boldface=True))
-            log.info("  More information can be found in the logfile at {0:s}".format(caracal.CARACAL_LOG))
-            log.info("  You are running version {0:s}".format(str(__version__)), extra=dict(logfile_only=True))
+        except Exception as exc:  # noqa: BLE001
+            log.error(f"{exc} [{type(exc).__name__}]", extra={"boldface": True})
+            log.info(f"  More information can be found in the logfile at {caracal.CARACAL_LOG:s}")
+            log.info(f"  You are running version {__version__!s:s}", extra={"logfile_only": True})
             for line in traceback.format_exc().splitlines():
-                log.error(line, extra=dict(traceback_report=True))
+                log.error(line, extra={"traceback_report": True})
             if debug:
                 log.warning("you are running with -debug enabled, dropping you into pdb. Use Ctrl+D to exit.")
                 pdb.post_mortem(sys.exc_info()[2])
@@ -181,7 +181,7 @@ def main(argv):
     # user requests worker help
     if options.worker_help:
         if not print_worker_help(options.worker_help):
-            parser.error("unknown worker '{}'".format(options.worker_help))
+            parser.error(f"unknown worker '{options.worker_help}'")
         return
 
     caracal.log.info(f"Invoked as {' '.join(sys.argv)}")
@@ -190,33 +190,25 @@ def main(argv):
     if options.get_default:
         sample_config = SAMPLE_CONFIGS.get(options.get_default_template)
         if sample_config is None:
-            parser.error("unknown default template '{}'".format(options.get_default_template))
+            parser.error(f"unknown default template '{options.get_default_template}'")
         sample_config_path = os.path.join(pckgdir, "sample_configurations", sample_config)
         if not os.path.exists(sample_config_path):
-            raise RuntimeError("Missing sample config file {}. This is a bug, please report".format(sample_config))
+            raise RuntimeError(f"Missing sample config file {sample_config}. This is a bug, please report")
         # validate the file
         try:
             parser = config_parser.config_parser()
             _, version = parser.validate_config(sample_config_path)
             if version != SCHEMA_VERSION:
-                log.warning(
-                    "Sample config file {} version is {}, current CARACal version is {}.".format(
-                        sample_config, SCHEMA_VERSION, version
-                    )
-                )
+                log.warning(f"Sample config file {sample_config} version is {SCHEMA_VERSION}, current CARACal version is {{version}}.")
                 log.warning("Proceeding anyway, but please notify the CARACal team to ship a newer sample config!")
         except config_parser.ConfigErrors as exc:
-            log.error("{}, list of errors follows:".format(exc))
+            log.error(f"{exc}, list of errors follows:")
             for section, errors in exc.errors.items():
-                print("  {}:".format(section))
+                print(f"  {section}:")
                 for err in errors:
-                    print("    - {}".format(err))
+                    print(f"    - {err}")
             sys.exit(1)  # indicate failure
-        log.info(
-            "Initializing {1} from config template '{0}' (schema version {2})".format(
-                options.get_default_template, options.get_default, version
-            )
-        )
+        log.info(f"Initializing {options.get_default} from config template '{options.get_default_template}' (schema version {{version}})")
         shutil.copyfile(sample_config_path, options.get_default)
         return
 
@@ -236,30 +228,24 @@ def main(argv):
         parser = config_parser.config_parser()
         config, version = parser.validate_config(config_file)
         if version != SCHEMA_VERSION:
-            log.warning(
-                "Config file {} schema version is {}, current CARACal version is {}".format(
-                    config_file, SCHEMA_VERSION, version
-                )
-            )
-            log.warning(
-                "Will try to proceed anyway, but please be advised that configuration options may have changed."
-            )
+            log.warning(f"Config file {config_file} schema version is {SCHEMA_VERSION}, current CARACal version is {version}")
+            log.warning("Will try to proceed anyway, but please be advised that configuration options may have changed.")
         # populate parser with items from config
         parser.populate_parser(config)
         # reparse arguments
-        caracal.log.info("Loading pipeline configuration from {}".format(config_file), extra=dict(color="GREEN"))
+        caracal.log.info(f"Loading pipeline configuration from {config_file}", extra={"color": "GREEN"})
         options, config = parser.update_config_from_args(config, argv)
         # raise warning on schema version
     except config_parser.ConfigErrors as exc:
-        log.error("{}, list of errors follows:".format(exc))
+        log.error(f"{exc}, list of errors follows:")
         for section, errors in exc.errors.items():
-            print("  {}:".format(section))
+            print(f"  {section}:")
             for err in errors:
-                print("    - {}".format(err))
+                print(f"    - {err}")
         sys.exit(1)  # indicate failure
-    except Exception as exc:
+    except Exception as exc:  # noqa BLE001
         traceback.print_exc()
-        log.error("Error parsing arguments or configuration: {}".format(exc))
+        log.error(f"Error parsing arguments or configuration: {exc}")
         if options.debug:
             log.warning("you are running with -debug enabled, dropping you into pdb. Use Ctrl+D to exit.")
             pdb.post_mortem(sys.exc_info()[2])

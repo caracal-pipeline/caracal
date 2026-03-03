@@ -163,9 +163,7 @@ class UzeroFlagger:
             #     shutil.rmtree(self.config['flag_u_zeros']['stripeMSDir']+outVis)
             # if os.path.exists(self.config['flag_u_zeros']['stripeMSDir']+outVis+'.flagversions'):
             #     shutil.rmtree(self.config['flag_u_zeros']['stripeMSDir']+outVis+'.flagversions')
-            remove_output_products(
-                (outVis, outVis + ".flagversions"), directory=self.config["flag_u_zeros"]["stripeMSDir"]
-            )
+            remove_output_products((outVis, outVis + ".flagversions"), directory=self.config["flag_u_zeros"]["stripeMSDir"])
 
             recipe = stimela.Recipe(
                 "flagUzerosMST",
@@ -422,10 +420,7 @@ class UzeroFlagger:
         lambdal = scconstants.c / avspecchan
         index = flags[:, 0, 0]
         flagCoords = uvw[index, :]
-        baseFlags = (
-            np.sqrt(np.power(flagCoords[:, 0], 2) + np.power(flagCoords[:, 1], 2) + np.power(flagCoords[:, 2], 2))
-            * lambdal
-        )
+        baseFlags = np.sqrt(np.power(flagCoords[:, 0], 2) + np.power(flagCoords[:, 1], 2) + np.power(flagCoords[:, 2], 2)) * lambdal
         baseAll = np.sqrt(np.power(uvw[:, 0], 2) + np.power(uvw[:, 1], 2) + np.power(uvw[:, 2], 2)) * lambdal
 
         figBase = plt.figure(figsize=(7.24409, 7.24409), constrained_layout=False)
@@ -523,9 +518,7 @@ class UzeroFlagger:
         hdr["COMMENT"] = "Ext 1 = FFT table"
 
         if method == "madThreshold":
-            cutoff = self.sunBlockStats(
-                inFFT, galaxy, msid, track, scan, makePlots, "mad", threshold, ax=None, title="", verb=True
-            )
+            cutoff = self.sunBlockStats(inFFT, galaxy, msid, track, scan, makePlots, "mad", threshold, ax=None, title="", verb=True)
         else:
             if self.config["flag_u_zeros"]["taper"]:
                 cutoff = np.nanpercentile(tabArr["Amp"], 99.99)
@@ -584,9 +577,7 @@ class UzeroFlagger:
 
         gsS = gridspec.GridSpec(nrows=1, ncols=1, figure=figS, hspace=0, wspace=0.0)
 
-        showgouse = np.linspace(
-            1.5 * bin_centers[0] - 0.5 * bin_centers[1], 1.5 * bin_centers[-1] - 0.5 * bin_centers[-2], 200
-        )
+        showgouse = np.linspace(1.5 * bin_centers[0] - 0.5 * bin_centers[1], 1.5 * bin_centers[-1] - 0.5 * bin_centers[-2], 200)
         calculated = self.gaussian(showgouse, average, widthes[0] * npoints / (np.sqrt(2 * np.pi) * stdev), stdev)
 
         # mad
@@ -718,11 +709,7 @@ class UzeroFlagger:
         else:
             caracal.log.warn("For some reasons I am not making the fftstats plots!")
 
-        caracal.log.info(
-            "FFT image flagging cutoff = median + {threshold} * mad = {cutoff:.5f}".format(
-                threshold=float(threshold), cutoff=ave + float(threshold) * std
-            )
-        )
+        caracal.log.info("FFT image flagging cutoff = median + {threshold} * mad = {cutoff:.5f}".format(threshold=float(threshold), cutoff=ave + float(threshold) * std))
 
         return ave + float(threshold) * std
 
@@ -746,19 +733,11 @@ class UzeroFlagger:
         caracal.log.info("{0:d} UV cells in the FFT image selected for flagging".format(U.shape[0]))
 
         if qrtdebug and U.shape[0]:
-            caracal.log.info(
-                "\tamplitude of selected cells in range {0:.3f} - {1:.3f}".format(
-                    np.nanmin(tableFlags["amp"]), np.nanmax(tableFlags["amp"])
-                )
-            )
+            caracal.log.info("\tamplitude of selected cells in range {0:.3f} - {1:.3f}".format(np.nanmin(tableFlags["amp"]), np.nanmax(tableFlags["amp"])))
             caracal.log.info("\t{0} total rows in scan MS".format(flags.shape))
 
         if U.shape[0]:
-            caracal.log.info(
-                "Finding MS rows within flagged cells +/- {0:d} U cell(s) and +/- {1:d} V cell(s)".format(
-                    dilateU, dilateV
-                )
-            )
+            caracal.log.info("Finding MS rows within flagged cells +/- {0:d} U cell(s) and +/- {1:d} V cell(s)".format(dilateU, dilateV))
 
         percent = 0.0
         for i in range(0, UV.shape[1]):
@@ -797,12 +776,8 @@ class UzeroFlagger:
                 caracal.log.info("\t\t{0:d} rows found".format(indexTot.shape[0]))
                 if indexTot.shape[0]:
                     caracal.log.info("\t\tSelected rows have uv in the following ranges")
-                    caracal.log.info(
-                        "\t\tu: {0:.3f} - {1:.3f}".format(np.nanmin(uv[indexTot, 0]), np.nanmax(uv[indexTot, 0]))
-                    )
-                    caracal.log.info(
-                        "\t\tv: {0:.3f} - {1:.3f}".format(np.nanmin(uv[indexTot, 1]), np.nanmax(uv[indexTot, 1]))
-                    )
+                    caracal.log.info("\t\tu: {0:.3f} - {1:.3f}".format(np.nanmin(uv[indexTot, 0]), np.nanmax(uv[indexTot, 0])))
+                    caracal.log.info("\t\tv: {0:.3f} - {1:.3f}".format(np.nanmin(uv[indexTot, 1]), np.nanmax(uv[indexTot, 1])))
 
             # Add to stripe flags of this scan
             flags[indexTot, :, :] = True
@@ -1036,9 +1011,7 @@ class UzeroFlagger:
                 caracal.log.info("----------------------------------------------------")
 
                 # Save flag version before start iterating over all thresholds
-                self.saveFlags(
-                    pipeline, visName, msdir=self.config["flag_u_zeros"]["stripeMSDir"], flagname="scan_flags_start"
-                )
+                self.saveFlags(pipeline, visName, msdir=self.config["flag_u_zeros"]["stripeMSDir"], flagname="scan_flags_start")
 
                 caracal.log.info("Imaging scan for stripe analysis")
                 outCubePrefix_0 = galaxy + track + "_scan" + str(scan)
@@ -1051,12 +1024,8 @@ class UzeroFlagger:
 
                 inFFTData, inFFTHeader = self.makeFFT(outCubeName_0)
 
-                U = (np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader["CRPIX1"]) * inFFTHeader[
-                    "CDELT1"
-                ] + inFFTHeader["CRVAL1"]
-                V = (np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader["CRPIX2"] - 1) * inFFTHeader[
-                    "CDELT2"
-                ] + inFFTHeader["CRVAL2"]
+                U = (np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader["CRPIX1"]) * inFFTHeader["CDELT1"] + inFFTHeader["CRVAL1"]
+                V = (np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader["CRPIX2"] - 1) * inFFTHeader["CDELT2"] + inFFTHeader["CRVAL2"]
 
                 el = 0
                 az = 0
@@ -1067,30 +1036,20 @@ class UzeroFlagger:
                 rms_thresh = []
 
                 if len(thresholds) > 1:
-                    caracal.log.info(
-                        "Start iterating over all requested thresholds {} to find the optimal one".format(thresholds)
-                    )
+                    caracal.log.info("Start iterating over all requested thresholds {} to find the optimal one".format(thresholds))
                 # iterate over all thresholds
                 for threshold in thresholds:
                     if len(thresholds) > 1:
                         caracal.log.info("New iter")
                     # Rewind flags of this scan to their initial state
-                    fvers = [
-                        ii.split(" :")[0] for ii in open(visAddress + ".flagversions/FLAG_VERSION_LIST").readlines()
-                    ]
-                    self.restoreFlags(
-                        pipeline, visName, msdir=self.config["flag_u_zeros"]["stripeMSDir"], flagname="scan_flags_start"
-                    )
+                    fvers = [ii.split(" :")[0] for ii in open(visAddress + ".flagversions/FLAG_VERSION_LIST").readlines()]
+                    self.restoreFlags(pipeline, visName, msdir=self.config["flag_u_zeros"]["stripeMSDir"], flagname="scan_flags_start")
 
                     while fvers[-1] != "scan_flags_start":
-                        self.deleteFlags(
-                            pipeline, visName, msdir=self.config["flag_u_zeros"]["stripeMSDir"], flagname=fvers[-1]
-                        )
+                        self.deleteFlags(pipeline, visName, msdir=self.config["flag_u_zeros"]["stripeMSDir"], flagname=fvers[-1])
                         fvers = fvers[:-1]
 
-                    caracal.log.info(
-                        "Computing statistics on FFT and flagging scan for threshold {0}".format(threshold)
-                    )
+                    caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
                     # scanFlags below are the stripe flags for this scan
                     statsArray, scanFlags, percent, cutoff_scan = self.saveFFTTable(
                         inFFTData,
@@ -1126,28 +1085,17 @@ class UzeroFlagger:
                     caracal.log.info("Done iterating over all requested thresholds")
                     threshold = thresholds[rms_thresh.index(min(rms_thresh))]
                     caracal.log.info("\tThe threshold that minimises the image noise is {}".format(threshold))
-                    caracal.log.info(
-                        "Repeating flagging and imaging steps with the selected threshold"
-                        "(yes, the must be a better way...)"
-                    )
+                    caracal.log.info("Repeating flagging and imaging steps with the selected threshold(yes, the must be a better way...)")
                     # Rewind flags of this scan to their initial state
-                    fvers = [
-                        ii.split(" :")[0] for ii in open(visAddress + ".flagversions/FLAG_VERSION_LIST").readlines()
-                    ]
-                    self.restoreFlags(
-                        pipeline, visName, msdir=self.config["flag_u_zeros"]["stripeMSDir"], flagname="scan_flags_start"
-                    )
+                    fvers = [ii.split(" :")[0] for ii in open(visAddress + ".flagversions/FLAG_VERSION_LIST").readlines()]
+                    self.restoreFlags(pipeline, visName, msdir=self.config["flag_u_zeros"]["stripeMSDir"], flagname="scan_flags_start")
 
                     while fvers[-1] != "scan_flags_start":
-                        self.deleteFlags(
-                            pipeline, visName, msdir=self.config["flag_u_zeros"]["stripeMSDir"], flagname=fvers[-1]
-                        )
+                        self.deleteFlags(pipeline, visName, msdir=self.config["flag_u_zeros"]["stripeMSDir"], flagname=fvers[-1])
 
                         fvers = fvers[:-1]
                     # Re-flag with selected threshold
-                    caracal.log.info(
-                        "Computing statistics on FFT and flagging scan for threshold {0}".format(threshold)
-                    )
+                    caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
                     statsArray, scanFlags, percent, cutoff_scan = self.saveFFTTable(
                         inFFTData,
                         inFFTHeader,
@@ -1236,9 +1184,7 @@ class UzeroFlagger:
             superArr = np.vstack((superArr, arr))
             caracal.log.info("Saving stats table")
             newtab = Table(names=["galaxy", "track", "scan", "perc", "cutoff", "el", "az"], data=(superArr))
-            outTablePercent = "{tableDir}stats_{galaxy}{track}.ecsv".format(
-                tableDir=self.config["flag_u_zeros"]["stripeTableDir"], galaxy=galaxy, track=track
-            )
+            outTablePercent = "{tableDir}stats_{galaxy}{track}.ecsv".format(tableDir=self.config["flag_u_zeros"]["stripeTableDir"], galaxy=galaxy, track=track)
             astasc.write(newtab, outTablePercent, overwrite=True, format="ecsv")
 
             if flagCmd:
@@ -1259,20 +1205,12 @@ class UzeroFlagger:
 
                 inFFTData, inFFTHeader = self.makeFFT(outCubeName)
 
-                U = (np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader["CRPIX1"]) * inFFTHeader[
-                    "CDELT1"
-                ] + inFFTHeader["CRVAL1"]
-                V = (np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader["CRPIX2"] - 1) * inFFTHeader[
-                    "CDELT2"
-                ] + inFFTHeader["CRVAL2"]
+                U = (np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader["CRPIX1"]) * inFFTHeader["CDELT1"] + inFFTHeader["CRVAL1"]
+                V = (np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader["CRPIX2"] - 1) * inFFTHeader["CDELT2"] + inFFTHeader["CRVAL2"]
 
                 caracal.log.info("Saving total stripe flagging diagnostic plots".format())
 
-                percTotAfter = (
-                    np.nansum(stripeFlags)
-                    / float(stripeFlags.shape[0] * stripeFlags.shape[1] * stripeFlags.shape[2])
-                    * 100.0
-                )
+                percTotAfter = np.nansum(stripeFlags) / float(stripeFlags.shape[0] * stripeFlags.shape[1] * stripeFlags.shape[2]) * 100.0
                 caracal.log.info("Total stripe flags: {percent:.3f} %".format(percent=percTotAfter))
                 caracal.log.info("----------------------------------------------------")
 
@@ -1282,9 +1220,7 @@ class UzeroFlagger:
                     caracal.log.info("----------------------------------------------------")
                     caracal.log.info("----------------------Plotting----------------------")
 
-                    outPlot = "{0}{1}_fullMS_prepostFlag.png".format(
-                        self.config["flag_u_zeros"]["stripePlotDir"], mfsOb
-                    )
+                    outPlot = "{0}{1}_fullMS_prepostFlag.png".format(self.config["flag_u_zeros"]["stripePlotDir"], mfsOb)
                     fig0, comvmax_tot = self.plotAll(
                         fig0,
                         gs0,

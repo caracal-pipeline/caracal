@@ -27,9 +27,7 @@ def check_config(config, name):
         # check that numbers match
         for other in "calmode", "solint", "combine":
             if len(config[primsec][other]) != len(order):
-                raise caracal.ConfigurationError(
-                    f"{name}: {primsec}: {other}: expected {len(order)} elements, found {len(config[primsec][other])}"
-                )
+                raise caracal.ConfigurationError(f"{name}: {primsec}: {other}: expected {len(order)} elements, found {len(config[primsec][other])}")
 
 
 # E.g. to split out continuum/<dir> from output/continuum/dir
@@ -157,9 +155,7 @@ def solve(
     def do_KGBF(i):
         interp = RULES[term]["interp"]
         if pipeline.refant[iobs] in ["auto"]:
-            params["refant"] = manants.get_refant(
-                pipeline, recipe, prefix, msname, fields, pipeline.minbase[iobs], pipeline.maxdist[iobs], i
-            )
+            params["refant"] = manants.get_refant(pipeline, recipe, prefix, msname, fields, pipeline.minbase[iobs], pipeline.maxdist[iobs], i)
             if params["refant"]:
                 caracal.log.info(f"Auto selected ref antenna(s): {params['refant']}")
             else:
@@ -300,17 +296,11 @@ def solve(
                 calmode="calflag",
             )
         else:
-            caracal.log.info(
-                "Gains have already been applied using this exact set of gain tables and fields."
-                " Skipping unnecessary applycal step"
-            )
+            caracal.log.info("Gains have already been applied using this exact set of gain tables and fields. Skipping unnecessary applycal step")
 
         if term == "A":
             if not set("KGBF").intersection(order[:i]):
-                raise RuntimeError(
-                    "Have encountered a request to flag the secondary calibrator without any gain,"
-                    " bandpass or delay tables to apply first."
-                )
+                raise RuntimeError("Have encountered a request to flag the secondary calibrator without any gain, bandpass or delay tables to apply first.")
             step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
             params["mode"] = RULES[term]["mode"]
             params["field"] = ",".join(field)
@@ -628,9 +618,7 @@ def worker(pipeline, recipe, config):
                     )
             else:
                 if flags_before_worker in available_flagversions and not config["overwrite_flagvers"]:
-                    manflags.conflict(
-                        "would_overwrite_bw", pipeline, wname, msname, config, flags_before_worker, flags_after_worker
-                    )
+                    manflags.conflict("would_overwrite_bw", pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                 else:
                     substep = "save-{0:s}-ms{1:d}".format(flags_before_worker, i)
                     manflags.add_cflags(
@@ -644,9 +632,7 @@ def worker(pipeline, recipe, config):
 
         if len(pipeline.fcal[i]) > 1:
             fluxscale_field = utils.observed_longest(msinfo, pipeline.fcal[i])
-            caracal.log.info(
-                f"Found more than one flux calibrator.Will use the one observed the longest {fluxscale_field}."
-            )
+            caracal.log.info(f"Found more than one flux calibrator.Will use the one observed the longest {fluxscale_field}.")
         else:
             fluxscale_field = pipeline.fcal[i][0]
 
@@ -677,9 +663,7 @@ def worker(pipeline, recipe, config):
                         "tile-size": config["set_model"]["tile_size"],
                         "column": "MODEL_DATA",
                     }
-                elif (
-                    config["set_model"]["meerkat_crystalball_skymodel"] and modelcrystal
-                ):  # Use Ben's crystalball models
+                elif config["set_model"]["meerkat_crystalball_skymodel"] and modelcrystal:  # Use Ben's crystalball models
                     opts = {
                         "ms": msname,
                         "sky-model": modelcrystal,
@@ -710,10 +694,7 @@ def worker(pipeline, recipe, config):
                         "scalebychan": True,
                     }
                 else:
-                    raise RuntimeError(
-                        'The flux calibrator field "{}" could not be '
-                        "found in our database or in the CASA NRAO database".format(fluxscale_field)
-                    )
+                    raise RuntimeError('The flux calibrator field "{}" could not be found in our database or in the CASA NRAO database'.format(fluxscale_field))
             step = "set_model_cal-{0:d}".format(i)
             if "skymodel" in opts:
                 cabtouse = "cab/simulator"
@@ -871,24 +852,18 @@ def worker(pipeline, recipe, config):
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
             substep = "save-{0:s}-ms{1:d}".format(flags_after_worker, i)
-            manflags.add_cflags(
-                pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config["overwrite_flagvers"]
-            )
+            manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config["overwrite_flagvers"])
 
         applycal_recipes = callibs.new_callib()
         # the fluxscale_field has already been chosen, so using "nearest" here does not make sense to FROM(Sphe)
         # see issue #1474
-        primary_tables = get_caltab_final(
-            primary_order, primary["gaintables"], primary["interps"], fluxscale_field, "target"
-        )
+        primary_tables = get_caltab_final(primary_order, primary["gaintables"], primary["interps"], fluxscale_field, "target")
         if no_secondary:
             for gt, itp, fd in zip(*primary_tables):
                 callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)
         else:
             # default recipes from secondary
-            for gt, itp, fd in zip(
-                *get_caltab_final(secondary_order, secondary["gaintables"], secondary["interps"], "nearest", "target")
-            ):
+            for gt, itp, fd in zip(*get_caltab_final(secondary_order, secondary["gaintables"], secondary["interps"], "nearest", "target")):
                 # if the table is already applied with the primary in it, re-add it with an "all" (empty) field
                 # add_callib_recipe(applycal_recipes, gt, itp, fd, '' if gt in applycal_recipes else targets)
                 callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)

@@ -187,9 +187,7 @@ def observed_longest(info: Dict, calfields: List[Union[str, int]]):
     return field
 
 
-def field_observation_length(
-    info: Dict, field: Union[str, int], return_scans: bool = False
-) -> Union[Tuple[float, List], float]:
+def field_observation_length(info: Dict, field: Union[str, int], return_scans: bool = False) -> Union[Tuple[float, List], float]:
     """
     Calculate observation for a field from a MSUtils.summary() dictionary
 

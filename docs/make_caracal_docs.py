@@ -200,10 +200,7 @@ def writeWorkersIndex(srtWrks, wrkDr, schms, schDr):
         if "type" in schm and schm["type"] == "map":
             schm = schm["mapping"]
         else:
-            raise ValidationErr(
-                f"  ERROR: type of {wrk} in {matchingSchema} is not mapping, or no type was found;"
-                " no idea what to do with this!"
-            )
+            raise ValidationErr(f"  ERROR: type of {wrk} in {matchingSchema} is not mapping, or no type was found; no idea what to do with this!")
 
         # enter the nested structure of the schema and get all relevant info
         for parLev1 in schm:
@@ -220,20 +217,12 @@ def writeWorkersIndex(srtWrks, wrkDr, schms, schDr):
                     f.write("  **{0:s}**\n\n".format(parLev2))
                     writeWorkerLevel(f, schm[parLev1]["mapping"][parLev2], indentLevel="    ")
 
-                    if (
-                        "type" in schm[parLev1]["mapping"][parLev2]
-                        and schm[parLev1]["mapping"][parLev2]["type"] == "map"
-                    ):
+                    if "type" in schm[parLev1]["mapping"][parLev2] and schm[parLev1]["mapping"][parLev2]["type"] == "map":
                         for parLev3 in schm[parLev1]["mapping"][parLev2]["mapping"]:
                             f.write("    **{0:s}**\n\n".format(parLev3))
-                            writeWorkerLevel(
-                                f, schm[parLev1]["mapping"][parLev2]["mapping"][parLev3], indentLevel="      "
-                            )
+                            writeWorkerLevel(f, schm[parLev1]["mapping"][parLev2]["mapping"][parLev3], indentLevel="      ")
 
-                            if (
-                                "type" in schm[parLev1]["mapping"][parLev2]["mapping"][parLev3]
-                                and schm[parLev1]["mapping"][parLev2]["mapping"][parLev3]["type"] == "map"
-                            ):
+                            if "type" in schm[parLev1]["mapping"][parLev2]["mapping"][parLev3] and schm[parLev1]["mapping"][parLev2]["mapping"][parLev3]["type"] == "map":
                                 for parLev4 in schm[parLev1]["mapping"][parLev2]["mapping"][parLev3]["mapping"]:
                                     f.write("      **{0:s}**\n\n".format(parLev4))
                                     writeWorkerLevel(

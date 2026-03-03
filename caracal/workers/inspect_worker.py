@@ -314,16 +314,9 @@ def _process_shadems_plot_list(plot_args, basesubst, plotlist, defaults, descrip
                 continue
             # all other keys go into new defaults (with substitutions done)
             new_defaults = defaults.copy()
-            new_defaults.update(
-                **{
-                    "--" + key.replace("_", "-"): val.format(**basesubst) if isinstance(val, str) else val
-                    for key, val in entry.items()
-                }
-            )
+            new_defaults.update(**{"--" + key.replace("_", "-"): val.format(**basesubst) if isinstance(val, str) else val for key, val in entry.items()})
             # and ecurse into new plot list
-            _process_shadems_plot_list(
-                plot_args, basesubst, plots, new_defaults, f"{description}: {desc or comment}", extras=extras
-            )
+            _process_shadems_plot_list(plot_args, basesubst, plots, new_defaults, f"{description}: {desc or comment}", extras=extras)
         elif isinstance(entry, str):
             # add user-defined substitutions
             plot = entry.format(**basesubst)
@@ -386,17 +379,14 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
         category_defaults = {
             "--title": "'{ms} {_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'",
             "--col": shade_cfg["default_column"],
-            "--png": f"{label}-{msbase}-{{field}}{{_Spw}}{{_Scan}}{{_Ant}}-{{label}}"
-            f"{{_alphalabel}}{{_colorlabel}}{{_suffix}}.png",
+            "--png": f"{label}-{msbase}-{{field}}{{_Spw}}{{_Scan}}{{_Ant}}-{{label}}{{_alphalabel}}{{_colorlabel}}{{_suffix}}.png",
             "--corr": shade_cfg["corrs"],
             **plot_cats[plot_cat],
         }
         _process_shadems_plot_list(plot_args, basesubst, plotlist, category_defaults, plot_cat)
 
     if len(plot_args) == 0:
-        log.warning(
-            "The shadems section doesn't contain any enabled 'plot_by_field' or 'plot_by_corr' or 'plots' entries."
-        )
+        log.warning("The shadems section doesn't contain any enabled 'plot_by_field' or 'plot_by_corr' or 'plots' entries.")
     else:
         recipe.add(
             "cab/shadems_direct",

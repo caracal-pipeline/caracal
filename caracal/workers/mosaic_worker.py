@@ -155,7 +155,6 @@ def worker(pipeline, recipe, config):
     caracal.log.info("***********************************")
     caracal.log.info("MQ2 is ON!")
     caracal.log.info("***********************************")
-    sys.exit()
 
     # Parameters that depend on the mosaictype
     if specified_mosaictype == "spectral":
@@ -174,6 +173,9 @@ def worker(pipeline, recipe, config):
     # Delete empty strings from list of specified images (as in default list = [''])
     while "" in specified_images:
         del specified_images[specified_images.index("")]
+
+    caracal.log.info(specified_images)
+    sys.exit()
 
     # If nothing is passed via the config file, then specified_images[0] adopts this via the schema
     if not len(specified_images):

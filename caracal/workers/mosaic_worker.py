@@ -33,8 +33,6 @@ def worker(pipeline, recipe, config):
             subdirectory_prefix = "cube_"
 
         matching_subdirectories = glob.glob(directory_to_check + "/" + subdirectory_prefix + "*")  # '*' to pick up the number
-        caracal.log.info(matching_subdirectories)
-        caracal.log.info(prfx)
 
         for subdirectory in matching_subdirectories:
             split_subdirectory = subdirectory.split("_")
@@ -190,6 +188,7 @@ def worker(pipeline, recipe, config):
         # Where the targets are in the output directory
         max_num, last_subdirectory = identify_last_subdirectory(specified_mosaictype, prefix)
         caracal.log.info(max_num, last_subdirectory)
+        sys.exit()
 
         # Expecting the same prefix and mfsprefix to apply for all fields to be mosaicked together
         for target in all_targets:

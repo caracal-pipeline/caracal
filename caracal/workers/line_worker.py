@@ -1817,7 +1817,6 @@ def worker(pipeline, recipe, config):
                     imcontsub_opts.update({"segments": config["imcontsub"]["segments"]})
 
                     imcontsub_opts.update({"infits": "{0:s}/cube_{1:d}/{2:s}".format(cube_dir, maxcube_dir, input_cube) + ":input"})
-                    print(imcontsub_opts)
                     recipe.add(
                         "cab/imcontsub",
                         step,

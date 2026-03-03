@@ -1835,9 +1835,6 @@ def worker(pipeline, recipe, config):
                     label='{0:s}:: Make SoFiA-2 mask and images for cube {1:s}'.format(step, simage_cube_list[uu]))
 
         if pipeline.enable_task(config, "imcontsub"):
-            caracal.log.info('*********************************')
-            caracal.log.info(config["imcontsub"])
-            caracal.log.info('*********************************')
             imcontsub_opts = {
                 "output-prefix": config["imcontsub"]["label_out"],
                 "order": config["imcontsub"]["order"],
@@ -1887,7 +1884,7 @@ def worker(pipeline, recipe, config):
                                 restfreq_cube = hdul_cube["RESTFREQ"]
                             else:
                                 restfreq_cube = config["imcontsub"]["rest_freq"] * 1e6
-                            hdul_cube["cdelt3"] = -C * float(hdul_cube["cdelt3"]) / restfreq_cube
+                            hdul_cube["cdelt3"] = -2.99792e+5 * float(hdul_cube["cdelt3"]) / restfreq_cube
                             vel_range = abs(hdul_cube["cdelt3"] * hdul_cube["naxis3"] / 1e3)
                         else:
                             vel_range = abs(hdul_cube["cdelt3"] * hdul_cube["naxis3"])

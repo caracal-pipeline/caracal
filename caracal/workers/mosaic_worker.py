@@ -279,6 +279,9 @@ def worker(pipeline, recipe, config):
                         " dish_diameter set in the config file."
                     )
 
+                    recipe.run()
+                    recipe.jobs = []
+
                 else:  # i.e. pb_type == 'mauchian'
                     filename = image_name
                     freq = config["ref_frequency"]  # Units of Hz. The default assumes that MeerKAT data is being processed

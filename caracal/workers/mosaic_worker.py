@@ -155,6 +155,10 @@ def worker(pipeline, recipe, config):
     caracal.log.info("***********************************")
     caracal.log.info("MQ2 is ON!")
     caracal.log.info("***********************************")
+    
+    if use_mfs_images and specified_mosaictype == "line":
+      caracal.log.warn("You have set 'use_mfs: true' but this only makes sense for 'mosaic_type: continuum'. "
+                       "Since you have set 'mosaic_type: line' we will revert to the default 'use_mfs: false'.")
 
     # Parameters that depend on the mosaictype
     if specified_mosaictype == "line":

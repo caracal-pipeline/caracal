@@ -1785,9 +1785,6 @@ def worker(pipeline, recipe, config):
                     else:
                         caracal.log.info("Using mask defined by user {0:s}".format(config["imcontsub"]["mask_image"]))
 
-                        path_mask = "{0:s}/../masking/{1:s}".format(pipeline.cubes, config["imcontsub"]["mask_image"])
-                        print(path_mask)
-                        sys.exit(0)
                         if os.path.exists("{0:s}/../masking/{1:s}".format(pipeline.cubes, config["imcontsub"]["mask_image"])):
                             imcontsub_opts.update(
                                 {
@@ -1879,7 +1876,9 @@ def worker(pipeline, recipe, config):
 
                 if config["imcontsub"]["mask_image"].split(".fits")[-1] != (None and "sofia"):
                     caracal.log.info("Mask provided by user, continuum subtraction will exclude the masked pixels from fitting.")
-
+                    path_mask = "{0:s}/../masking/{1:s}".format(pipeline.cubes, config["imcontsub"]["mask_image"])
+                    print(path_mask)
+                    sys.exit(0)
                     if os.path.exists("{0:s}/masking/{1:s}".format(pipeline.output, config["imcontsub"]["mask_image"])):
                         imcontsub_opts.update(
                             {

@@ -5,7 +5,6 @@ import json
 import os
 import re
 import shutil
-import sys
 import numpy as np
 import psutil
 import stimela.dismissable as sdm
@@ -17,6 +16,10 @@ from caracal import log
 from caracal.dispatch_crew import noisy, utils
 from caracal.workers.utils import flag_Uzeros, remove_output_products
 from caracal.workers.utils import manage_flagsets as manflags
+
+
+C = 2.99792458e8  # m/s
+HI = 1.4204057517667e9  # Hz
 
 NAME = "Process and Image Line Data"
 LABEL = "line"
@@ -36,8 +39,7 @@ def add_ms_label(msname, label="mst"):
 def freq_to_vel(filename, reverse):
     from astropy.io import fits
 
-    C = 2.99792458e8  # m/s
-    HI = 1.4204057517667e9  # Hz
+
     if not os.path.exists(filename):
         caracal.log.warn("Skipping conversion for {0:s}. File does not exist.".format(filename))
     else:
@@ -124,8 +126,8 @@ def fix_specsys_ra(filename, specframe):
 def make_pb_cube(filename, apply_corr, typ, dish_size, cutoff):
     from astropy.io import fits
 
-    C = 2.99792458e8  # m/s
-    HI = 1.4204057517667e9  # Hz
+    # C = 2.99792458e8  # m/s
+    # HI = 1.4204057517667e9  # Hz
 
     if not os.path.exists(filename):
         caracal.log.warn("Skipping primary beam cube for {0:s}. File does not exist.".format(filename))
@@ -557,7 +559,7 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, "mstransform"):
             # Set UVLIN fit channel range
             if pipeline.enable_task(config["mstransform"], "uvlin") and config["mstransform"]["uvlin"]["exclude_known_sources"]:
-                C = 2.99792458e5  # km/s
+                # C = 2.99792458e5  # km/s
                 chanfreqs = np.arange(firstchanfreq_all[i][0], lastchanfreq_all[i][0] + chanw_all[i][0], chanw_all[i][0])
                 chanids = np.arange(chanfreqs.shape[0])
                 linechans = chanids < 0  # Array of False's used to build the fitspw settings
@@ -1034,7 +1036,7 @@ def worker(pipeline, recipe, config):
                         """
                         doProj = False
                         doSpec = False
-                        C = 2.99792458e8  # m/s
+                        # C = 2.99792458e8  # m/s
                         femit = [r.strip() for r in re.split(r"([-+]?\d+\.\d+)|([-+]?\d+)", restfreq.strip()) if r is not None and r.strip() != ""]
                         femit = (eval(femit[0]) * units.Unit(femit[1])).to(units.Hz).value  # Hz
                         t = mslist[0].replace(".ms", "-summary.json")  # first file given to WSClean as input
@@ -1755,8 +1757,8 @@ def worker(pipeline, recipe, config):
                 "order": config["imcontsub"]["order"],
                 "sigma-clip": config["imcontsub"]["sigma_clip"],
             }
-            C = 2.99792458e8  # m/s
-            HI = 1.4204057517667e9  # Hz
+            # C = 2.99792458e8  # m/s
+            # HI = 1.4204057517667e9  # Hz
             caracal.log.info("Image-plane continuum subtraction")
             # find where cubes generally are
             

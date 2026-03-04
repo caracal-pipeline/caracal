@@ -360,8 +360,8 @@ def worker(pipeline, recipe, config):
 
     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     caracal.log.info(glob.glob('./*'))
+    caracal.log.info('I have verified that at this point of the code the files in this folder are symlinks indeed.')
     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    sys.exit()
 
     # To get back to where we were before symlink creation
     os.chdir(original_working_directory)
@@ -398,6 +398,10 @@ def worker(pipeline, recipe, config):
 #     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
 #     caracal.log.info((pipeline.mosaic_line,["{0:s}".format(os.path.basename(ii)) for ii in image_filenames]))
 #     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+
+    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+    caracal.log.info(glob.glob(parent_of_output, "{0:s}/mosaic_input:output".format(pipeline.mosaic_line)))
+    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
 
     recipe.add(
         "stimela/mosaic_queen",

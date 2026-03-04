@@ -109,6 +109,7 @@ def worker(pipeline, recipe, config):
             caracal.log.info("Created Mauchian primary-beam  FITS {0:s}".format(filename.replace("image.fits", "pb.fits")))
 
     def consistent_cdelt3(image_filenames, input_directory, nrdecimals):
+        caracal.log.info("Checking whether all cubes have the same CDELT3. This is required in order for mosaicking to work.")
         cdelt3s = []
         for ff in image_filenames:
             cc = fits.getval(ff, "cdelt3")
@@ -138,6 +139,8 @@ def worker(pipeline, recipe, config):
                 caracal.log.error("To proceed Please set mosaic:round_cdelt3 to round the CDELT3 values to an adequate number of decimals.")
                 caracal.log.error("This will overwrite CDELT3 in the input cubes.")
                 raise caracal.BadDataError("Inconsistent CDELT3 values in input cubes.")
+        elif len(cdelt3s) == 1:
+            caracal.log.info("All cubes have the same CDELT3.")
 
     ##########################################
     # Main part of the worker
@@ -375,7 +378,7 @@ def worker(pipeline, recipe, config):
                 "nrdecimals": config["round_cdelt3"],
             },
             input=input_directory,
-            output=pipeline.mosaics,
+            output=pipeline.mosaic_line,
             label="cdelt3_check",
         )
         recipe.run()

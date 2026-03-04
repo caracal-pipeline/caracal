@@ -307,7 +307,7 @@ def worker(pipeline, recipe, config):
     # Will need it later, unless Sphe has a more elegant method
     original_working_directory = os.getcwd()
 
-    caracal.log.info("Now creating / replacing symlinks to images and beams, in case they are distributed across multiple subdirectories.")
+    caracal.log.info("Creating / replacing symlinks to images and beams, in case they are distributed across multiple subdirectories.")
     # To get the symlinks created in the correct directory
     input_directory = pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes
     os.chdir(input_directory)
@@ -372,48 +372,60 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
     caracal.log.info("Ready to run MosaicQueen!")
-    caracal.log.info(image_filenames)
-    sys.exit()
 
-    if pipeline.enable_task(config, "domontage"):
-        recipe.add(
-            "cab/mosaicsteward",
-            "mosaic-steward",
-            {
-                "mosaic-type": specified_mosaictype,
-                "domontage": True,
-                "cutoff": config["cutoff"],
-                "name": mosaic_prefix,
-                "target-images": image_filenames,
-            },
-            input=input_directory,
-            output=pipeline.mosaics,
-            label="MosaicSteward:: Re-gridding {0:s} images before mosaicking them. For this mode, the mosaic_worker is using *pb.fits files {1:s}.".format(
-                specified_mosaictype, pb_origin
-            ),
-        )
-
-    else:  # Written out for clarity as to what difference the 'domontage' setting makes
-        recipe.add(
-            "cab/mosaicsteward",
-            "mosaic-steward",
-            {
-                "mosaic-type": specified_mosaictype,
-                "domontage": False,
-                "cutoff": config["cutoff"],
-                "name": mosaic_prefix,
-                "target-images": image_filenames,
-            },
-            input=input_directory,
-            output=pipeline.mosaics,
-            label="MosaicSteward:: Re-gridding of images and beams is assumed to be already done, "
-            f"so straight to mosaicking {specified_mosaictype} images. For this mode, the mosaic_worker"
-            f" is using *pb.fits files {pb_origin}.",
+    recipe.add(
+        "stimela/mosaic_queen",
+        "mosaic-queen",
+        {
+            "input": "{0:s}".format(pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes)
+            "target-images": image_filenames,
+            "name": prefix,
+            "num-workers": 2,
+            "output": "{0:s}".format(pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes)
         )
 
     recipe.run()
     recipe.jobs = []
 
+#     if pipeline.enable_task(config, "domontage"):
+#         recipe.add(
+#             "cab/mosaicsteward",
+#             "mosaic-steward",
+#             {
+#                 "mosaic-type": specified_mosaictype,
+#                 "domontage": True,
+#                 "cutoff": config["cutoff"],
+#                 "name": mosaic_prefix,
+#                 "target-images": image_filenames,
+#             },
+#             input=input_directory,
+#             output=pipeline.mosaics,
+#             label="MosaicSteward:: Re-gridding {0:s} images before mosaicking them. For this mode, the mosaic_worker is using *pb.fits files {1:s}.".format(
+#                 specified_mosaictype, pb_origin
+#             ),
+#         )
+# 
+#     else:  # Written out for clarity as to what difference the 'domontage' setting makes
+#         recipe.add(
+#             "cab/mosaicsteward",
+#             "mosaic-steward",
+#             {
+#                 "mosaic-type": specified_mosaictype,
+#                 "domontage": False,
+#                 "cutoff": config["cutoff"],
+#                 "name": mosaic_prefix,
+#                 "target-images": image_filenames,
+#             },
+#             input=input_directory,
+#             output=pipeline.mosaics,
+#             label="MosaicSteward:: Re-gridding of images and beams is assumed to be already done, "
+#             f"so straight to mosaicking {specified_mosaictype} images. For this mode, the mosaic_worker"
+#             f" is using *pb.fits files {pb_origin}.",
+#         )
+# 
+#     recipe.run()
+#     recipe.jobs = []
+# 
 #     # Set mosaic bunit, bmaj, bmin, bpa
 #     bunits, bmajs, bmins, bpas = [], [], [], []
 #     for ff in image_filenames:

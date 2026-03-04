@@ -400,7 +400,7 @@ def worker(pipeline, recipe, config):
 #     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
 
     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    caracal.log.info((parent_of_output, glob.glob("{0:s}/mosaic_input:output".format(pipeline.mosaic_line))))
+    caracal.log.info((parent_of_output, glob.glob("{0:s}/mosaic_input".format(pipeline.mosaic_line))))
     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     
     sys.exit()

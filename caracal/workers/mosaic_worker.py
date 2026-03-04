@@ -218,6 +218,7 @@ def worker(pipeline, recipe, config):
     caracal.log.info("PLEASE CHECK -- {0:s} to be mosaicked are:".format("Images" if specified_mosaictype == "continuum" else "Cubes"))
     for ii in specified_images:
         caracal.log.info("    {0:s}".format(ii))
+    sys.exit()
 
     found_stokes = (np.array([fits.getval(ff, "naxis") for ff in specified_images]) == 4).sum()
 #     if found_stokes:

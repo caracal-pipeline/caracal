@@ -1830,9 +1830,9 @@ def worker(pipeline, recipe, config):
                 "output-prefix": config["imcontsub"]["label_out"],
                 "order": config["imcontsub"]["order"],
                 "sigma-clip": config["imcontsub"]["sigma_clip"],
-                "ra-chunks": sdm.dismissable(onfig["imcontsub"]["ra_chunks"]),
-                "ncpus": sdm.dismissable(onfig["imcontsub"]["ncpus"]),
-                "cont-fit-tol": sdm.dismissable(onfig["imcontsub"]["cont_fit_tol"]),
+                "ra-chunks": sdm.dismissable(config["imcontsub"]["ra_chunks"]),
+                "ncpus": sdm.dismissable(cnfig["imcontsub"]["ncpus"]),
+                "cont-fit-tol": sdm.dismissable(config["imcontsub"]["cont_fit_tol"]),
             }
             # C = 2.99792458e8  # m/s
             # HI = 1.4204057517667e9  # Hz

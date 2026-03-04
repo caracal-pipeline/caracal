@@ -857,22 +857,6 @@ def xcal_from_pa_xcal_leak(
 
         # We search for the scan where the polarization signal is minimum in XX and YY
         # (i.e., maximum in XY and YX):
-        '''with tb(os.path.join(pipeline.caltables, prefix + ".Gpol1")) as t:
-            scans = t.getcol("SCAN_NUMBER")
-            gains = numpy.squeeze(t.getcol("CPARAM"))
-            t.close()
-        scanlist = numpy.array(list(set(scans)))
-        ratios = numpy.zeros(len(scanlist))
-
-        for si, s in enumerate(scanlist):
-            filt = scans == s
-            ratio = numpy.sqrt(numpy.average(numpy.power(numpy.abs(gains[filt, 0]) / numpy.abs(gains[filt, 1]) - 1.0, 2.0)))
-            ratios[si] = ratio
-
-        bestscidx = numpy.argmin(ratios)
-        bestscan = scanlist[bestscidx]
-        caracal.log.info("Scan with highest expected X-Y signal: " + str(bestscan))'''
-
         recipe.add(
             "cab/pycasacore",
             "select_best_scan",
@@ -915,9 +899,9 @@ with open(outfile, 'w') as json_file:
         recipe.run()
         recipe.jobs = []
 
-        with open(os.path.join(pipeline.caltables, prefix)+'_bestscan.json', 'r') as json_file:
-            data=json.load(json_file)
-            bestscan=data['bestscan']
+        with open(os.path.join(pipeline.caltables, prefix) + "_bestscan.json", "r") as json_file:
+            data = json.load(json_file)
+            bestscan = data["bestscan"]
 
         # Kcross
         tmp_gtab = caltablelist + [prefix + ".Gpol1"]
@@ -1447,7 +1431,7 @@ def worker(pipeline, recipe, config):
         if config["pol_calib"] != "none":
             pol_calib = pipeline.config["obsconf"][config["pol_calib"]][i]
             if config["set_model_pol"]["enable"]:
-                caracal.log.info('Setting model pol')
+                caracal.log.info("Setting model pol")
                 if config["set_model_pol"]["nrao_model"]:
                     file_path = caracal.pckgdir + "/data/nrao_xcal.yml"
                     polarized_calibrators = yaml.safe_load(open(file_path, "r", encoding="utf-8"))
@@ -1513,19 +1497,13 @@ def worker(pipeline, recipe, config):
 
         # Set -90 deg receptor angle rotation [if we are using MeerKAT data]
         if config["feed_angle_rotation"]:
-            '''with tb("%s::FEED" % os.path.join(pipeline.msdir, msname), readonly=False) as t:
-                ang = t.getcol("RECEPTOR_ANGLE")
-                ang[:, 0] = numpy.deg2rad(float(config["feed_angle_rotation"]))
-                ang[:, 1] = numpy.deg2rad(float(config["feed_angle_rotation"]))
-                t.putcol("RECEPTOR_ANGLE", ang)
-                caracal.log.info("RECEPTOR_ANGLE has been rotated by %s degrees" % config["feed_angle_rotation"])'''
-            FAR = float(config['feed_angle_rotation'])
+            FAR = float(config["feed_angle_rotation"])
             recipe.add(
-            "cab/pycasacore",
-            "set_receptor_angle",
-            {
-                "msname": msname,
-                "script": f"""
+                "cab/pycasacore",
+                "set_receptor_angle",
+                {
+                    "msname": msname,
+                    "script": f"""
 import numpy
 import os
 from casacore.tables import table as tb
@@ -1540,10 +1518,10 @@ with tb(ms+'::FEED', readonly=False) as t:
     t.putcol('RECEPTOR_ANGLE', ang)
     print('RECEPTOR_ANGLE has been rotated by %s degrees' % {FAR})
 """,
-            },
-            input=pipeline.input,
-            output=pipeline.output,
-            label="set_receptor_angle",
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label="set_receptor_angle",
             )
 
             recipe.run()

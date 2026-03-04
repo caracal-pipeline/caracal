@@ -384,13 +384,15 @@ def worker(pipeline, recipe, config):
         recipe.run()
         recipe.jobs = []
         
-    caracal.log.info((pipeline.mosaic_line,["mosaic_input/{0:s}:output".format(os.path.basename(ii)) for ii in image_filenames]))
+#     caracal.log.info((pipeline.mosaic_line,["{0:s}:output".format(os.path.basename(ii)) for ii in image_filenames]))
 
     recipe.add(
         "stimela/mosaic_queen",
         "mosaic-queen",
         {
-            "target-images": ["mosaic_input/{0:s}:output".format(os.path.basename(ii)) for ii in image_filenames],
+            "input": "mosaic_input",
+            "output": "mosaic_output",
+            "target-images": ["{0:s}:output".format(os.path.basename(ii)) for ii in image_filenames],
             "name": f"mosaic_output/{prefix}",
             "num-workers": 1,
             "force-regrid": True,

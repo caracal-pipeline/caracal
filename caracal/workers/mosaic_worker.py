@@ -384,7 +384,7 @@ def worker(pipeline, recipe, config):
         recipe.run()
         recipe.jobs = []
         
-    caracal.log.info((input_directory, image_filenames))
+    caracal.log.info((input_directory, image_filenames, "{0:s}/mosaic_input".format(pipeline.mosaic_line), "{0:s}/mosaic_output".format(pipeline.mosaic_line)))
 
     recipe.add(
         "stimela/mosaic_queen",

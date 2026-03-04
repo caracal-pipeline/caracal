@@ -641,7 +641,7 @@ mapping:
             required: False
           cont_fit_tol:
             desc: Minimum perentage of valid spectrum data points required to do a fit. Spectra below this tolerance will be set to NaN. Leaving this unset may result in poor or NaN spectra in the output cubes"
-            type: str
+            type: float
             example: ''
             required: False
           overwrite:
@@ -657,7 +657,7 @@ mapping:
           ra_chunks:
             desc: Chunking along RA-axis. If set to zero, no Chunking is perfomed.
             type: int 
-            example: ''
+            example: '0'
             required: False
           ncpus:
             desc: Number of workers (one per CPU) 

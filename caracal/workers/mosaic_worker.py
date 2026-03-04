@@ -366,7 +366,7 @@ def worker(pipeline, recipe, config):
     # so now ready to add montage_mosaic to the caracal recipe
 
     image_filenames = ["{0:s}/{1:s}".format(input_directory, ff) for ff in image_filenames]
-    input_directory = os.path.dirname(pipeline.output.rstrip('/'))
+    input_directory = os.path.dirname(os.path.abspath(pipeline.output).rstrip('/'))
     
     caracal.log.info((pipeline.output, input_directory))
     sys.exit()

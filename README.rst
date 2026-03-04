@@ -291,6 +291,10 @@ How to use it: Run ``uv run ruff check`` in the CI pipeline and in your editor.
 
 Lint and code format with: ``uv run ruff format``
 
+NB: Linters have limitations because both false positives and false negatives can occur.
+
+- Overall, it will be a huge help in improving your code quality (For more check: https://modernactuary.co.za/journal/ppp-4-linting).
+
 
 .. |Doc Status| image:: https://readthedocs.org/projects/caracal/badge/?version=latest
                 :target: http://caracal.readthedocs.io/en/latest

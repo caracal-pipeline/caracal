@@ -108,7 +108,8 @@ def worker(pipeline, recipe, config):
             fits.writeto(filename.replace("image.fits", "pb.fits"), pb_image, header=headimage, overwrite=True)
             caracal.log.info("Created Mauchian primary-beam  FITS {0:s}".format(filename.replace("image.fits", "pb.fits")))
 
-    def consistent_cdelt3(image_filenames, input_directory, nrdecimals):
+#     def consistent_cdelt3(image_filenames, input_directory, nrdecimals):
+    def consistent_cdelt3(image_filenames, nrdecimals):
         caracal.log.info("Checking whether all cubes have the same CDELT3. This is required in order for mosaicking to work.")
         cdelt3s = []
         for ff in image_filenames:
@@ -368,16 +369,13 @@ def worker(pipeline, recipe, config):
     image_filenames = ["{0:s}/{1:s}".format(input_directory, ff) for ff in image_filenames]
     input_directory = os.path.dirname(os.path.abspath(pipeline.output))
     
-    caracal.log.info((pipeline.output, input_directory))
-    sys.exit()
-
     if specified_mosaictype == "line":
         recipe.add(
             consistent_cdelt3,
             "cdelt3_check",
             {
                 "image_filenames": image_filenames,
-                "input_directory": input_directory,
+#                 "input_directory": input_directory,
                 "nrdecimals": config["round_cdelt3"],
             },
             input=input_directory,

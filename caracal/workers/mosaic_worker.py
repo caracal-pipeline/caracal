@@ -307,7 +307,7 @@ def worker(pipeline, recipe, config):
     # Will need it later, unless Sphe has a more elegant method
     original_working_directory = os.getcwd()
 
-    caracal.log.info("Now creating symlinks to images and beams, in case they are distributed across multiple subdirectories.")
+    caracal.log.info("Now creating / replacing symlinks to images and beams, in case they are distributed across multiple subdirectories.")
     # To get the symlinks created in the correct directory
     input_directory = pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes
     os.chdir(input_directory)

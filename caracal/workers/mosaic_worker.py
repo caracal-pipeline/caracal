@@ -390,16 +390,14 @@ def worker(pipeline, recipe, config):
         "stimela/mosaic_queen",
         "mosaic-queen",
         {
-            "target-images": ["../mosaic_input/{0:s}:output".format(os.path.basename(ii)) for ii in image_filenames],
-            "name": prefix,
+            "target-images": ["mosaic_input/{0:s}:output".format(os.path.basename(ii)) for ii in image_filenames],
+            "name": f"mosaic_output/{prefix}",
             "num-workers": 1,
             "force-regrid": True,
             "mosaic-cutoff": 0.01,
         },
             input = input_directory,
-#             input = pipeline.mosaic_line,
-#             input = "{0:s}/mosaic_input".format(pipeline.mosaic_line),
-            output = "{0:s}/mosaic_output".format(pipeline.mosaic_line),
+            output = pipeline.mosaic_line,
             label = "MosaicQueen"
         )
 

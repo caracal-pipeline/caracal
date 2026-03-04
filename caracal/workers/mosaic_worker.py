@@ -377,7 +377,7 @@ def worker(pipeline, recipe, config):
         "stimela/mosaic_queen",
         "mosaic-queen",
         {
-            "input": "{0:s}".format(pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes)
+            "input": "{0:s}".format(pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes),
             "target-images": image_filenames,
             "name": prefix,
             "num-workers": 2,

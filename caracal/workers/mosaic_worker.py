@@ -366,7 +366,10 @@ def worker(pipeline, recipe, config):
     # so now ready to add montage_mosaic to the caracal recipe
 
     image_filenames = ["{0:s}/{1:s}".format(input_directory, ff) for ff in image_filenames]
-    input_directory = "."
+    input_directory = pipeline.output
+    
+    caracal.log.info(pipeline.output)
+    sys.exit()
 
     if specified_mosaictype == "line":
         recipe.add(

@@ -108,7 +108,6 @@ def worker(pipeline, recipe, config):
             fits.writeto(filename.replace("image.fits", "pb.fits"), pb_image, header=headimage, overwrite=True)
             caracal.log.info("Created Mauchian primary-beam  FITS {0:s}".format(filename.replace("image.fits", "pb.fits")))
 
-#     def consistent_cdelt3(image_filenames, input_directory, nrdecimals):
     def consistent_cdelt3(image_filenames, nrdecimals):
         caracal.log.info("Checking whether all cubes have the same CDELT3. This is required in order for mosaicking to work.")
         cdelt3s = []
@@ -310,25 +309,23 @@ def worker(pipeline, recipe, config):
 
     caracal.log.info("Checking for *pb.fits files now complete.")
 
-    # Will need it later, unless Sphe has a more elegant method
-    original_working_directory = os.getcwd()
-
     caracal.log.info("Creating / replacing symlinks to images and beams, in case they are distributed across multiple subdirectories.")
     # To get the symlinks created in the correct directory
-    input_directory = "{0:s}/mosaic_input".format(pipeline.mosaic_continuum if specified_mosaictype == "continuum" else pipeline.mosaic_line)
-    if not os.path.exists(input_directory):
-        os.mkdir(input_directory)
+    mosaic_input_directory = "{0:s}/mosaic_input".format(pipeline.mosaic_continuum if specified_mosaictype == "continuum" else pipeline.mosaic_line)
+    if not os.path.exists(mosaic_input_directory):
+        os.mkdir(mosaic_input_directory)
 
-    os.chdir(input_directory)
-    
-    caracal.log.info("I have just moved to {0:s}".format(input_directory))
+#     # Will need it later, unless Sphe has a more elegant method
+#     original_working_directory = os.getcwd()
+#     os.chdir(mosaic_input_directory)
+#     caracal.log.info("I have just moved to {0:s}".format(mosaic_input_directory))
 
     # Empty list to add filenames to, as we are not to pass 'image_1', etc, to the recipe
     image_filenames = []
     
-    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    caracal.log.info(glob.glob('./*'))
-    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+#     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+#     caracal.log.info(glob.glob('./*'))
+#     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
 
     # Start by assuming that 'image' is of the form 'image_1/image_filename'
     for specified_image in specified_images:
@@ -336,16 +333,16 @@ def worker(pipeline, recipe, config):
         image_filename = split_imagename[-1]
         image_filenames.append(image_filename)
 
-        if not specified_image.split(input_directory)[0]:
-            specified_image = specified_image.replace(input_directory, "")
+        if not specified_image.split(mosaic_input_directory)[0]:
+            specified_image = specified_image.replace(mosaic_input_directory, "")
         else:
-            specified_image = "{0:s}/{1:s}".format("/".join([".." for ss in input_directory.split("/")]), specified_image)
+            specified_image = "{0:s}/{1:s}".format("/".join([".." for ss in mosaic_input_directory.split("/")]), specified_image)
         if specified_image[0] == "/":
             specified_image = specified_image[1:]
 
         if os.path.exists(image_filename):
             os.remove(image_filename)
-        symlink_for_image_command = "ln -sf {0:s} {1:s}".format(specified_image, image_filename)
+        symlink_for_image_command = "ln -sf {0:s} {1:s}/{2:s}".format(specified_image, mosaic_input_directory, image_filename)
         caracal.log.info(symlink_for_image_command)
         os.system(symlink_for_image_command)
 
@@ -354,19 +351,21 @@ def worker(pipeline, recipe, config):
 
         if os.path.exists(beam_filename):
             os.remove(beam_filename)
-        symlink_for_beam_command = "ln -sf {0:s} {1:s}".format(specified_beam, beam_filename)
+        symlink_for_beam_command = "ln -sf {0:s} {1:s}/{2:s}".format(specified_beam, mosaic_input_directory, beam_filename)
         caracal.log.info(symlink_for_beam_command)
         os.system(symlink_for_beam_command)
 
-    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    caracal.log.info(glob.glob('./*'))
-    caracal.log.info('I have verified that at this point of the code the files in this folder are symlinks indeed.')
-    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+#     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+#     caracal.log.info(glob.glob('./*'))
+#     caracal.log.info('I have verified that at this point of the code the files in this folder are symlinks indeed.')
+#     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
 
-    # To get back to where we were before symlink creation
-    os.chdir(original_working_directory)
+#     # To get back to where we were before symlink creation
+#     os.chdir(original_working_directory)
 
     caracal.log.info("Symlinks created.")
+    
+    sys.exit()
 
     # Prefix of the output files should be either the default
     # (pipeline.prefix) or that specified by the user via the config file
@@ -377,7 +376,7 @@ def worker(pipeline, recipe, config):
     # List of images in place, and have ensured that there are corresponding pb.fits files,
     # so now ready to add montage_mosaic to the caracal recipe
 
-    image_filenames = ["{0:s}/{1:s}".format(input_directory, ff) for ff in image_filenames]
+    image_filenames = ["{0:s}/{1:s}".format(mosaic_input_directory, ff) for ff in image_filenames]
     
     if specified_mosaictype == "line":
         recipe.add(
@@ -385,7 +384,6 @@ def worker(pipeline, recipe, config):
             "cdelt3_check",
             {
                 "image_filenames": image_filenames,
-#                 "input_directory": input_directory,
                 "nrdecimals": config["round_cdelt3"],
             },
             input=parent_of_output,
@@ -399,9 +397,9 @@ def worker(pipeline, recipe, config):
 #     caracal.log.info((pipeline.mosaic_line,["{0:s}".format(os.path.basename(ii)) for ii in image_filenames]))
 #     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
 
-    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    caracal.log.info((parent_of_output, glob.glob("{0:s}/mosaic_input".format(pipeline.mosaic_line))))
-    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+#     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+#     caracal.log.info((parent_of_output, glob.glob("{0:s}/mosaic_input".format(pipeline.mosaic_line))))
+#     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     
     sys.exit()
 
@@ -424,72 +422,3 @@ def worker(pipeline, recipe, config):
 
     recipe.run()
     recipe.jobs = []
-
-#     if pipeline.enable_task(config, "domontage"):
-#         recipe.add(
-#             "cab/mosaicsteward",
-#             "mosaic-steward",
-#             {
-#                 "mosaic-type": specified_mosaictype,
-#                 "domontage": True,
-#                 "cutoff": config["cutoff"],
-#                 "name": mosaic_prefix,
-#                 "target-images": image_filenames,
-#             },
-#             input=input_directory,
-#             output=pipeline.mosaics,
-#             label="MosaicSteward:: Re-gridding {0:s} images before mosaicking them. For this mode, the mosaic_worker is using *pb.fits files {1:s}.".format(
-#                 specified_mosaictype, pb_origin
-#             ),
-#         )
-# 
-#     else:  # Written out for clarity as to what difference the 'domontage' setting makes
-#         recipe.add(
-#             "cab/mosaicsteward",
-#             "mosaic-steward",
-#             {
-#                 "mosaic-type": specified_mosaictype,
-#                 "domontage": False,
-#                 "cutoff": config["cutoff"],
-#                 "name": mosaic_prefix,
-#                 "target-images": image_filenames,
-#             },
-#             input=input_directory,
-#             output=pipeline.mosaics,
-#             label="MosaicSteward:: Re-gridding of images and beams is assumed to be already done, "
-#             f"so straight to mosaicking {specified_mosaictype} images. For this mode, the mosaic_worker"
-#             f" is using *pb.fits files {pb_origin}.",
-#         )
-# 
-#     recipe.run()
-#     recipe.jobs = []
-# 
-#     # Set mosaic bunit, bmaj, bmin, bpa
-#     bunits, bmajs, bmins, bpas = [], [], [], []
-#     for ff in image_filenames:
-#         bunits.append(fits.getval(ff, "bunit"))
-#         bmajs.append(fits.getval(ff, "bmaj"))
-#         bmins.append(fits.getval(ff, "bmin"))
-#         bpas.append(fits.getval(ff, "bpa"))
-#     if np.unique(np.array(bunits)).shape[0] == 1:
-#         mosbunit = bunits[0]
-#     else:
-#         raise caracal.BadDataError("Inconsistent BUNIT values in input cubes. Cannot proceed")
-#     mosbmaj = np.median(np.array(bmajs))
-#     mosbmin = np.median(np.array(bmins))
-#     mosbpa = np.median(np.array(bpas))
-#     caracal.log.info("Setting BUNIT = {0:}, BMAJ = {1:}, BMIN = {2:}, BPA = {3:} in mosaic FITS headers".format(mosbunit, mosbmaj, mosbmin, mosbpa))
-# 
-#     # Add missing keys and convert some keys from string to float in the mosaic FITS headers
-#     for ff in [".fits", "_noise.fits", "_weights.fits"]:
-#         fitsfile = "{0:s}/{1:s}{2:s}".format(pipeline.mosaics, mosaic_prefix, ff)
-#         fits.setval(fitsfile, "bunit", value=mosbunit)
-#         fits.setval(fitsfile, "bmaj", value=mosbmaj)
-#         fits.setval(fitsfile, "bmin", value=mosbmin)
-#         fits.setval(fitsfile, "bpa", value=mosbpa)
-#         for hh in "crval3,crval4,crpix3,crpix4,cdelt3,cdelt4,crota2".split(","):
-#             try:
-#                 fits.setval(fitsfile, hh, value=float(fits.getval(fitsfile, hh)))
-#                 caracal.log.info("Header key {0:s} found and converted to float in file {1:s}".format(hh, fitsfile))
-#             except BaseException:
-#                 caracal.log.info("Header key {0:s} not found in file {1:s}".format(hh, fitsfile))

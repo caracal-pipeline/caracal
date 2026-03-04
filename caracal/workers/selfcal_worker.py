@@ -878,9 +878,12 @@ def worker(pipeline, recipe, config):
 
         # check if inputmask is provided by input
         preGridMasks = config[key]["inputmask"]
-        
-        # Accepts multiple input masks as list
-        postGridMask = preGridMasks[0].replace(".fits", "_{}_regrid.fits".format(pipeline.prefix))
+        if preGridMasks == ['']:
+            preGridMasks = []
+            postGridMask = ''
+        else:        
+            # Accepts multiple input masks as list
+            postGridMask = preGridMasks[0].replace(".fits", "_{}_regrid.fits".format(pipeline.prefix))
 
         if num == 0 and len(preGridMasks)>0:
             output_masks = []

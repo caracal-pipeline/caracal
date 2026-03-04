@@ -390,7 +390,7 @@ def worker(pipeline, recipe, config):
         "stimela/mosaic_queen",
         "mosaic-queen",
         {
-            "target-images": [ii for ii in image_filenames],
+            "target-images": [os.path.basename(ii) for ii in image_filenames],
             "name": prefix,
             "num-workers": 1,
             "force-regrid": True,

@@ -382,6 +382,7 @@ def worker(pipeline, recipe, config):
             "name": prefix,
             "num-workers": 1,
             "force-regrid": True,
+            "mosaic-cutoff": 0.01,
 #             "output": "{0:s}".format(pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes)
         },
             input = input_directory,

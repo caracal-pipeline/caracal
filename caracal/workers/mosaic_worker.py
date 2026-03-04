@@ -325,6 +325,10 @@ def worker(pipeline, recipe, config):
 
     # Empty list to add filenames to, as we are not to pass 'image_1', etc, to the recipe
     image_filenames = []
+    
+    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+    caracal.log.info(glob.glob('./*'))
+    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
 
     # Start by assuming that 'image' is of the form 'image_1/image_filename'
     for specified_image in specified_images:
@@ -353,6 +357,10 @@ def worker(pipeline, recipe, config):
         symlink_for_beam_command = "ln -sf {0:s} {1:s}".format(specified_beam, beam_filename)
         caracal.log.info(symlink_for_beam_command)
         os.system(symlink_for_beam_command)
+
+    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+    caracal.log.info(glob.glob('./*'))
+    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
 
     # To get back to where we were before symlink creation
     os.chdir(original_working_directory)
@@ -386,9 +394,9 @@ def worker(pipeline, recipe, config):
         recipe.run()
         recipe.jobs = []
 
-    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    caracal.log.info((pipeline.mosaic_line,["{0:s}".format(os.path.basename(ii)) for ii in image_filenames]))
-    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+#     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+#     caracal.log.info((pipeline.mosaic_line,["{0:s}".format(os.path.basename(ii)) for ii in image_filenames]))
+#     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
 
     recipe.add(
         "stimela/mosaic_queen",

@@ -365,7 +365,7 @@ def worker(pipeline, recipe, config):
 
     caracal.log.info("Symlinks created.")
     
-    sys.exit()
+#     sys.exit()
 
     # Prefix of the output files should be either the default
     # (pipeline.prefix) or that specified by the user via the config file
@@ -401,7 +401,7 @@ def worker(pipeline, recipe, config):
 #     caracal.log.info((parent_of_output, glob.glob("{0:s}/mosaic_input".format(pipeline.mosaic_line))))
 #     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     
-    sys.exit()
+#     sys.exit()
 
     recipe.add(
         "stimela/mosaic_queen",

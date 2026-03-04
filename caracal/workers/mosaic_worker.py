@@ -336,20 +336,20 @@ def worker(pipeline, recipe, config):
         if specified_image[0] == "/":
             specified_image = specified_image[1:]
 
-#         if os.path.exists(image_filename):
-#             os.remove(image_filename)
+        if os.path.exists(image_filename):
+            os.remove(image_filename)
         symlink_for_image_command = "ln -sf {0:s} {1:s}".format(specified_image, image_filename)
         caracal.log.info(symlink_for_image_command)
-#         os.system(symlink_for_image_command)
+        os.system(symlink_for_image_command)
 
         specified_beam = specified_image.replace("image.fits", "pb.fits")
         beam_filename = image_filename.replace("image.fits", "pb.fits")
 
-#         if os.path.exists(beam_filename):
-#             os.remove(beam_filename)
+        if os.path.exists(beam_filename):
+            os.remove(beam_filename)
         symlink_for_beam_command = "ln -sf {0:s} {1:s}".format(specified_beam, beam_filename)
         caracal.log.info(symlink_for_beam_command)
-#         os.system(symlink_for_beam_command)
+        os.system(symlink_for_beam_command)
 
     # To get back to where we were before symlink creation
     os.chdir(original_working_directory)

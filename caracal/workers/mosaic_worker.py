@@ -382,6 +382,10 @@ def worker(pipeline, recipe, config):
             "name": prefix,
             "num-workers": 2,
             "output": "{0:s}".format(pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes)
+        },
+            input = input_directory,
+            output = pipeline.mosaics,
+            label = "MosaicQueen"
         )
 
     recipe.run()

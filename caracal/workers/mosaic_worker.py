@@ -309,7 +309,10 @@ def worker(pipeline, recipe, config):
 
     caracal.log.info("Creating / replacing symlinks to images and beams, in case they are distributed across multiple subdirectories.")
     # To get the symlinks created in the correct directory
-    input_directory = pipeline.mosaic_continuum if specified_mosaictype == "continuum" else pipeline.mosaic_line
+    input_directory = "{0:s}/mosaic_input".format(pipeline.mosaic_continuum if specified_mosaictype == "continuum" else pipeline.mosaic_line)
+    if not os.path.exists(input_directory):
+        os.mkdir(input_directory)
+
     os.chdir(input_directory)
     
     caracal.log.info("I have just moved to {0:s}".format(input_directory))

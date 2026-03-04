@@ -184,12 +184,12 @@ def worker(pipeline, recipe, config):
         caracal.log.info("No {0:s} names were specified via the config file, so they are going to be selected "
                          "automatically.".format("image" if specified_mosaictype == "continuum" else "cube"))
         caracal.log.info("It is assumed that they are all in the highest-N directory {1:s}/{0:s}_N containing "
-                         " {0:s}s starting with the prefix {2:s}.".format(
+                         "{0:s}s whose name starts with the prefix {2:s}.".format(
                          "image" if specified_mosaictype == "continuum" else "cube",
                          pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes,
                          prefix))
         caracal.log.info("You should check the selected {0:s} names. If unhappy with the selection, please specify the correct "
-                         "ones to use with mosaic:target_images.".format("image" if specified_mosaictype == "continuum" else "cube"))
+                         "ones with mosaic:target_images.".format("image" if specified_mosaictype == "continuum" else "cube"))
 
         # Needed for working out the field names for the targets, so that the correct files can be selected
         all_targets = pipeline.get_target_mss(label)[0]
@@ -215,8 +215,9 @@ def worker(pipeline, recipe, config):
                     image_name = image_name.replace("-image", ".image")
                 specified_images.append(image_name)
 
-    caracal.log.info("PLEASE CHECK -- Images to be mosaicked are:")
-    caracal.log.info(specified_images)
+    caracal.log.info("PLEASE CHECK -- {0:s} to be mosaicked are:".format{"Images" if specified_mosaictype == "continuum" else "Cubes"})
+    for ii in specified_images:
+        caracal.log.info("    {0:s}".format(ii))
 
     found_stokes = (np.array([fits.getval(ff, "naxis") for ff in specified_images]) == 4).sum()
 #     if found_stokes:
@@ -327,6 +328,8 @@ def worker(pipeline, recipe, config):
         if specified_image[0] == "/":
             specified_image = specified_image[1:]
 
+        if os.path.exists(image_filename):
+            os.remove(image_filename)
         symlink_for_image_command = "ln -sf {0:s} {1:s}".format(specified_image, image_filename)
         os.system(symlink_for_image_command)
         specified_beam = specified_image.replace("image.fits", "pb.fits")

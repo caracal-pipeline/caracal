@@ -401,7 +401,7 @@ def worker(pipeline, recipe, config):
             "mosaic-cutoff": 0.01,
         },
             input = input_directory,
-            output = pipeline.mosaic_line,
+            output = input_directory,
             label = "MosaicQueen"
         )
 

@@ -127,25 +127,36 @@ If using `Singularity <https://github.com/sylabs/singularity>`_:
 
 
 3. Dev Installation (For developers)
---------------------------
+------------------------------------
 
-Installation from source using `uv`. First, install uv:
-
-..  code-block:: bash
-
-    pip install uv
-
-
-In the working directory where source is checked out run `uv sync` or to include all optional dependencies:
+Installation from source in editable mode inside a venv:
 
 ..  code-block:: bash
 
-    uv sync
+    pip install --editable .
+
+Installation from source using `uv` or `poetry`. First, install with:
 
 ..  code-block:: bash
 
-   uv add --group dev
+    pip install uv / pip install poetry
 
+
+In the working directory where source is checked out run `uv sync` or to include all group dependencies, such as tests:
+
+..  code-block:: bash
+
+    uv sync --group dev / poetry install --with dev
+
+..  code-block:: bash
+
+   uv add --group tests
+
+Finally, to install pre-install commit hooks with:
+
+..  code-block:: bash
+   
+   uv run pre-commit install
 
 =========================================
 Installation on (ILIFU) slurm environment
@@ -264,7 +275,8 @@ Set up a CI pipeline that automatically:
   #. Runs a linter/formatter (see below).
   #. Runs your entire test suite (pytest).
 
-NB: Pull Requests are blocked from being merged if the CI tests fail.
+NB: A PR can only be merged after an admin approves it via a 'OK to test' comment.
+Pull Requests are blocked from being merged if the CI tests fail.
 
 Code "Linting" (Style and Error Checking)
 -----------------------------------------

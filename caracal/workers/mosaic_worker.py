@@ -394,8 +394,8 @@ def worker(pipeline, recipe, config):
         {
             "input": "mosaic_input:output",
             "output": "mosaic_output",
-            "target-images": ["{0:s}:output".format(os.path.basename(ii)) for ii in image_filenames],
-            "name": f"mosaic_output/{prefix}",
+            "target-images": ["{0:s}".format(os.path.basename(ii)) for ii in image_filenames],
+            "name": prefix,
             "num-workers": 1,
             "force-regrid": True,
             "mosaic-cutoff": 0.01,

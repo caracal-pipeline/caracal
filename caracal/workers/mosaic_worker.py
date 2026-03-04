@@ -361,6 +361,7 @@ def worker(pipeline, recipe, config):
     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     caracal.log.info(glob.glob('./*'))
     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+    sys.exit()
 
     # To get back to where we were before symlink creation
     os.chdir(original_working_directory)

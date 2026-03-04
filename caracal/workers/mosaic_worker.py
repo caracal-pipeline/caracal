@@ -385,7 +385,7 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    caracal.log.info((pipeline.mosaic_line,["{0:s}:output".format(os.path.basename(ii)) for ii in image_filenames]))
+    caracal.log.info((pipeline.mosaic_line,["{0:s}".format(os.path.basename(ii)) for ii in image_filenames]))
     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
 
     recipe.add(

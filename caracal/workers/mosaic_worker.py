@@ -380,7 +380,8 @@ def worker(pipeline, recipe, config):
 #             "input": "{0:s}".format(pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes),
             "target-images": image_filenames,
             "name": prefix,
-            "num-workers": 2,
+            "num-workers": 1,
+            "force-regrid": True,
 #             "output": "{0:s}".format(pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes)
         },
             input = input_directory,

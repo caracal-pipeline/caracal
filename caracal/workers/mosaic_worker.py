@@ -218,9 +218,8 @@ def worker(pipeline, recipe, config):
     caracal.log.info("PLEASE CHECK -- {0:s} to be mosaicked are:".format("Images" if specified_mosaictype == "continuum" else "Cubes"))
     for ii in specified_images:
         caracal.log.info("    {0:s}".format(ii))
-    sys.exit()
 
-    found_stokes = (np.array([fits.getval(ff, "naxis") for ff in specified_images]) == 4).sum()
+#     found_stokes = (np.array([fits.getval(ff, "naxis") for ff in specified_images]) == 4).sum()
 #     if found_stokes:
 #         caracal.log.error("At least one of the input cubes has 4 axis. Mosaic Steward will not work.")
 #         caracal.log.error("In order to proceed please run the line worker with the removal of the Stokes axis enabled.")
@@ -304,6 +303,7 @@ def worker(pipeline, recipe, config):
             caracal.log.info("Primary beam {0:s} created.".format(pb_name))
 
     caracal.log.info("Checking for *pb.fits files now complete.")
+    sys.exit()
 
     # Will need it later, unless Sphe has a more elegant method
     original_working_directory = os.getcwd()

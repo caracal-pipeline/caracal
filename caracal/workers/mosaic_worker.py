@@ -396,7 +396,8 @@ def worker(pipeline, recipe, config):
             "force-regrid": True,
             "mosaic-cutoff": 0.01,
         },
-            input = "{0:s}/mosaic_input".format(pipeline.mosaic_line),
+            input = pipeline.mosaic_line,
+#             input = "{0:s}/mosaic_input".format(pipeline.mosaic_line),
             output = "{0:s}/mosaic_output".format(pipeline.mosaic_line),
             label = "MosaicQueen"
         )

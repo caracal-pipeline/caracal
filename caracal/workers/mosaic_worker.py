@@ -303,15 +303,17 @@ def worker(pipeline, recipe, config):
             caracal.log.info("Primary beam {0:s} created.".format(pb_name))
 
     caracal.log.info("Checking for *pb.fits files now complete.")
-    sys.exit()
 
     # Will need it later, unless Sphe has a more elegant method
     original_working_directory = os.getcwd()
 
     caracal.log.info("Creating / replacing symlinks to images and beams, in case they are distributed across multiple subdirectories.")
     # To get the symlinks created in the correct directory
-    input_directory = pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes
+    input_directory = pipeline.mosaic_continuum if specified_mosaictype == "continuum" else pipeline.mosaic_line
     os.chdir(input_directory)
+    
+    caracal.log.info("I have just moved to {0:s}".format(input_directory))
+    sys.exit()
 
     # Empty list to add filenames to, as we are not to pass 'image_1', etc, to the recipe
     image_filenames = []

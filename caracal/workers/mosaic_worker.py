@@ -155,6 +155,8 @@ def worker(pipeline, recipe, config):
     label = config["label_in"]
     line_name = config["line_name"]
     pb_type = config["pb_type"]
+    parent_of_output = os.path.dirname(os.path.abspath(pipeline.output))
+
 
     caracal.log.info("***********************************")
     caracal.log.info("MQ2 is ON!")
@@ -367,7 +369,6 @@ def worker(pipeline, recipe, config):
     # so now ready to add montage_mosaic to the caracal recipe
 
     image_filenames = ["{0:s}/{1:s}".format(input_directory, ff) for ff in image_filenames]
-    input_directory = os.path.dirname(os.path.abspath(pipeline.output))
     
     if specified_mosaictype == "line":
         recipe.add(
@@ -378,7 +379,7 @@ def worker(pipeline, recipe, config):
 #                 "input_directory": input_directory,
                 "nrdecimals": config["round_cdelt3"],
             },
-            input=input_directory,
+            input=parent_of_output,
             output=pipeline.mosaic_line,
             label="cdelt3_check",
         )
@@ -401,8 +402,8 @@ def worker(pipeline, recipe, config):
             "force-regrid": True,
             "mosaic-cutoff": 0.01,
         },
-            input = input_directory,
-            output = input_directory,
+            input = parent_of_output,
+            output = parent_of_output,
             label = "MosaicQueen"
         )
 

@@ -183,8 +183,8 @@ def worker(pipeline, recipe, config):
     if not len(specified_images):
         caracal.log.info("No {0:s} names were specified via the config file, so they are going to be selected "
                          "automatically.".format("image" if specified_mosaictype == "continuum" else "cube"))
-        caracal.log.info("It is assumed that they are all in the highest-numbered subdirectory of {1:s} that contains {0:s}s "
-                         "starting with the prefix {2:s}.".format(
+        caracal.log.info("It is assumed that they are all in the highest-N directory {1:s}/{0:s}_N containing "
+                         " {0:s}s starting with the prefix {2:s}.".format(
                          "image" if specified_mosaictype == "continuum" else "cube",
                          pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes,
                          prefix))

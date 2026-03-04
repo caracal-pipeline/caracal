@@ -400,7 +400,7 @@ def worker(pipeline, recipe, config):
             "force-regrid": True,
             "mosaic-cutoff": 0.01,
         },
-            input = pipeline.mosaic_line,
+            input = input_directory,
             output = pipeline.mosaic_line,
             label = "MosaicQueen"
         )

@@ -313,7 +313,6 @@ def worker(pipeline, recipe, config):
     os.chdir(input_directory)
     
     caracal.log.info("I have just moved to {0:s}".format(input_directory))
-    sys.exit()
 
     # Empty list to add filenames to, as we are not to pass 'image_1', etc, to the recipe
     image_filenames = []
@@ -334,17 +333,23 @@ def worker(pipeline, recipe, config):
         if os.path.exists(image_filename):
             os.remove(image_filename)
         symlink_for_image_command = "ln -sf {0:s} {1:s}".format(specified_image, image_filename)
+        caracal.log.info(symlink_for_image_command)
         os.system(symlink_for_image_command)
+
         specified_beam = specified_image.replace("image.fits", "pb.fits")
         beam_filename = image_filename.replace("image.fits", "pb.fits")
 
+        if os.path.exists(beam_filename):
+            os.remove(beam_filename)
         symlink_for_beam_command = "ln -sf {0:s} {1:s}".format(specified_beam, beam_filename)
+        caracal.log.info(symlink_for_beam_command)
         os.system(symlink_for_beam_command)
 
     # To get back to where we were before symlink creation
     os.chdir(original_working_directory)
 
     caracal.log.info("Symlinks created.")
+    sys.exit()
 
     # Prefix of the output files should be either the default
     # (pipeline.prefix) or that specified by the user via the config file

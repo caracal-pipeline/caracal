@@ -140,7 +140,7 @@ def worker(pipeline, recipe, config):
                 caracal.log.error("This will overwrite CDELT3 in the input cubes.")
                 raise caracal.BadDataError("Inconsistent CDELT3 values in input cubes.")
         elif len(cdelt3s) == 1:
-            caracal.log.info("All cubes have the same CDELT3.")
+            caracal.log.info("All clear, CDELT3 is the same for all cubes.")
 
     ##########################################
     # Main part of the worker
@@ -385,22 +385,19 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
         
     caracal.log.info((input_directory, image_filenames))
-    sys.exit()
 
     recipe.add(
         "stimela/mosaic_queen",
         "mosaic-queen",
         {
-#             "input": "{0:s}".format(pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes),
-            "target-images": [ii+":output" for ii in image_filenames],
+            "target-images": [ii for ii in image_filenames],
             "name": prefix,
             "num-workers": 1,
             "force-regrid": True,
             "mosaic-cutoff": 0.01,
-#             "output": "{0:s}".format(pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes)
         },
-            input = input_directory,
-            output = pipeline.mosaics,
+            input = "{0:s}/mosaic_input".format(pipeline.mosaic_line),
+            output = "{0:s}/mosaic_output".format(pipeline.mosaic_line),
             label = "MosaicQueen"
         )
 

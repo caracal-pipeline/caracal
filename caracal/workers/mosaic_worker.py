@@ -370,13 +370,16 @@ def worker(pipeline, recipe, config):
         )
         recipe.run()
         recipe.jobs = []
+        
+    caracal.log.info((input_directory, image_filenames))
+    sys.exit()
 
     recipe.add(
         "stimela/mosaic_queen",
         "mosaic-queen",
         {
 #             "input": "{0:s}".format(pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes),
-            "target-images": image_filenames,
+            "target-images": [ii+":output" for ii in image_filenames],
             "name": prefix,
             "num-workers": 1,
             "force-regrid": True,

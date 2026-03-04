@@ -392,13 +392,13 @@ def worker(pipeline, recipe, config):
         {
             "input": "mosaic_input:output",
             "output": "mosaic_output",
-            "target-images": ["{0:s}".format(os.path.basename(ii)) for ii in image_filenames],
+            "target-images": ["{0:s}:output".format(os.path.basename(ii)) for ii in image_filenames],
             "name": f"mosaic_output/{prefix}",
             "num-workers": 1,
             "force-regrid": True,
             "mosaic-cutoff": 0.01,
         },
-            input = input_directory,
+            input = pipeline.mosaic_line,
             output = pipeline.mosaic_line,
             label = "MosaicQueen"
         )

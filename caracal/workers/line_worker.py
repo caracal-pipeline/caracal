@@ -1861,11 +1861,18 @@ def worker(pipeline, recipe, config):
                     else:
                         caracal.log.info("Using mask defined by user {0:s}".format(config["imcontsub"]["mask_image"]))
 
-                        if os.path.exists("{0:s}/../masking/{1:s}".format(pipeline.cubes, config["imcontsub"]["mask_image"])):
-                            imcontsub_opts.update({"mask-image": "{0:s}/../masking/{1:s}".format(get_relative_path(pipeline.output, pipeline), config["imcontsub"]["mask_image"])})
+                        if os.path.exists("{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"])):
+                            imcontsub_opts.update(
+                                {
+                                    "mask-image": "masking/{0:s}".format(config["imcontsub"]["mask_image"]
+                                    )
+                                }
+                            )
+
                         else:
                             caracal.log.info("Mask datacube not found in output/masking")
                             caracal.log.info("Will proceed with automasking")
+
 
                     ##the segment size is chosen as the datacube velocity range / spline order
                     if all(item == 0.0 for item in config["imcontsub"]["segments"]):
@@ -1886,13 +1893,17 @@ def worker(pipeline, recipe, config):
                         config["imcontsub"]["segments"] = [round(vel_range, 0) / item for item in config["imcontsub"]["order"]]
                     imcontsub_opts.update({"segments": config["imcontsub"]["segments"]})
 
+
+                    if not config["imcontsub"]["label_out"]:
+                        imcontsub_opts.update({"output-prefix": input_cube.split(".fits")[0]})
+
                     imcontsub_opts.update({"infits": "{0:s}/cube_{1:d}/{2:s}".format(cube_dir, maxcube_dir, input_cube) + ":input"})
                     recipe.add(
                         "cab/imcontsub",
                         step,
                         imcontsub_opts,
                         input=pipeline.output,
-                        output="/".join(imsub_image_cube_list[uu].split("/")[:-1]),
+                        output="{0:s}/cube_{1:d}/".format(cube_dir,maxcube_dir),
                         label="{0:s}:: Image continuum subtraction for cube ".format(
                             step,
                         ),
@@ -1953,12 +1964,15 @@ def worker(pipeline, recipe, config):
                         caracal.log.info("Mask datacube {0:s} not found".format(path_mask))
                         caracal.log.info("Will proceed with automasking")
 
+                if not config["imcontsub"]["label_out"]:
+                    imcontsub_opts.update({"output-prefix": input_cube.split(".fits")[0]})
+
                 recipe.add(
                     "cab/imcontsub",
                     step,
                     imcontsub_opts,
                     input=pipeline.output,
-                    output=pipeline.output,
+                    output="{0:s}/{1:s}".format(pipeline.output,cubepath),
                     label="{0:s}:: Single cube continuum subtraction".format(step),
                 )
                 recipe.run()

@@ -606,7 +606,7 @@ mapping:
           label_out:
             desc: Name of ouput image
             type: str
-            example: 'imsub'
+            example: ''
             required: False
           input_cube:
             desc: name of input datacube located in /output/ (preferentially in outpupt/cubes/cube_xx/ . Where xx is the highest number. To use when running imcontsub independently.

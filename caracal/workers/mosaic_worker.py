@@ -352,7 +352,6 @@ def worker(pipeline, recipe, config):
     os.chdir(original_working_directory)
 
     caracal.log.info("Symlinks created.")
-    sys.exit()
 
     # Prefix of the output files should be either the default
     # (pipeline.prefix) or that specified by the user via the config file

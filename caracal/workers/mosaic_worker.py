@@ -345,8 +345,13 @@ def worker(pipeline, recipe, config):
 #             specified_image = "{0:s}/{1:s}".format("/".join([".." for ss in mosaic_input_directory.split("/")]), specified_image)
 #         if specified_image[0] == "/":
 #             specified_image = specified_image[1:]
+
+        # here target and image are both abs path
         target_image = os.path.abspath(specified_image)
         link_image = "{0:s}/{1:s}".format(os.path.abspath(mosaic_input_directory),os.path.basename(target_image))
+        
+        # convert target_image to path relative to CWD
+        target_image = os.path.relpath(target_image)
 
 #         # Sarah's way
 #         if os.path.exists(image_filename):

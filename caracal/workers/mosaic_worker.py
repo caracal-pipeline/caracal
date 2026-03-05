@@ -343,8 +343,8 @@ def worker(pipeline, recipe, config):
 
         if not specified_image.split(mosaic_input_directory)[0]:
             specified_image = specified_image.replace(mosaic_input_directory, "")
-        else:
-            specified_image = "{0:s}/{1:s}".format("/".join([".." for ss in mosaic_input_directory.split("/")]), specified_image)
+#         else:
+#             specified_image = "{0:s}/{1:s}".format("/".join([".." for ss in mosaic_input_directory.split("/")]), specified_image)
         if specified_image[0] == "/":
             specified_image = specified_image[1:]
 

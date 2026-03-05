@@ -412,6 +412,7 @@ def worker(pipeline, recipe, config):
 #     sys.exit()
 
     mosaic_folder_from_output = "{0:s}/{1:s}/mosaics".format(basename_of_output, "continuum" if specified_mosaictype == "continuum" else "cubes")
+    caracal.log.info("       ----> Stimela input and output = {0:s}".format(parent_of_output))
     recipe.add(
         "stimela/mosaic_queen",
         "mosaic-queen",

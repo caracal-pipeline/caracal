@@ -1685,8 +1685,6 @@ def worker(pipeline, recipe, config):
         cube_list = casa_cube_list + wscl_cube_list
         image_cube_list = [cc for cc in cube_list if "image.fits" in cc]
 
-        if not image_cube_list: 
-            caracal.log.warning("No cubes found for target {0:d}, please check your output directory".format(tt))
 
         if pipeline.enable_task(config, "pb_cube"):
             caracal.log.info("Will create primary beam cube for target {0:d}".format(tt))
@@ -1835,7 +1833,8 @@ def worker(pipeline, recipe, config):
                 "sigma-clip": config["imcontsub"]["sigma_clip"],
                 "ra-chunks": sdm.dismissable(config["imcontsub"]["ra_chunks"]),
                 "nworkers": sdm.dismissable(config["imcontsub"]["ncpus"]),
-                # "cont-fit-tol": sdm.dismissable(config["imcontsub"]["cont_fit_tol"]),
+                "cont-fit-tol": sdm.dismissable(config["imcontsub"]["cont_fit_tol"]),
+                "segments": sdm.dismissable(config["imcontsub"]["segments"]),
             }
             # C = 2.99792458e8  # m/s
             # HI = 1.4204057517667e9  # Hz
@@ -1885,23 +1884,28 @@ def worker(pipeline, recipe, config):
                     ##the segment size is chosen as the datacube velocity range / spline order
                     if all(item == 0.0 for item in config["imcontsub"]["segments"]):
                         hdul_cube = fits.getheader("{0:s}/cube_{1:d}/{2:s}".format(pipeline.cubes, maxcube_dir, input_cube))
+                        
                         if "FREQ" in hdul_cube["CTYPE3"]:
                             if "RESTFREQ" in hdul_cube:
                                 restfreq_cube = hdul_cube["RESTFREQ"]
                             else:
                                 restfreq_cube = config["imcontsub"]["rest_freq"] * 1e6
-                            hdul_cube["cdelt3"] = -C * float(hdul_cube["cdelt3"]) / restfreq_cube
+                            vel_step = -C * float(hdul_cube["cdelt3"]) / restfreq_cube
                             vel_range = abs(hdul_cube["cdelt3"] * hdul_cube["naxis3"] / 1e3)
                         else:
                             vel_range = abs(hdul_cube["cdelt3"] * hdul_cube["naxis3"])
-                            if vel_range > 1e4:
+                            if "km" in hdul_cube["cdelt3"].lower():
                                 # if cube in m/s then convert the velocity_range in km/s
                                 vel_range = vel_range / 1e3
 
-                        config["imcontsub"]["segments"] = [round(vel_range, 0) / item for item in config["imcontsub"]["order"]]
+                        for item in config["imcontsub"]["segments"]:
+                            if vel_range < config["imcontsub"]["segments"]:
+                                 caracal.log.warning('The width of the spline is larger than the spectral width of the cube, please check your segments keyword')
+
+                        # config["imcontsub"]["segments"] = [round(vel_range, 0) / item for item in config["imcontsub"]["order"]]
                     
 
-                    imcontsub_opts.update({"segments": config["imcontsub"]["segments"]})
+                    # imcontsub_opts.update({"segments": config["imcontsub"]["segments"]})
 
                     if not config["imcontsub"]["label_out"]:
                         imcontsub_opts.update({"output-prefix": input_cube.split(".fits")[0]})
@@ -1950,12 +1954,12 @@ def worker(pipeline, recipe, config):
                             vel_range = abs(hdul_cube["cdelt3"] * hdul_cube["naxis3"])
                         else:
                             vel_range = abs(hdul_cube["cdelt3"] * hdul_cube["naxis3"])
-                            if vel_range > 1e4:
+                            if "km" in hdul_cube["cdelt3"].lower():
                                 # if cube in m/s then convert the velocity_range in km/s
-                                vel_range = vel_range / 1e3
-
-                        config["imcontsub"]["segments"] = [round(vel_range, 0) / item for item in config["imcontsub"]["order"]]
-                    imcontsub_opts.update({"segments": config["imcontsub"]["segments"]})
+                                vel_range = vel_range / 1e3                        
+                        for item in config["imcontsub"]["segments"]:
+                            if vel_range < config["imcontsub"]["segments"]:
+                                 caracal.log.warning('The width of the spline is larger than the spectral width of the cube, please check your segments keyword')
 
                 else:
                     caracal.log.error(

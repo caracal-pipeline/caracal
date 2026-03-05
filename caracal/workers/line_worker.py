@@ -1931,6 +1931,8 @@ def worker(pipeline, recipe, config):
                 ]
                 cubepath = next((path for path in cubepaths_to_check if os.path.exists(path)), None)
                 cubepath = cubepath.split(pipeline.output)[-1]
+                cubedirname = os.path.dirname(os.path.abspath(cubepath))
+                print(cubedir)
                 if cubepath:
                     caracal.log.info("Continum subtraction in the image plage on datacube {0:s} provided by user ".format(config["imcontsub"]["input_cube"]))
                     step = "Image-continuum-subtraction-{0:s}".format(config["imcontsub"]["input_cube"])
@@ -1975,13 +1977,13 @@ def worker(pipeline, recipe, config):
 
                 if not config["imcontsub"]["label_out"]:
                     imcontsub_opts.update({"output-prefix": config["imcontsub"]["input_cube"].split(".fits")[0]})
-
+                print(imcontsub_opts)
                 recipe.add(
                     "cab/imcontsub",
                     step,
                     imcontsub_opts,
                     input=pipeline.output,
-                    output="{0:s}/{1:s}".format(pipeline.output,cubepath),
+                    output="{0:s}/{1:s}".format(pipeline.output,cubedirname),
                     label="{0:s}:: Single cube continuum subtraction".format(step),
                 )
                 recipe.run()

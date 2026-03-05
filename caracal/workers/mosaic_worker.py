@@ -350,8 +350,8 @@ def worker(pipeline, recipe, config):
         target_image = os.path.abspath(specified_image)
         link_image = "{0:s}/{1:s}".format(os.path.abspath(mosaic_input_directory),os.path.basename(target_image))
         
-        # convert target_image to path relative to the folder of the link images
-        target_image = os.path.relpath(target_image, start=os.path.basename(link_image))
+        # convert target_image to path relative to the directory of the link images
+        target_image = os.path.relpath(target_image, start=os.path.dirname(link_image))
 
 #         # Sarah's way
 #         if os.path.exists(image_filename):

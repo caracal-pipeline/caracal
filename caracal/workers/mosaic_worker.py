@@ -363,7 +363,7 @@ def worker(pipeline, recipe, config):
             "force-regrid": True,
             "beam-cutoff": config["beam_cutoff"],
             "mosaic-cutoff": config["mosaic_cutoff"],
-            "associated_mosaics": config["associated_mosaics"],
+            "associated-mosaics": config["associated_mosaics"],
             "unity-weights": False,
             "statistic": "mad"
         },

@@ -383,16 +383,13 @@ def worker(pipeline, recipe, config):
     
 #     sys.exit()
 
-    # Prefix of the output files should be either the default
-    # (pipeline.prefix) or that specified by the user via the config file
-    mosaic_prefix = config["name"]
-    if mosaic_prefix == "":  # i.e. this has been set via the schema
-        mosaic_prefix = pipeline.prefix
-
     # List of images in place, and have ensured that there are corresponding pb.fits files,
     # so now ready to add montage_mosaic to the caracal recipe
 
     image_filenames = ["{0:s}/{1:s}".format(mosaic_input_directory, ff) for ff in image_filenames]
+    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+    caracal.log.info(image_filenames)
+    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     
     if specified_mosaictype == "line":
         recipe.add(
@@ -419,6 +416,12 @@ def worker(pipeline, recipe, config):
     
     sys.exit()
 
+    # Prefix of the output files should be either the default
+    # (pipeline.prefix) or that specified by the user via the config file
+    mosaic_prefix = config["name"]
+    if mosaic_prefix == "":  # i.e. this has been set via the schema
+        mosaic_prefix = pipeline.prefix
+
     mosaic_folder_from_output = "{0:s}/{1:s}/mosaics".format(basename_of_output, "continuum" if specified_mosaictype == "continuum" else "cubes")
     caracal.log.info("       ----> Stimela input and output = {0:s}".format(parent_of_output))
     recipe.add(
@@ -428,7 +431,7 @@ def worker(pipeline, recipe, config):
             "input": "{0:s}/mosaic_input:output".format(mosaic_folder_from_output),
             "output": "{0:s}/mosaic_output".format(mosaic_folder_from_output),
             "target-images": ["{0:s}".format(os.path.basename(ii)) for ii in image_filenames],
-            "name": prefix,
+            "name": mosaic_prefix,
             "num-workers": 1,
             "force-regrid": True,
             "mosaic-cutoff": 0.01,

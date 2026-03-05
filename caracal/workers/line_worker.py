@@ -1903,9 +1903,7 @@ def worker(pipeline, recipe, config):
 
                     if not config["imcontsub"]["label_out"]:
                         imcontsub_opts.update({"output-prefix": input_cube.split(".fits")[0]})
-                    print(imcontsub_opts)
-                    import sys
-                    sys.exit(0)
+
                     imcontsub_opts.update({"infits": "{0:s}/cube_{1:d}/{2:s}".format(cube_dir, maxcube_dir, input_cube) + ":input"})
                     recipe.add(
                         "cab/imcontsub",

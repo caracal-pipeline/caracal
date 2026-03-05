@@ -1899,7 +1899,7 @@ def worker(pipeline, recipe, config):
 
                     # imcontsub_opts.update({"segments": config["imcontsub"]["segments"]})
 
-                    if len(config["imcontsub"]["label_out"]):
+                    if len(config["imcontsub"]["label_out"]) == 0:
                         imcontsub_opts.update({"output-prefix": input_cube.split(".fits")[0]})
 
                     imcontsub_opts.update({"infits": "{0:s}/cube_{1:d}/{2:s}".format(cube_dir, maxcube_dir, input_cube) + ":input"})
@@ -1971,7 +1971,7 @@ def worker(pipeline, recipe, config):
                         caracal.log.info("Mask datacube {0:s} not found".format(path_mask))
                         caracal.log.info("Will proceed with automasking")
 
-                if not config["imcontsub"]["label_out"]:
+                if len(config["imcontsub"]["label_out"]) == 0:
                     imcontsub_opts.update({"output-prefix": config["imcontsub"]["input_cube"].split(".fits")[0]})
 
                 recipe.add(

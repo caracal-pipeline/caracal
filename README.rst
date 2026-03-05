@@ -152,10 +152,9 @@ In the working directory where source is checked out run `uv sync` or to include
 
    uv sync --group tests
 
-Finally, to install pre-install commit hooks with:
+Finally, to install pre-commit hooks run:
 
 ..  code-block:: bash
-   
    uv run pre-commit install
 
 =========================================

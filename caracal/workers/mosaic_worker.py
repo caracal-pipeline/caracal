@@ -154,11 +154,11 @@ def worker(pipeline, recipe, config):
     label = config["label_in"]
     line_name = config["line_name"]
     pb_type = config["pb_type"]
+
     parent_of_output = os.path.dirname(os.path.abspath(pipeline.output))
 
-
     caracal.log.info("***********************************")
-    caracal.log.info("MQ2 is ON!")
+    caracal.log.info(("MQ2 is ON! -->", parent_of_output))
     caracal.log.info("***********************************")
     
     if use_mfs_images and specified_mosaictype == "line":

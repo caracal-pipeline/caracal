@@ -1868,6 +1868,7 @@ def worker(pipeline, recipe, config):
                     else:
                         caracal.log.info("Using mask defined by user {0:s}".format(config["imcontsub"]["mask_image"]))
                         print(config["imcontsub"]["mask_image"].strip())
+                        print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
                         print(config["imcontsub"]["label_out"].strip())
                         if not config["imcontsub"]["mask_image"].strip() and os.path.exists("{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"])):
                             print("{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"]))

@@ -348,6 +348,11 @@ def worker(pipeline, recipe, config):
     if mosaic_prefix == "":
         mosaic_prefix = pipeline.prefix
 
+    caracal.log.info("%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    caracal.log.info(config["associated_mosaics"])
+    caracal.log.info("%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    sys.exit()
+
     mosaic_folder_from_output = "{0:s}/{1:s}/mosaics".format(basename_of_output, "continuum" if specified_mosaictype == "continuum" else "cubes")
     recipe.add(
         "stimela/mosaic_queen",

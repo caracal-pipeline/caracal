@@ -366,7 +366,7 @@ def worker(pipeline, recipe, config):
 #             os.remove(beam_filename)
 #         symlink_for_beam_command = "ln -sf {0:s} {1:s}/{2:s}".format(specified_beam, mosaic_input_directory, beam_filename)
         if os.path.exists(link_beam):
-            os.remove(link_bea,)
+            os.remove(link_beam)
         symlink_for_beam_command = "ln -sf {0:s} {1:s}".format(target_beam, link_beam)
         caracal.log.info("    {0:s}".format(symlink_for_beam_command))
         os.system(symlink_for_beam_command)

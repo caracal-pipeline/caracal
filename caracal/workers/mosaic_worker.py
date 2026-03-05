@@ -331,10 +331,6 @@ def worker(pipeline, recipe, config):
     # Empty list to add filenames to, as we are not to pass 'image_1', etc, to the recipe
     image_filenames = []
     
-    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    caracal.log.info(specified_images)
-    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-
     # Start by assuming that 'image' is of the form 'image_1/image_filename'
     for specified_image in specified_images:
 
@@ -384,7 +380,6 @@ def worker(pipeline, recipe, config):
 #     os.chdir(original_working_directory)
 
     caracal.log.info("Symlinks created.")
-    sys.exit()
     
 #     sys.exit()
 
@@ -422,7 +417,7 @@ def worker(pipeline, recipe, config):
 #     caracal.log.info((parent_of_output, glob.glob("{0:s}/mosaic_input".format(pipeline.mosaic_line))))
 #     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     
-#     sys.exit()
+    sys.exit()
 
     mosaic_folder_from_output = "{0:s}/{1:s}/mosaics".format(basename_of_output, "continuum" if specified_mosaictype == "continuum" else "cubes")
     caracal.log.info("       ----> Stimela input and output = {0:s}".format(parent_of_output))

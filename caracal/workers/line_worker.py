@@ -1853,7 +1853,8 @@ def worker(pipeline, recipe, config):
                 for uu in range(len(imsub_image_cube_list)):
                     step = "Image-continuum-subtraction-{0:d}".format(uu)
                     input_cube = imsub_image_cube_list[uu].split("/")[-1]
-
+                    print(input_cube)
+                    print('$$$$$$$$$$$$$$$$$$$$$$$$$$$')
                     if config["imcontsub"]["mask_image"] == "sofia":
                         mask_name = input_cube.split(".image")[0] + ".image_mask.fits"
                         if os.path.exists("{0:s}/cube_{1:d}/{2:s}".format(pipeline.cubes, maxcube_dir, mask_name)):

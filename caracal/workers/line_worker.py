@@ -1835,7 +1835,7 @@ def worker(pipeline, recipe, config):
                 "sigma-clip": config["imcontsub"]["sigma_clip"],
                 "ra-chunks": sdm.dismissable(config["imcontsub"]["ra_chunks"]),
                 "nworkers": sdm.dismissable(config["imcontsub"]["ncpus"]),
-                "cont-fit-tol": sdm.dismissable(config["imcontsub"]["cont_fit_tol"]),
+                # "cont-fit-tol": sdm.dismissable(config["imcontsub"]["cont_fit_tol"]),
             }
             # C = 2.99792458e8  # m/s
             # HI = 1.4204057517667e9  # Hz

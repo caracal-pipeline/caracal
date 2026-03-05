@@ -289,9 +289,9 @@ A linter is a static checker that flags bugs and style errors.
 
 What it does: It finds things like unused variables, undefined names, overly complex functions, and imports that are not sorted.
 
-How to use it: Run ``uv run ruff check`` in the CI pipeline and in your editor.
+How to use it: Locally, run ``uv run ruff check`` and configure your editor to use Ruff.
 
-Lint and code format with: ``uv run ruff format``
+To lint and format your code locally, run: ``uv run ruff format``
 
 NB: Linters have limitations because both false positives and false negatives can occur.
 

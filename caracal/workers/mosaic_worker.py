@@ -148,7 +148,7 @@ def worker(pipeline, recipe, config):
     specified_mosaictype = config["mosaic_type"]
     use_mfs_images = config["use_mfs"]
     specified_images = config["target_images"]
-    label = config["label_in"]
+    label_in = config["label_in"]
     line_name = config["line_name"]
     pb_type = config["pb_type"]
 
@@ -192,9 +192,8 @@ def worker(pipeline, recipe, config):
                          "ones with mosaic:target_images.".format("image" if specified_mosaictype == "continuum" else "cube"))
 
         # Needed for working out the field names for the targets, so that the correct files can be selected
-        all_targets = pipeline.get_target_mss(label)[0]
-        n_targets = len(all_targets)
-        caracal.log.info("The number of targets to be mosaicked is {0:d}".format(n_targets))
+        all_targets = pipeline.get_target_mss(label_in)[0]
+        caracal.log.info("The number of targets to be mosaicked is {0:d}".format(len(all_targets)))
 
         # Where the targets are in the output directory
         max_num, last_subdirectory = identify_last_subdirectory(specified_mosaictype, prefix)
@@ -356,12 +355,17 @@ def worker(pipeline, recipe, config):
         "mosaic-queen",
         {
             "input": "{0:s}/mosaic_input:output".format(mosaic_folder_from_output),
-            "output": "{0:s}/mosaic_output".format(mosaic_folder_from_output),
             "target-images": ["{0:s}".format(os.path.basename(ii)) for ii in image_filenames],
+            "output": "{0:s}/mosaic_output".format(mosaic_folder_from_output),
             "name": mosaic_prefix,
-            "num-workers": 1,
+            "num-workers": config["num_workers"],
+            "regrid": False,
             "force-regrid": True,
-            "mosaic-cutoff": 0.01,
+            "beam-cutoff": config["beam_cutoff"],
+            "mosaic-cutoff": config["mosaic_cutoff"],
+            "associated_mosaics": config["associated_mosaics"],
+            "unity-weights": False,
+            "statistic": "mad"
         },
             input = parent_of_output,
             output = parent_of_output,

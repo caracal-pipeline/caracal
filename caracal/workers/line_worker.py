@@ -1684,7 +1684,7 @@ def worker(pipeline, recipe, config):
         wscl_cube_list = glob.glob("{0:s}/{1:s}/cube_*/{2:s}_{3:s}_{4:s}*.fits".format(pipeline.output, cube_dir, pipeline.prefix, field, line_name))
         cube_list = casa_cube_list + wscl_cube_list
         image_cube_list = [cc for cc in cube_list if "image.fits" in cc]
-        print("{0:s}/{1:s}/{2:s}_{3:s}_{4:s}*.fits".format(pipeline.output, cube_dir, pipeline.prefix, field, line_name)
+        print("{0:s}/{1:s}/{2:s}_{3:s}_{4:s}*.fits".format(pipeline.output, cube_dir, pipeline.prefix, field, line_name))
         print(image_cube_list) 
         print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
 

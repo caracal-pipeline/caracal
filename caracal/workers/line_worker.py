@@ -1684,7 +1684,9 @@ def worker(pipeline, recipe, config):
         wscl_cube_list = glob.glob("{0:s}/{1:s}/cube_*/{2:s}_{3:s}_{4:s}*.fits".format(pipeline.output, cube_dir, pipeline.prefix, field, line_name))
         cube_list = casa_cube_list + wscl_cube_list
         image_cube_list = [cc for cc in cube_list if "image.fits" in cc]
-
+        print(image_cube_list) 
+        print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+        
         if pipeline.enable_task(config, "pb_cube"):
             caracal.log.info("Will create primary beam cube for target {0:d}".format(tt))
             for uu in range(len(image_cube_list)):
@@ -1841,12 +1843,18 @@ def worker(pipeline, recipe, config):
 
             dirlist = glob.glob("{0:s}/{1:s}/cube_*".format(pipeline.output, cube_dir))
             maxcube_dir = max([int(gi[-1]) for gi in dirlist])
+
+
+
             # Here starts the loop within the logic of the line worker.
             # Imcontsub will use subtract into the datacube in the cubes directory of maximum order.
             # caracal will look for the corresponding mask saved by sofia, if this does not exist
             #  imcontsub will use the automasking method
             if not config["imcontsub"]["input_cube"]:
                 caracal.log.info("Continum subtraction in the image-plane for target {0:d}".format(tt))
+
+
+
 
                 imsub_image_cube_list = image_cube_list.copy()
                 print(imsub_image_cube_list)

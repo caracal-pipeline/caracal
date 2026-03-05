@@ -139,14 +139,14 @@ Installation from source using `uv` or `poetry`. First, install with:
 
 ..  code-block:: bash
 
-    pip install uv / pip install poetry
+    pip install uv # or pip install poetry
 
 
 In the working directory where source is checked out run `uv sync` or to include all group dependencies, such as tests:
 
 ..  code-block:: bash
 
-    uv sync --group dev / poetry install --with dev
+    uv sync --group dev # or poetry install --with dev
 
 ..  code-block:: bash
 

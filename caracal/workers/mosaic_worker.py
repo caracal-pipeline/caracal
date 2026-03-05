@@ -331,9 +331,10 @@ def worker(pipeline, recipe, config):
     # Empty list to add filenames to, as we are not to pass 'image_1', etc, to the recipe
     image_filenames = []
     
-#     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-#     caracal.log.info(glob.glob('./*'))
-#     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+    caracal.log.info(specified_images)
+    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+    sys.exit()
 
     # Start by assuming that 'image' is of the form 'image_1/image_filename'
     for specified_image in specified_images:

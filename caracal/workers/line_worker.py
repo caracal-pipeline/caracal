@@ -1686,7 +1686,7 @@ def worker(pipeline, recipe, config):
         image_cube_list = [cc for cc in cube_list if "image.fits" in cc]
 
         if not image_cube_list: 
-            caracal.log.error("No cubes found for target {0:d}, please check your output directory".format(tt))
+            caracal.log.warning("No cubes found for target {0:d}, please check your output directory".format(tt))
 
         if pipeline.enable_task(config, "pb_cube"):
             caracal.log.info("Will create primary beam cube for target {0:d}".format(tt))
@@ -1932,7 +1932,7 @@ def worker(pipeline, recipe, config):
                 cubepath = next((path for path in cubepaths_to_check if os.path.exists(path)), None)
                 cubepath = cubepath.split(pipeline.output)[-1]
                 cubedirname = os.path.dirname(os.path.abspath(cubepath))
-                print(cubedir)
+                print(cubedirname)
                 if cubepath:
                     caracal.log.info("Continum subtraction in the image plage on datacube {0:s} provided by user ".format(config["imcontsub"]["input_cube"]))
                     step = "Image-continuum-subtraction-{0:s}".format(config["imcontsub"]["input_cube"])

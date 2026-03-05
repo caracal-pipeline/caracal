@@ -1908,7 +1908,7 @@ def worker(pipeline, recipe, config):
                         step,
                         imcontsub_opts,
                         input=pipeline.output,
-                        output="{0:s}/cube_{1:d}/".format(cube_dir, maxcube_dir),
+                        output="{0:s}/cubes/cube_{1:d}/".format(pipeline_output, maxcube_dir),
                         label="{0:s}:: Image continuum subtraction for cube ".format(
                             step,
                         ),

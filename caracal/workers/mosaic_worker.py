@@ -317,8 +317,8 @@ def worker(pipeline, recipe, config):
 
     caracal.log.info("Checking for *pb.fits files now complete.")
 
-    caracal.log.info("Creating / replacing symlinks to images and beams, in case they are distributed across multiple subdirectories.")
     # To get the symlinks created in the correct directory
+    caracal.log.info("Creating / replacing symlinks to images and beams, in case they are distributed across multiple subdirectories.")
     mosaic_input_directory = "{0:s}/mosaic_input".format(pipeline.mosaic_continuum if specified_mosaictype == "continuum" else pipeline.mosaic_line)
     if not os.path.exists(mosaic_input_directory):
         os.mkdir(mosaic_input_directory)
@@ -334,33 +334,44 @@ def worker(pipeline, recipe, config):
     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     caracal.log.info(specified_images)
     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    sys.exit()
 
     # Start by assuming that 'image' is of the form 'image_1/image_filename'
     for specified_image in specified_images:
-        split_imagename = specified_image.split("/")
-        image_filename = split_imagename[-1]
-        image_filenames.append(image_filename)
 
-        if not specified_image.split(mosaic_input_directory)[0]:
-            specified_image = specified_image.replace(mosaic_input_directory, "")
+#         # Sarah's way
+#         split_imagename = specified_image.split("/")
+#         image_filename = split_imagename[-1]
+#         image_filenames.append(image_filename)
+# 
+#         if not specified_image.split(mosaic_input_directory)[0]:
+#             specified_image = specified_image.replace(mosaic_input_directory, "")
 #         else:
 #             specified_image = "{0:s}/{1:s}".format("/".join([".." for ss in mosaic_input_directory.split("/")]), specified_image)
-        if specified_image[0] == "/":
-            specified_image = specified_image[1:]
+#         if specified_image[0] == "/":
+#             specified_image = specified_image[1:]
+        target_image = os.path.abspath(specified_image)
+        link_image = "{0:s}/".format(os.path.abspath(mosaic_input_directory),os.path.basename(target_image_image))
 
-        if os.path.exists(image_filename):
-            os.remove(image_filename)
-        symlink_for_image_command = "ln -sf {0:s} {1:s}/{2:s}".format(specified_image, mosaic_input_directory, image_filename)
+#         # Sarah's way
+#         if os.path.exists(image_filename):
+#             os.remove(image_filename)
+#         symlink_for_image_command = "ln -sf {0:s} {1:s}/{2:s}".format(specified_image, mosaic_input_directory, image_filename)
+        if os.path.exists(link_image):
+            os.remove(link_image)
+        symlink_for_image_command = "ln -sf {0:s} {1:s}".format(target_image, link_image)
         caracal.log.info("    {0:s}".format(symlink_for_image_command))
         os.system(symlink_for_image_command)
 
-        specified_beam = specified_image.replace("image.fits", "pb.fits")
-        beam_filename = image_filename.replace("image.fits", "pb.fits")
+        target_beam = target_image.replace("image.fits", "pb.fits")
+        link_beam = link_image.replace("image.fits", "pb.fits")
 
-        if os.path.exists(beam_filename):
-            os.remove(beam_filename)
-        symlink_for_beam_command = "ln -sf {0:s} {1:s}/{2:s}".format(specified_beam, mosaic_input_directory, beam_filename)
+# #         # Sarah's way
+#         if os.path.exists(beam_filename):
+#             os.remove(beam_filename)
+#         symlink_for_beam_command = "ln -sf {0:s} {1:s}/{2:s}".format(specified_beam, mosaic_input_directory, beam_filename)
+        if os.path.exists(link_beam):
+            os.remove(link_bea,)
+        symlink_for_beam_command = "ln -sf {0:s} {1:s}".format(target_beam, link_beam)
         caracal.log.info("    {0:s}".format(symlink_for_beam_command))
         os.system(symlink_for_beam_command)
 
@@ -373,6 +384,7 @@ def worker(pipeline, recipe, config):
 #     os.chdir(original_working_directory)
 
     caracal.log.info("Symlinks created.")
+    sys.exit()
     
 #     sys.exit()
 

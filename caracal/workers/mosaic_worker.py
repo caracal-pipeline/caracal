@@ -157,6 +157,7 @@ def worker(pipeline, recipe, config):
     pb_type = config["pb_type"]
 
     parent_of_output = os.path.dirname(os.path.abspath(pipeline.output))
+    basename_of_output = os.path.basename(os.path.abspath(pipeline.output))
     original_working_directory = os.getcwd()
 
     caracal.log.info("***********************************")
@@ -410,8 +411,7 @@ def worker(pipeline, recipe, config):
     
 #     sys.exit()
 
-    mosaic_folder_from_output = "continuum" if specified_mosaictype == "continuum" else "cubes"
-    mosaic_folder_from_output += "/mosaics"
+    mosaic_folder_from_output = "{0:s}/{1:s}/mosaics".format(basename_of_output, "continuum" if specified_mosaictype == "continuum" else "cubes")
     recipe.add(
         "stimela/mosaic_queen",
         "mosaic-queen",

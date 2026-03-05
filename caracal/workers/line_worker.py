@@ -1685,7 +1685,6 @@ def worker(pipeline, recipe, config):
         cube_list = casa_cube_list + wscl_cube_list
         image_cube_list = [cc for cc in cube_list if "image.fits" in cc]
 
-
         if pipeline.enable_task(config, "pb_cube"):
             caracal.log.info("Will create primary beam cube for target {0:d}".format(tt))
             for uu in range(len(image_cube_list)):
@@ -1867,24 +1866,18 @@ def worker(pipeline, recipe, config):
                     else:
                         caracal.log.info("Using mask defined by user {0:s}".format(config["imcontsub"]["mask_image"]))
 
-                        if len (config["imcontsub"]["mask_image"].strip())!=0 and os.path.exists("{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"])):
+                        if len(config["imcontsub"]["mask_image"].strip()) != 0 and os.path.exists("{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"])):
                             print("{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"]))
-                            imcontsub_opts.update(
-                                {
-                                    "mask-image": "masking/{0:s}".format(config["imcontsub"]["mask_image"]
-                                    )
-                                }
-                            )
+                            imcontsub_opts.update({"mask-image": "masking/{0:s}".format(config["imcontsub"]["mask_image"])})
 
                         else:
                             caracal.log.info("Mask datacube not found in output/masking")
                             caracal.log.info("Will proceed with automasking")
 
-
                     ##the segment size is chosen as the datacube velocity range / spline order
                     if all(item == 0.0 for item in config["imcontsub"]["segments"]):
                         hdul_cube = fits.getheader("{0:s}/cube_{1:d}/{2:s}".format(pipeline.cubes, maxcube_dir, input_cube))
-                        
+
                         if "FREQ" in hdul_cube["CTYPE3"]:
                             if "RESTFREQ" in hdul_cube:
                                 restfreq_cube = hdul_cube["RESTFREQ"]
@@ -1900,10 +1893,9 @@ def worker(pipeline, recipe, config):
 
                         for item in config["imcontsub"]["segments"]:
                             if vel_range < config["imcontsub"]["segments"]:
-                                 caracal.log.warning('The width of the spline is larger than the spectral width of the cube, please check your segments keyword')
+                                caracal.log.warning("The width of the spline is larger than the spectral width of the cube, please check your segments keyword")
 
                         # config["imcontsub"]["segments"] = [round(vel_range, 0) / item for item in config["imcontsub"]["order"]]
-                    
 
                     # imcontsub_opts.update({"segments": config["imcontsub"]["segments"]})
 
@@ -1916,7 +1908,7 @@ def worker(pipeline, recipe, config):
                         step,
                         imcontsub_opts,
                         input=pipeline.output,
-                        output="{0:s}/cube_{1:d}/".format(cube_dir,maxcube_dir),
+                        output="{0:s}/cube_{1:d}/".format(cube_dir, maxcube_dir),
                         label="{0:s}:: Image continuum subtraction for cube ".format(
                             step,
                         ),
@@ -1956,10 +1948,10 @@ def worker(pipeline, recipe, config):
                             vel_range = abs(hdul_cube["cdelt3"] * hdul_cube["naxis3"])
                             if "km" in hdul_cube["cdelt3"].lower():
                                 # if cube in m/s then convert the velocity_range in km/s
-                                vel_range = vel_range / 1e3                        
+                                vel_range = vel_range / 1e3
                         for item in config["imcontsub"]["segments"]:
                             if vel_range < config["imcontsub"]["segments"]:
-                                 caracal.log.warning('The width of the spline is larger than the spectral width of the cube, please check your segments keyword')
+                                caracal.log.warning("The width of the spline is larger than the spectral width of the cube, please check your segments keyword")
 
                 else:
                     caracal.log.error(
@@ -1987,7 +1979,7 @@ def worker(pipeline, recipe, config):
                     step,
                     imcontsub_opts,
                     input=pipeline.output,
-                    output="{0:s}/{1:s}".format(pipeline.output,cubedirname),
+                    output="{0:s}/{1:s}".format(pipeline.output, cubedirname),
                     label="{0:s}:: Single cube continuum subtraction".format(step),
                 )
                 recipe.run()
@@ -1995,10 +1987,8 @@ def worker(pipeline, recipe, config):
 
                 caracal.log.info("Subtracted continuum in the image domain for datacube {0:s} provided by user ".format(config["imcontsub"]["input_cube"]))
 
-                if len(config["imcontsub"]["input_cube"])< tt:
-
+                if len(config["imcontsub"]["input_cube"]) < tt:
                     break
-
 
         if pipeline.enable_task(config, "sharpener"):
             for uu in range(len(image_cube_list)):

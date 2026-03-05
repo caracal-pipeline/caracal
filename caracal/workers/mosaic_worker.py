@@ -112,6 +112,7 @@ def worker(pipeline, recipe, config):
         caracal.log.info("Checking whether all cubes have the same CDELT3. This is required in order for mosaicking to work.")
         cdelt3s = []
         for ff in image_filenames:
+            caracal.log.info("    {0:s}".format(ff))
             cc = fits.getval(ff, "cdelt3")
             if cc not in cdelt3s:
                 cdelt3s.append(cc)

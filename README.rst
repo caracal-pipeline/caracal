@@ -275,6 +275,9 @@ Set up a CI pipeline that automatically:
   #. Runs your entire test suite (pytest).
 
 NB: A PR can only be merged after an admin approves it via a 'OK to test' comment.
+
+Continuous Integration (CI) checks will start running on the pull request changes.
+
 Pull Requests are blocked from being merged if the CI tests fail.
 
 Code "Linting" (Style and Error Checking)

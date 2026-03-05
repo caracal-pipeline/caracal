@@ -349,9 +349,9 @@ def worker(pipeline, recipe, config):
         mosaic_prefix = pipeline.prefix
     
     caracal.log.info("^^^^^^^^^^^^^^^^^")
-    caracal.log.info("" if config["associated_mosaics"] == [""] else config["associated_mosaics"])
+    caracal.log.info(None if config["associated_mosaics"] == [""] else config["associated_mosaics"])
     caracal.log.info("^^^^^^^^^^^^^^^^^")
-    sys.exit()
+#     sys.exit()
 
     mosaic_folder_from_output = "{0:s}/{1:s}/mosaics".format(basename_of_output, "continuum" if specified_mosaictype == "continuum" else "cubes")
     recipe.add(
@@ -367,7 +367,7 @@ def worker(pipeline, recipe, config):
             "force-regrid": True,
             "beam-cutoff": config["beam_cutoff"],
             "mosaic-cutoff": config["mosaic_cutoff"],
-            "associated-mosaics": sdm.dismissable("" if config["associated_mosaics"] == [""] else config["associated_mosaics"]),
+            "associated-mosaics": sdm.dismissable(None if config["associated_mosaics"] == [""] else config["associated_mosaics"]),
             "unity-weights": False,
             "statistic": "mad"
         },

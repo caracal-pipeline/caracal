@@ -146,12 +146,9 @@ In the working directory where source is checked out run `uv sync` or to include
 
 ..  code-block:: bash
 
-    uv sync --group dev # or poetry install --with dev
-
-..  code-block:: bash
-
-   uv sync --group tests
-
+    uv sync --group dev --group tests
+    # or, using poetry:
+    poetry install --with dev,tests
 Finally, to install pre-commit hooks run:
 
 ..  code-block:: bash

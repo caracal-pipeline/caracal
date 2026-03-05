@@ -156,15 +156,6 @@ def worker(pipeline, recipe, config):
     basename_of_output = os.path.basename(os.path.abspath(pipeline.output))
     original_working_directory = os.getcwd()
 
-    caracal.log.info("***********************************")
-    caracal.log.info("MQ2 is ON!")
-    caracal.log.info(parent_of_output)
-    caracal.log.info(original_working_directory)
-    caracal.log.info(pipeline.mosaic_line)
-    caracal.log.info(pipeline.continuum)
-    caracal.log.info(pipeline.caltables)
-    caracal.log.info("***********************************")
-    
     if use_mfs_images and specified_mosaictype == "line":
         caracal.log.warn("You have set 'use_mfs: true' but this only makes sense for 'mosaic_type: continuum'. "
                          "Since you have set 'mosaic_type: line' we will revert to the default 'use_mfs: false'.")
@@ -305,14 +296,12 @@ def worker(pipeline, recipe, config):
 
     caracal.log.info("Checking for *pb.fits files now complete.")
 
-    # To get the symlinks created in the correct directory
+    # Create symlinks of input images / cubes
     caracal.log.info("Creating / replacing symlinks to images and beams -- strictly needed only when they are distributed across multiple subdirectories.")
     mosaic_input_directory = "{0:s}/mosaic_input".format(pipeline.mosaic_continuum if specified_mosaictype == "continuum" else pipeline.mosaic_line)
     if not os.path.exists(mosaic_input_directory):
         os.mkdir(mosaic_input_directory)
-
     for specified_image in specified_images:
-
         # define both target and link as absolute paths
         target_image = os.path.abspath(specified_image)
         link_image = "{0:s}/{1:s}".format(os.path.abspath(mosaic_input_directory),os.path.basename(target_image))
@@ -362,7 +351,6 @@ def worker(pipeline, recipe, config):
         mosaic_prefix = pipeline.prefix
 
     mosaic_folder_from_output = "{0:s}/{1:s}/mosaics".format(basename_of_output, "continuum" if specified_mosaictype == "continuum" else "cubes")
-    caracal.log.info("       ----> Stimela input and output = {0:s}".format(parent_of_output))
     recipe.add(
         "stimela/mosaic_queen",
         "mosaic-queen",

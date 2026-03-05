@@ -609,7 +609,7 @@ mapping:
             example: ''
             required: False
           input_cube:
-            desc: name of input datacube located in /output/ (preferentially in outpupt/cubes/cube_xx/ . Where xx is the highest number. To use when running imcontsub independently.
+            desc: name of input datacube located in /output/ (preferentially in outpupt/cubes/cube_xx/ . Where xx is the highest number. To use when running imcontsub independently. Takes only one cube and mask at the time.
             type: str
             example: ''
             required: False

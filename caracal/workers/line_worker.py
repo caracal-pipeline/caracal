@@ -1995,6 +1995,11 @@ def worker(pipeline, recipe, config):
 
                 caracal.log.info("Subtracted continuum in the image domain for datacube {0:s} provided by user ".format(config["imcontsub"]["input_cube"]))
 
+                if len(config["imcontsub"]["input_cube"])< len(tt):
+
+                    break
+
+
         if pipeline.enable_task(config, "sharpener"):
             for uu in range(len(image_cube_list)):
                 step = "continuum-spectral_extraction-{0:d}".format(uu)

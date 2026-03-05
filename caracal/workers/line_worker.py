@@ -1995,7 +1995,7 @@ def worker(pipeline, recipe, config):
 
                 caracal.log.info("Subtracted continuum in the image domain for datacube {0:s} provided by user ".format(config["imcontsub"]["input_cube"]))
 
-                if len(config["imcontsub"]["input_cube"])< len(tt):
+                if len(config["imcontsub"]["input_cube"])< tt:
 
                     break
 

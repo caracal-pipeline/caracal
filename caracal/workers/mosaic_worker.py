@@ -161,6 +161,8 @@ def worker(pipeline, recipe, config):
     caracal.log.info("MQ2 is ON!")
     caracal.log.info(parent_of_output)
     caracal.log.info(pipeline.mosaic_line)
+    caracal.log.info(pipeline.continuum)
+    caracal.log.info(pipeline.caltables)
     caracal.log.info("***********************************")
     
     if use_mfs_images and specified_mosaictype == "line":

@@ -1849,6 +1849,8 @@ def worker(pipeline, recipe, config):
                 caracal.log.info("Continum subtraction in the image-plane for target {0:d}".format(tt))
 
                 imsub_image_cube_list = image_cube_list.copy()
+                print(imsub_image_cube_list)
+                print('$$$$$$$$$$$$$$$$$$$$$$$$$$$')
 
                 for uu in range(len(imsub_image_cube_list)):
                     step = "Image-continuum-subtraction-{0:d}".format(uu)

@@ -157,10 +157,12 @@ def worker(pipeline, recipe, config):
     pb_type = config["pb_type"]
 
     parent_of_output = os.path.dirname(os.path.abspath(pipeline.output))
+    original_working_directory = os.getcwd()
 
     caracal.log.info("***********************************")
     caracal.log.info("MQ2 is ON!")
     caracal.log.info(parent_of_output)
+    caracal.log.info(original_working_directory)
     caracal.log.info(pipeline.mosaic_line)
     caracal.log.info(pipeline.continuum)
     caracal.log.info(pipeline.caltables)

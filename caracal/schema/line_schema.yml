@@ -657,7 +657,7 @@ mapping:
           ra_chunks:
             desc: Chunking along RA-axis. If set to zero, no Chunking is perfomed.
             type: int 
-            example: '0'
+            example: '4'
             required: False
           ncpus:
             desc: Number of workers (one per CPU) 

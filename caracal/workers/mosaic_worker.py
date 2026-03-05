@@ -387,10 +387,9 @@ def worker(pipeline, recipe, config):
     # so now ready to add montage_mosaic to the caracal recipe
 
     image_filenames = ["{0:s}/{1:s}".format(mosaic_input_directory, os.path.basename(ff)) for ff in specified_images]
-    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    caracal.log.info(image_filenames)
-    caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    
+#     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+#     caracal.log.info(image_filenames)
+#     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')    
     if specified_mosaictype == "line":
         recipe.add(
             consistent_cdelt3,
@@ -414,7 +413,7 @@ def worker(pipeline, recipe, config):
 #     caracal.log.info((parent_of_output, glob.glob("{0:s}/mosaic_input".format(pipeline.mosaic_line))))
 #     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
     
-    sys.exit()
+#     sys.exit()
 
     # Prefix of the output files should be either the default
     # (pipeline.prefix) or that specified by the user via the config file

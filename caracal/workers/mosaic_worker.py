@@ -348,7 +348,7 @@ def worker(pipeline, recipe, config):
         if os.path.exists(image_filename):
             os.remove(image_filename)
         symlink_for_image_command = "ln -sf {0:s} {1:s}/{2:s}".format(specified_image, mosaic_input_directory, image_filename)
-        caracal.log.info(symlink_for_image_command)
+        caracal.log.info("    ".format(symlink_for_image_command))
         os.system(symlink_for_image_command)
 
         specified_beam = specified_image.replace("image.fits", "pb.fits")
@@ -357,7 +357,7 @@ def worker(pipeline, recipe, config):
         if os.path.exists(beam_filename):
             os.remove(beam_filename)
         symlink_for_beam_command = "ln -sf {0:s} {1:s}/{2:s}".format(specified_beam, mosaic_input_directory, beam_filename)
-        caracal.log.info(symlink_for_beam_command)
+        caracal.log.info("    ".format(symlink_for_beam_command))
         os.system(symlink_for_beam_command)
 
 #     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')

@@ -1688,7 +1688,8 @@ def worker(pipeline, recipe, config):
         print("{0:s}/{1:s}/cube_*/{2:s}_{3:s}_{4:s}*.fits".format(pipeline.output, cube_dir, pipeline.prefix, field, line_name))
         print(image_cube_list) 
         print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-
+        import sys
+        sys.exit(0)
         if pipeline.enable_task(config, "pb_cube"):
             caracal.log.info("Will create primary beam cube for target {0:d}".format(tt))
             for uu in range(len(image_cube_list)):

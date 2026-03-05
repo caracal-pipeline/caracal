@@ -1891,7 +1891,7 @@ def worker(pipeline, recipe, config):
                             else:
                                 restfreq_cube = config["imcontsub"]["rest_freq"] * 1e6
                             vel_step = -C * float(hdul_cube["cdelt3"]) / restfreq_cube
-                            vel_range = abs(hdul_cube["cdelt3"] * hdul_cube["naxis3"] / 1e3)
+                            vel_range = abs(vel_step * hdul_cube["naxis3"] / 1e3)
                         else:
                             vel_range = abs(hdul_cube["cdelt3"] * hdul_cube["naxis3"])
                             if "km" in hdul_cube["cdelt3"].lower():

@@ -616,7 +616,7 @@ mapping:
           mask_image:
             type: str
             desc: 1) 'sofia' to use the mask output of SoFiA  2) a prefix string to use an existing .FITS mask located in output_label/masking and called prefix_target.fits (name of the target is set automatically by the pipeline and the mask should be named accordingly). The .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this third masking method can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output_label/masking.
-            example: 'sofia'
+            example: ''
             required: False
           sigma_clip:
             desc: Sigma clip for each iteration. Only required if mask-image is not given.

@@ -350,7 +350,7 @@ def worker(pipeline, recipe, config):
         if os.path.exists(image_filename):
             os.remove(image_filename)
         symlink_for_image_command = "ln -sf {0:s} {1:s}/{2:s}".format(specified_image, mosaic_input_directory, image_filename)
-        caracal.log.info("    ".format(symlink_for_image_command))
+        caracal.log.info("    {0:s}".format(symlink_for_image_command))
         os.system(symlink_for_image_command)
 
         specified_beam = specified_image.replace("image.fits", "pb.fits")
@@ -359,7 +359,7 @@ def worker(pipeline, recipe, config):
         if os.path.exists(beam_filename):
             os.remove(beam_filename)
         symlink_for_beam_command = "ln -sf {0:s} {1:s}/{2:s}".format(specified_beam, mosaic_input_directory, beam_filename)
-        caracal.log.info("    ".format(symlink_for_beam_command))
+        caracal.log.info("    {0:s}".format(symlink_for_beam_command))
         os.system(symlink_for_beam_command)
 
 #     caracal.log.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
@@ -410,12 +410,14 @@ def worker(pipeline, recipe, config):
     
 #     sys.exit()
 
+    mosaic_folder_from_output = "continuum" if specified_mosaictype == "continuum" else "cubes"
+    mosaic_folder_from_output += "/mosaics"
     recipe.add(
         "stimela/mosaic_queen",
         "mosaic-queen",
         {
-            "input": "{0:s}/mosaic_input:output".format(pipeline.mosaic_line),
-            "output": "{0:s}/mosaic_output".format(pipeline.mosaic_line),
+            "input": "{0:s}/mosaic_input:output".format(mosaic_folder_from_output),
+            "output": "{0:s}/mosaic_output".format(mosaic_folder_from_output),
             "target-images": ["{0:s}".format(os.path.basename(ii)) for ii in image_filenames],
             "name": prefix,
             "num-workers": 1,

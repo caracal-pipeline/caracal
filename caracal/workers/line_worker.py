@@ -1899,6 +1899,8 @@ def worker(pipeline, recipe, config):
                                 vel_range = vel_range / 1e3
 
                         config["imcontsub"]["segments"] = [round(vel_range, 0) / item for item in config["imcontsub"]["order"]]
+                    
+
                     imcontsub_opts.update({"segments": config["imcontsub"]["segments"]})
 
                     if not config["imcontsub"]["label_out"]:
@@ -1972,7 +1974,7 @@ def worker(pipeline, recipe, config):
                         caracal.log.info("Will proceed with automasking")
 
                 if not config["imcontsub"]["label_out"]:
-                    imcontsub_opts.update({"output-prefix": input_cube.split(".fits")[0]})
+                    imcontsub_opts.update({"output-prefix": config["imcontsub"]["input_cube"].split(".fits")[0]})
 
                 recipe.add(
                     "cab/imcontsub",

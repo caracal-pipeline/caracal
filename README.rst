@@ -285,7 +285,7 @@ Code "Linting" (Style and Error Checking)
 
 A linter is a static checker that flags bugs and style errors.
 
-**Tool**: ruff (This is the new standard. It's incredibly fast and has replaced older tools like flake8 and isort).
+**Tool**: ruff (This is the new standard. It's incredibly fast and can cover most use cases of older tools like flake8 and isort).
 
 What it does: It finds things like unused variables, undefined names, overly complex functions, and imports that are not sorted.
 

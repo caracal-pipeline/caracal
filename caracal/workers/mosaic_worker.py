@@ -45,8 +45,15 @@ def worker(pipeline, recipe, config):
         last_subdirectory = subdirectory_prefix + str(max_num)
         return max_num, last_subdirectory
 
-    # Copied from masking_worker.py and edited. This is to get a Gaussian beam.
-    def build_beam(obs_freq, centre, cell, imsize, out_beam):
+    def make_gaussian_pb(filename, obs_freq, out_beam):
+
+        # Create rudimentary primary-beam, which is assumed to be a Gaussian with FWMH = 1.02*lambda/D
+        image_header = fits.getheader(filename)
+        # i.e. [ RA, Dec ]. Assuming that these are in units of deg.
+        centre = [image_header["CRVAL1"], image_header["CRVAL2"]]
+        # Again assuming that these are in units of deg.
+        cell = image_header["CDELT2"]
+        imsize = image_header["NAXIS1"]
 
         w = wcs.WCS(naxis=2)
 
@@ -88,10 +95,7 @@ def worker(pipeline, recipe, config):
 
         fits.writeto(out_beam, gaussian, hdr, overwrite=True)
 
-    # Copied from line_worker.py and edited. This is to get a Mauchian beam.
-    # The original version makes the build_beam function above redundant but
-    # I do not want to change too many things at once.
-    def make_mauchian_pb(filename, freq):  # pbtype):
+    def make_mauchian_pb(filename, freq, out_beam):  # pbtype):
         with fits.open(filename) as image:
             headimage = image[0].header
             ang_offset = np.indices((headimage["naxis2"], headimage["naxis1"]), dtype=np.float32)
@@ -101,7 +105,7 @@ def worker(pipeline, recipe, config):
             ang_offset = ang_offset * np.abs(headimage["cdelt1"])  # Now offset is in units of deg
             FWHM_pb = (57.5 / 60) * (freq / 1.5e9) ** -1  # Eqn 4 of Mauch et al. (2020), but in deg   # freq is just a float for the 2D case
             pb_image = (np.cos(1.189 * np.pi * (ang_offset / FWHM_pb)) / (1 - 4 * (1.189 * ang_offset / FWHM_pb) ** 2)) ** 2  # Eqn 3 of Mauch et al. (2020)
-            fits.writeto(filename.replace("image.fits", "pb.fits"), pb_image, header=headimage, overwrite=True)
+            fits.writeto(out_beam, pb_image, header=headimage, overwrite=True)
             caracal.log.info("Created Mauchian primary-beam  FITS {0:s}".format(filename.replace("image.fits", "pb.fits")))
 
     def consistent_cdelt3(image_filenames, nrdecimals):
@@ -255,27 +259,16 @@ def worker(pipeline, recipe, config):
                 caracal.log.info("Primary beam {0:s} does not exist, so going to create it.".format(pb_name))
 
                 if pb_type == "gaussian":
-                    # Create rudimentary primary-beam, which is assumed to be a Gaussian with FWMH = 1.02*lambda/D
-                    image_header = fits.getheader(image_name)
-                    # i.e. [ RA, Dec ]. Assuming that these are in units of deg.
-                    image_centre = [image_header["CRVAL1"], image_header["CRVAL2"]]
-                    # Again assuming that these are in units of deg.
-                    image_cell = image_header["CDELT2"]
-                    image_imsize = image_header["NAXIS1"]
-
                     recipe.add(
-                        build_beam,
+                        make_gaussian_pb,
                         "build_gaussian_pb",
                         {
+                            "filename": image_name,
                             # Units of Hz. The default assumes that MeerKAT data is being processed
                             "obs_freq": config["ref_frequency"],
-                            "centre": image_centre,
-                            "cell": image_cell,
-                            "imsize": image_imsize,
                             "out_beam": pb_name,
                         },
                         input=pipeline.input,
-                        # Was pipeline=pipeline.output before the restructure of the output directory
                         output=pipeline.output,
                         label="build_gaussian_pb:: Generating {0:s}".format(pb_name),
                     )
@@ -288,17 +281,24 @@ def worker(pipeline, recipe, config):
                         " dish_diameter set in the config file."
                     )
 
-                    recipe.run()
-                    recipe.jobs = []
-
-                else:  # i.e. pb_type == 'mauchian'
-                    filename = image_name
-                    freq = config["ref_frequency"]  # Units of Hz. The default assumes that MeerKAT data is being processed
-                    make_mauchian_pb(filename, freq)
+                elif pb_type == "mauchian":
+                    recipe.add(
+                        make_mauchian_pb,
+                        "build_mauchian_pb",
+                        {
+                            "filename": image_name,
+                            # Units of Hz. The default assumes that MeerKAT data is being processed
+                            "freq": config["ref_frequency"],
+                            "out_beam": pb_name,
+                        },
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label="build_mauchian_pb:: Generating {0:s}".format(pb_name),
+                    )
 
                     # Confirming freq value being used for the primary beam
-                    caracal.log.info("Observing frequency = {0:f} Hz".format(freq))
-                    if freq == 1383685546.875:  # i.e. if the default value was used
+                    caracal.log.info("Observing frequency = {0:f} Hz".format(config["ref_frequency"]))
+                    if config["ref_frequency"] == 1383685546.875:  # i.e. if the default value was used
                         caracal.log.info(
                             "If you did not want this value (i.e. the default) to be used for primary-beam creation,"
                             " then please delete the newly-created beams and re-run the mosaic worker "
@@ -306,7 +306,11 @@ def worker(pipeline, recipe, config):
                         )
                     else:
                         caracal.log.info("as set via ref_frequency in the config file, and used for primary-beam creation.")
-            caracal.log.info("Primary beam {0:s} created.".format(pb_name))
+
+    if len(recipe.jobs):
+        recipe.run()
+        recipe.jobs = []
+        caracal.log.info("All primary beams created.")
 
     caracal.log.info("Checking for *pb.fits files now complete.")
 

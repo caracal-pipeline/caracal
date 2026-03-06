@@ -138,6 +138,18 @@ def worker(pipeline, recipe, config):
         elif len(cdelt3s) == 1:
             caracal.log.info("All clear, CDELT3 is the same for all cubes.")
 
+    def create_symlink(link_name, target_name)
+        if os.path.exists(link_name):
+            os.remove(link_name)
+        symlink_command = "ln -sf {0:s} {1:s}".format(target_name, link_name)
+        caracal.log.info("    {0:s}".format(symlink_command))
+        if not os.path.exists(target_name):
+          caracal.log.error("Symlink could not be created because the target file {0:s} does not exist".format(target_name))
+          raise caracal.UserInputError("Inconsistent CDELT3 values in input cubes.")
+        else:
+          os.system(symlink_command)
+
+
     ##########################################
     # Main part of the worker
     ##########################################
@@ -217,14 +229,14 @@ def worker(pipeline, recipe, config):
     for ii in specified_images:
         caracal.log.info("    {0:s}".format(ii))
 
-    # Although montage_mosaic checks whether pb.fits files are present, we need to do this earlier in the worker,
+    # Although MosaicQueen checks whether pb.fits files are present, we need to do this earlier in the worker,
     # so that we can create simple Gaussian or Mauchian primary beams if need be
     caracal.log.info("Checking for *pb.fits.")
     for image_name in specified_images:
         pb_name = image_name.replace("image.fits", "pb.fits")
 
         if os.path.exists(pb_name):
-            caracal.log.info("Primary beam {0:s} is already in place, and will be used by montage_mosaic.".format(pb_name))
+            caracal.log.info("Primary beam {0:s} is already in place, and will be used by MosaicQueen.".format(pb_name))
 
         else:
             if specified_mosaictype == "line":
@@ -308,25 +320,31 @@ def worker(pipeline, recipe, config):
         target_image = os.path.relpath(target_image, start=os.path.dirname(link_image))
 
 		# create symlink for image / cube
-        if os.path.exists(link_image):
-            os.remove(link_image)
-        symlink_for_image_command = "ln -sf {0:s} {1:s}".format(target_image, link_image)
-        caracal.log.info("    {0:s}".format(symlink_for_image_command))
-        os.system(symlink_for_image_command)
+		create_symlink(link_image, target_image)
 
         # create symlink for beam
         target_beam = target_image.replace("image.fits", "pb.fits")
         link_beam = link_image.replace("image.fits", "pb.fits")
-        if os.path.exists(link_beam):
-            os.remove(link_beam)
-        symlink_for_beam_command = "ln -sf {0:s} {1:s}".format(target_beam, link_beam)
-        caracal.log.info("    {0:s}".format(symlink_for_beam_command))
-        os.system(symlink_for_beam_command)
+		create_symlink(link_beam, target_beam)
+
+        # create symlink for model if requested
+        if "model" in config["associated_mosaics"]:
+          target_model = target_image.replace("image.fits", "model.fits")
+          link_model = link_image.replace("image.fits", "model.fits")
+          create_symlink(link_model, target_model)
+
+        # create symlink for residual if requested
+        if "residual" in config["associated_mosaics"]:
+          target_residual = target_image.replace("image.fits", "residual.fits")
+          link_residual = link_image.replace("image.fits", "residual.fits")
+          create_symlink(link_residual, target_residual)
+
+        # create symlink for mask if requested       !!!!!!!!!!!!!!
 
     caracal.log.info("Symlinks created.")
     
     # List of images in place, and have ensured that there are corresponding pb.fits files,
-    # so now ready to add montage_mosaic to the caracal recipe
+    # so now ready to add MosaicQueen to the caracal recipe
 
     image_filenames = ["{0:s}/{1:s}".format(mosaic_input_directory, os.path.basename(ff)) for ff in specified_images]
     if specified_mosaictype == "line":

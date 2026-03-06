@@ -319,13 +319,13 @@ def worker(pipeline, recipe, config):
         # convert target to path relative to the directory of the link
         target_image = os.path.relpath(target_image, start=os.path.dirname(link_image))
 
-		# create symlink for image / cube
-		create_symlink(link_image, target_image)
+        # create symlink for image / cube
+        create_symlink(link_image, target_image)
 
         # create symlink for beam
         target_beam = target_image.replace("image.fits", "pb.fits")
         link_beam = link_image.replace("image.fits", "pb.fits")
-		create_symlink(link_beam, target_beam)
+        create_symlink(link_beam, target_beam)
 
         # create symlink for model if requested
         if "model" in config["associated_mosaics"]:

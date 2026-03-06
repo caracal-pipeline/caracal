@@ -146,8 +146,7 @@ def worker(pipeline, recipe, config):
         symlink_command = "ln -sf {0:s} {1:s}".format(target_name_rel, link_name)
         caracal.log.info("    {0:s}".format(symlink_command))
         if not os.path.exists(target_name):
-          caracal.log.error("Symlink could not be created because the target file {0:s} does not exist".format(target_name))
-          raise caracal.UserInputError("Inconsistent CDELT3 values in input cubes.")
+          raise caracal.UserInputError("Symlink could not be created because the target file {0:s} does not exist".format(target_name))
         else:
           os.system(symlink_command)
 

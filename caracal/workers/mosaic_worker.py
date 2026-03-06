@@ -172,7 +172,7 @@ def worker(pipeline, recipe, config):
             "You have set 'use_mfs: false' with 'mosaic_type: continuum'. Unfortunately, at the moment CARACal "
             "does not support mosaics of the individual continuum channels. We will revert to 'use_mfs: true'."
         )
-        use_mfs_images = False
+        use_mfs_images = True
 
     if use_mfs_images and specified_mosaictype == "line":
         caracal.log.warn(

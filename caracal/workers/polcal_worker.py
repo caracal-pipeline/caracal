@@ -1508,8 +1508,6 @@ import numpy
 import os
 from casacore.tables import table as tb
 MSDIR = os.environ["MSDIR"]
-print(MSDIR)
-print(os.environ.keys())
 ms = os.path.join(MSDIR, '{msname:s}')
 with tb(ms+'::FEED', readonly=False) as t:
     ang = t.getcol('RECEPTOR_ANGLE')

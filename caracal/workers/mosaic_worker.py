@@ -339,8 +339,11 @@ def worker(pipeline, recipe, config):
 
         # create symlink for mask if requested
         if "mask" in config["associated_mosaics"]:
-            target_mask = "{0:s}_clean_mask.fits".format(os.path.basename(target_image).split('-')[0])
-            target_mask = os.path.abspath("{0:s}/{1:s}".format(pipeline.masking, target_mask))
+            if specified_mosaictype == "continuum":
+                target_mask = "{0:s}_clean_mask.fits".format(os.path.basename(target_image).split('-')[0])
+                target_mask = os.path.abspath("{0:s}/{1:s}".format(pipeline.masking, target_mask))
+            else:
+                target_mask = target_image.replace("image.fits", "image_clean_mask.fits")
             link_mask = link_image.replace("image.fits", "mask.fits")
             create_symlink(link_mask, target_mask)
 

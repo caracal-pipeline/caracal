@@ -146,9 +146,9 @@ def worker(pipeline, recipe, config):
         symlink_command = "ln -sf {0:s} {1:s}".format(target_name_rel, link_name)
         caracal.log.info("    {0:s}".format(symlink_command))
         if not os.path.exists(target_name):
-          raise caracal.UserInputError("Symlink could not be created because the target file {0:s} does not exist".format(target_name))
+            raise caracal.UserInputError("Symlink could not be created because the target file {0:s} does not exist".format(target_name))
         else:
-          os.system(symlink_command)
+            os.system(symlink_command)
 
 
     ##########################################
@@ -327,17 +327,22 @@ def worker(pipeline, recipe, config):
 
         # create symlink for model if requested
         if "model" in config["associated_mosaics"]:
-          target_model = target_image.replace("image.fits", "modelX.fits")
-          link_model = link_image.replace("image.fits", "model.fits")
-          create_symlink(link_model, target_model)
+            target_model = target_image.replace("image.fits", "model.fits")
+            link_model = link_image.replace("image.fits", "model.fits")
+            create_symlink(link_model, target_model)
 
         # create symlink for residual if requested
         if "residual" in config["associated_mosaics"]:
-          target_residual = target_image.replace("image.fits", "residual.fits")
-          link_residual = link_image.replace("image.fits", "residual.fits")
-          create_symlink(link_residual, target_residual)
+            target_residual = target_image.replace("image.fits", "residual.fits")
+            link_residual = link_image.replace("image.fits", "residual.fits")
+            create_symlink(link_residual, target_residual)
 
-        # create symlink for mask if requested       !!!!!!!!!!!!!!
+        # create symlink for mask if requested
+        if "mask" in config["associated_mosaics"]:
+            target_mask = "{0:s}_clean_mask.fits".format(os.path.basename(target_image).split('-')[0])
+            target_mask = os.path.abspath("{0:s}/{1:s}".format(pipeline.masking, target_mask))
+            link_mask = link_image.replace("image.fits", "mask.fits")
+            create_symlink(link_mask, target_mask)
 
     caracal.log.info("Symlinks created.")
     

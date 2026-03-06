@@ -1,11 +1,8 @@
 import os
-import sys
-import re
-import numpy as np
-
 from glob import glob
+
+import numpy as np
 from astropy.io import fits
-from astropy.wcs import WCS
 
 from caracal import log
 
@@ -229,7 +226,7 @@ def worker(pipeline, recipe, config):
 
     pipeline.polarization = os.path.join(pipeline.continuum, "polarization")
 
-    label_in = config["label_in"]
+    # label_in = config["label_in"]
     max_phi = config["max_phi"]
 
     for target in all_targets:
@@ -244,7 +241,7 @@ def worker(pipeline, recipe, config):
         if config["freq_file"] and file_exists(config["freq_file"]):
             freq_file = config["freq_file"]
         else:
-            log.info(f"Frequency file was not found.")
+            log.info("Frequency file was not found.")
             log.info("Autogenerating one.")
 
             freq_file = generate_freq_file(cubes["q"])

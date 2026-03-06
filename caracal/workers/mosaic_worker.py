@@ -141,7 +141,9 @@ def worker(pipeline, recipe, config):
     def create_symlink(link_name, target_name):
         if os.path.exists(link_name):
             os.remove(link_name)
-        symlink_command = "ln -sf {0:s} {1:s}".format(target_name, link_name)
+        # convert target from absolute path to path relative to the directory of the link
+        target_name_rel = os.path.relpath(target_name, start=os.path.dirname(link_name))
+        symlink_command = "ln -sf {0:s} {1:s}".format(target_name_rel, link_name)
         caracal.log.info("    {0:s}".format(symlink_command))
         if not os.path.exists(target_name):
           caracal.log.error("Symlink could not be created because the target file {0:s} does not exist".format(target_name))
@@ -316,9 +318,6 @@ def worker(pipeline, recipe, config):
         target_image = os.path.abspath(specified_image)
         link_image = "{0:s}/{1:s}".format(os.path.abspath(mosaic_input_directory),os.path.basename(target_image))
         
-        # convert target to path relative to the directory of the link
-        target_image = os.path.relpath(target_image, start=os.path.dirname(link_image))
-
         # create symlink for image / cube
         create_symlink(link_image, target_image)
 

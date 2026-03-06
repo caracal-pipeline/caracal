@@ -138,7 +138,7 @@ def worker(pipeline, recipe, config):
         elif len(cdelt3s) == 1:
             caracal.log.info("All clear, CDELT3 is the same for all cubes.")
 
-    def create_symlink(link_name, target_name)
+    def create_symlink(link_name, target_name):
         if os.path.exists(link_name):
             os.remove(link_name)
         symlink_command = "ln -sf {0:s} {1:s}".format(target_name, link_name)

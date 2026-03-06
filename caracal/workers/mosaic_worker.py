@@ -151,7 +151,6 @@ def worker(pipeline, recipe, config):
         else:
             os.system(symlink_command)
 
-
     ##########################################
     # Main part of the worker
     ##########################################
@@ -169,13 +168,17 @@ def worker(pipeline, recipe, config):
     basename_of_output = os.path.basename(os.path.abspath(pipeline.output))
 
     if not use_mfs_images and specified_mosaictype == "continuum":
-        caracal.log.warn("You have set 'use_mfs: false' with 'mosaic_type: continuum'. Unfortunately, at the moment CARACal "
-                         "does not support mosaics of the individual continuum channels. We will revert to 'use_mfs: true'.")
+        caracal.log.warn(
+            "You have set 'use_mfs: false' with 'mosaic_type: continuum'. Unfortunately, at the moment CARACal "
+            "does not support mosaics of the individual continuum channels. We will revert to 'use_mfs: true'."
+        )
         use_mfs_images = False
 
     if use_mfs_images and specified_mosaictype == "line":
-        caracal.log.warn("You have set 'use_mfs: true' but this only makes sense for 'mosaic_type: continuum'. "
-                         "Since you have set 'mosaic_type: line' we will revert to the default 'use_mfs: false'.")
+        caracal.log.warn(
+            "You have set 'use_mfs: true' but this only makes sense for 'mosaic_type: continuum'. "
+            "Since you have set 'mosaic_type: line' we will revert to the default 'use_mfs: false'."
+        )
         use_mfs_images = False
 
     # To ease finding the appropriate files, and to keep this worker self-contained
@@ -192,15 +195,19 @@ def worker(pipeline, recipe, config):
 
     # If nothing is passed via the config file, then specified_images[0] adopts this via the schema
     if not len(specified_images):
-        caracal.log.info("No {0:s} names were specified via the config file, so they are going to be selected "
-                         "automatically.".format("image" if specified_mosaictype == "continuum" else "cube"))
-        caracal.log.info("It is assumed that they are all in the highest-N directory {1:s}/{0:s}_N containing "
-                         "{0:s}s whose name starts with the prefix {2:s}.".format(
-                         "image" if specified_mosaictype == "continuum" else "cube",
-                         pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes,
-                         prefix))
-        caracal.log.info("You should check the selected {0:s} names. If unhappy with the selection, please specify the correct "
-                         "ones with mosaic:target_images.".format("image" if specified_mosaictype == "continuum" else "cube"))
+        caracal.log.info(
+            "No {0:s} names were specified via the config file, so they are going to be selected automatically.".format("image" if specified_mosaictype == "continuum" else "cube")
+        )
+        caracal.log.info(
+            "It is assumed that they are all in the highest-N directory {1:s}/{0:s}_N containing {0:s}s whose name starts with the prefix {2:s}.".format(
+                "image" if specified_mosaictype == "continuum" else "cube", pipeline.continuum if specified_mosaictype == "continuum" else pipeline.cubes, prefix
+            )
+        )
+        caracal.log.info(
+            "You should check the selected {0:s} names. If unhappy with the selection, please specify the correct ones with mosaic:target_images.".format(
+                "image" if specified_mosaictype == "continuum" else "cube"
+            )
+        )
 
         # Needed for working out the field names for the targets, so that the correct files can be selected
         all_targets = pipeline.get_target_mss(label_in)[0]
@@ -312,8 +319,8 @@ def worker(pipeline, recipe, config):
     for specified_image in specified_images:
         # define both target and link as absolute paths
         target_image = os.path.abspath(specified_image)
-        link_image = "{0:s}/{1:s}".format(os.path.abspath(mosaic_input_directory),os.path.basename(target_image))
-        
+        link_image = "{0:s}/{1:s}".format(os.path.abspath(mosaic_input_directory), os.path.basename(target_image))
+
         # create symlink for image / cube
         create_symlink(link_image, target_image)
 
@@ -337,7 +344,7 @@ def worker(pipeline, recipe, config):
         # create symlink for mask if requested
         if "mask" in config["associated_mosaics"]:
             if specified_mosaictype == "continuum":
-                target_mask = "{0:s}_clean_mask.fits".format(os.path.basename(target_image).split('-')[0])
+                target_mask = "{0:s}_clean_mask.fits".format(os.path.basename(target_image).split("-")[0])
                 target_mask = os.path.abspath("{0:s}/{1:s}".format(pipeline.masking, target_mask))
             else:
                 target_mask = target_image.replace("image.fits", "image_clean_mask.fits")
@@ -345,7 +352,7 @@ def worker(pipeline, recipe, config):
             create_symlink(link_mask, target_mask)
 
     caracal.log.info("Symlinks created.")
-    
+
     # List of images in place, and have ensured that there are corresponding pb.fits files,
     # so now ready to add MosaicQueen to the caracal recipe
 
@@ -368,7 +375,7 @@ def worker(pipeline, recipe, config):
     mosaic_prefix = config["name"]
     if mosaic_prefix == "":
         mosaic_prefix = pipeline.prefix
-    
+
     mosaic_folder_from_output = "{0:s}/{1:s}/mosaics".format(basename_of_output, "continuum" if specified_mosaictype == "continuum" else "cubes")
     recipe.add(
         "stimela/mosaic_queen",
@@ -385,12 +392,12 @@ def worker(pipeline, recipe, config):
             "mosaic-cutoff": config["mosaic_cutoff"],
             "associated-mosaics": sdm.dismissable(None if config["associated_mosaics"] == [""] else config["associated_mosaics"]),
             "unity-weights": False,
-            "statistic": "mad"
+            "statistic": "mad",
         },
-            input = parent_of_output,
-            output = parent_of_output,
-            label = "MosaicQueen"
-        )
+        input=parent_of_output,
+        output=parent_of_output,
+        label="MosaicQueen",
+    )
 
     recipe.run()
     recipe.jobs = []

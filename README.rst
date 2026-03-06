@@ -133,7 +133,7 @@ Installation from source in editable mode inside a venv:
 
 ..  code-block:: bash
 
-    pip install --editable .
+    pip install --editable . --with dev --with tests
 
 Installation from source using `uv` or `poetry`. First, install with:
 
@@ -149,10 +149,12 @@ In the working directory where source is checked out run `uv sync` or to include
     uv sync --group dev --group tests
     # or, using poetry:
     poetry install --with dev,tests
+
 Finally, to install pre-commit hooks run:
 
 ..  code-block:: bash
-   uv run pre-commit install
+
+   pre-commit install # or uv run pre-commit install # or poetry run pre-commit install
 
 =========================================
 Installation on (ILIFU) slurm environment
@@ -286,9 +288,9 @@ A linter is a static checker that flags bugs and style errors.
 
 What it does: It finds things like unused variables, undefined names, overly complex functions, and imports that are not sorted.
 
-How to use it: Locally, run ``uv run ruff check`` and configure your editor to use Ruff.
+How to use it: Locally, for ``pip`` run ``ruff check`` or for ``uv`` run ``uv run ruff check`` or for ``poetry`` run ``poetry run ruff check`` and configure your editor to use Ruff.
 
-To lint and format your code locally, run: ``uv run ruff format``
+To lint and format your code locally, run: ``ruff format`` or ``uv run ruff format``  or ``poetry run ruff format``
 
 NB: Linters have limitations because both false positives and false negatives can occur.
 
@@ -306,7 +308,7 @@ NB: Linters have limitations because both false positives and false negatives ca
                   :target: https://github.com/caracal-pipeline/caracal/actions/workflows/continuous_integration.yml/
                   :alt:
 
-.. |Python Versions| image:: https://img.shields.io/badge/python-3.8+-blue.svg
+.. |Python Versions| image:: https://img.shields.io/badge/python-3.9+-blue.svg
                      :target: https://pypi.python.org/pypi/caracal/
                      :alt:
 

@@ -79,7 +79,7 @@ mapping:
         required: false
         example: '1383685546.875'
       round_cdelt3:
-        desc: For mosaic_type:continuum only. Round CDELT3 in the header of the input cubes to the number of decimal digits given by this parameter (0 means do not round). This is useful when the CDELT3 values of the input cubes are not identical (which would make the mosaicking algorithm crash) but the differences are small and can be ignored. Note that the CDELT3 values of the input cubes are overwritten with the common, rounded value (if the rounding is sufficient to find a common value). Use with caution.
+        desc: For mosaic_type:line only. Round CDELT3 in the header of the input cubes to the number of decimal digits given by this parameter (0 means do not round). This is useful when the CDELT3 values of the input cubes are not identical (which would make the mosaicking algorithm crash) but the differences are small and can be removed with no impact on the science. Note that the CDELT3 values of the input cubes are overwritten with the common, rounded value (if the rounding is sufficient to find a common value). Use with caution.
         type: int
         required: false
         example: '0'

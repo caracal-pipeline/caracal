@@ -133,7 +133,7 @@ def worker(pipeline, recipe, config):
                 caracal.log.error("Not all input cubes have the same CDELT3. Values found:")
                 caracal.log.error("    {0:}".format(cdelt3s))
                 caracal.log.error("To proceed Please set mosaic:round_cdelt3 to round the CDELT3 values to an adequate number of decimals.")
-                caracal.log.error("This will overwrite CDELT3 in the input cubes.")
+                caracal.log.error("WARNING: This will overwrite CDELT3 in the input cubes. Choose the rounding wisely to make sure that the change does not impact your science.")
                 raise caracal.BadDataError("Inconsistent CDELT3 values in input cubes.")
         elif len(cdelt3s) == 1:
             caracal.log.info("All clear, CDELT3 is the same for all cubes.")
@@ -167,6 +167,11 @@ def worker(pipeline, recipe, config):
     parent_of_output = os.path.dirname(os.path.abspath(pipeline.output))
     basename_of_output = os.path.basename(os.path.abspath(pipeline.output))
     original_working_directory = os.getcwd()
+
+    if not use_mfs_images and specified_mosaictype == "continuum":
+        caracal.log.warn("You have set 'use_mfs: false' with 'mosaic_type: continuum'. Unfortunately, at the moment CARACal "
+                         "does not support mosaics of the individual continuum channels. We will revert to 'use_mfs: true'.")
+        use_mfs_images = False
 
     if use_mfs_images and specified_mosaictype == "line":
         caracal.log.warn("You have set 'use_mfs: true' but this only makes sense for 'mosaic_type: continuum'. "

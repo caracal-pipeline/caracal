@@ -1746,7 +1746,7 @@ def worker(pipeline, recipe, config):
             if config["sofia2_settings"]["imcontsub"]:
                 simage_cube_list = []
                 for uu in range(len(image_cube_list)):
-                    icsname = image_cube_list[uu].replace(".image.fits", ".imcontsub.fits")
+                    icsname = image_cube_list[uu].replace(".image.fits", ".image-line.fits")
                     if len(glob.glob(icsname)) > 0:
                         simage_cube_list.append(icsname)
                     else:
@@ -1908,7 +1908,7 @@ def worker(pipeline, recipe, config):
                         step,
                         imcontsub_opts,
                         input=pipeline.output,
-                        output="{0:s}/cubes/cube_{1:d}/".format(pipeline_output, maxcube_dir),
+                        output="{0:s}/cubes/cube_{1:d}/".format(pipeline.output, maxcube_dir),
                         label="{0:s}:: Image continuum subtraction for cube ".format(
                             step,
                         ),

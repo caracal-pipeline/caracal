@@ -256,8 +256,7 @@ def worker(pipeline, recipe, config):
 
                 if pb_type == "gaussian":
                     # Create rudimentary primary-beam, which is assumed to be a Gaussian with FWMH = 1.02*lambda/D
-                    image_hdu = fits.open(image_name)
-                    image_header = image_hdu[0].header
+                    image_header = fits.getheader(image_name)
                     # i.e. [ RA, Dec ]. Assuming that these are in units of deg.
                     image_centre = [image_header["CRVAL1"], image_header["CRVAL2"]]
                     # Again assuming that these are in units of deg.

@@ -305,7 +305,7 @@ NB: Linters have limitations because both false positives and false negatives ca
                   :target: https://pypi.python.org/pypi/caracal
                   :alt:
 .. |Build Version| image:: https://github.com/caracal-pipeline/caracal/actions/workflows/continuous_integration.yml/badge.svg
-                  :target: https://github.com/caracal-pipeline/caracal/actions/workflows/continuous_integration.yml/
+                  :target: https://github.com/caracal-pipeline/caracal/actions/workflows/python-ci.yml/
                   :alt:
 
 .. |Python Versions| image:: https://img.shields.io/badge/python-3.9+-blue.svg

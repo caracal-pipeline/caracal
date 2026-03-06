@@ -57,7 +57,7 @@ mapping:
         required: false
         example: '0.2'
       associated_mosaics:
-        desc: Also make mosaics of the associated .fits files, selecting between 'mask', 'model' and 'residual'. Multiple choices allowed. Give user choice as a list. The defult is to not make any associated mosaics.
+        desc: Also make mosaics of the associated .fits files, selecting between 'mask', 'model' and 'residual'. Multiple choices allowed. Give user choice as a list. The default is to not make any associated mosaics.
         seq:
           - type: str
         required: false

@@ -51,7 +51,7 @@ def collect_single_polzn_images(imdir, label_in):
             if len(images) == 0:
                 continue
             else:           
-                cubes[stokes] = sorted(images)
+                cubes[stokes] = sorted(list(map(stimela_output, images)))
 
     if cubes:
         chans = {len(v) for v in cubes.values()}
@@ -67,6 +67,37 @@ def collect_single_polzn_images(imdir, label_in):
         return cubes
     else:
         raise Exception("No input cubes were found. Stopping RM-synthesis worker")
+
+
+def make_cube_from_singles(recipe, singles):
+
+    cubes = dict()
+    for stokes, images in singles.items():
+        step = f"Make-Stokes-{stokes}-cube"
+
+        stokes = stokes.upper()
+        oname = os.path.join(
+            PIPELINE.polarization, 
+            "{}_{}-{}-image.fits".format(PIPELINE.prefix, PIPELINE.field, stokes))
+        recipe.add(
+            "cab/fitstool",
+            step,
+            {
+                "image": images,
+                "output": stimela_output(oname),
+                "stack": True,
+                "delete-files": False,
+                "fits-axis": "FREQ",
+                "force": True,
+            },
+            input=PIPELINE.output,
+            output=PIPELINE.output,
+            label=f'{step}::Make stokes cube'
+        )
+        recipe.run()
+        recipe.jobs = []
+        cubes[stokes.lower()] = oname
+    return cubes
 
 
 def collect_polzn_cubes(imdir, label_in):
@@ -166,6 +197,7 @@ def do_rm_synthesis(recipe, cubes, freqfile, max_phi, prefix):
     recipe.jobs = []
     return
 
+
 def do_rm_clean(recipe, prefix, ncpu=8):
     """
     Do RM clean
@@ -215,6 +247,7 @@ def worker(pipeline, recipe, config):
         
         if config["singles"]["enable"]:
             cubes = collect_single_polzn_images(pipeline.polarization, pipeline.prefix) or None
+            cubes = make_cube_from_singles(recipe, cubes)
             
         if config["freq_file"] and file_exists(config['freq_file']) :
             freq_file = config['freq_file']

@@ -19,6 +19,10 @@ def file_exists(fname):
     return os.path.isfile(fname)
 
 
+def stimela_output(fname):
+    return os.path.join(*fname.split(os.sep)[1:]) + ":output"
+
+
 def collect_single_polzn_images(imdir, label_in):
     """
     Collect the single per-channel polarization images
@@ -71,12 +75,13 @@ def collect_polzn_cubes(imdir, label_in):
     """
     log.info("Collecting polarisation cubes")
 
-    # check if there are input cubes
+    # check if there are user supplied input cubes
     cubes = {
         _: WCONFIG["cubes"][f"{_}_cube"] for _ in "iquv" 
         if WCONFIG["cubes"][f"{_}_cube"] != "" and file_exists(WCONFIG["cubes"][f"{_}_cube"])
         } or None
 
+    # if none, use carac generated onees
     if cubes is None:
         cubes = dict()
         log.info("Fingding CARACal generated cubes")
@@ -145,10 +150,10 @@ def do_rm_synthesis(recipe, cubes, freqfile, max_phi, prefix):
         'cab/rmsynth3d',
         step,
         {
-            "fitsq": f'{cubes["q"]}:output',
-            "fitsu": f'{cubes["u"]}:output',
-            "fitsi": f'{cubes.get("i", None)}:output',
-            "freqs": f"{freqfile}:output",
+            "fitsq": stimela_output(cubes["q"]),
+            "fitsu": stimela_output(cubes["u"]),
+            "fitsi": stimela_output(cubes["i"]) if cubes.get("i", None) else None,
+            "freqs": stimela_output(freqfile),
             "s": 1,
             "phimax-radm2": max_phi,
             "prefixout": prefix,
@@ -171,8 +176,8 @@ def do_rm_clean(recipe, prefix, ncpu=8):
         'cab/rmclean3d',
         step,
         {
-            "dirty-pdf": os.path.join(PIPELINE.polarization, f'{prefix}FDF_tot_dirty.fits:output'),
-            "rmsf-fwhm": os.path.join(PIPELINE.polarization, f'{prefix}RMSF_tot.fits:output'),
+            "dirty-pdf": stimela_output(os.path.join(PIPELINE.polarization, f"{prefix}FDF_tot_dirty.fits")),
+            "rmsf-fwhm": stimela_output(os.path.join(PIPELINE.polarization, f"{prefix}RMSF_tot.fits")),
             # "cutoff": None,
             "prefixout": prefix,
             "v": True,
@@ -220,7 +225,7 @@ def worker(pipeline, recipe, config):
             freq_file = generate_freq_file(cubes["q"])
 
 
-        rm_prefix = os.path.join(PIPELINE.polarization, f"{PIPELINE.prefix}-{config['prefix']}-")
+        rm_prefix = f"{PIPELINE.prefix}-{config['prefix']}-"
         
         do_rm_synthesis(recipe, cubes,
                             freq_file, max_phi, rm_prefix),

@@ -3,6 +3,7 @@ import os
 import stimela.dismissable as sdm
 import numpy as np
 import caracal
+
 from caracal.dispatch_crew import utils
 
 NAME = "Mosaic 2D-images or cubes"

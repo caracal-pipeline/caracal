@@ -328,7 +328,7 @@ def worker(pipeline, recipe, config):
 
         # create symlink for model if requested
         if "model" in config["associated_mosaics"]:
-          target_model = target_image.replace("image.fits", "model.fits")
+          target_model = target_image.replace("image.fits", "modelX.fits")
           link_model = link_image.replace("image.fits", "model.fits")
           create_symlink(link_model, target_model)
 

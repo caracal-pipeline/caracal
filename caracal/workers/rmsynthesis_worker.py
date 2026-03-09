@@ -26,6 +26,7 @@ def check_stokes_v(cubes):
         del cubes["v"]
     return cubes
 
+
 def collect_single_polzn_images(imdir, label_in):
     """
     Collect the single per-channel polarization images
@@ -214,7 +215,7 @@ def do_rm_clean(recipe, prefix):
             "prefixout": prefix,
             "v": True,
             "gain": 0.1,
-            "ncores": WCONFIG["ncpus"], 
+            "ncores": WCONFIG["ncpus"],
             "maxiter": WCONFIG["max_iter"],
         },
         input=PIPELINE.input,
@@ -259,7 +260,7 @@ def worker(pipeline, recipe, config):
             log.info("Autogenerating one.")
 
             freq_file = generate_freq_file(cubes["q"])
- 
+
         rm_prefix = f"{PIPELINE.prefix}-{WCONFIG['prefix']}-"
 
         do_rm_synthesis(recipe, cubes, freq_file, rm_prefix)

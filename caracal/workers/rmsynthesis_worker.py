@@ -20,6 +20,12 @@ def stimela_output(fname):
     return os.path.join(*fname.split(os.sep)[1:]) + ":output"
 
 
+def check_stokes_v(cubes):
+    if "v" in cubes:
+        log.info("Ignoring specified Stokes V as they're not accepted as RM-tools inputs.")
+        del cubes["v"]
+    return cubes
+
 def collect_single_polzn_images(imdir, label_in):
     """
     Collect the single per-channel polarization images
@@ -27,9 +33,10 @@ def collect_single_polzn_images(imdir, label_in):
     log.info("Collecting per-channel polarization images")
 
     cubes = dict()
+    stokes_params = "iquv" if WCONFIG["use_i"] else "quv"
 
     # Check for user input
-    for stokes in "iquv":
+    for stokes in stokes_params:
         search_str = WCONFIG["singles"].get(f"{stokes}_prefix", None)
         if search_str in ["", None]:
             continue
@@ -38,7 +45,7 @@ def collect_single_polzn_images(imdir, label_in):
 
     if len(cubes) == 0:
         # if not, check for the caracal generated ones
-        for stokes in "iquv":
+        for stokes in stokes_params:
             search_str = os.path.join(PIPELINE.polarization, f"{PIPELINE.prefix}_{PIPELINE.field}-[0-9][0-9][0-9][0-9]-{stokes.upper()}*.convolved.fits")
             # Natural sort possible because of name with 0000 structure
             images = glob(search_str)
@@ -48,10 +55,11 @@ def collect_single_polzn_images(imdir, label_in):
                 cubes[stokes] = sorted(list(map(stimela_output, images)))
 
     if cubes:
+        cubes = check_stokes_v(cubes)
         chans = {len(v) for v in cubes.values()}
         if len(chans) > 1:
             log.exception(", ".join([f"{k.upper()}: {len(v)} images" for k, v in cubes.items()]))
-            log.exception(f"Please ensure there's an equal number of {list(cubes.keys())} images")
+            log.exception("Please ensure there's an equal number of {} images".format(", ".join(cubes.keys())))
             raise Exception("Stokes input channel counts do not match.")
 
         for stokes in cubes.keys():
@@ -74,7 +82,7 @@ def make_cube_from_singles(recipe, singles):
             "cab/fitstool",
             step,
             {
-                "image": images,
+                "image": list(map(stimela_output, images)),
                 "output": stimela_output(oname),
                 "stack": True,
                 "delete-files": False,
@@ -83,7 +91,7 @@ def make_cube_from_singles(recipe, singles):
             },
             input=PIPELINE.output,
             output=PIPELINE.output,
-            label=f"{step}::Make stokes cube",
+            label=f"{step}::Make Stokes cube",
         )
         recipe.run()
         recipe.jobs = []
@@ -97,14 +105,16 @@ def collect_polzn_cubes(imdir, label_in):
     """
     log.info("Collecting polarisation cubes")
 
+    stokes_params = "iquv" if WCONFIG["use_i"] else "quv"
+
     # check if there are user supplied input cubes
-    cubes = {_: WCONFIG["cubes"][f"{_}_cube"] for _ in "iquv" if WCONFIG["cubes"][f"{_}_cube"] != "" and file_exists(WCONFIG["cubes"][f"{_}_cube"])} or None
+    cubes = {_: WCONFIG["cubes"][f"{_}_cube"] for _ in stokes_params if WCONFIG["cubes"][f"{_}_cube"] != "" and file_exists(WCONFIG["cubes"][f"{_}_cube"])} or None
 
     # if none, use carac generated onees
     if cubes is None:
         cubes = dict()
         log.info("Fingding CARACal generated cubes")
-        for stokes in "iquv":
+        for stokes in stokes_params:
             # expecting images of the format
             # [PREFIX]_[TARGET]-I-0.0035-0.0035-0.0_image.convolved.fits
 
@@ -114,6 +124,7 @@ def collect_polzn_cubes(imdir, label_in):
                 cubes[f"{stokes}"] = search_str
 
     if cubes:
+        cubes = check_stokes_v(cubes)
         log.debug("The following cubes were found:")
         log.debug("".join([f"{k.upper()}: {v}\n" for k, v in cubes.items()]))
         return cubes
@@ -159,7 +170,7 @@ def generate_freq_file(cube):
     return freq_file
 
 
-def do_rm_synthesis(recipe, cubes, freqfile, max_phi, prefix):
+def do_rm_synthesis(recipe, cubes, freqfile, prefix):
     """
     The actual RM-synthesis step
     """
@@ -171,10 +182,10 @@ def do_rm_synthesis(recipe, cubes, freqfile, max_phi, prefix):
         {
             "fitsq": stimela_output(cubes["q"]),
             "fitsu": stimela_output(cubes["u"]),
-            "fitsi": stimela_output(cubes["i"]) if cubes.get("i", None) else None,
+            "fitsi": stimela_output(cubes["i"]) if cubes.get("i") else None,
             "freqs": stimela_output(freqfile),
-            "s": 1,
-            "phimax-radm2": max_phi,
+            "s": WCONFIG["n_samples"],
+            "phimax-radm2": WCONFIG["max_phi"],
             "prefixout": prefix,
             "v": True,
         },
@@ -187,7 +198,7 @@ def do_rm_synthesis(recipe, cubes, freqfile, max_phi, prefix):
     return
 
 
-def do_rm_clean(recipe, prefix, ncpu=8):
+def do_rm_clean(recipe, prefix):
     """
     Do RM clean
     """
@@ -199,12 +210,12 @@ def do_rm_clean(recipe, prefix, ncpu=8):
         {
             "dirty-pdf": stimela_output(os.path.join(PIPELINE.polarization, f"{prefix}FDF_tot_dirty.fits")),
             "rmsf-fwhm": stimela_output(os.path.join(PIPELINE.polarization, f"{prefix}RMSF_tot.fits")),
-            # "cutoff": None,
+            "cutoff": WCONFIG.get("cutoff", None),
             "prefixout": prefix,
             "v": True,
             "gain": 0.1,
-            # "ncores": ncpu, # deactivate because no mpi
-            "maxiter": "1000",
+            "ncores": WCONFIG["ncpus"], 
+            "maxiter": WCONFIG["max_iter"],
         },
         input=PIPELINE.input,
         output=PIPELINE.output,
@@ -227,28 +238,31 @@ def worker(pipeline, recipe, config):
     pipeline.polarization = os.path.join(pipeline.continuum, "polarization")
 
     # label_in = config["label_in"]
-    max_phi = config["max_phi"]
 
     for target in all_targets:
         pipeline.field = target
-        if config["cubes"]["enable"]:
+
+        if not WCONFIG["use_i"]:
+            log.info("Excluding available Stokes I cubes from RM-synthesis as per user request")
+
+        if WCONFIG["cubes"]["enable"]:
             cubes = collect_polzn_cubes(pipeline.polarization, pipeline.prefix) or None
 
-        if config["singles"]["enable"]:
+        if WCONFIG["singles"]["enable"]:
             cubes = collect_single_polzn_images(pipeline.polarization, pipeline.prefix) or None
             cubes = make_cube_from_singles(recipe, cubes)
 
-        if config["freq_file"] and file_exists(config["freq_file"]):
-            freq_file = config["freq_file"]
+        if WCONFIG["freq_file"] and file_exists(WCONFIG["freq_file"]):
+            freq_file = WCONFIG["freq_file"]
         else:
             log.info("Frequency file was not found.")
             log.info("Autogenerating one.")
 
             freq_file = generate_freq_file(cubes["q"])
+ 
+        rm_prefix = f"{PIPELINE.prefix}-{WCONFIG['prefix']}-"
 
-        rm_prefix = f"{PIPELINE.prefix}-{config['prefix']}-"
-
-        (do_rm_synthesis(recipe, cubes, freq_file, max_phi, rm_prefix),)
-        do_rm_clean(recipe, rm_prefix, config["ncpus"])
+        do_rm_synthesis(recipe, cubes, freq_file, rm_prefix)
+        do_rm_clean(recipe, rm_prefix)
 
         return

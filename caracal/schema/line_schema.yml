@@ -609,13 +609,13 @@ mapping:
             example: ''
             required: False
           input_cube:
-            desc: name of input datacube located in /output/ (preferentially in outpupt/cubes/cube_xx/ . Where xx is the highest number. To use when running imcontsub independently. IMPORTANT - even if your MSfile has multiple targets, this function works only for one cube/target at the time.
+            desc: (EXPERIMENTAL - Succesfully tested only for single-target MS files. Use at own risk in all other cases.) Name of input datacube located in /output/ (preferentially in outpupt/cubes/cube_xx/ . Where xx is the highest number. To use when running imcontsub independently.
             type: str
             example: ''
             required: False
           mask_image:
             type: str
-            desc: 1) 'sofia' to use the mask output of SoFiA  2) a prefix string to use an existing .FITS mask located in output_label/masking and called prefix_target.fits (name of the target is set automatically by the pipeline and the mask should be named accordingly). The .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this third masking method can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output_label/masking.
+            desc: 1) 'sofia' to use the mask output of SoFiA  2) a prefix string to use an existing .FITS mask located in output_label/masking and called prefix_target.fits (name of the target is set automatically by the pipeline and the mask should be named accordingly). The .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this second masking method can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output_label/masking.
             example: ''
             required: False
           sigma_clip:
@@ -633,7 +633,7 @@ mapping:
             example: '3'
             required: False
           segments: 
-            desc: Width of spline segments in km/s. Default is datacube velocity range / order of spline. Must be given as list of same size --order.
+            desc: Width of spline segments in km/s. Ideally, this is larger than the largest single-sightline line-width in the data cube. Default is 1000 km/s. Must be given as list of the same size as --order.
             type: seq
             seq:
               - type: float

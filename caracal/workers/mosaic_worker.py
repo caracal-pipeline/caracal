@@ -201,6 +201,7 @@ def worker(pipeline, recipe, config):
 
     caracal.log.info("PLEASE CHECK -- Images to be mosaicked are:")
     caracal.log.info(specified_images)
+
     found_stokes = (np.array([fits.getval(ff, "naxis") for ff in specified_images]) == 4).sum()
     if found_stokes:
         caracal.log.error("At least one of the input cubes has 4 axis. Mosaic Steward will not work.")

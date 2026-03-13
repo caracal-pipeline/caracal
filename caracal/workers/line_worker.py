@@ -1690,13 +1690,13 @@ def worker(pipeline, recipe, config):
         final_image_cube_list = [cc for cc in final_cube_list if "image.fits" in cc]
 
         if pipeline.enable_task(config, "pb_cube"):
-            caracal.log.info("Will create primary beam cube for target {0:d}".format(tt))
-            for uu in range(len(image_cube_list)):
+            caracal.log.info("Will create primary beam cube for the final image cube of target {0:d}".format(tt))
+            for uu in range(len(final_image_cube_list)):
                 recipe.add(
                     make_pb_cube,
                     "make pb_cube-{0:d}".format(uu),
                     {
-                        "filename": image_cube_list[uu],
+                        "filename": final_image_cube_list[uu],
                         "apply_corr": config["pb_cube"]["apply_pb"],
                         "typ": config["pb_cube"]["pb_type"],
                         "dish_size": config["pb_cube"]["dish_size"],
@@ -1704,14 +1704,14 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label="Make primary beam cube for {0:s}".format(image_cube_list[uu]),
+                    label="Make primary beam cube for {0:s}".format(final_image_cube_list[uu]),
                 )
-                cube_list.append(image_cube_list[uu].replace("image.fits", "pb.fits"))
+                cube_list.append(final_image_cube_list[uu].replace("image.fits", "pb.fits"))
                 if config["pb_cube"]["apply_pb"]:
-                    cube_list.append(image_cube_list[uu].replace("image.fits", "pb_corr.fits"))
+                    cube_list.append(final_image_cube_list[uu].replace("image.fits", "pb_corr.fits"))
 
         if pipeline.enable_task(config, "remove_stokes_axis"):
-            caracal.log.info("Will remove Stokes axis of all cubes/images of target {0:d}".format(tt))
+            caracal.log.info("Will remove Stokes axis of all cubes of target {0:d}".format(tt))
             for uu in range(len(cube_list)):
                 recipe.add(
                     remove_stokes_axis,
@@ -1759,6 +1759,7 @@ def worker(pipeline, recipe, config):
             else:
                 simage_cube_list = final_image_cube_list
 
+            caracal.log.info("Will find sources with SoFiA for the final image cube of target {0:d}".format(tt))
             for uu in range(len(final_image_cube_list)):
                 step = "sofia2-source_finding-{0:d}".format(uu)
                 sofia2_opts = {
@@ -1853,7 +1854,7 @@ def worker(pipeline, recipe, config):
             # caracal will look for the corresponding mask saved by sofia, if this does not exist
             #  imcontsub will use the automasking method
             if not config["imcontsub"]["input_cube"]:
-                caracal.log.info("Continum subtraction in the image-plane for target {0:d}".format(tt))
+                caracal.log.info("Continum subtraction in the image-plane for the final cube of target {0:d}".format(tt))
 
                 imsub_image_cube_list = final_image_cube_list.copy()
 

@@ -1016,20 +1016,20 @@ def worker(pipeline, recipe, config):
                 del line_image_opts["fitsmask"]
             if "auto-mask" in line_image_opts:
                 del line_image_opts["auto-mask"]
-            for j in range(1, wscl_niter + 1):
-                cube_path = "{0:s}/cube_{1:d}".format(pipeline.cubes, j)
+            for jj in range(1, wscl_niter + 1):
+                cube_path = "{0:s}/cube_{1:d}".format(pipeline.cubes, jj)
                 if not os.path.exists(cube_path):
                     os.mkdir(cube_path)
-                cube_dir = "{0:s}/cube_{1:d}".format(get_relative_path(pipeline.cubes, pipeline), j)
+                cube_dir = "{0:s}/cube_{1:d}".format(get_relative_path(pipeline.cubes, pipeline), jj)
 
                 line_image_opts.update(
                     {
                         "msname": mslist,
-                        "prefix": "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}".format(cube_dir, pipeline.prefix, field, line_name, j),
+                        "prefix": "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}".format(cube_dir, pipeline.prefix, field, line_name, jj),
                     }
                 )
 
-                if j == 1:
+                if jj == 1:
                     own_line_clean_mask = config["make_cube"]["wscl_user_clean_mask"]
                     if own_line_clean_mask:
                         """
@@ -1312,17 +1312,17 @@ def worker(pipeline, recipe, config):
                             else:
                                 pass
 
-                        step = "make_cube-{0:s}-field{1:d}-iter{2:d}-with_user_mask".format(line_name, tt, j)
+                        step = "make_cube-{0:s}-field{1:d}-iter{2:d}-with_user_mask".format(line_name, tt, jj)
                     else:
                         line_image_opts.update({"auto-mask": config["make_cube"]["wscl_auto_mask"]})
-                        step = "make_cube-{0:s}-field{1:d}-iter{2:d}-with_automasking".format(line_name, tt, j)
+                        step = "make_cube-{0:s}-field{1:d}-iter{2:d}-with_automasking".format(line_name, tt, jj)
                 else:
-                    step = "make_SoFiA-2_mask-field{0:d}-iter{1:d}".format(tt, j - 1)
-                    line_clean_mask = "{0:s}_{1:s}_{2:s}_{3:d}.image_clean_mask.fits:output".format(pipeline.prefix, field, line_name, j)
-                    line_clean_mask_file = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits".format(cube_path, pipeline.prefix, field, line_name, j)
-                    cubename = "{0:s}_{1:s}_{2:s}_{3:d}.image.fits:input".format(pipeline.prefix, field, line_name, j - 1)
-                    cubename_file = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image.fits".format(cube_path, pipeline.prefix, field, line_name, j - 1)
-                    outmask = "{0:s}_{1:s}_{2:s}_{3:d}.image_clean".format(pipeline.prefix, field, line_name, j)
+                    step = "make_SoFiA-2_mask-field{0:d}-iter{1:d}".format(tt, jj - 1)
+                    line_clean_mask = "{0:s}_{1:s}_{2:s}_{3:d}.image_clean_mask.fits:output".format(pipeline.prefix, field, line_name, jj)
+                    line_clean_mask_file = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits".format(cube_path, pipeline.prefix, field, line_name, jj)
+                    cubename = "{0:s}_{1:s}_{2:s}_{3:d}.image.fits:input".format(pipeline.prefix, field, line_name, jj - 1)
+                    cubename_file = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image.fits".format(cube_path, pipeline.prefix, field, line_name, jj - 1)
+                    outmask = "{0:s}_{1:s}_{2:s}_{3:d}.image_clean".format(pipeline.prefix, field, line_name, jj)
 
                     sofia2_opts = {
                         "pipeline.threads": 0,
@@ -1389,7 +1389,7 @@ def worker(pipeline, recipe, config):
                         "cab/sofia2",
                         step,
                         sofia2_opts,
-                        input=pipeline.cubes + "/cube_" + str(j - 1),
+                        input=pipeline.cubes + "/cube_" + str(jj - 1),
                         output=pipeline.output + "/" + cube_dir,
                         label="{0:s}:: Make SoFiA-2 mask".format(step),
                     )
@@ -1398,11 +1398,11 @@ def worker(pipeline, recipe, config):
                     recipe.jobs = []
 
                     if not os.path.exists(line_clean_mask_file):
-                        caracal.log.info("SoFiA-2 mask_" + str(j - 1) + " was not found. Exiting and saving the cube")
-                        j -= 1
+                        caracal.log.info("SoFiA-2 mask_" + str(jj - 1) + " was not found. Exiting and saving the cube")
+                        jj -= 1
                         break
 
-                    step = "make_cube-{0:s}-field{1:d}-iter{2:d}-with_SoFiA-2_mask".format(line_name, tt, j)
+                    step = "make_cube-{0:s}-field{1:d}-iter{2:d}-with_SoFiA-2_mask".format(line_name, tt, jj)
                     line_image_opts.update({"fitsmask": "{0:s}/{1:s}".format(cube_dir, line_clean_mask)})
                     if "auto-mask" in line_image_opts:
                         del line_image_opts["auto-mask"]
@@ -1419,7 +1419,7 @@ def worker(pipeline, recipe, config):
                 recipe.jobs = []
 
                 # delete line "MFS" images made by WSclean by averaging all channels
-                for mfs in glob.glob("{0:s}/{1:s}/{2:s}_{3:s}_{4:s}_{5:d}-MFS*fits".format(pipeline.output, cube_dir, pipeline.prefix, field, line_name, j)):
+                for mfs in glob.glob("{0:s}/{1:s}/{2:s}_{3:s}_{4:s}_{5:d}-MFS*fits".format(pipeline.output, cube_dir, pipeline.prefix, field, line_name, jj)):
                     os.remove(mfs)
 
                 # Stack channels together into cubes and fix spectral frame
@@ -1435,16 +1435,16 @@ def worker(pipeline, recipe, config):
                         if config["make_cube"]["wscl_mgain"] < 1.0:
                             imagetype.append("first-residual")
                     for mm in imagetype:
-                        step = "{0:s}-cubestack-field{1:d}-iter{2:d}".format(mm.replace("-", "_"), tt, j)
-                        if not os.path.exists("{6:s}/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-0000-{5:s}.fits".format(cube_dir, pipeline.prefix, field, line_name, j, mm, pipeline.output)):
+                        step = "{0:s}-cubestack-field{1:d}-iter{2:d}".format(mm.replace("-", "_"), tt, jj)
+                        if not os.path.exists("{6:s}/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-0000-{5:s}.fits".format(cube_dir, pipeline.prefix, field, line_name, jj, mm, pipeline.output)):
                             caracal.log.warn("Skipping container {0:s}. Single channels do not exist.".format(step))
                         else:
-                            stacked_cube = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits".format(cube_dir, pipeline.prefix, field, line_name, j, mm)
+                            stacked_cube = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits".format(cube_dir, pipeline.prefix, field, line_name, jj, mm)
                             recipe.add(
                                 "cab/fitstool",
                                 step,
                                 {
-                                    "file_pattern": "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-*-{5:s}.fits:output".format(cube_dir, pipeline.prefix, field, line_name, j, mm),
+                                    "file_pattern": "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-*-{5:s}.fits:output".format(cube_dir, pipeline.prefix, field, line_name, jj, mm),
                                     "output": stacked_cube,
                                     "stack": True,
                                     "delete-files": True,
@@ -1484,12 +1484,12 @@ def worker(pipeline, recipe, config):
                                         overwrite=True,
                                     )
 
-                    caracal.log.info("Fixing the spectral system of all cubes for target {0:d}, iteration {1:d}".format(tt, j))
+                    caracal.log.info("Fixing the spectral system of all cubes for target {0:d}, iteration {1:d}".format(tt, jj))
                     for ss in ["dirty", "psf", "first-residual", "residual", "model", "image"]:
-                        cubename = "{6:s}/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits".format(cube_dir, pipeline.prefix, field, line_name, j, ss, pipeline.output)
+                        cubename = "{6:s}/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits".format(cube_dir, pipeline.prefix, field, line_name, jj, ss, pipeline.output)
                         recipe.add(
                             fix_specsys_ra,
-                            "fixspecsysra-{0:s}-cube-field{1:d}-iter{2:d}".format(ss.replace("_", "-"), tt, j),
+                            "fixspecsysra-{0:s}-cube-field{1:d}-iter{2:d}".format(ss.replace("_", "-"), tt, jj),
                             {
                                 "filename": cubename,
                                 "specframe": specframe_all,
@@ -1503,7 +1503,7 @@ def worker(pipeline, recipe, config):
                     recipe.jobs = []
 
                 if not config["make_cube"]["wscl_onlypsf"]:
-                    cubename_file = "{0:s}/cube_{1:d}/{2:s}_{3:s}_{4:s}_{1:d}.image.fits".format(pipeline.cubes, j, pipeline.prefix, field, line_name)
+                    cubename_file = "{0:s}/cube_{1:d}/{2:s}_{3:s}_{4:s}_{1:d}.image.fits".format(pipeline.cubes, jj, pipeline.prefix, field, line_name)
                     rms_values.append(calc_rms(cubename_file, line_clean_mask_file))
                     caracal.log.info("RMS = {0:.3e} Jy/beam for {1:s}".format(rms_values[-1], cubename_file))
 
@@ -1523,7 +1523,7 @@ def worker(pipeline, recipe, config):
                         "The cube RMS noise has decreased by a factor > {0:.3f} compared to the previous WSclean iteration. "
                         "The noise has not converged yet and we should continue iterating SoFiA-2 + WSclean.".format(wscl_tol)
                     )
-                    if j == wscl_niter:
+                    if jj == wscl_niter:
                         caracal.log.info("Stopping anyway. Maximum number of SoFiA-2 + WSclean iterations reached.")
                     else:
                         caracal.log.info("Starting a new SoFiA-2 + WSclean iteration.")
@@ -1532,11 +1532,11 @@ def worker(pipeline, recipe, config):
             for ss in ["dirty", "psf", "first-residual", "residual", "model", "image"]:
                 if "dirty" in ss:
                     caracal.log.info("Preparing final cubes.")
-                cubename = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits".format(cube_path, pipeline.prefix, field, line_name, j, ss)
+                cubename = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits".format(cube_path, pipeline.prefix, field, line_name, jj, ss)
                 finalcubename = "{0:s}/{1:s}_{2:s}_{3:s}.{4:s}.fits".format(cube_path, pipeline.prefix, field, line_name, ss)
-                line_clean_mask_file = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits".format(cube_path, pipeline.prefix, field, line_name, j)
+                line_clean_mask_file = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits".format(cube_path, pipeline.prefix, field, line_name, jj)
                 final_line_clean_mask_file = "{0:s}/{1:s}_{2:s}_{3:s}.image_clean_mask.fits".format(cube_path, pipeline.prefix, field, line_name)
-                MFScubename = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-MFS-{5:s}.fits".format(cube_path, pipeline.prefix, field, line_name, j, ss)
+                MFScubename = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-MFS-{5:s}.fits".format(cube_path, pipeline.prefix, field, line_name, jj, ss)
                 finalMFScubename = "{0:s}/{1:s}_{2:s}_{3:s}-MFS-{4:s}.fits".format(cube_path, pipeline.prefix, field, line_name, ss)
                 if os.path.exists(cubename):
                     os.rename(cubename, finalcubename)
@@ -1545,12 +1545,12 @@ def worker(pipeline, recipe, config):
                 if os.path.exists(MFScubename):
                     os.rename(MFScubename, finalMFScubename)
 
-            for j in range(1, wscl_niter):
+            for jj in range(1, wscl_niter):
                 if config["make_cube"]["wscl_removeintermediate"]:
                     for ss in ["dirty", "psf", "first-residual", "residual", "model", "image"]:
-                        cubename = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits".format(pipeline.cubes, pipeline.prefix, field, line_name, j, ss)
-                        line_clean_mask_file = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits".format(pipeline.cubes, pipeline.prefix, field, line_name, j)
-                        MFScubename = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-MFS-{5:s}.fits".format(pipeline.cubes, pipeline.prefix, field, line_name, j, ss)
+                        cubename = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits".format(pipeline.cubes, pipeline.prefix, field, line_name, jj, ss)
+                        line_clean_mask_file = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits".format(pipeline.cubes, pipeline.prefix, field, line_name, jj)
+                        MFScubename = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-MFS-{5:s}.fits".format(pipeline.cubes, pipeline.prefix, field, line_name, jj, ss)
                         if os.path.exists(cubename):
                             os.remove(cubename)
                         if os.path.exists(line_clean_mask_file):

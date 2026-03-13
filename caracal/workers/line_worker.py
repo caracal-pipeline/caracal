@@ -1728,7 +1728,7 @@ def worker(pipeline, recipe, config):
             if not config["freq_to_vel"]["reverse"]:
                 caracal.log.info("Will convert spectral axis of all cubes from frequency to radio velocity for target {0:d}: {1}".format(tt, cube_list))
             else:
-                caracal.log.info("Will convert spectral axis of all cubes from radio velocity to frequency for target {0:d}: {1}".format(tt ,cube_list))
+                caracal.log.info("Will convert spectral axis of all cubes from radio velocity to frequency for target {0:d}: {1}".format(tt, cube_list))
             for uu in range(len(cube_list)):
                 recipe.add(
                     freq_to_vel,

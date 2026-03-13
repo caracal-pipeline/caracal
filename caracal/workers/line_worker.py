@@ -1690,7 +1690,7 @@ def worker(pipeline, recipe, config):
         final_image_cube_list = [cc for cc in final_cube_list if "image.fits" in cc]
 
         if pipeline.enable_task(config, "pb_cube"):
-            caracal.log.info("Will create primary beam cube for the final image cube of target {0:d}".format(tt))
+            caracal.log.info("Will create primary beam cube for the final image cube of target {0:d}: {1}".format(tt, final_image_cube_list))
             for uu in range(len(final_image_cube_list)):
                 recipe.add(
                     make_pb_cube,
@@ -1711,7 +1711,7 @@ def worker(pipeline, recipe, config):
                     cube_list.append(final_image_cube_list[uu].replace("image.fits", "pb_corr.fits"))
 
         if pipeline.enable_task(config, "remove_stokes_axis"):
-            caracal.log.info("Will remove Stokes axis of all cubes of target {0:d}".format(tt))
+            caracal.log.info("Will remove Stokes axis of all cubes of target {0:d}: {1}".format(tt, cube_list))
             for uu in range(len(cube_list)):
                 recipe.add(
                     remove_stokes_axis,
@@ -1726,9 +1726,9 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, "freq_to_vel"):
             if not config["freq_to_vel"]["reverse"]:
-                caracal.log.info("Will convert spectral axis of all cubes from frequency to radio velocity for target {0:d}".format(tt))
+                caracal.log.info("Will convert spectral axis of all cubes from frequency to radio velocity for target {0:d}: {1}".format(tt, cube_list))
             else:
-                caracal.log.info("Will convert spectral axis of all cubes from radio velocity to frequency for target {0:d}".format(tt))
+                caracal.log.info("Will convert spectral axis of all cubes from radio velocity to frequency for target {0:d}: {1}".format(tt ,cube_list))
             for uu in range(len(cube_list)):
                 recipe.add(
                     freq_to_vel,
@@ -1759,7 +1759,7 @@ def worker(pipeline, recipe, config):
             else:
                 simage_cube_list = final_image_cube_list
 
-            caracal.log.info("Will find sources with SoFiA for the final image cube of target {0:d}".format(tt))
+            caracal.log.info("Will find sources with SoFiA for the final image cube of target {0:d}: {1}".format(tt, final_image_cube_list))
             for uu in range(len(final_image_cube_list)):
                 step = "sofia2-source_finding-{0:d}".format(uu)
                 sofia2_opts = {
@@ -1854,10 +1854,8 @@ def worker(pipeline, recipe, config):
             # caracal will look for the corresponding mask saved by sofia, if this does not exist
             #  imcontsub will use the automasking method
             if not config["imcontsub"]["input_cube"]:
-                caracal.log.info("Continum subtraction in the image-plane for the final cube of target {0:d}".format(tt))
-
                 imsub_image_cube_list = final_image_cube_list.copy()
-
+                caracal.log.info("Continum subtraction in the image-plane for the final cube of target {0:d}: {1}".format(tt, imsub_image_cube_list))
                 for uu in range(len(imsub_image_cube_list)):
                     step = "Image-continuum-subtraction-{0:d}".format(uu)
                     input_cube = imsub_image_cube_list[uu].split("/")[-1]
@@ -1996,6 +1994,7 @@ def worker(pipeline, recipe, config):
                     break
 
         if pipeline.enable_task(config, "sharpener"):
+            caracal.log.info("Running Sharpener on the final cube of target {0:d}: {1}".format(tt, final_image_cube_list))
             for uu in range(len(final_image_cube_list)):
                 step = "continuum-spectral_extraction-{0:d}".format(uu)
 

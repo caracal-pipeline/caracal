@@ -1685,6 +1685,10 @@ def worker(pipeline, recipe, config):
         cube_list = casa_cube_list + wscl_cube_list
         image_cube_list = [cc for cc in cube_list if "image.fits" in cc]
 
+        final_wscl_cube_list = glob.glob("{0:s}/{1:s}/cube_*/{2:s}_{3:s}_{4:s}.*.fits".format(pipeline.output, cube_dir, pipeline.prefix, field, line_name))
+        final_cube_list = casa_cube_list + final_wscl_cube_list
+        final_image_cube_list = [cc for cc in final_cube_list if "image.fits" in cc]
+
         if pipeline.enable_task(config, "pb_cube"):
             caracal.log.info("Will create primary beam cube for target {0:d}".format(tt))
             for uu in range(len(image_cube_list)):
@@ -1741,20 +1745,21 @@ def worker(pipeline, recipe, config):
         recipe.run()
         recipe.jobs = []
 
-        # This is being run on all cubes in image_cube_list. Should this change?
+        # The following runs on all cubes in final_image_cube_list instead of all cubes in image_cube_list
+
         if config["do_sourcefinding"]:
             if config["sofia2_settings"]["imcontsub"]:
                 simage_cube_list = []
-                for uu in range(len(image_cube_list)):
-                    icsname = image_cube_list[uu].replace(".image.fits", ".image-line.fits")
+                for uu in range(len(final_image_cube_list)):
+                    icsname = final_image_cube_list[uu].replace(".image.fits", ".image-line.fits")
                     if len(glob.glob(icsname)) > 0:
                         simage_cube_list.append(icsname)
                     else:
-                        simage_cube_list.append(image_cube_list[uu])
+                        simage_cube_list.append(final_image_cube_list[uu])
             else:
-                simage_cube_list = image_cube_list
+                simage_cube_list = final_image_cube_list
 
-            for uu in range(len(image_cube_list)):
+            for uu in range(len(final_image_cube_list)):
                 step = "sofia2-source_finding-{0:d}".format(uu)
                 sofia2_opts = {
                     "pipeline.threads": 0,
@@ -1850,7 +1855,7 @@ def worker(pipeline, recipe, config):
             if not config["imcontsub"]["input_cube"]:
                 caracal.log.info("Continum subtraction in the image-plane for target {0:d}".format(tt))
 
-                imsub_image_cube_list = image_cube_list.copy()
+                imsub_image_cube_list = final_image_cube_list.copy()
 
                 for uu in range(len(imsub_image_cube_list)):
                     step = "Image-continuum-subtraction-{0:d}".format(uu)
@@ -1990,7 +1995,7 @@ def worker(pipeline, recipe, config):
                     break
 
         if pipeline.enable_task(config, "sharpener"):
-            for uu in range(len(image_cube_list)):
+            for uu in range(len(final_image_cube_list)):
                 step = "continuum-spectral_extraction-{0:d}".format(uu)
 
                 params = {
@@ -1998,7 +2003,7 @@ def worker(pipeline, recipe, config):
                     "enable_source_catalog": True,
                     "enable_abs_plot": True,
                     "enable_source_finder": False,
-                    "cubename": image_cube_list[uu] + ":output",
+                    "cubename": final_image_cube_list[uu] + ":output",
                     "channels_per_plot": config["sharpener"]["chans_per_plot"],
                     "workdir": "{0:s}/".format(stimela.recipe.CONT_IO["output"]),
                     "label": config["sharpener"]["label"],
@@ -2029,7 +2034,7 @@ def worker(pipeline, recipe, config):
                             "cab/sharpener",
                             step,
                             params,
-                            input="/".join("{0:s}/{1:s}".format(pipeline.output, image_cube_list[uu]).split("/")[:-1]),
+                            input="/".join("{0:s}/{1:s}".format(pipeline.output, final_image_cube_list[uu]).split("/")[:-1]),
                             output=pipeline.output,
                             label="{0:s}:: Continuum Spectral Extraction".format(step),
                         )
@@ -2045,7 +2050,7 @@ def worker(pipeline, recipe, config):
                         "cab/sharpener",
                         step,
                         params,
-                        input="/".join("{0:s}/{1:s}".format(pipeline.output, image_cube_list[uu]).split("/")[:-1]),
+                        input="/".join("{0:s}/{1:s}".format(pipeline.output, final_image_cube_list[uu]).split("/")[:-1]),
                         output=pipeline.output,
                         label="{0:s}:: Continuum Spectral Extraction".format(step),
                     )

@@ -1523,7 +1523,7 @@ with tb(ms+'::FEED', readonly=False) as t:
             )
 
             recipe.run()
-            recipe.job = []
+            recipe.jobs = []
 
         # save flags before and after
         if {"xcal", "gcal", "fcal", "target"}.intersection(config["applyto"]):

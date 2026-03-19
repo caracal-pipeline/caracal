@@ -1073,10 +1073,7 @@ def worker(pipeline, recipe, config):
         key = "extract_sources"
         if config[key]["detection_image"]:
             step = "detection_image-field{0:d}-iter{1:d}".format(trg, num)
-            detection_image = "{0:s}/{1:s}-detection_image_{0:s}_{1:d}.fits:output".format(
-                img_dir,
-                prefix,
-            )
+            detection_image = "{0:s}/{1:s}-detection_image_{2:s}_{3:d}.fits:output".format(img_dir, prefix, field, num)
             recipe.add(
                 "cab/fitstool",
                 step,

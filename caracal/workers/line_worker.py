@@ -597,16 +597,21 @@ def worker(pipeline, recipe, config):
                     line_fmax[line_selected],
                 )
                 line_chanmin, line_chanmax = [], []
+                print('SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSs')
                 caracal.log.info("Excluding the following line sources and channel intervals from the UVLIN fit:")
                 for ll in range(line_id.shape[0]):
+                    print(line_fmin[ll])
+                    print(chanids[0],chanids[1])
                     if line_fmin[ll] < chanfreqs[0]:
                         line_chanmin.append(chanids[0])
                     else:
                         line_chanmin.append(chanids[chanfreqs < line_fmin[ll]].max())
+                        print('there')
                     if line_fmax[ll] > chanfreqs[-1]:
                         line_chanmax.append(chanids[-1])
                     else:
                         line_chanmax.append(chanids[chanfreqs > line_fmax[ll]].min())
+                        print('THERE')
                     caracal.log.info("  {0:20s}:  {1:5d} - {2:5d}".format(line_id[ll], line_chanmin[ll], line_chanmax[ll]))
                     linechans += (chanids >= line_chanmin[ll]) * (chanids <= line_chanmax[ll])
                 autofitchans = ~linechans

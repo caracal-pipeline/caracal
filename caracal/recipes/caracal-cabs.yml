@@ -20,28 +20,6 @@ _include:
 
 cabs:
 
-  quartical:
-    inputs:
-      input_ms.path:
-        skip_freshness_checks: true
-      output.gain_directory:
-        dtype: Directory
-        writable: true
-        must_exist: false
-        mkdir: false
-        required: true
-        path_policies:
-          write_parent: true
-    outputs:
-      gain_directory:
-        dtype: Directory
-        implicit: "{current.output.gain_directory}"
-        policies:
-          skip: true
-        must_exist: false
-        mkdir: false
-        required: false
-
   aimfast:
     inputs:
       compare_models:

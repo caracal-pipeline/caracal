@@ -1426,7 +1426,7 @@ def worker(pipeline, recipe, config):
             refant = pipeline.refant[i]
 
         # Check if feeds are linear
-        if set(list(msinfo["CORR"]["CORR_TYPE"])) & {"XX", "XY", "YX", "YY"} == 0:
+        if not (set(msinfo["CORR"]["CORR_TYPE"]) & {"XX", "XY", "YX", "YY"}):
             raise RuntimeError("Cannot calibrate polarization! Allowed strategies are for linear feed data but correlation is: " + str(["XX", "XY", "YX", "YY"]))
         if config["pol_calib"] != "none":
             pol_calib = pipeline.config["obsconf"][config["pol_calib"]][i]

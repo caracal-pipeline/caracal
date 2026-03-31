@@ -1657,6 +1657,25 @@ with tb(ms+'::FEED', readonly=False) as t:
         # choose the strategy according to config parameters
         if leakage_calib in unpolarized_calibrators:
             if pol_calib != "none":
+                # Using an unpolarized leakage calibrator together with a separate polarized
+                # calibrator requires that a polarization model is enabled and configured.
+                set_model_pol_cfg = config.get("set_model_pol") or {}
+                if not set_model_pol_cfg.get("enable"):
+                    raise RuntimeError(
+                        "Configuration error: using a separate polarized calibrator (pol_calib != 'none') "
+                        "together with an unpolarized leakage calibrator requires set_model_pol.enable = true "
+                        "and a valid polarized model source. Please enable obsconf:set_model_pol and select "
+                        "an appropriate model source, or change your leakage_calib / pol_calib settings."
+                    )
+                # Defensive check to avoid an UnboundLocalError if polarized_calibrators was not
+                # prepared despite set_model_pol.enable being true.
+                try:
+                    polarized_calibrators  # noqa: F821 - checked for NameError at runtime
+                except NameError as exc:
+                    raise RuntimeError(
+                        "Internal configuration error: polarized_calibrators is not defined even though "
+                        "set_model_pol.enable is true. Please verify the polarization model configuration."
+                    ) from exc
                 caracal.log.info(
                     "You decided to calibrate the polarized angle with a polarized calibrator assuming a model for the calibrator and the leakage with an unpolarized calibrator."
                 )

@@ -1651,8 +1651,9 @@ with tb(ms+'::FEED', readonly=False) as t:
                     output=pipeline.output,
                     label="extend_flags_polcal",
                 )
-        caracal.log.info(leakage_calib)
-        caracal.log.info(pol_calib)
+        caracal.log.info(
+            f"Polarization calibration selection: leakage_calib={leakage_calib}, pol_calib={pol_calib}"
+        )
         # choose the strategy according to config parameters
         if leakage_calib in unpolarized_calibrators:
             if pol_calib != "none":

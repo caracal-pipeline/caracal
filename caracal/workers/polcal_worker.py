@@ -1705,7 +1705,7 @@ with tb(ms+'::FEED', readonly=False) as t:
                     f"Unable to determine pol_calib={config['pol_calib']}. Is your obsconf section configured properly?"
                     f"Your setting of pol_calib={config['pol_calib']} selects {pol_calib}."
                     "Alternatively, you can calibrate both leakage and polarization using a"
-                    " (known or unknown) polarized source oserved at several parallactic angles."
+                    " (known or unknown) polarized source observed at several parallactic angles."
                     " Configure this source as obsconf:xcal, and leakage_calib=pol_calib=xcal."
                 )
         elif leakage_calib == pol_calib:

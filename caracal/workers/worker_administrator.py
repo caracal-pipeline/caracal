@@ -50,7 +50,8 @@ class WorkerAdministrator(object):
         self.continuum = f"{self.output}/continuum"
         self.crosscal_continuum = f"{self.output}/continuum/crosscal"
         self.cubes = f"{self.output}/cubes"
-        self.mosaics = f"{self.output}/mosaics"
+        self.mosaic_continuum = f"{self.continuum}/mosaics"
+        self.mosaic_line = f"{self.cubes}/mosaics"
         self.generate_reports = generate_reports
         self.timeNow = "{:%Y%m%d-%H%M%S}".format(datetime.now())
         self.ms_extension = self.config["getdata"]["extension"]
@@ -331,6 +332,10 @@ class WorkerAdministrator(object):
             os.mkdir(self.continuum)
         if not os.path.exists(self.cubes):
             os.mkdir(self.cubes)
+        if not os.path.exists(self.mosaic_continuum):
+            os.mkdir(self.mosaic_continuum)
+        if not os.path.exists(self.mosaic_line):
+            os.mkdir(self.mosaic_line)
         # create proper logfile and start flushing
         # NB (Oleg): placing this into output rather than output/logs to make the reporting notebooks easier
         CARACAL_LOG_BASENAME = "log-caracal.txt"

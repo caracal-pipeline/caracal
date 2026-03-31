@@ -10,6 +10,7 @@ import numpy as np
 import psutil
 import stimela.dismissable as sdm
 import stimela.recipe
+from astropy.io import fits
 from casacore.tables import table
 
 import caracal
@@ -17,6 +18,9 @@ from caracal import log
 from caracal.dispatch_crew import noisy, utils
 from caracal.workers.utils import flag_Uzeros, remove_output_products
 from caracal.workers.utils import manage_flagsets as manflags
+
+C = 2.99792458e8  # m/s
+HI = 1.4204057517667e9  # Hz
 
 NAME = "Process and Image Line Data"
 LABEL = "line"
@@ -34,10 +38,6 @@ def add_ms_label(msname, label="mst"):
 
 
 def freq_to_vel(filename, reverse):
-    from astropy.io import fits
-
-    C = 2.99792458e8  # m/s
-    HI = 1.4204057517667e9  # Hz
     if not os.path.exists(filename):
         caracal.log.warn("Skipping conversion for {0:s}. File does not exist.".format(filename))
     else:
@@ -124,8 +124,8 @@ def fix_specsys_ra(filename, specframe):
 def make_pb_cube(filename, apply_corr, typ, dish_size, cutoff):
     from astropy.io import fits
 
-    C = 2.99792458e8  # m/s
-    HI = 1.4204057517667e9  # Hz
+    # C = 2.99792458e8  # m/s
+    # HI = 1.4204057517667e9  # Hz
 
     if not os.path.exists(filename):
         caracal.log.warn("Skipping primary beam cube for {0:s}. File does not exist.".format(filename))
@@ -560,7 +560,7 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, "mstransform"):
             # Set UVLIN fit channel range
             if pipeline.enable_task(config["mstransform"], "uvlin") and config["mstransform"]["uvlin"]["exclude_known_sources"]:
-                C = 2.99792458e5  # km/s
+                # C = 2.99792458e5  # km/s
                 chanfreqs = np.arange(firstchanfreq_all[i][0], lastchanfreq_all[i][0] + chanw_all[i][0], chanw_all[i][0])
                 chanids = np.arange(chanfreqs.shape[0])
                 linechans = chanids < 0  # Array of False's used to build the fitspw settings
@@ -1016,20 +1016,20 @@ def worker(pipeline, recipe, config):
                 del line_image_opts["fitsmask"]
             if "auto-mask" in line_image_opts:
                 del line_image_opts["auto-mask"]
-            for j in range(1, wscl_niter + 1):
-                cube_path = "{0:s}/cube_{1:d}".format(pipeline.cubes, j)
+            for jj in range(1, wscl_niter + 1):
+                cube_path = "{0:s}/cube_{1:d}".format(pipeline.cubes, jj)
                 if not os.path.exists(cube_path):
                     os.mkdir(cube_path)
-                cube_dir = "{0:s}/cube_{1:d}".format(get_relative_path(pipeline.cubes, pipeline), j)
+                cube_dir = "{0:s}/cube_{1:d}".format(get_relative_path(pipeline.cubes, pipeline), jj)
 
                 line_image_opts.update(
                     {
                         "msname": mslist,
-                        "prefix": "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}".format(cube_dir, pipeline.prefix, field, line_name, j),
+                        "prefix": "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}".format(cube_dir, pipeline.prefix, field, line_name, jj),
                     }
                 )
 
-                if j == 1:
+                if jj == 1:
                     own_line_clean_mask = config["make_cube"]["wscl_user_clean_mask"]
                     if own_line_clean_mask:
                         """
@@ -1037,7 +1037,7 @@ def worker(pipeline, recipe, config):
                         """
                         doProj = False
                         doSpec = False
-                        C = 2.99792458e8  # m/s
+                        # C = 2.99792458e8  # m/s
                         femit = [r.strip() for r in re.split(r"([-+]?\d+\.\d+)|([-+]?\d+)", restfreq.strip()) if r is not None and r.strip() != ""]
                         femit = (eval(femit[0]) * units.Unit(femit[1])).to(units.Hz).value  # Hz
                         t = mslist[0].replace(".ms", "-summary.json")  # first file given to WSClean as input
@@ -1312,17 +1312,17 @@ def worker(pipeline, recipe, config):
                             else:
                                 pass
 
-                        step = "make_cube-{0:s}-field{1:d}-iter{2:d}-with_user_mask".format(line_name, tt, j)
+                        step = "make_cube-{0:s}-field{1:d}-iter{2:d}-with_user_mask".format(line_name, tt, jj)
                     else:
                         line_image_opts.update({"auto-mask": config["make_cube"]["wscl_auto_mask"]})
-                        step = "make_cube-{0:s}-field{1:d}-iter{2:d}-with_automasking".format(line_name, tt, j)
+                        step = "make_cube-{0:s}-field{1:d}-iter{2:d}-with_automasking".format(line_name, tt, jj)
                 else:
-                    step = "make_SoFiA-2_mask-field{0:d}-iter{1:d}".format(tt, j - 1)
-                    line_clean_mask = "{0:s}_{1:s}_{2:s}_{3:d}.image_clean_mask.fits:output".format(pipeline.prefix, field, line_name, j)
-                    line_clean_mask_file = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits".format(cube_path, pipeline.prefix, field, line_name, j)
-                    cubename = "{0:s}_{1:s}_{2:s}_{3:d}.image.fits:input".format(pipeline.prefix, field, line_name, j - 1)
-                    cubename_file = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image.fits".format(cube_path, pipeline.prefix, field, line_name, j - 1)
-                    outmask = "{0:s}_{1:s}_{2:s}_{3:d}.image_clean".format(pipeline.prefix, field, line_name, j)
+                    step = "make_SoFiA-2_mask-field{0:d}-iter{1:d}".format(tt, jj - 1)
+                    line_clean_mask = "{0:s}_{1:s}_{2:s}_{3:d}.image_clean_mask.fits:output".format(pipeline.prefix, field, line_name, jj)
+                    line_clean_mask_file = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits".format(cube_path, pipeline.prefix, field, line_name, jj)
+                    cubename = "{0:s}_{1:s}_{2:s}_{3:d}.image.fits:input".format(pipeline.prefix, field, line_name, jj - 1)
+                    cubename_file = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image.fits".format(cube_path, pipeline.prefix, field, line_name, jj - 1)
+                    outmask = "{0:s}_{1:s}_{2:s}_{3:d}.image_clean".format(pipeline.prefix, field, line_name, jj)
 
                     sofia2_opts = {
                         "pipeline.threads": 0,
@@ -1389,7 +1389,7 @@ def worker(pipeline, recipe, config):
                         "cab/sofia2",
                         step,
                         sofia2_opts,
-                        input=pipeline.cubes + "/cube_" + str(j - 1),
+                        input=pipeline.cubes + "/cube_" + str(jj - 1),
                         output=pipeline.output + "/" + cube_dir,
                         label="{0:s}:: Make SoFiA-2 mask".format(step),
                     )
@@ -1398,11 +1398,11 @@ def worker(pipeline, recipe, config):
                     recipe.jobs = []
 
                     if not os.path.exists(line_clean_mask_file):
-                        caracal.log.info("SoFiA-2 mask_" + str(j - 1) + " was not found. Exiting and saving the cube")
-                        j -= 1
+                        caracal.log.info("SoFiA-2 mask_" + str(jj - 1) + " was not found. Exiting and saving the cube")
+                        jj -= 1
                         break
 
-                    step = "make_cube-{0:s}-field{1:d}-iter{2:d}-with_SoFiA-2_mask".format(line_name, tt, j)
+                    step = "make_cube-{0:s}-field{1:d}-iter{2:d}-with_SoFiA-2_mask".format(line_name, tt, jj)
                     line_image_opts.update({"fitsmask": "{0:s}/{1:s}".format(cube_dir, line_clean_mask)})
                     if "auto-mask" in line_image_opts:
                         del line_image_opts["auto-mask"]
@@ -1419,7 +1419,7 @@ def worker(pipeline, recipe, config):
                 recipe.jobs = []
 
                 # delete line "MFS" images made by WSclean by averaging all channels
-                for mfs in glob.glob("{0:s}/{1:s}/{2:s}_{3:s}_{4:s}_{5:d}-MFS*fits".format(pipeline.output, cube_dir, pipeline.prefix, field, line_name, j)):
+                for mfs in glob.glob("{0:s}/{1:s}/{2:s}_{3:s}_{4:s}_{5:d}-MFS*fits".format(pipeline.output, cube_dir, pipeline.prefix, field, line_name, jj)):
                     os.remove(mfs)
 
                 # Stack channels together into cubes and fix spectral frame
@@ -1435,16 +1435,16 @@ def worker(pipeline, recipe, config):
                         if config["make_cube"]["wscl_mgain"] < 1.0:
                             imagetype.append("first-residual")
                     for mm in imagetype:
-                        step = "{0:s}-cubestack-field{1:d}-iter{2:d}".format(mm.replace("-", "_"), tt, j)
-                        if not os.path.exists("{6:s}/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-0000-{5:s}.fits".format(cube_dir, pipeline.prefix, field, line_name, j, mm, pipeline.output)):
+                        step = "{0:s}-cubestack-field{1:d}-iter{2:d}".format(mm.replace("-", "_"), tt, jj)
+                        if not os.path.exists("{6:s}/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-0000-{5:s}.fits".format(cube_dir, pipeline.prefix, field, line_name, jj, mm, pipeline.output)):
                             caracal.log.warn("Skipping container {0:s}. Single channels do not exist.".format(step))
                         else:
-                            stacked_cube = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits".format(cube_dir, pipeline.prefix, field, line_name, j, mm)
+                            stacked_cube = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits".format(cube_dir, pipeline.prefix, field, line_name, jj, mm)
                             recipe.add(
                                 "cab/fitstool",
                                 step,
                                 {
-                                    "file_pattern": "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-*-{5:s}.fits:output".format(cube_dir, pipeline.prefix, field, line_name, j, mm),
+                                    "file_pattern": "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-*-{5:s}.fits:output".format(cube_dir, pipeline.prefix, field, line_name, jj, mm),
                                     "output": stacked_cube,
                                     "stack": True,
                                     "delete-files": True,
@@ -1484,12 +1484,12 @@ def worker(pipeline, recipe, config):
                                         overwrite=True,
                                     )
 
-                    caracal.log.info("Fixing the spectral system of all cubes for target {0:d}, iteration {1:d}".format(tt, j))
+                    caracal.log.info("Fixing the spectral system of all cubes for target {0:d}, iteration {1:d}".format(tt, jj))
                     for ss in ["dirty", "psf", "first-residual", "residual", "model", "image"]:
-                        cubename = "{6:s}/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits".format(cube_dir, pipeline.prefix, field, line_name, j, ss, pipeline.output)
+                        cubename = "{6:s}/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits".format(cube_dir, pipeline.prefix, field, line_name, jj, ss, pipeline.output)
                         recipe.add(
                             fix_specsys_ra,
-                            "fixspecsysra-{0:s}-cube-field{1:d}-iter{2:d}".format(ss.replace("_", "-"), tt, j),
+                            "fixspecsysra-{0:s}-cube-field{1:d}-iter{2:d}".format(ss.replace("_", "-"), tt, jj),
                             {
                                 "filename": cubename,
                                 "specframe": specframe_all,
@@ -1503,7 +1503,7 @@ def worker(pipeline, recipe, config):
                     recipe.jobs = []
 
                 if not config["make_cube"]["wscl_onlypsf"]:
-                    cubename_file = "{0:s}/cube_{1:d}/{2:s}_{3:s}_{4:s}_{1:d}.image.fits".format(pipeline.cubes, j, pipeline.prefix, field, line_name)
+                    cubename_file = "{0:s}/cube_{1:d}/{2:s}_{3:s}_{4:s}_{1:d}.image.fits".format(pipeline.cubes, jj, pipeline.prefix, field, line_name)
                     rms_values.append(calc_rms(cubename_file, line_clean_mask_file))
                     caracal.log.info("RMS = {0:.3e} Jy/beam for {1:s}".format(rms_values[-1], cubename_file))
 
@@ -1523,7 +1523,7 @@ def worker(pipeline, recipe, config):
                         "The cube RMS noise has decreased by a factor > {0:.3f} compared to the previous WSclean iteration. "
                         "The noise has not converged yet and we should continue iterating SoFiA-2 + WSclean.".format(wscl_tol)
                     )
-                    if j == wscl_niter:
+                    if jj == wscl_niter:
                         caracal.log.info("Stopping anyway. Maximum number of SoFiA-2 + WSclean iterations reached.")
                     else:
                         caracal.log.info("Starting a new SoFiA-2 + WSclean iteration.")
@@ -1532,11 +1532,11 @@ def worker(pipeline, recipe, config):
             for ss in ["dirty", "psf", "first-residual", "residual", "model", "image"]:
                 if "dirty" in ss:
                     caracal.log.info("Preparing final cubes.")
-                cubename = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits".format(cube_path, pipeline.prefix, field, line_name, j, ss)
+                cubename = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits".format(cube_path, pipeline.prefix, field, line_name, jj, ss)
                 finalcubename = "{0:s}/{1:s}_{2:s}_{3:s}.{4:s}.fits".format(cube_path, pipeline.prefix, field, line_name, ss)
-                line_clean_mask_file = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits".format(cube_path, pipeline.prefix, field, line_name, j)
+                line_clean_mask_file = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits".format(cube_path, pipeline.prefix, field, line_name, jj)
                 final_line_clean_mask_file = "{0:s}/{1:s}_{2:s}_{3:s}.image_clean_mask.fits".format(cube_path, pipeline.prefix, field, line_name)
-                MFScubename = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-MFS-{5:s}.fits".format(cube_path, pipeline.prefix, field, line_name, j, ss)
+                MFScubename = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-MFS-{5:s}.fits".format(cube_path, pipeline.prefix, field, line_name, jj, ss)
                 finalMFScubename = "{0:s}/{1:s}_{2:s}_{3:s}-MFS-{4:s}.fits".format(cube_path, pipeline.prefix, field, line_name, ss)
                 if os.path.exists(cubename):
                     os.rename(cubename, finalcubename)
@@ -1545,12 +1545,12 @@ def worker(pipeline, recipe, config):
                 if os.path.exists(MFScubename):
                     os.rename(MFScubename, finalMFScubename)
 
-            for j in range(1, wscl_niter):
+            for jj in range(1, wscl_niter):
                 if config["make_cube"]["wscl_removeintermediate"]:
                     for ss in ["dirty", "psf", "first-residual", "residual", "model", "image"]:
-                        cubename = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits".format(pipeline.cubes, pipeline.prefix, field, line_name, j, ss)
-                        line_clean_mask_file = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits".format(pipeline.cubes, pipeline.prefix, field, line_name, j)
-                        MFScubename = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-MFS-{5:s}.fits".format(pipeline.cubes, pipeline.prefix, field, line_name, j, ss)
+                        cubename = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits".format(pipeline.cubes, pipeline.prefix, field, line_name, jj, ss)
+                        line_clean_mask_file = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits".format(pipeline.cubes, pipeline.prefix, field, line_name, jj)
+                        MFScubename = "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-MFS-{5:s}.fits".format(pipeline.cubes, pipeline.prefix, field, line_name, jj, ss)
                         if os.path.exists(cubename):
                             os.remove(cubename)
                         if os.path.exists(line_clean_mask_file):
@@ -1683,16 +1683,20 @@ def worker(pipeline, recipe, config):
         casa_cube_list = glob.glob("{0:s}/{1:s}/{2:s}_{3:s}_{4:s}*.fits".format(pipeline.output, cube_dir, pipeline.prefix, field, line_name))
         wscl_cube_list = glob.glob("{0:s}/{1:s}/cube_*/{2:s}_{3:s}_{4:s}*.fits".format(pipeline.output, cube_dir, pipeline.prefix, field, line_name))
         cube_list = casa_cube_list + wscl_cube_list
-        image_cube_list = [cc for cc in cube_list if "image.fits" in cc]
+        # image_cube_list = [cc for cc in cube_list if "image.fits" in cc]
+
+        final_wscl_cube_list = glob.glob("{0:s}/{1:s}/cube_*/{2:s}_{3:s}_{4:s}.*.fits".format(pipeline.output, cube_dir, pipeline.prefix, field, line_name))
+        final_cube_list = casa_cube_list + final_wscl_cube_list
+        final_image_cube_list = [cc for cc in final_cube_list if "image.fits" in cc]
 
         if pipeline.enable_task(config, "pb_cube"):
-            caracal.log.info("Will create primary beam cube for target {0:d}".format(tt))
-            for uu in range(len(image_cube_list)):
+            caracal.log.info("Will create primary beam cube for the final image cube of target {0:d}: {1}".format(tt, final_image_cube_list))
+            for uu in range(len(final_image_cube_list)):
                 recipe.add(
                     make_pb_cube,
                     "make pb_cube-{0:d}".format(uu),
                     {
-                        "filename": image_cube_list[uu],
+                        "filename": final_image_cube_list[uu],
                         "apply_corr": config["pb_cube"]["apply_pb"],
                         "typ": config["pb_cube"]["pb_type"],
                         "dish_size": config["pb_cube"]["dish_size"],
@@ -1700,14 +1704,14 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label="Make primary beam cube for {0:s}".format(image_cube_list[uu]),
+                    label="Make primary beam cube for {0:s}".format(final_image_cube_list[uu]),
                 )
-                cube_list.append(image_cube_list[uu].replace("image.fits", "pb.fits"))
+                cube_list.append(final_image_cube_list[uu].replace("image.fits", "pb.fits"))
                 if config["pb_cube"]["apply_pb"]:
-                    cube_list.append(image_cube_list[uu].replace("image.fits", "pb_corr.fits"))
+                    cube_list.append(final_image_cube_list[uu].replace("image.fits", "pb_corr.fits"))
 
         if pipeline.enable_task(config, "remove_stokes_axis"):
-            caracal.log.info("Will remove Stokes axis of all cubes/images of target {0:d}".format(tt))
+            caracal.log.info("Will remove Stokes axis of all cubes of target {0:d}: {1}".format(tt, cube_list))
             for uu in range(len(cube_list)):
                 recipe.add(
                     remove_stokes_axis,
@@ -1722,9 +1726,9 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, "freq_to_vel"):
             if not config["freq_to_vel"]["reverse"]:
-                caracal.log.info("Will convert spectral axis of all cubes from frequency to radio velocity for target {0:d}".format(tt))
+                caracal.log.info("Will convert spectral axis of all cubes from frequency to radio velocity for target {0:d}: {1}".format(tt, cube_list))
             else:
-                caracal.log.info("Will convert spectral axis of all cubes from radio velocity to frequency for target {0:d}".format(tt))
+                caracal.log.info("Will convert spectral axis of all cubes from radio velocity to frequency for target {0:d}: {1}".format(tt, cube_list))
             for uu in range(len(cube_list)):
                 recipe.add(
                     freq_to_vel,
@@ -1741,20 +1745,22 @@ def worker(pipeline, recipe, config):
         recipe.run()
         recipe.jobs = []
 
-        # This is being run on all cubes in image_cube_list. Should this change?
+        # The following runs on all cubes in final_image_cube_list instead of all cubes in image_cube_list
+
         if config["do_sourcefinding"]:
             if config["sofia2_settings"]["imcontsub"]:
                 simage_cube_list = []
-                for uu in range(len(image_cube_list)):
-                    icsname = image_cube_list[uu].replace(".image.fits", ".imcontsub.fits")
+                for uu in range(len(final_image_cube_list)):
+                    icsname = final_image_cube_list[uu].replace(".image.fits", ".image-line.fits")
                     if len(glob.glob(icsname)) > 0:
                         simage_cube_list.append(icsname)
                     else:
-                        simage_cube_list.append(image_cube_list[uu])
+                        simage_cube_list.append(final_image_cube_list[uu])
             else:
-                simage_cube_list = image_cube_list
+                simage_cube_list = final_image_cube_list
 
-            for uu in range(len(image_cube_list)):
+            caracal.log.info("Will find sources with SoFiA for the final image cube of target {0:d}: {1}".format(tt, final_image_cube_list))
+            for uu in range(len(final_image_cube_list)):
                 step = "sofia2-source_finding-{0:d}".format(uu)
                 sofia2_opts = {
                     "pipeline.threads": 0,
@@ -1830,10 +1836,14 @@ def worker(pipeline, recipe, config):
                 "output-prefix": config["imcontsub"]["label_out"],
                 "order": config["imcontsub"]["order"],
                 "sigma-clip": config["imcontsub"]["sigma_clip"],
+                "ra-chunks": sdm.dismissable(config["imcontsub"]["ra_chunks"]),
+                "nworkers": sdm.dismissable(config["imcontsub"]["ncpus"]),
+                "cont-fit-tol": sdm.dismissable(config["imcontsub"]["cont_fit_tol"]),
+                "segments": sdm.dismissable(config["imcontsub"]["segments"]),
             }
-
+            # C = 2.99792458e8  # m/s
+            # HI = 1.4204057517667e9  # Hz
             caracal.log.info("Image-plane continuum subtraction")
-
             # find where cubes generally are
 
             dirlist = glob.glob("{0:s}/{1:s}/cube_*".format(pipeline.output, cube_dir))
@@ -1844,10 +1854,8 @@ def worker(pipeline, recipe, config):
             # caracal will look for the corresponding mask saved by sofia, if this does not exist
             #  imcontsub will use the automasking method
             if not config["imcontsub"]["input_cube"]:
-                caracal.log.info("Continum subtraction in the image-plane for target {0:d}".format(tt))
-
-                imsub_image_cube_list = image_cube_list.copy()
-
+                imsub_image_cube_list = final_image_cube_list.copy()
+                caracal.log.info("Continum subtraction in the image-plane for the final cube of target {0:d}: {1}".format(tt, imsub_image_cube_list))
                 for uu in range(len(imsub_image_cube_list)):
                     step = "Image-continuum-subtraction-{0:d}".format(uu)
                     input_cube = imsub_image_cube_list[uu].split("/")[-1]
@@ -1860,9 +1868,11 @@ def worker(pipeline, recipe, config):
                         else:
                             caracal.log.info("Mask generated by SoFiA not found, using automasking method. Suggest to activate sofia:enable to generate a mask")
                     else:
-                        caracal.log.info("Using mask defined by user {0:s}".format(config["imcontsub"]["mask_image"]))
-                        if os.path.exists("{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"])):
-                            imcontsub_opts.update({"mask-image": "{0:s}/{1:s}".format(get_relative_path(pipeline.masking, pipeline), config["imcontsub"]["mask_image"])})
+                        if len(config["imcontsub"]["mask_image"].strip()) != 0 and os.path.exists("{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"])):
+                            caracal.log.info("Using mask defined by user {0:s}".format(config["imcontsub"]["mask_image"]))
+                            print("{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"]))
+                            imcontsub_opts.update({"mask-image": "masking/{0:s}".format(config["imcontsub"]["mask_image"])})
+
                         else:
                             caracal.log.info("Mask datacube not found in output/masking")
                             caracal.log.info("Will proceed with automasking")
@@ -1870,30 +1880,38 @@ def worker(pipeline, recipe, config):
                     ##the segment size is chosen as the datacube velocity range / spline order
                     if all(item == 0.0 for item in config["imcontsub"]["segments"]):
                         hdul_cube = fits.getheader("{0:s}/cube_{1:d}/{2:s}".format(pipeline.cubes, maxcube_dir, input_cube))
+
                         if "FREQ" in hdul_cube["CTYPE3"]:
                             if "RESTFREQ" in hdul_cube:
                                 restfreq_cube = hdul_cube["RESTFREQ"]
                             else:
                                 restfreq_cube = config["imcontsub"]["rest_freq"] * 1e6
-                            hdul_cube["cdelt3"] = -2.99792e5 * float(hdul_cube["cdelt3"]) / restfreq_cube
-                            vel_range = abs(hdul_cube["cdelt3"] * hdul_cube["naxis3"] / 1e3)
+                            vel_step = -C * float(hdul_cube["cdelt3"]) / restfreq_cube
+                            vel_range = abs(vel_step * hdul_cube["naxis3"] / 1e3)
                         else:
                             vel_range = abs(hdul_cube["cdelt3"] * hdul_cube["naxis3"])
-                            if vel_range > 1e4:
+                            if "km" in hdul_cube["cdelt3"].lower():
                                 # if cube in m/s then convert the velocity_range in km/s
                                 vel_range = vel_range / 1e3
 
-                        config["imcontsub"]["segments"] = [round(vel_range, 0) / item for item in config["imcontsub"]["order"]]
-                    imcontsub_opts.update({"segments": config["imcontsub"]["segments"]})
+                        for item in config["imcontsub"]["segments"]:
+                            if vel_range < config["imcontsub"]["segments"]:
+                                caracal.log.warning("The width of the spline is larger than the spectral width of the cube, please check your segments keyword")
+
+                        # config["imcontsub"]["segments"] = [round(vel_range, 0) / item for item in config["imcontsub"]["order"]]
+
+                    # imcontsub_opts.update({"segments": config["imcontsub"]["segments"]})
+
+                    if len(config["imcontsub"]["label_out"]) == 0:
+                        imcontsub_opts.update({"output-prefix": input_cube.split(".fits")[0]})
 
                     imcontsub_opts.update({"infits": "{0:s}/cube_{1:d}/{2:s}".format(cube_dir, maxcube_dir, input_cube) + ":input"})
-                    print(imcontsub_opts)
                     recipe.add(
                         "cab/imcontsub",
                         step,
                         imcontsub_opts,
                         input=pipeline.output,
-                        output="/".join(imsub_image_cube_list[uu].split("/")[:-1]),
+                        output="{0:s}/cubes/cube_{1:d}/".format(pipeline.output, maxcube_dir),
                         label="{0:s}:: Image continuum subtraction for cube ".format(
                             step,
                         ),
@@ -1911,7 +1929,8 @@ def worker(pipeline, recipe, config):
                     "{0:s}/cubes/cube_{1:d}/{2:s}".format(pipeline.output, maxcube_dir, config["imcontsub"]["input_cube"]),
                 ]
                 cubepath = next((path for path in cubepaths_to_check if os.path.exists(path)), None)
-                cubepath = cubepath.split("output/")[-1]
+                cubepath = cubepath.split(pipeline.output)[-1]
+                cubedirname = os.path.dirname(os.path.abspath(cubepath))
 
                 if cubepath:
                     caracal.log.info("Continum subtraction in the image plage on datacube {0:s} provided by user ".format(config["imcontsub"]["input_cube"]))
@@ -1925,17 +1944,17 @@ def worker(pipeline, recipe, config):
                             if "RESTFREQ" in hdul_cube:
                                 restfreq_cube = hdul_cube["RESTFREQ"]
                             else:
-                                restfreq_cube = config["imcontsub"]["rest-freq"] * 1e6
+                                restfreq_cube = config["imcontsub"]["rest_freq"] * 1e6
                             hdul_cube["cdelt3"] = -C * float(hdul_cube["cdelt3"]) / restfreq_cube
                             vel_range = abs(hdul_cube["cdelt3"] * hdul_cube["naxis3"])
                         else:
                             vel_range = abs(hdul_cube["cdelt3"] * hdul_cube["naxis3"])
-                            if vel_range > 1e4:
+                            if "km" in hdul_cube["cdelt3"].lower():
                                 # if cube in m/s then convert the velocity_range in km/s
                                 vel_range = vel_range / 1e3
-
-                        config["imcontsub"]["segments"] = [round(vel_range, 0) / item for item in config["imcontsub"]["order"]]
-                    imcontsub_opts.update({"segments": config["imcontsub"]["segments"]})
+                        for item in config["imcontsub"]["segments"]:
+                            if vel_range < config["imcontsub"]["segments"]:
+                                caracal.log.warning("The width of the spline is larger than the spectral width of the cube, please check your segments keyword")
 
                 else:
                     caracal.log.error(
@@ -1947,20 +1966,23 @@ def worker(pipeline, recipe, config):
 
                 if config["imcontsub"]["mask_image"].split(".fits")[-1] != (None and "sofia"):
                     caracal.log.info("Mask provided by user, continuum subtraction will exclude the masked pixels from fitting.")
+                    path_mask = "{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"])
 
-                    if os.path.exists("{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"])):
-                        imcontsub_opts.update({"mask-image": "{0:s}/{1:s}".format(get_relative_path(pipeline.masking, pipeline), config["imcontsub"]["mask_image"])})
+                    if os.path.exists(path_mask):
+                        imcontsub_opts.update({"mask-image": "masking/{0:s}".format(config["imcontsub"]["mask_image"])})
                     else:
-                        caracal.log.info("Mask datacube not found in output/masking")
+                        caracal.log.info("Mask datacube {0:s} not found".format(path_mask))
                         caracal.log.info("Will proceed with automasking")
-                print(imcontsub_opts)
+
+                if len(config["imcontsub"]["label_out"]) == 0:
+                    imcontsub_opts.update({"output-prefix": config["imcontsub"]["input_cube"].split(".fits")[0]})
 
                 recipe.add(
                     "cab/imcontsub",
                     step,
                     imcontsub_opts,
                     input=pipeline.output,
-                    output=pipeline.output,
+                    output="{0:s}/{1:s}".format(pipeline.output, cubedirname),
                     label="{0:s}:: Single cube continuum subtraction".format(step),
                 )
                 recipe.run()
@@ -1968,8 +1990,12 @@ def worker(pipeline, recipe, config):
 
                 caracal.log.info("Subtracted continuum in the image domain for datacube {0:s} provided by user ".format(config["imcontsub"]["input_cube"]))
 
+                if len(config["imcontsub"]["input_cube"]) < tt:
+                    break
+
         if pipeline.enable_task(config, "sharpener"):
-            for uu in range(len(image_cube_list)):
+            caracal.log.info("Running Sharpener on the final cube of target {0:d}: {1}".format(tt, final_image_cube_list))
+            for uu in range(len(final_image_cube_list)):
                 step = "continuum-spectral_extraction-{0:d}".format(uu)
 
                 params = {
@@ -1977,7 +2003,7 @@ def worker(pipeline, recipe, config):
                     "enable_source_catalog": True,
                     "enable_abs_plot": True,
                     "enable_source_finder": False,
-                    "cubename": image_cube_list[uu] + ":output",
+                    "cubename": final_image_cube_list[uu] + ":output",
                     "channels_per_plot": config["sharpener"]["chans_per_plot"],
                     "workdir": "{0:s}/".format(stimela.recipe.CONT_IO["output"]),
                     "label": config["sharpener"]["label"],
@@ -2008,7 +2034,7 @@ def worker(pipeline, recipe, config):
                             "cab/sharpener",
                             step,
                             params,
-                            input="/".join("{0:s}/{1:s}".format(pipeline.output, image_cube_list[uu]).split("/")[:-1]),
+                            input="/".join("{0:s}/{1:s}".format(pipeline.output, final_image_cube_list[uu]).split("/")[:-1]),
                             output=pipeline.output,
                             label="{0:s}:: Continuum Spectral Extraction".format(step),
                         )
@@ -2024,7 +2050,7 @@ def worker(pipeline, recipe, config):
                         "cab/sharpener",
                         step,
                         params,
-                        input="/".join("{0:s}/{1:s}".format(pipeline.output, image_cube_list[uu]).split("/")[:-1]),
+                        input="/".join("{0:s}/{1:s}".format(pipeline.output, final_image_cube_list[uu]).split("/")[:-1]),
                         output=pipeline.output,
                         label="{0:s}:: Continuum Spectral Extraction".format(step),
                     )

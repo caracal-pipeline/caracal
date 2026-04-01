@@ -881,6 +881,7 @@ def worker(pipeline, recipe, config):
         if preGridMasks == ['']:
             preGridMasks = []
             postGridMask = ''
+            preGridMask = ''
         else:        
             # Accepts multiple input masks as list
             postGridMask = preGridMasks[0].replace(".fits", "_{}_regrid.fits".format(pipeline.prefix))

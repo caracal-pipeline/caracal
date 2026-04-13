@@ -597,7 +597,6 @@ def worker(pipeline, recipe, config):
                     line_fmax[line_selected],
                 )
                 line_chanmin, line_chanmax = [], []
-                print('SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSs')
                 caracal.log.info("Excluding the following line sources and channel intervals from the UVLIN fit:")
                 for ll in range(line_id.shape[0]):
                     print(line_fmin[ll])

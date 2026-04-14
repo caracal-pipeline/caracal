@@ -1,10 +1,10 @@
+import json
 import os
 import pickle
 import shutil
 
 import numpy
 import yaml
-from casacore.tables import table as tb
 
 import caracal
 import caracal.dispatch_crew.utils as utils
@@ -827,7 +827,6 @@ def xcal_from_pa_xcal_leak(
                     "interp": interplist,
                 }
             )
-
         recipe.add(
             "cab/casa_gaincal",
             "gain_xcal_1",
@@ -858,24 +857,51 @@ def xcal_from_pa_xcal_leak(
 
         # We search for the scan where the polarization signal is minimum in XX and YY
         # (i.e., maximum in XY and YX):
-        with tb(os.path.join(pipeline.caltables, prefix + ".Gpol1")) as t:
-            scans = t.getcol("SCAN_NUMBER")
-            gains = numpy.squeeze(t.getcol("CPARAM"))
-            t.close()
-        scanlist = numpy.array(list(set(scans)))
-        ratios = numpy.zeros(len(scanlist))
+        recipe.add(
+            "cab/pycasacore",
+            "select_best_scan",
+            {
+                "msname": msname,
+                "script": f"""
+import json
+import os
+from casacore.tables import table as tb
+import numpy
 
-        for si, s in enumerate(scanlist):
-            filt = scans == s
-            ratio = numpy.sqrt(numpy.average(numpy.power(numpy.abs(gains[filt, 0]) / numpy.abs(gains[filt, 1]) - 1.0, 2.0)))
-            ratios[si] = ratio
+OUTPUT=os.environ['OUTPUT']
+ext_prefix = os.path.join(OUTPUT, '{prefix}')
+with tb(ext_prefix + '.Gpol1') as t:
+    scans = t.getcol('SCAN_NUMBER')
+    gains = numpy.squeeze(t.getcol('CPARAM'))
+    t.close()
+scanlist = numpy.array(list(set(scans)))
+ratios = numpy.zeros(len(scanlist))
 
-        bestscidx = numpy.argmin(ratios)
-        bestscan = scanlist[bestscidx]
-        caracal.log.info("Scan with highest expected X-Y signal: " + str(bestscan))
+for si, s in enumerate(scanlist):
+    filt = scans == s
+    ratio = numpy.sqrt(
+        numpy.average(numpy.power(numpy.abs(gains[filt, 0]) / numpy.abs(gains[filt, 1]) - 1.0, 2.0))
+    )
+    ratios[si] = ratio
+outfile = ext_prefix + '_bestscan.json'
+bestscidx = numpy.argmin(ratios)
+bestscan = scanlist[bestscidx]
+bestscan=int(bestscan)
+with open(outfile, 'w') as json_file:
+    json.dump({{'bestscan': bestscan}}, json_file, indent=4)
+""",
+            },
+            input=pipeline.caltables,
+            output=pipeline.caltables,
+            label="select_best_scan",
+        )
 
         recipe.run()
         recipe.jobs = []
+
+        with open(os.path.join(pipeline.caltables, prefix) + "_bestscan.json", "r") as json_file:
+            data = json.load(json_file)
+            bestscan = data["bestscan"]
 
         # Kcross
         tmp_gtab = caltablelist + [prefix + ".Gpol1"]
@@ -1400,29 +1426,28 @@ def worker(pipeline, recipe, config):
             refant = pipeline.refant[i]
 
         # Check if feeds are linear
-        if set(list(msinfo["CORR"]["CORR_TYPE"])) & {"XX", "XY", "YX", "YY"} == 0:
+        if not (set(msinfo["CORR"]["CORR_TYPE"]) & {"XX", "XY", "YX", "YY"}):
             raise RuntimeError("Cannot calibrate polarization! Allowed strategies are for linear feed data but correlation is: " + str(["XX", "XY", "YX", "YY"]))
-
         if config["pol_calib"] != "none":
             pol_calib = pipeline.config["obsconf"][config["pol_calib"]][i]
-            if config["set_model_pol"]["nrao_model"]:
-                file_path = caracal.pckgdir + "/data/nrao_xcal.yml"
-                polarized_calibrators = yaml.safe_load(open(file_path, "r", encoding="utf-8"))
-                polarized_calibrators["J1331+3030"] = polarized_calibrators["3C286"]
-                polarized_calibrators["J0521+1638"] = polarized_calibrators["3C138"]
-            elif config["set_model_pol"]["taylor_legodi_model"]:
-                polarized_calibrators = dict.fromkeys(["NAME"])
-                polarized_calibrators[pol_calib] = utils.read_taylor_legodi_row(msinfo, pol_calib)
-                if pol_calib == "3C286":
-                    polarized_calibrators["3C286"] = polarized_calibrators["J1331+3030"]
-                if pol_calib == "3C138":
-                    polarized_calibrators["3C138"] = polarized_calibrators["J0521+1638"]
-            elif len(config["set_model_pol"]["user_model"]) > 0:
-                polarized_calibrators[config["pol_calib"]] = config["set_model_pol"]["user_model"].split(",")
-            else:
-                raise RuntimeError("No model specified for xcal!")
-            # if pol_calib == 'J1130-1449':
-            #    caracal.log.info("CARACal knows only bandwidth averaged properties of J1130-1449 based on https://archive-gw-1.kat.ac.za/public/meerkat/MeerKAT-L-band-Polarimetric-Calibration.pdf")
+            if config["set_model_pol"]["enable"]:
+                caracal.log.info("Setting model pol")
+                if config["set_model_pol"]["nrao_model"]:
+                    file_path = caracal.pckgdir + "/data/nrao_xcal.yml"
+                    polarized_calibrators = yaml.safe_load(open(file_path, "r", encoding="utf-8"))
+                    polarized_calibrators["J1331+3030"] = polarized_calibrators["3C286"]
+                    polarized_calibrators["J0521+1638"] = polarized_calibrators["3C138"]
+                elif config["set_model_pol"]["taylor_legodi_model"]:
+                    polarized_calibrators = dict.fromkeys(["NAME"])
+                    polarized_calibrators[pol_calib] = utils.read_taylor_legodi_row(msinfo, pol_calib)
+                    if pol_calib == "3C286":
+                        polarized_calibrators["3C286"] = polarized_calibrators["J1331+3030"]
+                    if pol_calib == "3C138":
+                        polarized_calibrators["3C138"] = polarized_calibrators["J0521+1638"]
+                elif len(config["set_model_pol"]["user_model"]) > 0:
+                    polarized_calibrators[pol_calib] = config["set_model_pol"]["user_model"].split(",")
+                else:
+                    raise RuntimeError("No model specified for xcal!")
         else:
             pol_calib = "none"
 
@@ -1445,7 +1470,7 @@ def worker(pipeline, recipe, config):
             "0408-65",
         ]
         # check if cross_callib needs to be applied
-        if config["otfcal"]:
+        if config["otfcal"]["enable"]:
             if pol_calib != "none":
                 _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = callibs.resolve_calibration_library(
                     pipeline,
@@ -1472,12 +1497,33 @@ def worker(pipeline, recipe, config):
 
         # Set -90 deg receptor angle rotation [if we are using MeerKAT data]
         if config["feed_angle_rotation"]:
-            with tb("%s::FEED" % os.path.join(pipeline.msdir, msname), readonly=False) as t:
-                ang = t.getcol("RECEPTOR_ANGLE")
-                ang[:, 0] = numpy.deg2rad(float(config["feed_angle_rotation"]))
-                ang[:, 1] = numpy.deg2rad(float(config["feed_angle_rotation"]))
-                t.putcol("RECEPTOR_ANGLE", ang)
-                caracal.log.info("RECEPTOR_ANGLE has been rotated by %s degrees" % config["feed_angle_rotation"])
+            FAR = float(config["feed_angle_rotation"])
+            recipe.add(
+                "cab/pycasacore",
+                "set_receptor_angle",
+                {
+                    "msname": msname,
+                    "script": f"""
+import numpy
+import os
+from casacore.tables import table as tb
+MSDIR = os.environ["MSDIR"]
+ms = os.path.join(MSDIR, '{msname:s}')
+with tb(ms+'::FEED', readonly=False) as t:
+    ang = t.getcol('RECEPTOR_ANGLE')
+    ang[:, 0] = numpy.deg2rad({FAR})
+    ang[:, 1] = numpy.deg2rad({FAR})
+    t.putcol('RECEPTOR_ANGLE', ang)
+    print('RECEPTOR_ANGLE has been rotated by %s degrees' % {FAR})
+""",
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label="set_receptor_angle",
+            )
+
+            recipe.run()
+            recipe.jobs = []
 
         # save flags before and after
         if {"xcal", "gcal", "fcal", "target"}.intersection(config["applyto"]):
@@ -1605,10 +1651,29 @@ def worker(pipeline, recipe, config):
                     output=pipeline.output,
                     label="extend_flags_polcal",
                 )
-
+        caracal.log.info("Polarization calibration selection: leakage_calib={leakage_calib}, pol_calib={pol_calib}")
         # choose the strategy according to config parameters
         if leakage_calib in unpolarized_calibrators:
             if pol_calib != "none":
+                # Using an unpolarized leakage calibrator together with a separate polarized
+                # calibrator requires that a polarization model is enabled and configured.
+                set_model_pol_cfg = config.get("set_model_pol") or {}
+                if not set_model_pol_cfg.get("enable"):
+                    raise RuntimeError(
+                        "Configuration error: using a separate polarized calibrator (pol_calib != 'none') "
+                        "together with an unpolarized leakage calibrator requires set_model_pol.enable = true "
+                        "and a valid polarized model source. Please enable obsconf:set_model_pol and select "
+                        "an appropriate model source, or change your leakage_calib / pol_calib settings."
+                    )
+                # Defensive check to avoid an UnboundLocalError if polarized_calibrators was not
+                # prepared despite set_model_pol.enable being true.
+                try:
+                    polarized_calibrators  # noqa: F821 - checked for NameError at runtime
+                except NameError as exc:
+                    raise RuntimeError(
+                        "Internal configuration error: polarized_calibrators is not defined even though "
+                        "set_model_pol.enable is true. Please verify the polarization model configuration."
+                    ) from exc
                 caracal.log.info(
                     "You decided to calibrate the polarized angle with a polarized calibrator assuming a model for the calibrator and the leakage with an unpolarized calibrator."
                 )
@@ -1656,15 +1721,14 @@ def worker(pipeline, recipe, config):
                 raise RuntimeError(
                     f"Unable to determine pol_calib={config['pol_calib']}. Is your obsconf section configured properly?"
                     f"Your setting of pol_calib={config['pol_calib']} selects {pol_calib}."
-                    f"Supported calibrators are {', '.join(polarized_calibrators.keys())}."
                     "Alternatively, you can calibrate both leakage and polarization using a"
-                    " (known or unknown) polarized source oserved at several parallactic angles."
+                    " (known or unknown) polarized source observed at several parallactic angles."
                     " Configure this source as obsconf:xcal, and leakage_calib=pol_calib=xcal."
                 )
         elif leakage_calib == pol_calib:
             caracal.log.info("You decided to calibrate the polarized angle and leakage with a polarized calibrator.")
             idx = utils.get_field_id(msinfo, leakage_calib)[0]
-            if config["set_model_pol"]:
+            if config["set_model_pol"]["enable"]:
                 caracal.log.info("Using a known model for the polarized calibrator.")
                 xcal_model_xcal_leak(
                     msname,
@@ -1706,8 +1770,9 @@ def worker(pipeline, recipe, config):
                     raise RuntimeError("Cannot calibrate polarization! Insufficient number of scans for the pol calibrator.")
         else:
             raise RuntimeError(f"""Unable to determine a polarization calibration strategy. Supported strategies are:
-                    1. Calibrate leakage using an unpolarized source ({", ".join(unpolarized_calibrators)}), and
-                       polarization angle using a known polarized source ({", ".join(polarized_calibrators.keys())}).
+                    1. Calibrate leakage using an unpolarized source 
+                       ({", ".join(unpolarized_calibrators)})
+                       , and polarization angle using a known polarized source).
                        This is usually achieved by setting leakage_cal=bpcal, pol_cal=xcal.
                     2. Calibrate both leakage and polarized angle with a (known or unknown) polarized source observed at
                        different parallactic angles. This is usually achieved by setting leakage_cal=xcal, pol_cal=xcal.

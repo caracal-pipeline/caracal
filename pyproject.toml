@@ -34,7 +34,7 @@ dependencies = [
     "nbconvert>=6,<8",
     "radiopadre-client>=1,<2",
     "python-casacore>=3,<4",
-    "matplotlib>=3.7,<4",
+    "matplotlib>=3.8,<4",
     "jinja2>=3.1,<4",
 ]
 

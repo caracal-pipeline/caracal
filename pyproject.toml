@@ -25,7 +25,7 @@ dependencies = [
     "progressbar2>=4.2.0,<5",
     "ruamel.yaml>=0.17.21,<1",
     "ruamel.yaml.string>=0.1,<1",
-    "astropy==5.3.3; python_version >= '3.9' and python_version < '3.11'",
+    "astropy>=5.3.3,<7.0; python_version >= '3.9' and python_version < '3.11'",
     "astropy>=7.0,<8; python_version >= '3.11' and python_version < '3.13'",
     "scipy>=1.10,<2",
     "regions>=0.7,<1",

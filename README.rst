@@ -241,6 +241,18 @@ Contribute
 Contributions are always welcome! Please ensure that you adhere to our coding
 standards pep8_.
 
+Testing & Robustness
+--------------------
+
+Before submitting your changes, please test them as thoroughly as possible. 
+A high-quality contribution includes:
+
+* **Feature Validation**: Verifying that new features work as intended under 
+  expected conditions.
+* **Pipeline Flexibility**: Testing your changes against a varying pipeline 
+  settings and configurations to ensure the code is robust and doesn't break 
+  existing workflows.
+
 Code Review
 -----------
 A Pull Request (PR) is the formal moment to request a review. This is the single best way to share knowledge, catch bugs, and enforce standards.

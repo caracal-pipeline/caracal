@@ -58,6 +58,10 @@ image-prefix:
 image-col:
   info: Column(s) to image.
   dtype: str
+image-field:
+  info: Field ID to image
+  dtype: int
+  default: 0
 image-niter:
   info: Number of cleaning iterations.
   default: 100000

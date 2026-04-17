@@ -1,6 +1,6 @@
 [project]
 name = "caracal"
-version = "1.2.1rc1"
+version = "1.2.2"
 description = "Containerized Automated Radio Astronomy Calibration"
 authors = [
     { name = "The CaraCAL Team", email = "caracal-info@googlegroups.com" },

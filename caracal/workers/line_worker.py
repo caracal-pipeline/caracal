@@ -572,8 +572,8 @@ def worker(pipeline, recipe, config):
                 line_ra = astropy.coordinates.Angle(line_ra, unit="hour").degree
                 line_dec = astropy.coordinates.Angle(line_dec, unit="degree").degree
                 line_flux = line_flux.astype(float)
-                line_fmax = (units.Quantity(config["restfreq"]) / ((line_vmin.astype(float) - config["mstransform"]["uvlin"]["known_sources_dv"]) / C + 1)).to_value(units.hertz)
-                line_fmin = (units.Quantity(config["restfreq"]) / ((line_vmax.astype(float) + config["mstransform"]["uvlin"]["known_sources_dv"]) / C + 1)).to_value(units.hertz)
+                line_fmax = (units.Quantity(config["restfreq"]) / ((line_vmin.astype(float)/1e3 - config["mstransform"]["uvlin"]["known_sources_dv"]/1e3) / C + 1)).to_value(units.hertz)
+                line_fmin = (units.Quantity(config["restfreq"]) / ((line_vmax.astype(float)/1e3 + config["mstransform"]["uvlin"]["known_sources_dv"]/1e3) / C + 1)).to_value(units.hertz)
                 distance = (
                     180
                     / np.pi

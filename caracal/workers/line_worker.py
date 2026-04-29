@@ -560,7 +560,7 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, "mstransform"):
             # Set UVLIN fit channel range
             if pipeline.enable_task(config["mstransform"], "uvlin") and config["mstransform"]["uvlin"]["exclude_known_sources"]:
-                # C = 2.99792458e5  # km/s
+                C = 2.99792458e5  # km/s
                 chanfreqs = np.arange(firstchanfreq_all[i][0], lastchanfreq_all[i][0] + chanw_all[i][0], chanw_all[i][0])
                 chanids = np.arange(chanfreqs.shape[0])
                 linechans = chanids < 0  # Array of False's used to build the fitspw settings
@@ -572,8 +572,8 @@ def worker(pipeline, recipe, config):
                 line_ra = astropy.coordinates.Angle(line_ra, unit="hour").degree
                 line_dec = astropy.coordinates.Angle(line_dec, unit="degree").degree
                 line_flux = line_flux.astype(float)
-                line_fmax = (units.Quantity(config["restfreq"]) / ((line_vmin.astype(float)/1e3 - config["mstransform"]["uvlin"]["known_sources_dv"]/1e3) / C + 1)).to_value(units.hertz)
-                line_fmin = (units.Quantity(config["restfreq"]) / ((line_vmax.astype(float)/1e3 + config["mstransform"]["uvlin"]["known_sources_dv"]/1e3) / C + 1)).to_value(units.hertz)
+                line_fmax = (units.Quantity(config["restfreq"]) / ((line_vmin.astype(float) - config["mstransform"]["uvlin"]["known_sources_dv"])*1e3 / C + 1)).to_value(units.hertz)
+                line_fmin = (units.Quantity(config["restfreq"]) / ((line_vmax.astype(float) + config["mstransform"]["uvlin"]["known_sources_dv"])*1e3 / C + 1)).to_value(units.hertz)
                 distance = (
                     180
                     / np.pi

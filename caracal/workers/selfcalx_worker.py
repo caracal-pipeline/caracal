@@ -17,8 +17,8 @@ from caracal.workers.utils import manage_flagsets as manflags
 from casacore.tables import table
 import psutil
 
-NAME = 'Continuum Imaging and Self-calibration using stimeal2 recipes'
-LABEL = 'selfcal2'
+NAME = 'Continuum Imaging and Self-calibration experimentation using stimeal2 recipes'
+LABEL = 'selfcalx'
 
 
 # self_cal_iter_counter is used as a global variable.
@@ -1317,6 +1317,7 @@ def worker(pipeline, recipe, config):
     for target in all_targets:
         mslist = ms_dict[target]
         field = utils.filter_name(target)
+        params = config_to_params(config, mslist, field)
 
         global self_cal_iter_counter
         self_cal_iter_counter = config['start_iter']
@@ -1325,7 +1326,7 @@ def worker(pipeline, recipe, config):
         image_path = "{0:s}/image_{1:d}".format(
             pipeline.continuum, self_cal_iter_counter)
 
-        step = 'selfcal2'
+        step = 'selfcalx'
         recipe.add('cab/stimela2', step,
             {
                'recipe': f'recipes/caracal.yml',
@@ -1334,7 +1335,56 @@ def worker(pipeline, recipe, config):
             },
             input=pipeline.input,
             output=pipeline.output,
-            label='{:s}:: Running CARACal selfcal2'.format(step))
+            label='{:s}:: Running CARACal selfcalx'.format(step))
+
+    recipe.run()
+    # Empty job que after execution
+    recipe.jobs = []
+
+    cal = config.get("calibrate", {})
+    # Calculate the interval value beforehand
+    gsols = cal.get('gsols_timeslots', [0])
+    ts_int = gsols[1] if len(gsols) > 1 else gsols[-1]
+    gs_chan = cal.get('gsols_chan', [0])
+    ch_int = gs_chan[1] if len(gs_chan) > 1 else gs_chan[-1]
+    for target in all_targets:
+        mslist = ms_dict[target]
+        field = utils.filter_name(target)
+        if config['peel_dde']['enable'] and target in config['peel_dde']['de_target']:
+            # Retrieve the index of the dde target
+            target_idx = config['peel_dde']['de_target'].index(target)
+            caliniter = config["cal_niter"] + 1
+            srclist = f"/stimela_mount/output/continuum/image_{caliniter}/{pipeline.prefix}_{field}_{caliniter}-sources.txt"
+            mask_file = f"/stimela_mount/output/continuum/image_{caliniter-1}/{pipeline.prefix}_{field}_{caliniter-1}-MFS-mask.fits"
+            step = 'peeling'
+            image_params = [p for p in params if p.startswith("image-") and "mask" not in p]
+            params = [
+                f"ms=/stimela_mount/msdir/{mslist[0]}",
+                f"image-temp=/stimela_mount/output/tmp",
+                f"image-prefix={pipeline.prefix}_{field}",
+                f"image-no-update-model-required={config['peel_dde']['no_update_model']}",
+                f"dir-out-base=/stimela_mount/output/continuum",
+                f"dd-mask={mask_file}",
+                #f"image-fits-mask={mask_file}",
+                f"dd-srclist={srclist}",
+                f"dd-coord=[{config['peel_dde']['de_sources'][target_idx]}]",
+                f"ddcal.de-timeslots-int={config['peel_dde']['de_timeslots_int']}",
+                f"ddcal.de-chan-int={config['peel_dde']['de_chan_int']}",
+                f"ddcal.k-timeslots-int={cal.get('gsols_timeslots', [0])[0]}",
+                f"ddcal.k-chan-int={cal.get('gsols_chan', [0])[0]}",
+                f"ddcal.g-timeslots-int={cal.get('gsols_timeslots', [0])[1] if len(cal.get('gsols_timeslots', [])) > 1 else cal.get('gsols_timeslots',[0])[-1]}",
+                f"ddcal.g-chan-int={cal.get('gsols_chan', [0])[1] if len(cal.get('gsols_chan', [])) > 1 else cal.get('gsols_chan',[0])[-1]}",
+                f"ncpu={config['ncpu']}"
+            ] + image_params
+            recipe.add('cab/stimela2', step,
+                {
+                   'recipe': f'recipes/caracal.yml',
+                   'recipe-name': 'caracal-ddcal',
+                   'params': params
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{:s}:: Running CARACal ddcal'.format(step))
 
     recipe.run()
     # Empty job que after execution

@@ -1,12 +1,12 @@
 type: map
 mapping:
-  selfcal2:
+  selfcalx:
     type: map
     desc: Perform self-calibration on the data.
     mapping:
       enable:
         type: bool
-        desc: Execute the selfcal2 worker.
+        desc: Execute the selfcalx worker.
         required: true
         example: 'False'
       label_in:
@@ -110,7 +110,7 @@ mapping:
         type: str
         desc: Gaussian taper for imaging (in units of arcsec).
         required: false
-        example: '0.'
+        example: ''
       img_maxuv_l:
         type: float
         desc: Taper for imaging (in units of lambda).
@@ -625,6 +625,53 @@ mapping:
               - type: int
             required: false
             example: '-1'
+
+      peel_dde:
+        type: map
+        desc: Calibration dd parameters.
+        mapping:
+          enable:
+            type: bool
+            desc: Enable the 'peel-dde' segment.
+            required: false
+            example: 'False'
+          de_target:
+            seq:
+              - type: str
+            desc: List of target fieldnames for carrying out DD calibration. The remaining fields will not undergo DD calibration.
+            required: false
+            example: ''
+          de_sources:
+            seq:
+              - type: str
+            desc: List of sources per target to tag for DD calibration, in the same order as the 'de_target' list.
+            required: false
+            example: ''
+          dd_type:
+            type: str
+            desc: Gain matrix type for the G-Jones matrix.
+            required: false
+            example: 'complex-2x2'
+          de_timeslots_int:
+            type: int
+            desc: Time solution interval in timeslot units for DE-Jones matrix.
+            required: false
+            example: "4"
+          de_chan_int:
+            type: int
+            desc: Frequency solution interval in channel units for DE-Jones matrix.
+            example: "64"
+            required: false
+          no_update_model:
+            type: bool
+            desc: No update model is required.
+            example: 'True'
+            required: false
+          reuse_caltables:
+            type: bool
+            desc: Re-apply selfcal gain tables for direction 0.
+            example: 'True'
+            required: false
 
       restore_model:
         type: map

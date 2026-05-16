@@ -38,6 +38,7 @@ caracal-pointings:
       params:
         dir-out-base: =recipe.dir-out-base
         ms: =recipe.ms
+        dd-rgn: =recipe.ddcal.mask-region
 
 mosaic-pointings:
   name: "CARACal mosaicking"

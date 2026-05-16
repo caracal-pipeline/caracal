@@ -291,19 +291,29 @@ ddcal.enable:
   default: false
   dtype: bool
 ddcal.mask-region:
-        #default: 'mask/PictorA_1-MFS-hotspot-mask.image.out.fits'
-        #  default: mask/PictorA_1-MFS-hotspot-6144-mask.image.fits
   dtype: File
 ddcal.jones:
   default: ['k-g-de']
   dtype: List[str]
   element_choices: ['k-de', 'k-g-de']
-ddcal.jones-time:
-  default: [1, 1, 32]
-  dtype: List[int]
-ddcal.jones-freq:
-  default: [0, 64, 64]
-  dtype: List[int]
+ddcal.de-timeslots-int:
+  dtype: int
+  default: 32
+ddcal.de-chan-int:
+  dtype: int
+  default: 64
+ddcal.k-timeslots-int:
+  dtype: int
+  default: 1
+ddcal.k-chan-int:
+  dtype: int
+  default: 64
+ddcal.g-timeslots-int:
+  dtype: int
+  default: 1
+ddcal.g-chan-int:
+  dtype: int
+  default: 1
 
 # Model
 upsample-model-channels:

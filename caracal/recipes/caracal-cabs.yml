@@ -20,6 +20,9 @@ _include:
 
 cabs:
 
+  crystalball:
+    command: /opt/venv/bin/crystalball
+
   aimfast:
     inputs:
       compare_models:
@@ -73,6 +76,8 @@ cabs:
   breizorro:
     info: A tool for creating a binary mask and regions given a FITS image (https://github.com/ratt-ru/breizorro)
     inputs:
+      subtract:
+        dtype: File
       fill-holes:
         dtype: bool
   intervals_out:

@@ -125,3 +125,33 @@ log-*.txt
 .persistent_history
 caracal/.idea
 
+# Ignore everything in _build
+sphinx/_build/*
+
+# But allow the html folder and its contents
+!sphinx/_build/html/
+!sphinx/_build/html/**
+
+# Ignore doctrees and pickled environment files
+**/doctrees/
+**/*.pickle
+
+# Ignore HTML dependencies and static cache
+**/_static/
+**/*.doctree
+
+# Virtual environments (if any)
+venv/
+.env/
+.venv/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Editor configs and logs
+*.swp
+*.swo
+*~
+.idea/
+.vscode/

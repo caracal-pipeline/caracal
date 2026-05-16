@@ -1,4 +1,5 @@
 import os
+import re
 
 import numpy as np
 
@@ -125,6 +126,35 @@ def worker(pipeline, recipe, config):
                     output=pipeline.output,
                     label="{0:s}:: Fix UVW coordinates ms={1:s}".format(step, msname),
                 )
+
+            if pipeline.enable_task(config, "correct_parang"):
+                cp_cfg = config["correct_parang"]
+                all_fields = msdict["FIELD"]["NAME"]
+                for f_id, f_name in enumerate(all_fields):
+                    safe_field = re.sub(r"[^0-9A-Za-z_]+", "_", f_name)
+                    step = "correct-parang-ms{:d}-{}".format(i, safe_field)
+                    recipe.add(
+                        "cab/correct_parang",
+                        step,
+                        {
+                            "msname": msname,
+                            "field": f_id,
+                            "doPlot": False,
+                            "simulate": False,
+                            "chunksize": cp_cfg.get("chunksize", 1000),
+                            "datadiscriptor": cp_cfg.get("datadiscriptor", 0),
+                            "applyantidiag": cp_cfg.get("applyantidiag", True),
+                            "overridefeedangle": cp_cfg.get("overridefeedangle", "0"),
+                            "storecolumn": cp_cfg.get("storecolumn", "DATA"),
+                            "rawcolumn": cp_cfg.get("rawcolumn", "DATA"),
+                            "noparang": cp_cfg.get("noparang", True),
+                            "invertPA": cp_cfg.get("invertPA", False),
+                            "crosshandphase": cp_cfg.get("crosshandphase", 0.0),
+                        },
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label="correct_parang:: Correct_PA ms={} field={}".format(msname, f_name),
+                    )
 
             if pipeline.enable_task(config, "manage_flags"):
                 mode = config["manage_flags"]["mode"]

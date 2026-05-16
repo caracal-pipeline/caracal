@@ -10,53 +10,60 @@ mapping:
         required: true
         example: 'False'
       mosaic_type:
-        desc: Type of mosaic to be made, either continuum (2D) or spectral (3D).
+        desc: Type of mosaic to be made, either continuum (2D) or line (3D).
         type: str
-        enum: ['continuum', 'spectral']
+        enum: ['continuum', 'line']
         required: true
         example: 'continuum'
-      target_images:
-        desc: List of .FITS images/cubes to be mosaicked. Their file names must end with "image.fits" and must include the path relative to the current working directory. These images/cubes MUST be located within (sub-directories of) the current working directory.
-        seq:
-          - type: str
-        required: false
-        example: ''
-      label_in:
-        desc: For autoselection of images, this needs to match the label/label_cal setting used for the selfcal/crosscal worker (when mosaicking continuum images) or the label setting used for the line worker (when mosaicking cubes).
-        type: str
-        required: false
-        example: 'corr'
       line_name:
-        desc: Spectral mode only -- If autoselection is used to find the final cubes, this needs to match the line_name parameter used for the line worker.
+        desc: Line mode only -- If autoselection is used to find the final cubes, this needs to match the line_name parameter used for the line worker.
         type: str
         required: false
         example: 'HI'
       use_mfs:
-        desc: Continuum mode only -- If the images to be mosaicked were created using MFS, in the selfcal or crosscal worker, then this needs to be indicated via this parameter.
+        desc: If the images to be mosaicked were created using MFS, in the selfcal or crosscal worker, then this needs to be indicated via this parameter. Ignored if mosaic_type:line.
         type: bool
         required: false
-        example: 'False'
+        example: 'True'
+      label_in:
+        desc: For autoselection of images/cubes to be mosaicked. For mosaic_type:continuum it should match selfcal:label_in, for mosaic_type:line it should match line:label_in.
+        type: str
+        required: false
+        example: 'corr'
+      target_images:
+        desc: For manual selection images/cubes to be mosaicked. They must be located within (sub-directories of) the parent of "general:output". Their file names must end with "image.fits" and must include the path relative to the parent of "general:output".
+        seq:
+          - type: str
+        required: false
+        example: ''
       name:
-        desc: The prefix to be used for output files. Default is the pipeline prefix, as set for the general worker.
+        desc: The prefix to be used for all output files. Default is the global pipeline prefix general:prefix.
         type: str
         required: false
         example: ''
-      domontage:
-        desc: Re-grid the input images, and associated beams.
-        type: map
-        mapping:
-          enable:
-            desc: Enable the 'domontage' (i.e. re-gridding) segment.
-            type: bool
-            required: false
-            example: 'True'
-      cutoff:
-        desc: The cutoff in the primary beam. It should be a number between 0 and 1.
+      num_workers:
+        desc: Number of worker threads to distribute the regridding of the input images / cubes to the output mosaic pixel grid. Default=0 means all available threads. The more the workers, the higher the RAM usage.
+        type: int
+        required: false
+        example: '0'
+      beam_cutoff:
+        desc: The cutoff in the primary beam. The default of 0.1 means going down to the 10 percent level for each pointing. Set to zero for no primary beam cutoff.
         type: float
         required: false
         example: '0.1'
+      mosaic_cutoff:
+        desc: Sensitivity cutoff in the final mosaic. Pixels with a noise level > minimum mosaic noise / cutoff are blanked in all final products. E.g. The default of 0.2 means blanking in the mosaic all pixels with a noise level > 5x the minimum mosaic noise level. Set to zero for no cutoff (but some cutoff may still result from mosaic:beam_cutoff setting).
+        type: float
+        required: false
+        example: '0.2'
+      associated_mosaics:
+        desc: Also make mosaics of the associated .fits files, selecting between 'mask', 'model' and 'residual'. Multiple choices allowed. Give user choice as a list. The default is to not make any associated mosaics.
+        seq:
+          - type: str
+        required: false
+        example: ''
       pb_type:
-        desc: If no continuum pb.fits are already in place, user needs to choose whether a rudimentary primary beam is created ('gaussian') or one that follows the model of Mauch et al. (2020), relevant for MeerKAT data ('mauchian').   
+        desc: For mosaic_type:continuum only. If no continuum pb.fits are in place create them either as 2D Gaussians or as in Mauch et al. (2020).
         type: str
         enum: ['gaussian', 'mauchian']
         required: false
@@ -67,12 +74,12 @@ mapping:
         required: false
         example: '13.5'
       ref_frequency:
-        desc: If no continuum pb.fits are already in place, user needs to specify the reference frequency (in units of Hz) so that primary beams can be created.
+        desc: If continuum pb.fits need to be created, specify the reference frequency (in Hz) for appropriate scaling of the PB shape.
         type: float
         required: false
         example: '1383685546.875'
       round_cdelt3:
-        desc: If mosaic_type is "spectral", round CDELT3 in the header of the input cubes to the number of decimal digits given by this parameter (0 means do not round). This is useful when the CDELT3 values of the input cubes are not identical (which would make the mosaicking algorithm crash) but the differences are small and can be ignored. Note that the CDELT3 values of the input cubes are overwritten with the common, rounded value (if the rounding is sufficient to find a common value).
+        desc: For mosaic_type:line only. Round CDELT3 in the header of the input cubes to the number of decimal digits given by this parameter (0 means do not round). This is useful when the CDELT3 values of the input cubes are not identical (which would make the mosaicking algorithm crash) but the differences are small and can be removed with no impact on the science. Note that the CDELT3 values of the input cubes are overwritten with the common, rounded value (if the rounding is sufficient to find a common value). Use with caution.
         type: int
         required: false
         example: '0'

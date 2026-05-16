@@ -1,18 +1,21 @@
-from caracal import log
-import caracal
-import os
-import sys
-import ruamel.yaml
-import pdb
-import traceback
 import logging
+import os
+import pdb  # noqa: T100
 import shutil
-from caracal.dispatch_crew import config_parser
-from caracal.dispatch_crew import worker_help
-import caracal.dispatch_crew.caltables as mkct
-from caracal.workers.worker_administrator import WorkerAdministrator
+import sys
+import traceback
+import warnings
+
 import stimela
+
+import caracal
+import caracal.dispatch_crew.caltables as mkct
+from caracal import log, utils
+from caracal.dispatch_crew import config_parser, worker_help
 from caracal.schema import SCHEMA_VERSION
+from caracal.workers.worker_administrator import WorkerAdministrator
+
+warnings.filterwarnings("ignore", category=SyntaxWarning)
 
 __version__ = caracal.__version__
 pckgdir = caracal.PCKGDIR
@@ -41,12 +44,11 @@ def print_worker_help(worker):
     """
     worker help
     """
-    schema = os.path.join(pckgdir, "schema", "{0:s}_schema.yml".format(worker))
+    schema = os.path.join(pckgdir, "schema", f"{worker:s}_schema.yml")
     if not os.path.exists(schema):
         return None
 
-    with open(schema, "r") as f:
-        worker_dict = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1, 1))
+    worker_dict = utils.load_yaml(schema)
 
     helper = worker_help.worker_options(worker, worker_dict["mapping"][worker])
 
@@ -58,41 +60,12 @@ def get_default(sample, to):
     """
     Get default parset copy
     """
-    log.info(
-        "Dumping default configuration to {0:s} as requested. Goodbye!".format(to))
-    sample_config = os.path.join(pckgdir, "sample_configurations",
-                                 SAMPLE_CONFIGS[sample])
-    os.system('cp {0:s} {1:s}'.format(sample_config, to))
+    log.info(f"Dumping default configuration to {to:s} as requested. Goodbye!")
+    sample_config = os.path.join(pckgdir, "sample_configurations", SAMPLE_CONFIGS[sample])
+    shutil.copyfile(sample_config, to)
 
 
 def log_logo():
-    # print("WWWWWWWWMMWMMWWMMWWWWWMWWWWMMMMWWWWWWWWWWWWWWWWWWWWMMMMWWWWWWWWWWWWWWWWWWWWWWWWWMMMWWWWWMWWWWWWWWWWWWWNNNNWWMMWWMWWWWWWW")
-    # print("WWWWWWWMMWWWWWWMMWWWWWWWWWWMMWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWMMMMMMMWWWWWWWWWWWWWWWWWWWWWWWWMWWWWXkO0KWWWWWWWWWWWWW")
-    # print("WWMWWWWWWWWWWWKOxdollcok00KKXWWWWMMMMWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWNXKKXXXXXNWWWWWWWN0d::ckWMWWMMWWWWWWW")
-    # print("WMWWMWWWWWN0dc;'....',cxOOkkkO0XWMWWMMWWWWWX0xolllccc::::cllooddxxxxdddoooooooollcc;,,,;;;;;:cldxO0Ol,'.'lKWWWWMWWWWWWWW")
-    # print("MWWWWWWWXkc'.''...,ckKNWWWNXKOkk0XWWWWWWKxc,.....................................................',''''.,xNWWWWWWWWWWWWW")
-    # print("MWWWWWNk:'',;,'.,l0NWWWWWWMWWNKOkkKWWKxc'........................................................'''''''',dXWWMMWWWWWWWW")
-    # print("WWWWW0c'',;:;'.:kNWWWMWWWWWMWWWN0kdoc'....,ll'.....................................................''''''',kWWWMMWWWWWWW")
-    # print("MWWWO;.';cc,''cKWWWWWMMMMWWWWWWXx:.....:dkkx:...................................................';::;'.''''oNWWWWWWWWWWW")
-    # print("WWWO;.';cc;'.cKWWWWMMWWWWWWWWW0;...'..':l;.....................................................,oKNNKOd:,,:xXWWWWWWWWWWW")
-    # print("WWKc.';cc:'.;0WWWWWMMMWMMWWWWW0odOOc..........................',,'...................'.........cKWWWWWWN0KNWWWWWWWWWWWWW")
-    # print("MWx'.,:cc,.'dWMWWWWWWWMWMMMWMMWWWWk'....................;cdkO0KXXOxdoc,''''',;;:lokOOkc........,cxXWWWWWWWMWWWMMWWWWWWWW")
-    # print("MNl.';cc:'.;OWWWWWMWWWWWMWWMWWWWWO;...''.............:dOXWWMMWWWWMMWWNX0KK00KXXNWWWWWWXkl:,'.....':x0NWWWWMMWWMMMWWWWWWW")
-    # print("WKc.';cc:'.:KWWWWWWWMWWMWWMWWWWWO;...,x0kdoloolc:cox0NMWWWWMMWMMWWWMWWMWWWWMMWWWWWWWWWWWWNKOxoc:,'..,lONWWWWWMMMWWWWWWWW")
-    # print("WKc.';cc:'.:KWWMWWWWMMMWMMWWWMXo'....l0NWWWWWMWWWWMWWWMWMMWMMMMWWWWWMMWWMWWWWWWMWWWWWWMWWWWWWWWNk;.''.,xNWWWMMWWWWWWWWWW")
-    # print("WXl.';cc:'.;0MWWWWWWWWWWWMMWWWx.....:x0NWWWMMMWWWWMWWMWWWWMWWWMMMWWWMWWMMMWWMWWWWMWWMMMWWWWMWMWWNk:'''.;OWWWWWWMMWWWWWWW")
-    # print("WWd'.,ccc,.'xWMWWWWWWWWMWWMWWNo..;loxkKWWWMMWWMMMWWWMWWMWWWWWWWMMWWWWWMMMWWWWMWWMMWWMMWWMWWMWMMWMWX00OdxXWWWWMWWWWWWWWWW")
-    # print("WW0:.';cc;'.cKMWWWWWWWWWWWWWWWNOdxxdxOXWWMXOkkkkkkOKNWWMMWWMMN0kkOXWMWMMMWWN0kxxxk0XWMWWMWN0kkONWWWWMNOkkKWWWWWWWWWWWWWW")
-    # print("WWWk,.':cc,''oXWWWWWWWWWWWWWWWXo'..'cOWMWWO;..''''',:dKWWWWNNx,..'lXMWMMWKd:'.''''';dXMWMNd'..'oNMWWW0;..lNWWMMWWWWWWWWW")
-    # print("MWWNx,.';c:,.'oXWWMWWWMWWMMWWNd'.,,.'dNWWWO;..cO0Od,.'oNMWWkc,.,;''oXMMW0:..;dO00kooONWWNx,.,;.'dNMWW0;..lNWWWWMWWMWWWWW")
-    # print("WWWWNk;.',::,.'lKWWWWMWWWWWWNx,.,ol,.,xWWWO;..lXNXk;..cXWWO;..,xO:.'dNMNo..,kWWWWWWWWWWWk,.;kk;.,xWWW0;..lNWWWWWWMMMWWMW")
-    # print("WWWWWWKo,.';;,'.;xXWWWWMMWWWk,.';ll;'.;kWMO;..,:::,.'c0WW0:...:dkc'.,dNNl..;OWWWWWWWWWWk;.':xxc'.,kWW0;..lNWWWWWMWWWWMMM")
-    # print("WMWWMWWNOl,.',''.':d0NWWWWWO;.'',,,,,'.;OWO;..;ol;..:0WWKc.'',,,,,,'.,xNO:.';d0K0kod0NO;.',,,,,,'.;OW0;..cO0000KNMWWWWWW")
-    # print("WMWWMWWWWWKxc,'.....,cdOK0x;.'cOKKKKOc..:0O;..oNW0c'':OKl..:dOKKKK0o'.,kNKd:'.',''';dk:..l0KKKK0c'.;O0;..'''''':0MWWWWWW")
-    # print("WWWWWWWMWWWWNKkdlc:;;,:dOOxdxOXWWWWWWKkkkKXOkkKWWWXOkk0KOkkKWWWWWWWXOkk0NMWX0kxxxk0XWKkkOXWWWWWWXOkkKXOkkkkkkkkONMWWWMMW")
-    # print("WWWWWWWMMWWWWWWWWWNXKKXNNWWWMWWWWMWWWWWMWWWWMMWWWWWWWWMMMWMMWWWWWWWWMMWWWWWWMMWWWWWWMMMWWMWWMWWWWMMMMWMMMMWWMWWMMWWWWWWW")
-    # print("WWWWWWWMMWWMWWWWMMWWWWWWWWWWWWWWMWWWWWWWWMWWWWMWWWMWWWWMWWWMMWWWMWWWWMMWWWWWWWMMMMWWMMMWMWWMWWMWMMWWMWWMMWMWWMWWWWMMMWWW")
-
     print("""
 ........................................................................................................................
 ..........................................................................................................Z.~...........
@@ -130,66 +103,42 @@ def log_logo():
 ........................................................................................................................
 """)
 
-#     print("""
-# ................................................................................
-# ........................................................................?.......
-# ..............:~~:,....................................................Z$.......
-# ..........ZOOOOOO+==+=...........+7O88OOOI,......,+7~+?OOZZOZZZZZ=...ZZZZ.......
-# ........OOOOOOO.....,==+.....:88888OOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZZZZZ........
-# ......OOOIOOO.........+=+..88888888OOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZZZZZZ,......
-# .....ZOOIOOO...........==88888+I888OOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZZZZZZZ......
-# ....OOZI$OO............8888I.$DO888OOOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZ..ZZZZZ .....
-# ...$OO7IOO............88.+888888888OOOOOOOOOOOOOOOOOOOOOOZZZZZZZZO..............
-# ...OO7I$OO...............8888888888OOOOO8....I,OOOOOOOOO?=.OZZZZZZO.............
-# ...OOIIOO=..............D888888888OOOO......................,ZZZZZZZ:...........
-# ...OOIIOO..............I888+..:...Z..............................OZZZZ:.........
-# ...OOIIOO.............8888==.......................................ZZZZ.........
-# ...OOIIOO7............8888==........................................ZZZZ........
-# ...OOII7OO...............+=.....................................................
-# ....OOIIOO.............OOO=...$OOOOOO+.....OOO.....~OOOOOO....8OOZ....OOO.......
-# ....ZOZIIOO...........OOOOO...$OO...OOI...OOOOO...ZOO,..=O...,OOOO....OOO.......
-# .....OOOI$OO.........OOO=OO:..$OO...OOZ..OOO.OO,..OO~........OO.:OO...OOO.......
-# ......=OOO7OO?......:OOOOOOO..$OOOOOOO..=OOOOZOO..OOZ.......OOOOOOOO..OOO.......
-# ........ZOOOOOO+....OOZ$$$OOO.$OZ.,OO7..OO$$$$OOO.,OOOZOOO~$OO$$$$OO=.OOZOOOO...
-# ...........OOOOOO+=OOO.....OO$$OO...OOOZOO.....ZO?..:OOOO..OO,....~OO.OOOOOOO...
-# ................................................................................
-# ................................................................................
-#     """)
-
-    log.info("Version {1:s} installed at {0:s}".format(pckgdir, str(__version__)))
+    log.info(f"Version {__version__!s:s} installed at {pckgdir:s}")
 
 
-def execute_pipeline(options, config, block):
+def execute_pipeline(options, config):
     # setup piping infractructure to send messages to the parent
     workers_directory = os.path.join(caracal.pckgdir, "workers")
-    backend = config['general']['backend']
-    if options.container_tech and options.container_tech != 'default':
+    backend = config["general"]["backend"]
+    if options.container_tech and options.container_tech != "default":
         backend = options.container_tech
 
     def __run(debug=False):
-        """ Executes pipeline """
-#        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well -- nah
+        """Executes pipeline"""
+        #        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well -- nah
 
         try:
-            pipeline = WorkerAdministrator(config,
-                                           workers_directory,
-                                           add_all_first=False, prefix=options.general_prefix,
-                                           configFileName=options.config, singularity_image_dir=options.singularity_image_dir,
-                                           container_tech=backend, start_worker=options.start_worker,
-                                           end_worker=options.end_worker, generate_reports=not options.no_reports)
+            pipeline = WorkerAdministrator(
+                config,
+                workers_directory,
+                prefix=options.general_prefix,
+                configFileName=options.config,
+                singularity_image_dir=options.singularity_image_dir,
+                container_tech=backend,
+                start_worker=options.start_worker,
+                end_worker=options.end_worker,
+                generate_reports=not options.no_reports,
+            )
 
             if options.report:
                 pipeline.regenerate_reports()
             else:
-                # OMS: I don't think this is necessary, as it is not used here directly, and loaded on-demand
-                # # Obtain some divine knowledge
-                # cdb = mkct.calibrator_database()
                 pipeline.run_workers()
         except SystemExit as e:
             # if e.code != 0:
-            log.error("A pipeline worker initiated sys.exit({0:}). This is likely a bug, please report.".format(e.code))
-            log.info("  More information can be found in the logfile at {0:s}".format(caracal.CARACAL_LOG))
-            log.info("  You are running version {0:s}".format(str(__version__)), extra=dict(logfile_only=True))
+            log.error(f"A pipeline worker initiated sys.exit({e.code}). This is likely a bug, please report.")
+            log.info(f"  More information can be found in the logfile at {caracal.CARACAL_LOG:s}")
+            log.info(f"  You are running version {__version__!s:s}", extra={"logfile_only": True})
             if debug:
                 log.warning("you are running with -debug enabled, dropping you into pdb. Use Ctrl+D to exit.")
                 pdb.post_mortem(sys.exc_info()[2])
@@ -197,12 +146,12 @@ def execute_pipeline(options, config, block):
 
         except KeyboardInterrupt:
             log.error("Ctrl+C received from user, shutting down. Goodbye!")
-        except Exception as exc:
-            log.error("{} [{}]".format(exc, type(exc).__name__), extra=dict(boldface=True))
-            log.info("  More information can be found in the logfile at {0:s}".format(caracal.CARACAL_LOG))
-            log.info("  You are running version {0:s}".format(str(__version__)), extra=dict(logfile_only=True))
+        except Exception as exc:  # noqa: BLE001
+            log.error(f"{exc} [{type(exc).__name__}]", extra={"boldface": True})
+            log.info(f"  More information can be found in the logfile at {caracal.CARACAL_LOG:s}")
+            log.info(f"  You are running version {__version__!s:s}", extra={"logfile_only": True})
             for line in traceback.format_exc().splitlines():
-                log.error(line, extra=dict(traceback_report=True))
+                log.error(line, extra={"traceback_report": True})
             if debug:
                 log.warning("you are running with -debug enabled, dropping you into pdb. Use Ctrl+D to exit.")
                 pdb.post_mortem(sys.exc_info()[2])
@@ -210,6 +159,7 @@ def execute_pipeline(options, config, block):
             sys.exit(1)  # indicate failure
 
     return __run(debug=options.debug)
+
 
 ############################################################################
 # Driver entrypoint
@@ -231,7 +181,7 @@ def main(argv):
     # user requests worker help
     if options.worker_help:
         if not print_worker_help(options.worker_help):
-            parser.error("unknown worker '{}'".format(options.worker_help))
+            parser.error(f"unknown worker '{options.worker_help}'")
         return
 
     caracal.log.info(f"Invoked as {' '.join(sys.argv)}")
@@ -240,28 +190,25 @@ def main(argv):
     if options.get_default:
         sample_config = SAMPLE_CONFIGS.get(options.get_default_template)
         if sample_config is None:
-            parser.error("unknown default template '{}'".format(options.get_default_template))
+            parser.error(f"unknown default template '{options.get_default_template}'")
         sample_config_path = os.path.join(pckgdir, "sample_configurations", sample_config)
         if not os.path.exists(sample_config_path):
-            raise RuntimeError("Missing sample config file {}. This is a bug, please report".format(sample_config))
+            raise RuntimeError(f"Missing sample config file {sample_config}. This is a bug, please report")
         # validate the file
         try:
             parser = config_parser.config_parser()
             _, version = parser.validate_config(sample_config_path)
             if version != SCHEMA_VERSION:
-                log.warning("Sample config file {} version is {}, current CARACal version is {}.".format(sample_config,
-                                                                                                         SCHEMA_VERSION,
-                                                                                                         version))
+                log.warning(f"Sample config file {sample_config} version is {SCHEMA_VERSION}, current CARACal version is {{version}}.")
                 log.warning("Proceeding anyway, but please notify the CARACal team to ship a newer sample config!")
         except config_parser.ConfigErrors as exc:
-            log.error("{}, list of errors follows:".format(exc))
+            log.error(f"{exc}, list of errors follows:")
             for section, errors in exc.errors.items():
-                print("  {}:".format(section))
+                print(f"  {section}:")
                 for err in errors:
-                    print("    - {}".format(err))
+                    print(f"    - {err}")
             sys.exit(1)  # indicate failure
-        log.info("Initializing {1} from config template '{0}' (schema version {2})".format(options.get_default_template,
-                                                                                           options.get_default, version))
+        log.info(f"Initializing {options.get_default} from config template '{options.get_default_template}' (schema version {{version}})")
         shutil.copyfile(sample_config_path, options.get_default)
         return
 
@@ -281,26 +228,24 @@ def main(argv):
         parser = config_parser.config_parser()
         config, version = parser.validate_config(config_file)
         if version != SCHEMA_VERSION:
-            log.warning("Config file {} schema version is {}, current CARACal version is {}".format(config_file,
-                                                                                                    SCHEMA_VERSION,
-                                                                                                    version))
+            log.warning(f"Config file {config_file} schema version is {SCHEMA_VERSION}, current CARACal version is {version}")
             log.warning("Will try to proceed anyway, but please be advised that configuration options may have changed.")
         # populate parser with items from config
         parser.populate_parser(config)
         # reparse arguments
-        caracal.log.info("Loading pipeline configuration from {}".format(config_file), extra=dict(color="GREEN"))
+        caracal.log.info(f"Loading pipeline configuration from {config_file}", extra={"color": "GREEN"})
         options, config = parser.update_config_from_args(config, argv)
         # raise warning on schema version
     except config_parser.ConfigErrors as exc:
-        log.error("{}, list of errors follows:".format(exc))
+        log.error(f"{exc}, list of errors follows:")
         for section, errors in exc.errors.items():
-            print("  {}:".format(section))
+            print(f"  {section}:")
             for err in errors:
-                print("    - {}".format(err))
+                print(f"    - {err}")
         sys.exit(1)  # indicate failure
-    except Exception as exc:
+    except Exception as exc:  # noqa BLE001
         traceback.print_exc()
-        log.error("Error parsing arguments or configuration: {}".format(exc))
+        log.error(f"Error parsing arguments or configuration: {exc}")
         if options.debug:
             log.warning("you are running with -debug enabled, dropping you into pdb. Use Ctrl+D to exit.")
             pdb.post_mortem(sys.exc_info()[2])
@@ -314,4 +259,4 @@ def main(argv):
     # Very good idea to print user options into the log before running:
     parser.log_options(config)
 
-    execute_pipeline(options, config, block=True)
+    execute_pipeline(options, config)

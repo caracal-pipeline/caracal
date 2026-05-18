@@ -48,6 +48,60 @@ mapping:
             type: bool
             required: false
             example: 'False'
+      correct_parang:
+        desc: Correct parallactic angle terms for all fields of all selected MS files.
+        type: map
+        mapping:
+          enable:
+            desc: Enable the 'correct_parang' segment.
+            type: bool
+            required: false
+            example: 'False'
+          chunksize:
+            desc: Number of rows processed per chunk.
+            type: int
+            required: false
+            example: '1000'
+          datadiscriptor:
+            desc: Data descriptor index to process.
+            type: int
+            required: false
+            example: '0'
+          applyantidiag:
+            desc: Apply anti-diagonal Jones terms.
+            type: bool
+            required: false
+            example: 'True'
+          overridefeedangle:
+            desc: Feed angle override in degrees.
+            type: str
+            required: false
+            example: '0'
+          storecolumn:
+            desc: Column to write corrected visibilities to.
+            type: str
+            required: false
+            example: 'DATA'
+          rawcolumn:
+            desc: Column to read raw visibilities from.
+            type: str
+            required: false
+            example: 'DATA'
+          noparang:
+            desc: Disable standard parallactic angle correction term.
+            type: bool
+            required: false
+            example: 'True'
+          invertPA:
+            desc: Flip the parallactic-angle rotation direction.
+            type: bool
+            required: false
+            example: 'False'
+          crosshandphase:
+            desc: Cross-hand phase offset in radians.
+            type: float
+            required: false
+            example: '0.0'
         
       clearcal:
         desc: Clear out calibrated data and reset the previous predicted model.

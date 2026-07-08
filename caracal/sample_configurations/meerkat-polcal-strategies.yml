@@ -71,7 +71,8 @@ polcal:
   reuse_existing_tables: false
   pol_calib: xcal
   leakage_calib: fcal
-  set_model_pol: true
+  set_model_pol:
+    enable: true
   gain_solint: '60s'
   time_solint: 'inf'
   plotgains: true

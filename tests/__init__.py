@@ -1,7 +1,7 @@
 import os.path
 import shutil
 import tempfile
-from typing import Dict, Union
+from typing import Dict, Union  # noqa: F401, UP035
 
 from ruamel.yaml import YAML
 
@@ -14,7 +14,7 @@ class InitTest:
     def __init__(self):
         self.test_files = []
 
-    def update_config_dirs(self, caracal_config: Union[Dict, str], outfile: str = None):
+    def update_config_dirs(self, caracal_config: dict | str, outfile: str = None):  # noqa: RUF013
         if isinstance(caracal_config, str):
             caracal_config = self.read_yaml(caracal_config)
 
@@ -28,11 +28,11 @@ class InitTest:
 
         return caracal_config
 
-    def random_named_file(self, suffix: str = None):
+    def random_named_file(self, suffix: str = None):  # noqa: RUF013
         if not hasattr(self, "test_files"):
             self.test_files = []
 
-        file_obj = tempfile.NamedTemporaryFile(suffix=suffix, dir=TESTDIR, delete=False)
+        file_obj = tempfile.NamedTemporaryFile(suffix=suffix, dir=TESTDIR, delete=False)  # noqa: SIM115
         name = file_obj.name
         file_obj.close()
 
@@ -44,7 +44,7 @@ class InitTest:
             ydict = yaml.load(stdr)
         return ydict
 
-    def random_named_directory(self, suffix: str = None):
+    def random_named_directory(self, suffix: str = None):  # noqa: RUF013
         if not hasattr(self, "test_files"):
             self.test_files = []
 

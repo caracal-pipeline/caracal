@@ -7,7 +7,7 @@ import numpy
 import yaml
 
 import caracal
-import caracal.dispatch_crew.utils as utils
+from caracal.dispatch_crew import utils
 from caracal.workers.utils import callibs
 from caracal.workers.utils import manage_antennas as manants
 from caracal.workers.utils import manage_flagsets as manflags
@@ -87,7 +87,7 @@ def xcal_model_fcal_leak(
     if docal:
         for cal in gaintables:
             if not os.path.exists(os.path.join(pipeline.caltables, cal)):
-                caracal.log.info("No polcal table found in %s" % str(os.path.join(pipeline.caltables, cal)))
+                caracal.log.info("No polcal table found in %s" % str(os.path.join(pipeline.caltables, cal)))  # noqa: UP031
                 docal = False
 
     if not docal:
@@ -121,7 +121,7 @@ def xcal_model_fcal_leak(
                         "field": leak_field,
                         "standard": "manual",
                         "fluxdensity": modelpoint["I"],
-                        "reffreq": "{0:f}GHz".format(modelpoint["ref"] / 1e9),
+                        "reffreq": "{0:f}GHz".format(modelpoint["ref"] / 1e9),  # noqa: UP030
                         "spix": [modelpoint[a] for a in "abcd"],
                         "scalebychan": True,
                         "usescratch": True,
@@ -135,8 +135,8 @@ def xcal_model_fcal_leak(
                         "scalebychan": True,
                     }
                 else:
-                    raise RuntimeError('The flux calibrator field "{}" could not be found in our database or in the CASA NRAO database'.format(leak_field))
-            step = "set_model_cal-{0:d}".format(i)
+                    raise RuntimeError(f'The flux calibrator field "{leak_field}" could not be found in our database or in the CASA NRAO database')
+            step = f"set_model_cal-{i:d}"
             cabtouse = "cab/casa_setjy"
             recipe.add(
                 cabtouse if "skymodel" not in opts else "cab/simulator",
@@ -144,12 +144,12 @@ def xcal_model_fcal_leak(
                 opts,
                 input=pipeline.input,
                 output=pipeline.output,
-                label="{0:s}:: Set jansky ms={1:s}".format(step, msname),
+                label=f"{step:s}:: Set jansky ms={msname:s}",
             )
 
         recipe.add(
             "cab/casa_setjy",
-            "set_model_%d" % 0,
+            "set_model_%d" % 0,  # noqa: UP031
             {
                 "msname": msname,
                 "usescratch": True,
@@ -164,7 +164,7 @@ def xcal_model_fcal_leak(
             },
             input=pipeline.input,
             output=pipeline.output,
-            label="set_model_%d" % 0,
+            label="set_model_%d" % 0,  # noqa: UP031
         )
 
         gain_opts = {
@@ -182,7 +182,7 @@ def xcal_model_fcal_leak(
         }
         if caltablelist:
             gain_opts.update({
-                "gaintable": ["%s:output" % ct for ct in caltablelist],
+                "gaintable": ["%s:output" % ct for ct in caltablelist],  # noqa: UP031
                 "gainfield": gainfieldlist,
                 "interp": interplist,
             })
@@ -214,7 +214,7 @@ def xcal_model_fcal_leak(
                 "parang": True,
                 "gaintype": "KCROSS",
                 "spw": "",
-                "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                "gaintable": ["%s:output" % ct for ct in tmp_gtab],  # noqa: UP031
                 "gainfield": tmp_field,
                 "interp": tmp_interp,
             },
@@ -242,7 +242,7 @@ def xcal_model_fcal_leak(
                     "poltype": "Xf",
                     "refant": ref,
                     "spw": freqsel,
-                    "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                    "gaintable": ["%s:output" % ct for ct in tmp_gtab],  # noqa: UP031
                     "gainfield": tmp_field,
                     "interp": tmp_interp,
                 },
@@ -265,7 +265,7 @@ def xcal_model_fcal_leak(
                 "combine": "scan",
                 "poltype": "Xf",
                 "refant": ref,
-                "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                "gaintable": ["%s:output" % ct for ct in tmp_gtab],  # noqa: UP031
                 "gainfield": tmp_field,
                 "interp": tmp_interp,
             },
@@ -316,7 +316,7 @@ def xcal_model_fcal_leak(
                     "poltype": "D",
                     "refant": ref,
                     "spw": freqsel,
-                    "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                    "gaintable": ["%s:output" % ct for ct in tmp_gtab],  # noqa: UP031
                     "gainfield": tmp_field,
                     "interp": tmp_interp,
                 },
@@ -339,7 +339,7 @@ def xcal_model_fcal_leak(
                 "combine": "scan",
                 "poltype": "Df",
                 "refant": ref,
-                "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                "gaintable": ["%s:output" % ct for ct in tmp_gtab],  # noqa: UP031
                 "gainfield": tmp_field,
                 "interp": tmp_interp,
             },
@@ -392,12 +392,12 @@ def xcal_model_fcal_leak(
         if not os.path.exists(plotdir):
             os.mkdir(plotdir)
         for ix, gt in enumerate(gfields):
-            plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
+            plotgains(recipe, pipeline, plotdir, gt, gaintables[ix], i, terms[ix])
 
     if config["apply_pcal"]:
         for ff in config["applyto"]:
             fld = ",".join(getattr(pipeline, ff)[i])
-            _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = callibs.resolve_calibration_library(
+            _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = callibs.resolve_calibration_library(  # noqa: RUF059
                 pipeline,
                 prefix_msbase,
                 config["otfcal"]["callib"],
@@ -406,7 +406,7 @@ def xcal_model_fcal_leak(
                 default_interpolation_types=config["otfcal"]["interpolation"],
             )
 
-            _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist) = callibs.resolve_calibration_library(pipeline, prefix_msbase, "", config["label_cal"], [fld])
+            _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist) = callibs.resolve_calibration_library(pipeline, prefix_msbase, "", config["label_cal"], [fld])  # noqa: RUF059
             pcal = caltablelist + pcaltablelist
             pgain = gainfieldlist + pgainfieldlist
             pinter = interplist + pinterplist
@@ -418,7 +418,7 @@ def xcal_model_fcal_leak(
                     "vis": msname,
                     "field": fld,
                     "calwt": pcalwt,
-                    "gaintable": ["%s:output" % ct for ct in pcal],
+                    "gaintable": ["%s:output" % ct for ct in pcal],  # noqa: UP031
                     "gainfield": pgain,
                     "interp": pinter,
                     "parang": True,
@@ -474,7 +474,7 @@ def xcal_model_xcal_leak(
     if docal:
         for cal in gaintables:
             if not os.path.exists(os.path.join(pipeline.caltables, cal)):
-                caracal.log.info("No polcal table found in %s" % str(os.path.join(pipeline.caltables, cal)))
+                caracal.log.info("No polcal table found in %s" % str(os.path.join(pipeline.caltables, cal)))  # noqa: UP031
                 docal = False
 
     if not docal:
@@ -488,7 +488,7 @@ def xcal_model_xcal_leak(
         index = 0
         polindex = polarized_calibrators[field]["polindex"][0]
         polangle = polarized_calibrators[field]["polangle"][0]
-        for n in range(0, len(spix)):
+        for n in range(len(spix)):
             index += numpy.sum(spix[n] * pow(numpy.log(normfreq), n))
         c = numpy.sqrt(pow(numpy.tan(2 * polangle), 2) + 1)
         istokes = (polarized_calibrators[field]["fluxdensity"][0]) * pow(normfreq, index)
@@ -499,7 +499,7 @@ def xcal_model_xcal_leak(
 
         recipe.add(
             "cab/casa_setjy",
-            "set_model_%d" % 0,
+            "set_model_%d" % 0,  # noqa: UP031
             {
                 "msname": msname,
                 "usescratch": True,
@@ -513,7 +513,7 @@ def xcal_model_xcal_leak(
             },
             input=pipeline.input,
             output=pipeline.output,
-            label="set_model_%d" % 0,
+            label="set_model_%d" % 0,  # noqa: UP031
         )
 
         gain_opts = {
@@ -531,7 +531,7 @@ def xcal_model_xcal_leak(
         }
         if caltablelist:
             gain_opts.update({
-                "gaintable": ["%s:output" % ct for ct in caltablelist],
+                "gaintable": ["%s:output" % ct for ct in caltablelist],  # noqa: UP031
                 "gainfield": gainfieldlist,
                 "interp": interplist,
             })
@@ -562,7 +562,7 @@ def xcal_model_xcal_leak(
                 "parang": True,
                 "gaintype": "KCROSS",
                 "spw": "",
-                "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                "gaintable": ["%s:output" % ct for ct in tmp_gtab],  # noqa: UP031
                 "gainfield": tmp_field,
                 "interp": tmp_interp,
             },
@@ -589,7 +589,7 @@ def xcal_model_xcal_leak(
                     "poltype": "Xf",
                     "refant": ref,
                     "spw": freqsel,
-                    "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                    "gaintable": ["%s:output" % ct for ct in tmp_gtab],  # noqa: UP031
                     "gainfield": tmp_field,
                     "interp": tmp_interp,
                 },
@@ -614,7 +614,7 @@ def xcal_model_xcal_leak(
                 "combine": "scan",
                 "poltype": "Xf",
                 "refant": ref,
-                "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                "gaintable": ["%s:output" % ct for ct in tmp_gtab],  # noqa: UP031
                 "gainfield": tmp_field,
                 "interp": tmp_interp,
             },
@@ -664,7 +664,7 @@ def xcal_model_xcal_leak(
                 "poltype": "Dflls",
                 "refant": "",
                 "smodel": S,
-                "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                "gaintable": ["%s:output" % ct for ct in tmp_gtab],  # noqa: UP031
                 "gainfield": tmp_field,
                 "interp": tmp_interp,
             },
@@ -720,12 +720,12 @@ def xcal_model_xcal_leak(
         if not os.path.exists(plotdir):
             os.mkdir(plotdir)
         for ix, gt in enumerate(gfields):
-            plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
+            plotgains(recipe, pipeline, plotdir, gt, gaintables[ix], i, terms[ix])
 
     if config["apply_pcal"]:
         for ff in config["applyto"]:
             fld = ",".join(getattr(pipeline, ff)[i])
-            _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = callibs.resolve_calibration_library(
+            _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = callibs.resolve_calibration_library(  # noqa: RUF059
                 pipeline,
                 prefix_msbase,
                 config["otfcal"]["callib"],
@@ -733,7 +733,7 @@ def xcal_model_xcal_leak(
                 [fld],
                 default_interpolation_types=config["otfcal"]["interpolation"],
             )
-            _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist) = callibs.resolve_calibration_library(pipeline, prefix_msbase, "", config["label_cal"], [fld])
+            _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist) = callibs.resolve_calibration_library(pipeline, prefix_msbase, "", config["label_cal"], [fld])  # noqa: RUF059
             pcal = caltablelist + pcaltablelist
             pgain = gainfieldlist + pgainfieldlist
             pinter = interplist + pinterplist
@@ -745,7 +745,7 @@ def xcal_model_xcal_leak(
                     "vis": msname,
                     "field": fld,
                     "calwt": pcalwt,
-                    "gaintable": ["%s:output" % ct for ct in pcal],
+                    "gaintable": ["%s:output" % ct for ct in pcal],  # noqa: UP031
                     "gainfield": pgain,
                     "interp": pinter,
                     "parang": True,
@@ -796,7 +796,7 @@ def xcal_from_pa_xcal_leak(
     if docal:
         for cal in gaintables:
             if not os.path.exists(os.path.join(pipeline.caltables, cal)):
-                caracal.log.info("No polcal table found in %s" % str(os.path.join(pipeline.caltables, cal)))
+                caracal.log.info("No polcal table found in %s" % str(os.path.join(pipeline.caltables, cal)))  # noqa: UP031
                 docal = False
 
     if not docal:
@@ -817,7 +817,7 @@ def xcal_from_pa_xcal_leak(
         }
         if caltablelist:
             gain_opts.update({
-                "gaintable": ["%s:output" % ct for ct in caltablelist],
+                "gaintable": ["%s:output" % ct for ct in caltablelist],  # noqa: UP031
                 "gainfield": gainfieldlist,
                 "interp": interplist,
             })
@@ -917,7 +917,7 @@ with open(outfile, 'w') as json_file:
                 "smodel": ["1", "0", "1", "0"],
                 "selectdata": True,
                 "spw": "",
-                "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                "gaintable": ["%s:output" % ct for ct in tmp_gtab],  # noqa: UP031
                 "gainfield": tmp_field,
                 "interp": tmp_interp,
             },
@@ -935,7 +935,7 @@ with open(outfile, 'w') as json_file:
                 S1 = pickle.load(stdr, encoding="latin1")
 
             S1 = S1[field]["SpwAve"]
-            caracal.log.info("First [I,Q,U,V] fitted model (with I=1 and Q, U fractional): %s" % S1)
+            caracal.log.info("First [I,Q,U,V] fitted model (with I=1 and Q, U fractional): %s" % S1)  # noqa: UP031
         else:
             raise RuntimeError("Cannot find S1")
 
@@ -958,7 +958,7 @@ with open(outfile, 'w') as json_file:
                 "preavg": scandur,
                 "smodel": S1,
                 "save_result": prefix + "_S2_from_polcal:output",
-                "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                "gaintable": ["%s:output" % ct for ct in tmp_gtab],  # noqa: UP031
                 "gainfield": tmp_field,
                 "interp": tmp_interp,
             },
@@ -994,7 +994,7 @@ with open(outfile, 'w') as json_file:
             with open(pipeline.output + "/caltables/" + prefix + "_S2_from_polcal", "rb") as stdr:
                 S2 = pickle.load(stdr, encoding="latin1")
             S2 = S2[field]["SpwAve"].tolist()
-            caracal.log.info("Second [I,Q,U,V] fitted model (with I=1 and Q, U fractional): %s" % S2)
+            caracal.log.info("Second [I,Q,U,V] fitted model (with I=1 and Q, U fractional): %s" % S2)  # noqa: UP031
         else:
             raise RuntimeError("Cannot find " + pipeline.output + "/caltables/" + prefix + "_S2_from_polcal")
 
@@ -1016,7 +1016,7 @@ with open(outfile, 'w') as json_file:
         }
         if caltablelist:
             gain2_opts.update({
-                "gaintable": ["%s:output" % ct for ct in caltablelist],
+                "gaintable": ["%s:output" % ct for ct in caltablelist],  # noqa: UP031
                 "gainfield": gainfieldlist,
                 "interp": interplist,
             })
@@ -1048,7 +1048,7 @@ with open(outfile, 'w') as json_file:
                 "poltype": "Dflls",
                 "refant": "",
                 "smodel": S2,
-                "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                "gaintable": ["%s:output" % ct for ct in tmp_gtab],  # noqa: UP031
                 "gainfield": tmp_field,
                 "interp": tmp_interp,
             },
@@ -1112,7 +1112,7 @@ with open(outfile, 'w') as json_file:
                 "gaintype": "G",
                 "smodel": S2,
                 "calmode": "a",
-                "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                "gaintable": ["%s:output" % ct for ct in tmp_gtab],  # noqa: UP031
                 "gainfield": tmp_field,
                 "interp": tmp_interp,
                 "solnorm": True,
@@ -1138,12 +1138,12 @@ with open(outfile, 'w') as json_file:
         if not os.path.exists(plotdir):
             os.mkdir(plotdir)
         for ix, gt in enumerate(gfields):
-            plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
+            plotgains(recipe, pipeline, plotdir, gt, gaintables[ix], i, terms[ix])
 
     if config["apply_pcal"]:
         for ff in config["applyto"]:
             fld = ",".join(getattr(pipeline, ff)[i])
-            _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = callibs.resolve_calibration_library(
+            _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = callibs.resolve_calibration_library(  # noqa: RUF059
                 pipeline,
                 prefix_msbase,
                 config["otfcal"]["callib"],
@@ -1151,7 +1151,7 @@ with open(outfile, 'w') as json_file:
                 [fld],
                 default_interpolation_types=config["otfcal"]["interpolation"],
             )
-            _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist) = callibs.resolve_calibration_library(pipeline, prefix_msbase, "", config["label_cal"], [fld])
+            _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist) = callibs.resolve_calibration_library(pipeline, prefix_msbase, "", config["label_cal"], [fld])  # noqa: RUF059
             pcal = caltablelist + pcaltablelist
             pgain = gainfieldlist + pgainfieldlist
             pinter = interplist + pinterplist
@@ -1163,7 +1163,7 @@ with open(outfile, 'w') as json_file:
                     "vis": msname,
                     "field": fld,
                     "calwt": pcalwt,
-                    "gaintable": ["%s:output" % ct for ct in pcal],
+                    "gaintable": ["%s:output" % ct for ct in pcal],  # noqa: UP031
                     "gainfield": pgain,
                     "interp": pinter,
                     "parang": True,
@@ -1206,7 +1206,7 @@ def calib_only_leakage(
     if docal:
         for cal in gaintables:
             if not os.path.exists(os.path.join(pipeline.caltables, cal)):
-                caracal.log.info("No polcal table found in %s" % str(os.path.join(pipeline.caltables, cal)))
+                caracal.log.info("No polcal table found in %s" % str(os.path.join(pipeline.caltables, cal)))  # noqa: UP031
                 docal = False
 
     if not docal:
@@ -1240,7 +1240,7 @@ def calib_only_leakage(
                         "field": leak_field,
                         "standard": "manual",
                         "fluxdensity": modelpoint["I"],
-                        "reffreq": "{0:f}GHz".format(modelpoint["ref"] / 1e9),
+                        "reffreq": "{0:f}GHz".format(modelpoint["ref"] / 1e9),  # noqa: UP030
                         "spix": [modelpoint[a] for a in "abcd"],
                         "scalebychan": True,
                         "usescratch": True,
@@ -1254,8 +1254,8 @@ def calib_only_leakage(
                         "scalebychan": True,
                     }
                 else:
-                    raise RuntimeError('The flux calibrator field "{}" could not be found in our database or in the CASA NRAO database'.format(leak_field))
-            step = "set_model_cal-{0:d}".format(i)
+                    raise RuntimeError(f'The flux calibrator field "{leak_field}" could not be found in our database or in the CASA NRAO database')
+            step = f"set_model_cal-{i:d}"
             cabtouse = "cab/casa_setjy"
             recipe.add(
                 cabtouse if "skymodel" not in opts else "cab/simulator",
@@ -1263,7 +1263,7 @@ def calib_only_leakage(
                 opts,
                 input=pipeline.input,
                 output=pipeline.output,
-                label="{0:s}:: Set jansky ms={1:s}".format(step, msname),
+                label=f"{step:s}:: Set jansky ms={msname:s}",
             )
 
         recipe.add(
@@ -1278,7 +1278,7 @@ def calib_only_leakage(
                 "combine": "scan",
                 "poltype": "Df",
                 "refant": ref,
-                "gaintable": ["%s:output" % ct for ct in leak_caltablelist],
+                "gaintable": ["%s:output" % ct for ct in leak_caltablelist],  # noqa: UP031
                 "gainfield": leak_gainfieldlist,
                 "interp": leak_interplist,
             },
@@ -1331,15 +1331,15 @@ def calib_only_leakage(
         if not os.path.exists(plotdir):
             os.mkdir(plotdir)
         for ix, gt in enumerate(gfields):
-            plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
+            plotgains(recipe, pipeline, plotdir, gt, gaintables[ix], i, terms[ix])
 
     if config["apply_pcal"]:
         for ff in config["applyto"]:
             fld = ",".join(getattr(pipeline, ff)[i])
-            _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = callibs.resolve_calibration_library(
+            _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = callibs.resolve_calibration_library(  # noqa: RUF059
                 pipeline, prefix_msbase, config["otfcal"]["callib"], config["otfcal"]["label_cal"], [fld]
             )
-            _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist) = callibs.resolve_calibration_library(pipeline, prefix_msbase, "", config["label_cal"], [fld])
+            _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist) = callibs.resolve_calibration_library(pipeline, prefix_msbase, "", config["label_cal"], [fld])  # noqa: RUF059
             pcal = caltablelist + pcaltablelist
             pgain = gainfieldlist + pgainfieldlist
             pinter = interplist + pinterplist
@@ -1351,7 +1351,7 @@ def calib_only_leakage(
                     "vis": msname,
                     "field": fld,
                     "calwt": pcalwt,
-                    "gaintable": ["%s:output" % ct for ct in pcal],
+                    "gaintable": ["%s:output" % ct for ct in pcal],  # noqa: UP031
                     "gainfield": pgain,
                     "interp": pinter,
                     "parang": True,
@@ -1363,7 +1363,7 @@ def calib_only_leakage(
 
 
 def plotgains(recipe, pipeline, plotdir, field_id, gtab, i, term):
-    step = "plotgains-%s-%d-%s" % (term, i, gtab)
+    step = "plotgains-%s-%d-%s" % (term, i, gtab)  # noqa: UP031
     opts = {
         "table": gtab + ":msfile",
         "corr": "",
@@ -1385,14 +1385,14 @@ def plotgains(recipe, pipeline, plotdir, field_id, gtab, i, term):
         input=pipeline.input,
         msdir=pipeline.caltables,
         output=plotdir,
-        label="{0:s}:: Plot gaincal phase".format(step),
+        label=f"{step:s}:: Plot gaincal phase",
     )
 
 
 def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
-    flags_before_worker = "{0:s}_{1:s}_before".format(pipeline.prefix, wname)
-    flags_after_worker = "{0:s}_{1:s}_after".format(pipeline.prefix, wname)
+    flags_before_worker = f"{pipeline.prefix:s}_{wname:s}_before"
+    flags_after_worker = f"{pipeline.prefix:s}_{wname:s}_after"
     label = config["label_cal"]
     label_in = config["label_in"]
 
@@ -1422,7 +1422,7 @@ def worker(pipeline, recipe, config):
                 caracal.log.info("Setting model pol")
                 if config["set_model_pol"]["nrao_model"]:
                     file_path = caracal.pckgdir + "/data/nrao_xcal.yml"
-                    polarized_calibrators = yaml.safe_load(open(file_path, "r", encoding="utf-8"))
+                    polarized_calibrators = yaml.safe_load(open(file_path, "r", encoding="utf-8"))  # noqa: SIM115
                     polarized_calibrators["J1331+3030"] = polarized_calibrators["3C286"]
                     polarized_calibrators["J0521+1638"] = polarized_calibrators["3C138"]
                 elif config["set_model_pol"]["taylor_legodi_model"]:
@@ -1541,10 +1541,10 @@ with tb(ms+'::FEED', readonly=False) as t:
                             flags_before_worker,
                             flags_after_worker,
                         )
-                    substep = "version-{0:s}-ms{1:d}".format(version, i)
+                    substep = f"version-{version:s}-ms{i:d}"
                     manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
                     if version != available_flagversions[-1]:
-                        substep = "delete-flag_versions-after-{0:s}-ms{1:d}".format(version, i)
+                        substep = f"delete-flag_versions-after-{version:s}-ms{i:d}"
                         manflags.delete_cflags(
                             pipeline,
                             recipe,
@@ -1553,7 +1553,7 @@ with tb(ms+'::FEED', readonly=False) as t:
                             cab_name=substep,
                         )
                     if version != flags_before_worker:
-                        substep = "save-{0:s}-ms{1:d}".format(flags_before_worker, i)
+                        substep = f"save-{flags_before_worker:s}-ms{i:d}"
                         manflags.add_cflags(
                             pipeline,
                             recipe,
@@ -1573,7 +1573,7 @@ with tb(ms+'::FEED', readonly=False) as t:
                         flags_after_worker,
                     )
                 else:
-                    substep = "save-{0:s}-ms{1:d}".format(flags_before_worker, i)
+                    substep = f"save-{flags_before_worker:s}-ms{i:d}"
                     manflags.add_cflags(
                         pipeline,
                         recipe,
@@ -1586,7 +1586,7 @@ with tb(ms+'::FEED', readonly=False) as t:
                 if flags_before_worker in available_flagversions and not config["overwrite_flagvers"]:
                     manflags.conflict("would_overwrite_bw", pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                 else:
-                    substep = "save-{0:s}-ms{1:d}".format(flags_before_worker, i)
+                    substep = f"save-{flags_before_worker:s}-ms{i:d}"
                     manflags.add_cflags(
                         pipeline,
                         recipe,
@@ -1656,7 +1656,7 @@ with tb(ms+'::FEED', readonly=False) as t:
                 # Defensive check to avoid an UnboundLocalError if polarized_calibrators was not
                 # prepared despite set_model_pol.enable being true.
                 try:
-                    polarized_calibrators  # noqa: F821 - checked for NameError at runtime
+                    polarized_calibrators  # noqa: B018
                 except NameError as exc:
                     raise RuntimeError(
                         "Internal configuration error: polarized_calibrators is not defined even though "
@@ -1767,7 +1767,7 @@ with tb(ms+'::FEED', readonly=False) as t:
                        If the polarized source is unknown at least three scans are required.""")
 
         if pipeline.enable_task(config, "summary") and pol_calib != "none":
-            step = "summary-{0:s}-{1:d}".format(label, i)
+            step = f"summary-{label:s}-{i:d}"
             recipe.add(
                 "cab/casa_flagdata",
                 step,
@@ -1778,7 +1778,7 @@ with tb(ms+'::FEED', readonly=False) as t:
                 },
                 input=pipeline.input,
                 output=pipeline.output,
-                label="{0:s}:: Flagging summary  ms={1:s}".format(step, msname),
+                label=f"{step:s}:: Flagging summary  ms={msname:s}",
             )
 
         recipe.run()

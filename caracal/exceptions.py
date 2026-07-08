@@ -1,31 +1,21 @@
 class CaracalException(RuntimeError):
     """Base class for pipeline logic errors"""
 
-    pass
-
 
 class PlayingWithFire(RuntimeError):
     """Silly settings chosen."""
-
-    pass
 
 
 class UserInputError(CaracalException):
     """Something wrong with user input"""
 
-    pass
-
 
 class ConfigurationError(CaracalException):
     """Something wrong with the configuration"""
 
-    pass
-
 
 class BadDataError(CaracalException):
     """Something wrong with the data"""
-
-    pass
 
 
 class ExtraDependencyError(Exception):

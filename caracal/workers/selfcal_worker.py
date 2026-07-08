@@ -4,10 +4,10 @@ import json
 import os
 import shutil
 
-import astropy.io.fits as fits
 import numpy as np
 import psutil
 import stimela.dismissable as sdm
+from astropy.io import fits
 from casacore.tables import table
 from stimela.pathformatter import pathformatter as spf
 
@@ -77,15 +77,14 @@ def check_config(config, name):
     # First check we are actually running a calibrate
     if config["calibrate"]["enable"]:
         # Running with a model shorter than the output type is dengerous with 'CORR_RES'
-        if "CORR_RES" in config["calibrate"]["output_data"]:
-            if len(config["calibrate"]["model"]) < config["cal_niter"]:
-                raise caracal.ConfigurationError("You did not set a model to use for every iteration while using residuals. This is too dangerous for CARACal to execute.")
+        if "CORR_RES" in config["calibrate"]["output_data"] and len(config["calibrate"]["model"]) < config["cal_niter"]:
+            raise caracal.ConfigurationError("You did not set a model to use for every iteration while using residuals. This is too dangerous for CARACal to execute.")
 
         # Make sure we are not using two_step with CubiCal
         if config["calibrate_with"].lower() == "cubical" and config["cal_meqtrees"]["two_step"]:
             raise caracal.ConfigurationError("Two_Step calibration is an experimental mode only available for meqtrees at the moment.")
         # Then let's check that the solutions are reasonable and fit in our time chunks
-        #!!!!!! Remainder solutions are not checked to be a full solution block!!!!!!!!
+        #!!!!!! Remainder solutions are not checked to be a full solution block!!!!!!!!  # noqa: EXE001, EXE005
         #  we check there are enough solution
         if len(config["calibrate"]["gsols_timeslots"]) < int(config["cal_niter"]):
             amount_sols = len(config["calibrate"]["gsols_timeslots"])
@@ -126,14 +125,14 @@ def check_config(config, name):
         if time_chunk != 0:
             if 0.0 in solutions:
                 caracal.log.error("You are using all timeslots in your solutions (i.e. 0) but have set cal_timeslots_chunk, please set it to 0 for using all timeslots.")
-                caracal.log.error("Your timeslots chunk = {}".format(time_chunk))
+                caracal.log.error(f"Your timeslots chunk = {time_chunk}")
                 caracal.log.error("Your timeslots solutions to be applied are {}".format(", ".join([str(x) for x in solutions])))
                 raise caracal.ConfigurationError("Inconsistent selfcal chunking")
             sol_int_array = float(time_chunk) / np.array(solutions, dtype=float)
             for val in sol_int_array:
                 if val != int(val):
                     caracal.log.error("Not all applied time solutions fit in the timeslot_chunk.")
-                    caracal.log.error("Your timeslot chunk = {}".format(time_chunk))
+                    caracal.log.error(f"Your timeslot chunk = {time_chunk}")
                     caracal.log.error("Your time solutions to be applied are {}".format(", ".join([str(x) for x in solutions])))
                     raise caracal.ConfigurationError("Inconsistent selfcal chunking")
         # Then we repeat for the channels, as these arrays do not have to be the same length
@@ -175,26 +174,25 @@ def check_config(config, name):
             if chan_chunk != 0:
                 if 0.0 in solutions:
                     caracal.log.error("You are using all channels in your solutions (i.e. 0) but have set chan_chunk, please set it to 0 for using all channels.")
-                    caracal.log.error("Your channel chunk = {} \n".format(chan_chunk))
+                    caracal.log.error(f"Your channel chunk = {chan_chunk} \n")
                     caracal.log.error("Your channel solutions to be applied are {}".format(", ".join([str(x) for x in solutions])))
                     raise caracal.ConfigurationError("Inconsistent selfcal chunking")
                 sol_int_array = float(chan_chunk) / np.array(solutions, dtype=float)
                 for val in sol_int_array:
                     if val != int(val):
                         caracal.log.error("Not all applied channel solutions fit in the chan_chunk.")
-                        caracal.log.error("Your channel chunk = {} \n".format(chan_chunk))
+                        caracal.log.error(f"Your channel chunk = {chan_chunk} \n")
                         caracal.log.error("Your channel solutions to be applied are {}".format(", ".join([str(x) for x in solutions])))
                         raise caracal.ConfigurationError("Inconsistent selfcal chunking")
     # Check some imaging stuff
-    if config["image"]["enable"]:
-        if config["img_maxuv_l"] > 0.0 and config["img_taper"] > 0.0:
-            caracal.UserInputError("You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
+    if config["image"]["enable"] and config["img_maxuv_l"] > 0.0 and config["img_taper"] > 0.0:
+        caracal.UserInputError("You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
 
 
 def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
-    flags_before_worker = "{0:s}_{1:s}_before".format(pipeline.prefix, wname)
-    flags_after_worker = "{0:s}_{1:s}_after".format(pipeline.prefix, wname)
+    flags_before_worker = f"{pipeline.prefix:s}_{wname:s}_before"
+    flags_after_worker = f"{pipeline.prefix:s}_{wname:s}_after"
     flag_main_ms = pipeline.enable_task(config, "calibrate") and config["cal_niter"] >= config["start_iter"]
     rewind_main_ms = config["rewind_flags"]["enable"] and (config["rewind_flags"]["mode"] == "reset_worker" or config["rewind_flags"]["version"] != "null")
     rewind_transf_ms = config["rewind_flags"]["enable"] and (config["rewind_flags"]["mode"] == "reset_worker" or config["rewind_flags"]["transfer_apply_gains_version"] != "null")
@@ -302,7 +300,7 @@ def worker(pipeline, recipe, config):
     for i, m in enumerate(all_msfile):
         # check whether all ms files to be used exist
         if not os.path.exists(os.path.join(pipeline.msdir, m)):
-            raise IOError("MS file {0:s} does not exist. Please check that it is where it should be.".format(m))
+            raise OSError(f"MS file {m:s} does not exist. Please check that it is where it should be.")
 
         # Write/rewind flag versions only if flagging tasks are being
         # executed on these .MS files, or if the user asks to rewind flags
@@ -324,10 +322,10 @@ def worker(pipeline, recipe, config):
                         and not config["overwrite_flagvers"]
                     ):
                         manflags.conflict("rewind_too_little", pipeline, wname, m, config, flags_before_worker, flags_after_worker)
-                    substep = "version-{0:s}-ms{1:d}".format(version, i)
+                    substep = f"version-{version:s}-ms{i:d}"
                     manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
                     if version != available_flagversions[-1]:
-                        substep = "delete-flag_versions-after-{0:s}-ms{1:d}".format(version, i)
+                        substep = f"delete-flag_versions-after-{version:s}-ms{i:d}"
                         manflags.delete_cflags(
                             pipeline,
                             recipe,
@@ -336,7 +334,7 @@ def worker(pipeline, recipe, config):
                             cab_name=substep,
                         )
                     if version != flags_before_worker:
-                        substep = "save-{0:s}-ms{1:d}".format(flags_before_worker, i)
+                        substep = f"save-{flags_before_worker:s}-ms{i:d}"
                         manflags.add_cflags(
                             pipeline,
                             recipe,
@@ -348,7 +346,7 @@ def worker(pipeline, recipe, config):
                 elif stop_if_missing:
                     manflags.conflict("rewind_to_non_existing", pipeline, wname, m, config, flags_before_worker, flags_after_worker)
                 elif flag_main_ms:
-                    substep = "save-{0:s}-ms{1:d}".format(flags_before_worker, i)
+                    substep = f"save-{flags_before_worker:s}-ms{i:d}"
                     manflags.add_cflags(
                         pipeline,
                         recipe,
@@ -361,7 +359,7 @@ def worker(pipeline, recipe, config):
                 if flags_before_worker in available_flagversions and not config["overwrite_flagvers"]:
                     manflags.conflict("would_overwrite_bw", pipeline, wname, m, config, flags_before_worker, flags_after_worker)
                 else:
-                    substep = "save-{0:s}-ms{1:d}".format(flags_before_worker, i)
+                    substep = f"save-{flags_before_worker:s}-ms{i:d}"
                     manflags.add_cflags(
                         pipeline,
                         recipe,
@@ -378,9 +376,9 @@ def worker(pipeline, recipe, config):
         for j, m in enumerate(all_msfile_tgain):
             # check whether all ms files to be used exist
             if not os.path.exists(os.path.join(pipeline.msdir, m)):
-                raise IOError(f"MS file {m}, to transfer gains to, does not exist. Please check that it is where it should be.")
+                raise OSError(f"MS file {m}, to transfer gains to, does not exist. Please check that it is where it should be.")
             # Check if a model subtraction has already been done
-            with table("{0:s}/{1:s}".format(pipeline.msdir, m), readonly=False) as ms_table:
+            with table(f"{pipeline.msdir:s}/{m:s}", readonly=False) as ms_table:
                 try:
                     caracal.log.info(f"Transferring the gains to {m}")
                     nModelSub = 0
@@ -416,10 +414,10 @@ def worker(pipeline, recipe, config):
                             flags_after_worker,
                             read_version="transfer_apply_gains_version",
                         )
-                    substep = "version_{0:s}_ms{1:d}".format(version, i)
+                    substep = f"version_{version:s}_ms{i:d}"
                     manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
                     if version != available_flagversions[-1]:
-                        substep = "delete-flag_versions-after-{0:s}-ms{1:d}".format(version, i)
+                        substep = f"delete-flag_versions-after-{version:s}-ms{i:d}"
                         manflags.delete_cflags(
                             pipeline,
                             recipe,
@@ -428,7 +426,7 @@ def worker(pipeline, recipe, config):
                             cab_name=substep,
                         )
                     if version != flags_before_worker:
-                        substep = "save-{0:s}-ms{1:d}".format(flags_before_worker, i + j)
+                        substep = f"save-{flags_before_worker:s}-ms{i + j:d}"
                         manflags.add_cflags(
                             pipeline,
                             recipe,
@@ -449,7 +447,7 @@ def worker(pipeline, recipe, config):
                         read_version="transfer_apply_gains_version",
                     )
                 else:
-                    substep = "save-{0:s}-ms{1:d}".format(flags_before_worker, i + j)
+                    substep = f"save-{flags_before_worker:s}-ms{i + j:d}"
                     manflags.add_cflags(
                         pipeline,
                         recipe,
@@ -471,7 +469,7 @@ def worker(pipeline, recipe, config):
                         read_version="transfer_apply_gains_version",
                     )
                 else:
-                    substep = "save-{0:s}-ms{1:d}".format(flags_before_worker, i + j)
+                    substep = f"save-{flags_before_worker:s}-ms{i + j:d}"
                     manflags.add_cflags(
                         pipeline,
                         recipe,
@@ -482,10 +480,10 @@ def worker(pipeline, recipe, config):
                     )
 
     if pipeline.enable_task(config, "transfer_model"):
-        t, all_msfile_tmodel, ms_dict_tmodel = pipeline.get_target_mss(label_tmodel)
+        t, all_msfile_tmodel, ms_dict_tmodel = pipeline.get_target_mss(label_tmodel)  # noqa: RUF059
         for m in all_msfile_tmodel:  # check whether all ms files to be used exist
             if not os.path.exists(os.path.join(pipeline.msdir, m)):
-                raise IOError(f"MS file {m}, to transfer model to, does not exist. Please check that it is where it should be.")
+                raise OSError(f"MS file {m}, to transfer model to, does not exist. Please check that it is where it should be.")
 
     prefix = pipeline.prefix
 
@@ -493,17 +491,17 @@ def worker(pipeline, recipe, config):
         key = "image"
         ncpu_img = config[key]["ncpu_img"] if config[key]["ncpu_img"] else ncpu
         absmem = config[key]["absmem"]
-        step = "image-field{0:d}-iter{1:d}".format(trg, num)
+        step = f"image-field{trg:d}-iter{num:d}"
 
         fake_image_opts = {
             "msname": mslist,
             "column": config[key]["col"][0],
-            "weight": imgweight if not imgweight == "briggs" else "briggs {}".format(robust),
+            "weight": imgweight if not imgweight == "briggs" else f"briggs {robust}",  # noqa: SIM201
             "nmiter": sdm.dismissable(config["img_nmiter"]),
             "npix": config["img_npix"],
             "padding": config["img_padding"],
             "scale": config["img_cell"],
-            "prefix": "{0:s}/{1:s}_{2:s}_{3:d}".format(img_dir, prefix, field, num),
+            "prefix": f"{img_dir:s}/{prefix:s}_{field:s}_{num:d}",
             "niter": config["img_niter"],
             "gain": config["img_gain"],
             "mgain": config["img_mgain"],
@@ -556,7 +554,7 @@ def worker(pipeline, recipe, config):
             fake_image_opts,
             input=pipeline.input,
             output=pipeline.output,
-            label="{:s}:: Make image after first round of calibration".format(step),
+            label=f"{step:s}:: Make image after first round of calibration",
         )
 
     def image(trg, num, img_dir, mslist, field):
@@ -580,16 +578,16 @@ def worker(pipeline, recipe, config):
         else:
             imcolumn = config[key]["col"][num - 1 if len(config[key]["col"]) >= num else -1]
 
-        step = "image-field{0:d}-iter{1:d}".format(trg, num)
+        step = f"image-field{trg:d}-iter{num:d}"
         image_opts = {
             "msname": mslist,
             "column": imcolumn,
-            "weight": imgweight if not imgweight == "briggs" else "briggs {}".format(robust),
+            "weight": imgweight if not imgweight == "briggs" else f"briggs {robust}",  # noqa: SIM201
             "nmiter": sdm.dismissable(config["img_nmiter"]),
             "npix": config["img_npix"],
             "padding": config["img_padding"],
             "scale": config["img_cell"],
-            "prefix": "{0:s}/{1:s}_{2:s}_{3:d}".format(img_dir, prefix, field, num),
+            "prefix": f"{img_dir:s}/{prefix:s}_{field:s}_{num:d}",
             "niter": config["img_niter"],
             "gain": config["img_gain"],
             "mgain": config["img_mgain"],
@@ -646,53 +644,51 @@ def worker(pipeline, recipe, config):
                     "local-rms-window": config[key]["cleanmask_localrms_window"][num - 1 if len(config[key]["cleanmask_localrms_window"]) >= num else -1],
                 })
         elif mask_key == "sofia":
-            fits_mask = "masking/{0:s}_{1:s}_{2:d}_clean_mask.fits".format(prefix, field, num)
-            if not os.path.isfile("{0:s}/{1:s}".format(pipeline.output, fits_mask)):
+            fits_mask = f"masking/{prefix:s}_{field:s}_{num:d}_clean_mask.fits"
+            if not os.path.isfile(f"{pipeline.output:s}/{fits_mask:s}"):
                 raise caracal.ConfigurationError(
-                    "SoFiA clean mask {0:s}/{1:s} not found. Something must have gone wrong with the SoFiA run"
-                    " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output, fits_mask)
+                    f"SoFiA clean mask {pipeline.output:s}/{fits_mask:s} not found. Something must have gone wrong with the SoFiA run"
+                    " (maybe the detection threshold was too high?). Please check the logs."
                 )
             image_opts.update({
-                "fitsmask": "{0:s}:output".format(fits_mask),
+                "fitsmask": f"{fits_mask:s}:output",
                 "local-rms": False,
             })
         elif mask_key == "breizorro":
-            fits_mask = "masking/{0:s}_{1:s}_{2:d}_clean_mask.fits".format(prefix, field, num)
-            if not os.path.isfile("{0:s}/{1:s}".format(pipeline.output, fits_mask)):
+            fits_mask = f"masking/{prefix:s}_{field:s}_{num:d}_clean_mask.fits"
+            if not os.path.isfile(f"{pipeline.output:s}/{fits_mask:s}"):
                 raise caracal.ConfigurationError(
-                    "Breizorro clean mask {0:s}/{1:s} not found. Something must have gone wrong with the Breizorro run"
-                    " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output, fits_mask)
+                    f"Breizorro clean mask {pipeline.output:s}/{fits_mask:s} not found. Something must have gone wrong with the Breizorro run"
+                    " (maybe the detection threshold was too high?). Please check the logs."
                 )
             image_opts.update({
-                "fitsmask": "{0:s}:output".format(fits_mask),
+                "fitsmask": f"{fits_mask:s}:output",
                 "local-rms": False,
             })
         else:
-            fits_mask = "masking/{0:s}_{1:s}.fits".format(mask_key, field)
-            if not os.path.isfile("{0:s}/{1:s}".format(pipeline.output, fits_mask)):
+            fits_mask = f"masking/{mask_key:s}_{field:s}.fits"
+            if not os.path.isfile(f"{pipeline.output:s}/{fits_mask:s}"):
                 raise caracal.ConfigurationError(
-                    "Clean mask {0:s}/{1:s} not found. Please make sure that you have given the correct mask label in cleanmask_method, and that the mask exists.".format(
-                        pipeline.output, fits_mask
-                    )
+                    f"Clean mask {pipeline.output:s}/{fits_mask:s} not found. Please make sure that you have given the correct mask label in cleanmask_method, and that the mask exists."  # noqa: E501
                 )
 
             doProj = False
 
-            preGridMask = "{0:s}_{1:s}.fits".format(mask_key, field)
+            preGridMask = f"{mask_key:s}_{field:s}.fits"
 
-            postGridMask = preGridMask.replace(".fits", "_{}_regrid.fits".format(pipeline.prefix))
+            postGridMask = preGridMask.replace(".fits", f"_{pipeline.prefix}_regrid.fits")
 
             msname_base = os.path.splitext(mslist[0])[0]
 
             t = f"{msname_base}-summary.json"
 
-            with open("{}/{}".format(pipeline.msdir, t)) as f:
+            with open(f"{pipeline.msdir}/{t}") as f:
                 obsDict = json.load(f)
 
             raTarget = obsDict["FIELD"]["REFERENCE_DIR"][0][0][0] / np.pi * 180
             decTarget = obsDict["FIELD"]["REFERENCE_DIR"][0][0][1] / np.pi * 180
 
-            with fits.open("{}/{}".format(pipeline.masking, preGridMask)) as hdul:
+            with fits.open(f"{pipeline.masking}/{preGridMask}") as hdul:
                 caracal.log.info("An input mask for cleaning is provided checking if regridding is needed")
 
                 imgHeight = config["img_npix"]
@@ -710,42 +706,42 @@ def worker(pipeline, recipe, config):
                 """
                 caracal.log.info("Regridding the fitsmask for cleaning")
 
-                caracal.log.info("Write header for new mask {} to match the grid of the image".format(postGridMask))
+                caracal.log.info(f"Write header for new mask {postGridMask} to match the grid of the image")
 
-                with open("{}/tmp.hdr".format(pipeline.masking), "w") as file:
+                with open(f"{pipeline.masking}/tmp.hdr", "w") as file:
                     file.write("SIMPLE  =   T\n")
                     file.write("BITPIX  =   -64\n")
                     file.write("NAXIS   =   2\n")
-                    file.write("NAXIS1  =   {}\n".format(imgWidth))
+                    file.write(f"NAXIS1  =   {imgWidth}\n")
                     file.write("CTYPE1  =   'RA---SIN'\n")
-                    file.write("CRVAL1  =   {}\n".format(raTarget))
-                    file.write("CRPIX1  =   {}\n".format(imgWidth / 2))
+                    file.write(f"CRVAL1  =   {raTarget}\n")
+                    file.write(f"CRPIX1  =   {imgWidth / 2}\n")
                     file.write("CDELT1  =   {}\n".format(-1 * config["img_cell"] / 3600.0))
-                    file.write("NAXIS2  =   {}\n".format(imgHeight))
+                    file.write(f"NAXIS2  =   {imgHeight}\n")
                     file.write("CTYPE2  =   'DEC--SIN'\n")
-                    file.write("CRVAL2  =   {}\n".format(decTarget))
-                    file.write("CRPIX2  =   {}\n".format(imgHeight / 2))
+                    file.write(f"CRVAL2  =   {decTarget}\n")
+                    file.write(f"CRPIX2  =   {imgHeight / 2}\n")
                     file.write("CDELT2  =   {}\n".format(config["img_cell"] / 3600.0))
                     file.write("EXTEND  =   T\n")
                     file.write("EQUINOX =   2000.0\n")
                     file.write("SPECSYS =   TOPOCENT\n")
                     file.write("END\n")
 
-                if os.path.exists("{}/{}".format(pipeline.masking, postGridMask)):
-                    os.remove("{}/{}".format(pipeline.masking, postGridMask))
+                if os.path.exists(f"{pipeline.masking}/{postGridMask}"):
+                    os.remove(f"{pipeline.masking}/{postGridMask}")
 
-                with fits.open("{}/{}".format(pipeline.masking, preGridMask)) as hdul:
+                with fits.open(f"{pipeline.masking}/{preGridMask}") as hdul:
                     if np.amax(hdul[0].data) > 1:
                         mask = np.where(hdul[0].data > 0)
                         hdul[0].data[mask] = 1
                         preGridMaskNew = preGridMask.replace(".fits", "_01.fits")
-                        hdul.writeto("{}/{}".format(pipeline.masking, preGridMaskNew), overwrite=True)
+                        hdul.writeto(f"{pipeline.masking}/{preGridMaskNew}", overwrite=True)
                         preGridMask = preGridMaskNew
 
-                caracal.log.info("Reprojecting mask {} to match the grid of the image.".format(preGridMask))
+                caracal.log.info(f"Reprojecting mask {preGridMask} to match the grid of the image.")
 
                 # REPROJECT user supplied mask
-                step = "reprojectMask-img-{}-field-{}".format(trg, num)
+                step = f"reprojectMask-img-{trg}-field-{num}"
                 recipe.add(
                     "cab/mProject",
                     step,
@@ -757,23 +753,23 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.masking,
                     output=pipeline.masking,
-                    label="{0:s}:: Reprojecting user input mask {1:s} to match the grid of the image".format(step, preGridMask),
+                    label=f"{step:s}:: Reprojecting user input mask {preGridMask:s} to match the grid of the image",
                 )
 
                 recipe.run()
                 recipe.jobs = []
 
-                if not os.path.exists("{}/{}".format(pipeline.masking, postGridMask)):
-                    raise IOError(f"The regridded mask {postGridMask} does not exist. The original mask likely has no overlap with the cube.")
+                if not os.path.exists(f"{pipeline.masking}/{postGridMask}"):
+                    raise OSError(f"The regridded mask {postGridMask} does not exist. The original mask likely has no overlap with the cube.")
 
                 # convert floats of mask to integers
-                with fits.open("{}/{}".format(pipeline.masking, postGridMask), mode="update") as hdul:
+                with fits.open(f"{pipeline.masking}/{postGridMask}", mode="update") as hdul:
                     hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
                     hdul.flush()
 
                 # update fitsmask keyword of wsclean
                 image_opts.update({
-                    "fitsmask": "{0:s}/{1:s}:output".format(get_relative_path(pipeline.masking, pipeline), postGridMask.split("/")[-1]),
+                    "fitsmask": "{0:s}/{1:s}:output".format(get_relative_path(pipeline.masking, pipeline), postGridMask.split("/")[-1]),  # noqa: UP030
                     "local-rms": False,
                 })
 
@@ -783,20 +779,20 @@ def worker(pipeline, recipe, config):
             image_opts,
             input=pipeline.input,
             output=pipeline.output,
-            label="{:s}:: Make wsclean image (selfcal iter {})".format(step, num),
+            label=f"{step:s}:: Make wsclean image (selfcal iter {num})",
         )
         recipe.run()
         # Empty job que after execution
         recipe.jobs = []
 
     def sofia_mask(trg, num, img_dir, field):
-        step = "make-sofia_mask-field{0:d}-iter{1:d}".format(trg, num)
+        step = f"make-sofia_mask-field{trg:d}-iter{num:d}"
         key = "img_sofia_settings"
 
         if config["img_joinchans"]:
-            imagename = "{0:s}/{1:s}_{2:s}_{3:d}-MFS-image.fits".format(img_dir, prefix, field, num)
+            imagename = f"{img_dir:s}/{prefix:s}_{field:s}_{num:d}-MFS-image.fits"
         else:
-            imagename = "{0:s}/{1:s}_{2:s}_{3:d}-image.fits".format(img_dir, prefix, field, num)
+            imagename = f"{img_dir:s}/{prefix:s}_{field:s}_{num:d}-image.fits"
 
         outmask = pipeline.prefix + "_" + field + "_" + str(num + 1) + "_clean"
         outmaskName = outmask + "_mask.fits"
@@ -851,10 +847,10 @@ def worker(pipeline, recipe, config):
 
         # check if inputmask is provided by input
         preGridMask = config[key]["inputmask"]
-        postGridMask = preGridMask.replace(".fits", "_{}_regrid.fits".format(pipeline.prefix))
+        postGridMask = preGridMask.replace(".fits", f"_{pipeline.prefix}_regrid.fits")
 
         if num == 0 and preGridMask:
-            caracal.log.info("Inputmask {} found in Cycle-0. Checking if regridding is needed, and proceed if true".format(preGridMask))
+            caracal.log.info(f"Inputmask {preGridMask} found in Cycle-0. Checking if regridding is needed, and proceed if true")
 
             doProj = False
 
@@ -862,12 +858,12 @@ def worker(pipeline, recipe, config):
 
             t = f"{msname_base}-summary.json"
 
-            with open("{}/{}".format(pipeline.msdir, t)) as f:
+            with open(f"{pipeline.msdir}/{t}") as f:
                 obsDict = json.load(f)
 
             raTarget = obsDict["FIELD"]["REFERENCE_DIR"][0][0][0] / np.pi * 180
             decTarget = obsDict["FIELD"]["REFERENCE_DIR"][0][0][1] / np.pi * 180
-            with fits.open("{}/{}".format(pipeline.masking, preGridMask)) as hdul:
+            with fits.open(f"{pipeline.masking}/{preGridMask}") as hdul:
                 imgHeight = config["img_npix"]
                 imgWidth = config["img_npix"]
 
@@ -878,11 +874,11 @@ def worker(pipeline, recipe, config):
             if doProj:
                 # MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
 
-                caracal.log.info("Regridding input {} mask".format(preGridMask))
-                caracal.log.info("Write header for new mask {} to match the grid of the image".format(postGridMask))
-                hduImage = fits.getheader("{}/{}".format(pipeline.output, imagename))
+                caracal.log.info(f"Regridding input {preGridMask} mask")
+                caracal.log.info(f"Write header for new mask {postGridMask} to match the grid of the image")
+                hduImage = fits.getheader(f"{pipeline.output}/{imagename}")
 
-                with open("{}/tmp.hdr".format(pipeline.masking), "w") as file:
+                with open(f"{pipeline.masking}/tmp.hdr", "w") as file:
                     file.write("SIMPLE  =   T\n")
                     file.write("BITPIX  =   -64\n")
                     file.write("NAXIS   =   {}\n".format(hduImage["NAXIS"]))
@@ -901,22 +897,22 @@ def worker(pipeline, recipe, config):
                     file.write("SPECSYS =   TOPOCENT\n")
                     file.write("END\n")
 
-                if os.path.exists("{}/{}".format(pipeline.masking, postGridMask)):
-                    os.remove("{}/{}".format(pipeline.masking, postGridMask))
+                if os.path.exists(f"{pipeline.masking}/{postGridMask}"):
+                    os.remove(f"{pipeline.masking}/{postGridMask}")
 
                 # turn mask into zeros and ones
-                with fits.open("{}/{}".format(pipeline.masking, preGridMask)) as hdul:
+                with fits.open(f"{pipeline.masking}/{preGridMask}") as hdul:
                     if np.amax(hdul[0].data) > 1:
                         mask = np.where(hdul[0].data > 0)
                         hdul[0].data[mask] = 1
 
                     preGridMaskNew = preGridMask.replace(".fits", "_01.fits")
-                    hdul.writeto("{}/{}".format(pipeline.masking, preGridMaskNew), overwrite=True)
+                    hdul.writeto(f"{pipeline.masking}/{preGridMaskNew}", overwrite=True)
 
-                caracal.log.info("Reprojecting mask {} to match the grid of the image.".format(preGridMask))
+                caracal.log.info(f"Reprojecting mask {preGridMask} to match the grid of the image.")
 
                 # REPROJECT user supplied mask
-                step = "reprojectMask-img-{}-field-{}".format(trg, num)
+                step = f"reprojectMask-img-{trg}-field-{num}"
                 recipe.add(
                     "cab/mProject",
                     step,
@@ -928,36 +924,36 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.masking,
                     output=pipeline.masking,
-                    label="{0:s}:: Reprojecting user input mask {1:s} to match the grid of the image".format(step, preGridMaskNew),
+                    label=f"{step:s}:: Reprojecting user input mask {preGridMaskNew:s} to match the grid of the image",
                 )
 
                 recipe.run()
                 recipe.jobs = []
 
                 # turn nans of regridded mask into zeros
-                datTmp = fits.getdata("{}/{}".format(pipeline.masking, postGridMask))
-                headTmp = fits.getheader("{}/{}".format(pipeline.masking, postGridMask))
+                datTmp = fits.getdata(f"{pipeline.masking}/{postGridMask}")
+                headTmp = fits.getheader(f"{pipeline.masking}/{postGridMask}")
 
                 idxNan = np.isnan(datTmp)
                 datTmp[idxNan] = 0.0
                 datNew = np.around(datTmp.astype(np.float32)).astype(np.int16)
 
-                postGridMaskSof = preGridMask.replace(".fits", "_{}_regridSof.fits".format(pipeline.prefix))
+                postGridMaskSof = preGridMask.replace(".fits", f"_{pipeline.prefix}_regridSof.fits")
 
-                fits.writeto("{}/{}".format(pipeline.masking, postGridMaskSof), datNew, headTmp, overwrite=True)
+                fits.writeto(f"{pipeline.masking}/{postGridMaskSof}", datNew, headTmp, overwrite=True)
 
         elif num > 0 and preGridMask:
             caracal.log.info("Cycle > 0 and user provided inputmask")
 
             caracal.log.info("Updating mask inputmask name for sofia run ")
-            postGridMaskSof = preGridMask.replace(".fits", "_{}_regridSof.fits".format(pipeline.prefix))
+            postGridMaskSof = preGridMask.replace(".fits", f"_{pipeline.prefix}_regridSof.fits")
 
-            if os.path.exists("{}/{}".format(pipeline.masking, postGridMaskSof)):
-                caracal.log.info("Regridded mask {}".format(postGridMaskSof))
-                sofia_opts.update({"import.maskFile": "masking/{}".format(postGridMaskSof)})
+            if os.path.exists(f"{pipeline.masking}/{postGridMaskSof}"):
+                caracal.log.info(f"Regridded mask {postGridMaskSof}")
+                sofia_opts.update({"import.maskFile": f"masking/{postGridMaskSof}"})
             else:
-                caracal.log.info("User provided inputmask {}".format(preGridMask))
-                sofia_opts.update({"import.maskFile": "masking/{}".format(preGridMask)})
+                caracal.log.info(f"User provided inputmask {preGridMask}")
+                sofia_opts.update({"import.maskFile": f"masking/{preGridMask}"})
 
         recipe.add(
             "cab/sofia",
@@ -965,23 +961,19 @@ def worker(pipeline, recipe, config):
             sofia_opts,
             input=pipeline.output,
             output=pipeline.output + "/masking/",
-            label="{0:s}:: Make SoFiA mask".format(step),
+            label=f"{step:s}:: Make SoFiA mask",
         )
 
         recipe.run()
         recipe.jobs = []
 
         if preGridMask:
-            caracal.log.info(
-                "Adding user-supplied input mask onto SoFiA mask {}".format(
-                    postGridMaskSof,
-                )
-            )
+            caracal.log.info(f"Adding user-supplied input mask onto SoFiA mask {postGridMaskSof}")
 
-            datMask = fits.getdata("{}/{}".format(pipeline.masking, outmaskName))
+            datMask = fits.getdata(f"{pipeline.masking}/{outmaskName}")
 
-            datHead = fits.getheader("{}/{}".format(pipeline.masking, outmaskName))
-            datForn = fits.getdata("{}/{}".format(pipeline.masking, postGridMaskSof))
+            datHead = fits.getheader(f"{pipeline.masking}/{outmaskName}")
+            datForn = fits.getdata(f"{pipeline.masking}/{postGridMaskSof}")
             caracal.log.info(postGridMaskSof)
             datForn = np.expand_dims(datForn, axis=0)
             datForn = np.expand_dims(datForn, axis=0)
@@ -1002,13 +994,13 @@ def worker(pipeline, recipe, config):
             caracal.log.info("Mask saved, ready for cleaning")
 
     def breizorro_mask(trg, num, img_dir, field):
-        step = "make-breizorro_mask-field{0:d}-iter{1:d}".format(trg, num)
+        step = f"make-breizorro_mask-field{trg:d}-iter{num:d}"
         key = "img_breizorro_settings"
 
         if config["img_joinchans"]:
-            imagename = "{0:s}/{1:s}_{2:s}_{3:d}-MFS-image.fits".format(img_dir, prefix, field, num)
+            imagename = f"{img_dir:s}/{prefix:s}_{field:s}_{num:d}-MFS-image.fits"
         else:
-            imagename = "{0:s}/{1:s}_{2:s}_{3:d}-image.fits".format(img_dir, prefix, field, num)
+            imagename = f"{img_dir:s}/{prefix:s}_{field:s}_{num:d}-image.fits"
 
         outmask = pipeline.prefix + "_" + field + "_" + str(num + 1) + "_clean"
         outmaskName = outmask + "_mask.fits"
@@ -1028,13 +1020,13 @@ def worker(pipeline, recipe, config):
             breizorro_opts,
             input=pipeline.output,
             output=pipeline.output + "/masking/",
-            label="{0:s}:: Make Breizorro".format(step),
+            label=f"{step:s}:: Make Breizorro",
         )
 
     def make_cube(num, img_dir, field, imtype="model"):
-        im = "{0:s}/{1:s}_{2:s}_{3}-cube.fits:output".format(img_dir, prefix, field, num)
-        step = "makecube-{}".format(num)
-        images = ["{0:s}/{1:s}_{2:s}_{3}-{4:04d}-{5:s}.fits:output".format(img_dir, prefix, field, num, i, imtype) for i in range(config["img_nchans"])]
+        im = f"{img_dir:s}/{prefix:s}_{field:s}_{num}-cube.fits:output"
+        step = f"makecube-{num}"
+        images = [f"{img_dir:s}/{prefix:s}_{field:s}_{num}-{i:04d}-{imtype:s}.fits:output" for i in range(config["img_nchans"])]
         recipe.add(
             "cab/fitstool",
             step,
@@ -1046,7 +1038,7 @@ def worker(pipeline, recipe, config):
             },
             input=pipeline.input,
             output=pipeline.output,
-            label="{0:s}:: Make convolved model".format(step),
+            label=f"{step:s}:: Make convolved model",
         )
 
         return im
@@ -1054,20 +1046,20 @@ def worker(pipeline, recipe, config):
     def extract_sources(trg, num, img_dir, field):
         key = "extract_sources"
         if config[key]["detection_image"]:
-            step = "detection_image-field{0:d}-iter{1:d}".format(trg, num)
-            detection_image = "{0:s}/{1:s}-detection_image_{2:s}_{3:d}.fits:output".format(img_dir, prefix, field, num)
+            step = f"detection_image-field{trg:d}-iter{num:d}"
+            detection_image = f"{img_dir:s}/{prefix:s}-detection_image_{field:s}_{num:d}.fits:output"
             recipe.add(
                 "cab/fitstool",
                 step,
                 {
-                    "image": ["{0:s}/{1:s}_{2:s}_{3:d}{4:s}-{5:s}.fits:output".format(img_dir, prefix, field, num, im, mfsprefix) for im in ("image", "residual")],
+                    "image": [f"{img_dir:s}/{prefix:s}_{field:s}_{num:d}{im:s}-{mfsprefix:s}.fits:output" for im in ("image", "residual")],
                     "output": detection_image,
                     "diff": True,
                     "force": True,
                 },
                 input=pipeline.input,
                 output=pipeline.output,
-                label="{0:s}:: Make convolved model".format(step),
+                label=f"{step:s}:: Make convolved model",
             )
         else:
             detection_image = None
@@ -1079,7 +1071,7 @@ def worker(pipeline, recipe, config):
                 im = make_cube(num, get_dir_path(pipeline.continuum, pipeline) + "/" + img_dir.split("/")[-1], field, "image")
                 im = im.split("/")[-1]
             else:
-                im = "{0:s}_{1:s}_{2:d}{3:s}-image.fits:output".format(prefix, field, num, mfsprefix)
+                im = f"{prefix:s}_{field:s}_{num:d}{mfsprefix:s}-image.fits:output"
 
             if config[key]["breizorro_image"]["enable"]:
                 step = "Breizorro_masked_image"
@@ -1096,7 +1088,7 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.input,
                     output=pipeline.output + "/" + img_dir,
-                    label="{0:s}:: Make Breizorro".format(step),
+                    label=f"{step:s}:: Make Breizorro",
                 )
                 im = "{}:{}".format(outmask_image, "output")
                 # In order to make sure that we actually find stuff in the images we execute the rec ipe here
@@ -1105,20 +1097,20 @@ def worker(pipeline, recipe, config):
                 recipe.jobs = []
                 caracal.log.info(im)
 
-            step = "extract-field{0:d}-iter{1:d}".format(trg, num)
-            calmodel = "{0:s}_{1:s}_{2:d}-pybdsm".format(prefix, field, num)
+            step = f"extract-field{trg:d}-iter{num:d}"
+            calmodel = f"{prefix:s}_{field:s}_{num:d}-pybdsm"
 
             if detection_image:
                 blank_limit = 1e-9
             else:
                 blank_limit = None
             try:
-                os.remove("{0:s}/{1:s}/{2:s}.fits".format(pipeline.output, img_dir, calmodel))
-            except BaseException:
+                os.remove(f"{pipeline.output:s}/{img_dir:s}/{calmodel:s}.fits")
+            except BaseException:  # noqa: BLE001
                 caracal.log.info("No Previous fits log found.")
             try:
-                os.remove("{0:s}/{1:s}/{2:s}.lsm.html".format(pipeline.output, img_dir, calmodel))
-            except BaseException:
+                os.remove(f"{pipeline.output:s}/{img_dir:s}/{calmodel:s}.lsm.html")
+            except BaseException:  # noqa: BLE001
                 caracal.log.info("No Previous lsm.html found.")
             recipe.add(
                 "cab/pybdsm",
@@ -1127,7 +1119,7 @@ def worker(pipeline, recipe, config):
                     "image": sdm.dismissable(im),
                     "thresh_pix": config[key]["thr_pix"][num - 1 if len(config[key]["thr_pix"]) >= num else -1],
                     "thresh_isl": config[key]["thr_isl"][num - 1 if len(config[key]["thr_isl"]) >= num else -1],
-                    "outfile": "{:s}.gaul:output".format(calmodel),
+                    "outfile": f"{calmodel:s}.gaul:output",
                     "blank_limit": sdm.dismissable(blank_limit),
                     "adaptive_rms_box": config[key]["local_rms"],
                     "port2tigger": False,
@@ -1140,42 +1132,43 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 # Unfortuntaly need to do it this way for pybdsm
                 output=pipeline.output + "/" + img_dir,
-                label="{0:s}:: Extract sources".format(step),
+                label=f"{step:s}:: Extract sources",
             )
             # In order to make sure that we actually find stuff in the images we execute the rec ipe here
             recipe.run()
             # Empty job que after execution
             recipe.jobs = []
             # and then check the proper file is produced
-            if not os.path.isfile("{0:s}/{1:s}/{2:s}.gaul".format(pipeline.output, img_dir, calmodel)):
+            if not os.path.isfile(f"{pipeline.output:s}/{img_dir:s}/{calmodel:s}.gaul"):
                 caracal.log.error("No model file is found after the PYBDSM run. This probably means no sources were found either due to a bad calibration or to stringent values. ")
                 raise caracal.BadDataError("No model file found after the PyBDSM run")
 
-            step = "convert-field{0:d}-iter{1:d}".format(trg, num)
+            step = f"convert-field{trg:d}-iter{num:d}"
             recipe.add(
                 "cab/tigger_convert",
                 step,
                 {
-                    "input-skymodel": "{0:s}/{1:s}.gaul:output".format(img_dir, calmodel),
-                    "output-skymodel": "{0:s}/{1:s}.lsm.html:output".format(img_dir, calmodel),
+                    "input-skymodel": f"{img_dir:s}/{calmodel:s}.gaul:output",
+                    "output-skymodel": f"{img_dir:s}/{calmodel:s}.lsm.html:output",
                     "type": "Gaul",
                     "output-type": "Tigger",
                 },
                 input=pipeline.input,
                 output=pipeline.output,
-                label="{0:s}:: Convert extracted sources to tigger model".format(step),
+                label=f"{step:s}:: Convert extracted sources to tigger model",
             )
 
     def combine_models(models, num, img_dir, field, enable=True):
         model_names = [
-            "{0:s}/{1:s}_{2:s}_{3:s}-pybdsm.lsm.html:output".format(get_dir_path("{0:s}/image_{1:d}".format(pipeline.continuum, int(m)), pipeline), prefix, field, m)
+            "{0:s}/{1:s}_{2:s}_{3:s}-pybdsm.lsm.html:output".format(get_dir_path(f"{pipeline.continuum:s}/image_{int(m):d}", pipeline), prefix, field, m)  # noqa: UP030
             for m in models
         ]
 
         model_names_fits = [
-            "{0:s}/{1:s}_{2:s}_{3:s}-pybdsm.fits".format(get_dir_path("{0:s}/image_{1:d}".format(pipeline.continuum, int(m)), pipeline), prefix, field, m) for m in models
+            "{0:s}/{1:s}_{2:s}_{3:s}-pybdsm.fits".format(get_dir_path(f"{pipeline.continuum:s}/image_{int(m):d}", pipeline), prefix, field, m)  # noqa: UP030
+            for m in models
         ]
-        calmodel = "{0:s}/{1:s}_{2:d}-pybdsm-combined.lsm.html:output".format(img_dir, prefix, num)
+        calmodel = f"{img_dir:s}/{prefix:s}_{num:d}-pybdsm-combined.lsm.html:output"
 
         if enable:
             step = "combine_models-" + "_".join(map(str, models))
@@ -1191,14 +1184,14 @@ def worker(pipeline, recipe, config):
                 },
                 input=pipeline.input,
                 output=pipeline.output,
-                label="{0:s}:: Combined models".format(step),
+                label=f"{step:s}:: Combined models",
             )
 
         return calmodel, model_names_fits
 
     def calibrate_meqtrees(trg, num, prod_path, img_dir, mslist, field):
         key = "calibrate"
-        global reset_cal, trace_SN, trace_matrix
+        global reset_cal, trace_SN, trace_matrix  # noqa: PLW0602
 
         # force to calibrate with model data column if specified by user
 
@@ -1219,11 +1212,11 @@ def worker(pipeline, recipe, config):
             modelcolumn = "MODEL_DATA"
             if isinstance(model, str) and len(model.split("+")) > 1:
                 mm = model.split("+")
-                calmodel, fits_model = combine_models(mm, num, img_dir, field, enable=False if pipeline.enable_task(config, "aimfast") else True)
+                calmodel, fits_model = combine_models(mm, num, img_dir, field, enable=False if pipeline.enable_task(config, "aimfast") else True)  # noqa: SIM211
             else:
                 model = int(model)
-                calmodel = "{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.lsm.html:output".format(img_dir, prefix, field, model)
-                fits_model = "{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.fits".format(img_dir, prefix, field, model)
+                calmodel = f"{img_dir:s}/{prefix:s}_{field:s}_{model:d}-pybdsm.lsm.html:output"
+                fits_model = f"{img_dir:s}/{prefix:s}_{field:s}_{model:d}-pybdsm.fits"
         # If the mode is pybdsm_only, don't use any clean components. So, the same as above, but with
         # vismodel =False
         elif config["cal_model_mode"] == "pybdsm_only":
@@ -1235,10 +1228,10 @@ def worker(pipeline, recipe, config):
 
             if isinstance(model, str) and len(model.split("+")) > 1:
                 mm = model.split("+")
-                calmodel, fits_model = combine_models(mm, num, img_dir, field, enable=False if pipeline.enable_task(config, "aimfast") else True)
+                calmodel, fits_model = combine_models(mm, num, img_dir, field, enable=False if pipeline.enable_task(config, "aimfast") else True)  # noqa: RUF059, SIM211
             else:
                 model = int(model)
-                calmodel = "{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.lsm.html:output".format(img_dir, prefix, field, model)
+                calmodel = f"{img_dir:s}/{prefix:s}_{field:s}_{model:d}-pybdsm.lsm.html:output"
 
             modelcolumn = ""
         # If the mode is vis_only, then there is need for an empty sky model (since meqtrees needs one).
@@ -1246,7 +1239,7 @@ def worker(pipeline, recipe, config):
         elif config["cal_model_mode"] == "vis_only":
             vismodel = True
             modelcolumn = "MODEL_DATA"
-            calmodel = "{0:s}_{1:d}-nullmodel.txt".format(prefix, num)
+            calmodel = f"{prefix:s}_{num:d}-nullmodel.txt"
             with open(os.path.join(pipeline.output, img_dir, calmodel), "w") as stdw:
                 stdw.write("#format: ra_d dec_d i\n")
                 stdw.write("0.0 -30.0 1e-99")
@@ -1283,13 +1276,13 @@ def worker(pipeline, recipe, config):
                 for scan_key in obs_data["SCAN"]["0"]:
                     tot_time += obs_data["SCAN"]["0"][scan_key]
                 no_ant = len(obs_data["ANT"]["DISH_DIAMETER"])
-                DR = fidelity_data["{0}_{2}_{1}-residual".format(prefix, num, field)]["{0}_{2}_{1}-model".format(prefix, num, field)]["DR"]
-                Noise = fidelity_data["{0}_{2}_{1}-residual".format(prefix, num, field)]["STDDev"]
+                DR = fidelity_data[f"{prefix}_{field}_{num}-residual"][f"{prefix}_{field}_{num}-model"]["DR"]
+                Noise = fidelity_data[f"{prefix}_{field}_{num}-residual"]["STDDev"]
                 flux = DR * Noise
                 solvetime = int(Noise**2 * SN**2 * tot_time * no_ant / (flux**2 * 2.0) / int_time)
 
                 if num > 1:
-                    DR = fidelity_data["{0}_{2}_{1}-residual".format(prefix, num - 1, field)]["{0}_{2}_{1}-model".format(prefix, num - 1, field)]["DR"]
+                    DR = fidelity_data[f"{prefix}_{field}_{num - 1}-residual"][f"{prefix}_{field}_{num - 1}-model"]["DR"]
                     flux = DR * Noise
                     prev_solvetime = int(Noise**2 * SN**2 * tot_time * no_ant / (flux**2 * 2.0) / int_time)
                 else:
@@ -1341,7 +1334,7 @@ def worker(pipeline, recipe, config):
                 config[key]["bsols_timeslots"][num - 1 if num <= len(config[key]["bsols_timeslots"]) else -1],
                 config[key]["bsols_chan"][num - 1 if num <= len(config[key]["bsols_chan"]) else -1],
             ]
-            step = "calibrate-field{0:d}-iter{1:d}-ms{2:d}".format(trg, num, i)
+            step = f"calibrate-field{trg:d}-iter{num:d}-ms{i:d}"
             outdata = config[key]["output_data"][num - 1 if len(config[key]["output_data"]) >= num else -1]
             if outdata == "CORRECTED_DATA":
                 outdata = "CORR_DATA"
@@ -1351,7 +1344,7 @@ def worker(pipeline, recipe, config):
             op_dir = pipeline.continuum + "/selfcal_products/"
             msbase = os.path.splitext(msname)[0]
             # Check if a model subtraction has already been done
-            with table("{0:s}/{1:s}".format(pipeline.msdir, msname), readonly=False) as ms_table:
+            with table(f"{pipeline.msdir:s}/{msname:s}", readonly=False) as ms_table:
                 try:
                     caracal.log.info(f"Re-doing the calibration on {msname}")
                     nModelSub = 0
@@ -1371,8 +1364,8 @@ def worker(pipeline, recipe, config):
                     "column": incolumn,
                     "output-data": outdata,
                     "output-column": outcolumn,
-                    "prefix": "{0:s}_{1:s}_{2:d}_meqtrees".format(prefix, msbase, num),
-                    "label": "cal{0:d}".format(num),
+                    "prefix": f"{prefix:s}_{msbase:s}_{num:d}_meqtrees",
+                    "label": f"cal{num:d}",
                     "read-flags-from-ms": True,
                     "read-flagsets": "-stefcal",
                     "write-flagset": "stefcal",
@@ -1393,7 +1386,7 @@ def worker(pipeline, recipe, config):
                 },
                 input=inp_dir,
                 output=op_dir,
-                label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname),
+                label=f"{step:s}:: Calibrate step {num:d} ms={msname:s}",
             )
 
     def calibrate_cubical(trg, num, prod_path, img_dir, mslist, field):
@@ -1413,7 +1406,7 @@ def worker(pipeline, recipe, config):
         # If it doesn't then don't combine.
         else:
             model = int(model)
-            calmodel = "{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.lsm.html:output".format(img_dir, prefix, field, model)
+            calmodel = f"{img_dir:s}/{prefix:s}_{field:s}_{model:d}-pybdsm.lsm.html:output"
         # In pybdsm_vis mode, add the calmodel (pybdsf) and the MODEL_DATA.
         if config["cal_model_mode"] == "pybdsm_vis":
             if num == cal_niter:
@@ -1453,7 +1446,7 @@ def worker(pipeline, recipe, config):
             gupdate = "phase-diag"
 
         else:
-            raise ValueError("{} is not a viable matrix_type".format(matrix_type))
+            raise ValueError(f"{matrix_type} is not a viable matrix_type")
 
         jones_chain = "G"
         gsols_ = [
@@ -1476,7 +1469,7 @@ def worker(pipeline, recipe, config):
         # If we are doing a calibration of phases and amplitudes on different timescale G is always phase
         # This cannot be combined with the earlier statement as bupdate needs to be equal to the original matrix
         # first check if we are doing amplitude and phase
-        if matrix_type == "GainDiag" or matrix_type == "Gain2x2":
+        if matrix_type == "GainDiag" or matrix_type == "Gain2x2":  # noqa: SIM102
             # Then check whether the scales different
             if (gasols_[0] != -1 and gasols_[0] != gsols_[0]) or (gasols_[1] != -1 and gasols_[1] != gsols_[1]):
                 gupdate = "phase-diag"
@@ -1503,25 +1496,22 @@ def worker(pipeline, recipe, config):
             if len(corrs) > 2:
                 take_diag_terms = False
             # End temp fix
-            step = "calibrate-cubical-field{0:d}-iter{1:d}".format(
-                trg,
-                num,
-            )
+            step = f"calibrate-cubical-field{trg:d}-iter{num:d}"
             if gupdate == "phase-diag" and matrix_type == "Fslope":
-                g_table_name = "{0:s}/{3:s}-g-delay-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(msname)[0], prefix)
+                g_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-g-delay-gains-{num:d}-{os.path.splitext(msname)[0]:s}.parmdb:output"
             elif gupdate == "phase-diag":
-                g_table_name = "{0:s}/{3:s}-g-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(msname)[0], prefix)
+                g_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-g-phase-gains-{num:d}-{os.path.splitext(msname)[0]:s}.parmdb:output"
             elif gupdate == "amp-diag":
-                g_table_name = "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(msname)[0], prefix)
+                g_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-g-amp-gains-{num:d}-{os.path.splitext(msname)[0]:s}.parmdb:output"
             elif gupdate == "diag":
-                g_table_name = "{0:s}/{3:s}-g-amp-phase-diag-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(msname)[0], prefix)
+                g_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-g-amp-phase-diag-gains-{num:d}-{os.path.splitext(msname)[0]:s}.parmdb:output"
             elif gupdate == "full":
-                g_table_name = "{0:s}/{3:s}-g-amp-phase-full-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(msname)[0], prefix)
+                g_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-g-amp-phase-full-gains-{num:d}-{os.path.splitext(msname)[0]:s}.parmdb:output"
             else:
                 raise RuntimeError("Something has corrupted the selfcal run")
             msbase = os.path.splitext(msname)[0]
             # Check if a model subtraction has already been done
-            with table("{0:s}/{1:s}".format(pipeline.msdir, msname), readonly=False) as ms_table:
+            with table(f"{pipeline.msdir:s}/{msname:s}", readonly=False) as ms_table:
                 try:
                     caracal.log.info(f"Re-doing the calibration on {msname}")
                     nModelSub = 0
@@ -1540,7 +1530,7 @@ def worker(pipeline, recipe, config):
                 "sol-jones": jones_chain,
                 "sol-term-iters": ",".join(sol_terms_add),
                 "sel-diag": take_diag_terms,
-                "out-name": "{0:s}/{1:s}_{2:s}_{3:d}_cubical".format(get_dir_path(prod_path, pipeline), prefix, msbase, num),
+                "out-name": f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}_{msbase:s}_{num:d}_cubical",
                 "out-mode": CUBICAL_OUT[config[key]["output_data"][num - 1 if len(config[key]["output_data"]) >= num else -1]],
                 "out-plots": True,
                 "out-derotate": config["cal_cubical"]["out_derotate"],
@@ -1548,8 +1538,8 @@ def worker(pipeline, recipe, config):
                 "out-casa-gaintables": False,
                 "weight-column": config["cal_cubical"]["weight_col"],
                 "montblanc-dtype": "float",
-                "bbc-save-to": "{0:s}/bbc-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, msbase),
-                "g-solvable": True if config[key]["output_data"][num - 1 if len(config[key]["output_data"]) >= num else -1] not in ["PA_DATA"] else False,
+                "bbc-save-to": f"{get_dir_path(prod_path, pipeline):s}/bbc-gains-{num:d}-{msbase:s}.parmdb:output",
+                "g-solvable": True if config[key]["output_data"][num - 1 if len(config[key]["output_data"]) >= num else -1] not in ["PA_DATA"] else False,  # noqa: SIM210
                 "g-type": CUBICAL_MT[matrix_type],
                 "g-update-type": gupdate,
                 "g-time-int": int(gsols_[0]),
@@ -1561,7 +1551,7 @@ def worker(pipeline, recipe, config):
                 "g-max-prior-error": config["cal_cubical"]["max_prior_error"],
                 "g-max-post-error": config["cal_cubical"]["max_post_error"],
                 "madmax-enable": config["cal_cubical"]["flag_madmax"],
-                "madmax-plot": True if (config["cal_cubical"]["flag_madmax"]) else False,
+                "madmax-plot": True if (config["cal_cubical"]["flag_madmax"]) else False,  # noqa: SIM210
                 "madmax-threshold": config["cal_cubical"]["madmax_flag_thr"],
                 "madmax-estimate": "corr",
                 "log-boring": True,
@@ -1583,7 +1573,7 @@ def worker(pipeline, recipe, config):
                     "dd-type": CUBICAL_MT[matrix_type],
                     "dd-time-int": int(gasols_[0]),
                     "dd-freq-int": int(gasols_[1]),
-                    "dd-save-to": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(msname)[0], prefix),
+                    "dd-save-to": f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-g-amp-gains-{num:d}-{os.path.splitext(msname)[0]:s}.parmdb:output",
                     "dd-clip-low": config["cal_gain_cliplow"],
                     "dd-clip-high": config["cal_gain_cliphigh"],
                     "dd-max-prior-error": config["cal_cubical"]["max_prior_error"],
@@ -1591,17 +1581,13 @@ def worker(pipeline, recipe, config):
                 })
             if config["cal_bjones"]:
                 if bupdate == "phase-diag":
-                    b_table_name = "{0:s}/{3:s}-b-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(msname)[0], prefix)
+                    b_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-b-phase-gains-{num:d}-{os.path.splitext(msname)[0]:s}.parmdb:output"
                 elif bupdate == "amp-diag":
-                    b_table_name = "{0:s}/{3:s}-b-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(msname)[0], prefix)
+                    b_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-b-amp-gains-{num:d}-{os.path.splitext(msname)[0]:s}.parmdb:output"
                 elif bupdate == "diag":
-                    b_table_name = "{0:s}/{3:s}-b-amp-phase-diag-gains-{1:d}-{2:s}.parmdb:output".format(
-                        get_dir_path(prod_path, pipeline), num, os.path.splitext(msname)[0], prefix
-                    )
+                    b_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-b-amp-phase-diag-gains-{num:d}-{os.path.splitext(msname)[0]:s}.parmdb:output"
                 elif bupdate == "full":
-                    b_table_name = "{0:s}/{3:s}-b-amp-phase-full-gains-{1:d}-{2:s}.parmdb:output".format(
-                        get_dir_path(prod_path, pipeline), num, os.path.splitext(msname)[0], prefix
-                    )
+                    b_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-b-amp-phase-full-gains-{num:d}-{os.path.splitext(msname)[0]:s}.parmdb:output"
                 else:
                     raise RuntimeError("Something has corrupted the selfcal run")
                 cubical_opts.update({
@@ -1628,7 +1614,7 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 shared_memory=config["cal_cubical"]["shared_mem"],
-                label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname),
+                label=f"{step:s}:: Calibrate step {num:d} ms={msname:s}",
             )
 
     def restore(num, prod_path, mslist_out, enable_inter=True):
@@ -1654,7 +1640,7 @@ def worker(pipeline, recipe, config):
         elif matrix_type == "Fslope":
             gupdate = "phase-diag"
         else:
-            raise ValueError("{} is not a viable matrix_type".format(matrix_type))
+            raise ValueError(f"{matrix_type} is not a viable matrix_type")
 
         jones_chain = "G"
         gsols_ = [
@@ -1672,7 +1658,7 @@ def worker(pipeline, recipe, config):
         # If we are doing a calibration of phases and amplitudes on different timescale G is always phase
         # This cannot be combined with the earlier statement as bupdate needs to be equal to the original matrix.
         second_matrix_invoked = False
-        if matrix_type == "GainDiag" or matrix_type == "Gain2x2":
+        if matrix_type == "GainDiag" or matrix_type == "Gain2x2":  # noqa: SIM102
             # Then check whether the scales different
             if (gasols_[0] != -1 and gasols_[0] != gsols_[0]) or (gasols_[1] != -1 and gasols_[1] != gsols_[1]):
                 gupdate = "phase-diag"
@@ -1732,14 +1718,14 @@ def worker(pipeline, recipe, config):
                 fullres_data = get_obs_data(msname_out)
                 int_time_fullres = fullres_data["EXPOSURE"]
                 channelsize_fullres = fullres_data["SPW"]["TOTAL_BANDWIDTH"][0] / fullres_data["SPW"]["NUM_CHAN"][0]
-                caracal.log.info("Integration time of full-resolution data is: {}".format(int_time_fullres))
-                caracal.log.info("Channel size of full-resolution data is: {}".format(channelsize_fullres))
+                caracal.log.info(f"Integration time of full-resolution data is: {int_time_fullres}")
+                caracal.log.info(f"Channel size of full-resolution data is: {channelsize_fullres}")
                 # Corresponding numbers for the self-cal -ed MS:
                 avg_data = get_obs_data(mslist[i])
                 int_time_avg = avg_data["EXPOSURE"]
                 channelsize_avg = avg_data["SPW"]["TOTAL_BANDWIDTH"][0] / avg_data["SPW"]["NUM_CHAN"][0]
-                caracal.log.info("Integration time of averaged data is: {}".format(int_time_avg))
-                caracal.log.info("Channel size of averaged data is:{}".format(channelsize_avg))
+                caracal.log.info(f"Integration time of averaged data is: {int_time_avg}")
+                caracal.log.info(f"Channel size of averaged data is:{channelsize_avg}")
                 # Compare the channel and timeslot ratios:
                 ratio_timeslot = int_time_avg / int_time_fullres
                 ratio_channelsize = channelsize_avg / channelsize_fullres
@@ -1764,22 +1750,22 @@ def worker(pipeline, recipe, config):
                 fromname = msname_out
                 # First remove the later flags
                 counter = num + 1
-                remainder_flags = "step_{0:d}_2gc_flags".format(counter)
+                remainder_flags = f"step_{counter:d}_2gc_flags"
 
                 while counter < cal_niter:
                     counter += 1
-                    remainder_flags += ",step_{0:d}_2gc_flags".format(counter)
+                    remainder_flags += f",step_{counter:d}_2gc_flags"
                 mspref = msname_out.split(".ms")[0].replace("-", "_")
                 recipe.add(
                     "cab/flagms",
-                    "remove_2gc_flags-{0:s}".format(mspref),
+                    f"remove_2gc_flags-{mspref:s}",
                     {
                         "msname": msname_out,
                         "remove": remainder_flags,
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label="remove-2gc_flags-{0:s}:: Remove 2GC flags".format(mspref),
+                    label=f"remove-2gc_flags-{mspref:s}:: Remove 2GC flags",
                 )
 
             # build cubical commands
@@ -1794,7 +1780,7 @@ def worker(pipeline, recipe, config):
                 "dist-ncpu": ncpu,
                 "dist-max-chunks": config["cal_cubical"]["dist_max_chunks"],
                 "log-memory": True,
-                "out-name": "{0:s}/{1:s}-{2:s}_{3:d}_restored_cubical".format(get_dir_path(prod_path, pipeline), prefix, msbase, num),
+                "out-name": f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-{msbase:s}_{num:d}_restored_cubical",
                 "out-mode": apmode,
                 # "out-overwrite": config[key]['overwrite'],
                 "out-overwrite": True,
@@ -1817,15 +1803,15 @@ def worker(pipeline, recipe, config):
             matrix_type = config[key]["gain_matrix_type"][num - 1 if len(config[key]["gain_matrix_type"]) >= num else -1]
 
             if gupdate == "phase-diag" and matrix_type == "Fslope":
-                g_table_name = "{0:s}/{3:s}-g-delay-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(fromname)[0], prefix)
+                g_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-g-delay-gains-{num:d}-{os.path.splitext(fromname)[0]:s}.parmdb:output"
             elif gupdate == "phase-diag":
-                g_table_name = "{0:s}/{3:s}-g-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(fromname)[0], prefix)
+                g_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-g-phase-gains-{num:d}-{os.path.splitext(fromname)[0]:s}.parmdb:output"
             elif gupdate == "amp-diag":
-                g_table_name = "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(fromname)[0], prefix)
+                g_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-g-amp-gains-{num:d}-{os.path.splitext(fromname)[0]:s}.parmdb:output"
             elif gupdate == "diag":
-                g_table_name = "{0:s}/{3:s}-g-amp-phase-diag-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(fromname)[0], prefix)
+                g_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-g-amp-phase-diag-gains-{num:d}-{os.path.splitext(fromname)[0]:s}.parmdb:output"
             elif gupdate == "full":
-                g_table_name = "{0:s}/{3:s}-g-amp-phase-full-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(fromname)[0], prefix)
+                g_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-g-amp-phase-full-gains-{num:d}-{os.path.splitext(fromname)[0]:s}.parmdb:output"
             else:
                 raise RuntimeError("Something has corrupted the application of the tables")
             if config["transfer_apply_gains"]["interpolate"]["enable"]:
@@ -1862,17 +1848,13 @@ def worker(pipeline, recipe, config):
                 })
                 # Set the table name
                 if bupdate == "phase-diag":
-                    b_table_name = "{0:s}/{3:s}-b-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(fromname)[0], prefix)
+                    b_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-b-phase-gains-{num:d}-{os.path.splitext(fromname)[0]:s}.parmdb:output"
                 elif bupdate == "amp-diag":
-                    b_table_name = "{0:s}/{3:s}-b-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(fromname)[0], prefix)
+                    b_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-b-amp-gains-{num:d}-{os.path.splitext(fromname)[0]:s}.parmdb:output"
                 elif bupdate == "diag":
-                    b_table_name = "{0:s}/{3:s}-b-amp-phase-diag-gains-{1:d}-{2:s}.parmdb:output".format(
-                        get_dir_path(prod_path, pipeline), num, os.path.splitext(fromname)[0], prefix
-                    )
+                    b_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-b-amp-phase-diag-gains-{num:d}-{os.path.splitext(fromname)[0]:s}.parmdb:output"
                 elif bupdate == "full":
-                    b_table_name = "{0:s}/{3:s}-b-amp-phase-full-gains-{1:d}-{2:s}.parmdb:output".format(
-                        get_dir_path(prod_path, pipeline), num, os.path.splitext(fromname)[0], prefix
-                    )
+                    b_table_name = f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-b-amp-phase-full-gains-{num:d}-{os.path.splitext(fromname)[0]:s}.parmdb:output"
                 else:
                     raise RuntimeError("Something has corrupted the application of the tables")
                 if config["transfer_apply_gains"]["interpolate"]["enable"]:
@@ -1906,11 +1888,11 @@ def worker(pipeline, recipe, config):
                 })
                 if config["transfer_apply_gains"]["interpolate"]["enable"]:
                     cubical_gain_interp_opts.update({
-                        "dd-xfer-from": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(fromname)[0], prefix)
+                        "dd-xfer-from": f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-g-amp-gains-{num:d}-{os.path.splitext(fromname)[0]:s}.parmdb:output"
                     })
                 else:
                     cubical_gain_interp_opts.update({
-                        "dd-load-from": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(fromname)[0], prefix)
+                        "dd-load-from": f"{get_dir_path(prod_path, pipeline):s}/{prefix:s}-g-amp-gains-{num:d}-{os.path.splitext(fromname)[0]:s}.parmdb:output"
                     })
             cubical_gain_interp_opts.update({
                 "data-time-chunk": time_chunk_apply,
@@ -1918,11 +1900,11 @@ def worker(pipeline, recipe, config):
             })
             # ensure proper logging for restore or interpolation
             if not enable_inter:
-                step = "restore_cubical_gains-{0:d}-{1:d}".format(num, i)
-                stim_label = "{0:s}:: restore cubical gains ms={1:s}".format(step, msname_out)
+                step = f"restore_cubical_gains-{num:d}-{i:d}"
+                stim_label = f"{step:s}:: restore cubical gains ms={msname_out:s}"
             else:
-                step = "apply_cubical_gains-{0:d}-{1:d}".format(num, i)
-                stim_label = "{0:s}:: Apply cubical gains ms={1:s}".format(step, msname_out)
+                step = f"apply_cubical_gains-{num:d}-{i:d}"
+                stim_label = f"{step:s}:: Apply cubical gains ms={msname_out:s}"
             recipe.add(
                 "cab/cubical",
                 step,
@@ -1936,7 +1918,7 @@ def worker(pipeline, recipe, config):
             # Empty job que after execution
             recipe.jobs = []
 
-    def get_aimfast_data(filename="{0:s}/{1:s}_fidelity_results.json".format(pipeline.output, prefix)):
+    def get_aimfast_data(filename=f"{pipeline.output:s}/{prefix:s}_fidelity_results.json"):
         "Extracts data from the json data file"
         with open(filename) as f:
             data = json.load(f)
@@ -1968,14 +1950,14 @@ def worker(pipeline, recipe, config):
                 fidelity_data = get_aimfast_data()
                 conv_crit = [cc.upper() for cc in conv_crit]
                 # Ensure atleast one iteration is ran to compare previous and subsequent images
-                residual0 = fidelity_data["{0}_{1}_{2}-residual".format(prefix, field, n - 1)]
-                residual1 = fidelity_data["{0}_{1}_{2}-residual".format(prefix, field, n)]
+                residual0 = fidelity_data[f"{prefix}_{field}_{n - 1}-residual"]
+                residual1 = fidelity_data[f"{prefix}_{field}_{n}-residual"]
                 # Unlike the other ratios DR should grow hence n-1/n < 1.
 
                 if not pipeline.enable_task(config, "extract_sources"):
-                    drratio = fidelity_data["{0}_{1}_{2}-restored".format(prefix, field, n - 1)]["DR"] / fidelity_data["{0}_{1}_{2}-restored".format(prefix, field, n)]["DR"]
+                    drratio = fidelity_data[f"{prefix}_{field}_{n - 1}-restored"]["DR"] / fidelity_data[f"{prefix}_{field}_{n}-restored"]["DR"]
                 else:
-                    drratio = residual0["{0}_{1}_{2}-model".format(prefix, field, n - 1)]["DR"] / residual1["{0}_{1}_{2}-model".format(prefix, field, n)]["DR"]
+                    drratio = residual0[f"{prefix}_{field}_{n - 1}-model"]["DR"] / residual1[f"{prefix}_{field}_{n}-model"]["DR"]
 
                 # Dynamic range is important,
                 if any(cc == "DR" for cc in conv_crit):
@@ -2033,9 +2015,9 @@ def worker(pipeline, recipe, config):
                 )
                 if (1 - tol) < HolisticCheck:
                     caracal.log.info("Stopping criterion: " + " ".join([cc for cc in conv_crit]))
-                    caracal.log.info("The calculated ratios DR={:f}, Skew={:f}, Kurt={:f}, Mean={:f}, Noise={:f} ".format(drratio, skewratio, kurtratio, meanratio, noiseratio))
-                    caracal.log.info("The weights used DR={:f}, Skew={:f}, Kurt={:f}, Mean={:f}, Noise={:f} ".format(drweight, skewweight, kurtweight, meanweight, noiseweight))
-                    caracal.log.info("{:f} < {:f}".format(1 - tol, HolisticCheck))
+                    caracal.log.info(f"The calculated ratios DR={drratio:f}, Skew={skewratio:f}, Kurt={kurtratio:f}, Mean={meanratio:f}, Noise={noiseratio:f} ")
+                    caracal.log.info(f"The weights used DR={drweight:f}, Skew={skewweight:f}, Kurt={kurtweight:f}, Mean={meanweight:f}, Noise={noiseweight:f} ")
+                    caracal.log.info(f"{1 - tol:f} < {HolisticCheck:f}")
                     #   If we stop we want change the final output model to the previous iteration
                     global self_cal_iter_counter
                     reset_cal += 1
@@ -2044,12 +2026,11 @@ def worker(pipeline, recipe, config):
                     else:
                         self_cal_iter_counter -= 2
 
-                    if self_cal_iter_counter < 1:
-                        self_cal_iter_counter = 1
+                    self_cal_iter_counter = max(self_cal_iter_counter, 1)
                     return False
         # If we reach the number of iterations we want to stop.
         if n == cal_niter + 1:
-            caracal.log.info("Number of iterations to be done: {:d}".format(cal_niter))
+            caracal.log.info(f"Number of iterations to be done: {cal_niter:d}")
             return False
         # If no condition is met return true to continue
         return True
@@ -2075,25 +2056,25 @@ def worker(pipeline, recipe, config):
 
         step = "aimfast"
         aimfast_settings = {
-            "residual-image": "{0:s}/{1:s}_{2:s}_{3:d}{4:s}-residual.fits:output".format(img_dir, prefix, field, num, mfsprefix),
+            "residual-image": f"{img_dir:s}/{prefix:s}_{field:s}_{num:d}{mfsprefix:s}-residual.fits:output",
             "normality-test": config[step]["normality_model"],
             "area-factor": config[step]["area_factor"],
-            "label": "{0:s}_{1:s}_{2:d}".format(prefix, field, num),
-            "outfile": "{0:s}_fidelity_results.json".format(prefix),
+            "label": f"{prefix:s}_{field:s}_{num:d}",
+            "outfile": f"{prefix:s}_fidelity_results.json",
         }
 
         # if we run pybdsm we want to use the  model as well. Otherwise we want to use the image.
         if pipeline.enable_task(config, "extract_sources"):
             if config["calibrate"].get("output_data")[-1] == "CORR_DATA":
-                aimfast_settings.update({"tigger-model": "{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.lsm.html:output".format(img_dir, prefix, field, num)})
+                aimfast_settings.update({"tigger-model": f"{img_dir:s}/{prefix:s}_{field:s}_{num:d}-pybdsm.lsm.html:output"})
             else:
                 # In the case of RES_DATA we need the combined models to compute the dynamic range.
                 aimfast_settings.update({
-                    "tigger-model": "{0:s}/{1:s}_{2:s}_{3:d}-pybdsm{4:s}.lsm.html:output".format(
+                    "tigger-model": "{0:s}/{1:s}_{2:s}_{3:d}-pybdsm{4:s}.lsm.html:output".format(  # noqa: UP030
                         img_dir,
                         prefix,
                         field,
-                        num if num <= len(config["calibrate"].get("model")) else len(config["calibrate"].get("model")),
+                        min(num, len(config["calibrate"].get("model"))),
                         "-combined" if len(model.split("+")) >= 2 else "",
                     )
                 })
@@ -2104,21 +2085,21 @@ def worker(pipeline, recipe, config):
                 config["calibrate"]["output_data"][num - 1 if num <= len(config["calibrate"]["output_data"]) else -1] == "CORR_DATA"
                 or config["calibrate"]["output_data"][num - 1 if num <= len(config["calibrate"]["output_data"]) else -1] == "CORRECTED_DATA"
             ):
-                aimfast_settings.update({"restored-image": "{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output".format(img_dir, prefix, field, num, mfsprefix)})
+                aimfast_settings.update({"restored-image": f"{img_dir:s}/{prefix:s}_{field:s}_{num:d}{mfsprefix:s}-image.fits:output"})
 
             else:
                 try:
                     im = config["calibrate"]["output_data"].index("CORR_RES") + 1
                 except ValueError:
                     im = num
-                aimfast_settings.update({"restored-image": "{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output".format(img_dir, prefix, field, im, mfsprefix)})
+                aimfast_settings.update({"restored-image": f"{img_dir:s}/{prefix:s}_{field:s}_{im:d}{mfsprefix:s}-image.fits:output"})
         recipe.add(
             "cab/aimfast",
             step,
             aimfast_settings,
             input=pipeline.output,
             output=pipeline.output,
-            label="{0:s}_{1:d}:: Image fidelity assessment for {2:d}".format(step, num, num),
+            label=f"{step:s}_{num:d}:: Image fidelity assessment for {num:d}",
         )
 
     def aimfast_plotting(field):
@@ -2128,27 +2109,27 @@ def worker(pipeline, recipe, config):
         res_files = []
         residuals_compare = []
         for ii in range(1, cal_niter + 2):
-            res_file = glob.glob("{0:s}/image_{1:d}/{2:s}_{3:s}_?-MFS-residual.fits".format(pipeline.continuum, ii, prefix, field))
+            res_file = glob.glob(f"{pipeline.continuum:s}/image_{ii:d}/{prefix:s}_{field:s}_?-MFS-residual.fits")
             if res_file:
                 res_files.append(res_file[0])
         res_files = sorted(res_files)
 
-        for ii in range(0, len(res_files) - 1):
-            residuals_compare.append("{0:s}:output".format(res_files[ii].split(pipeline.output)[-1]))
-            residuals_compare.append("{0:s}:output".format(res_files[ii + 1].split(pipeline.output)[-1]))
+        for ii in range(len(res_files) - 1):
+            residuals_compare.append(f"{res_files[ii].split(pipeline.output)[-1]:s}:output")
+            residuals_compare.append(f"{res_files[ii + 1].split(pipeline.output)[-1]:s}:output")
 
         # Get models to compare
         model_files = []
         models_compare = []
         for ii in range(1, cal_niter + 2):
-            model_file = glob.glob("{0:s}/image_{1:d}/{2:s}_{3:s}_?-pybdsm.lsm.html".format(pipeline.continuum, ii, prefix, field))
+            model_file = glob.glob(f"{pipeline.continuum:s}/image_{ii:d}/{prefix:s}_{field:s}_?-pybdsm.lsm.html")
             if model_file:
                 model_files.append(model_file[0])
         model_files = sorted(model_files)
 
-        for ii in range(0, len(model_files) - 1):
-            models_compare.append("{0:s}:output".format(model_files[ii].split(pipeline.output)[-1]))
-            models_compare.append("{0:s}:output".format(model_files[ii + 1].split(pipeline.output)[-1]))
+        for ii in range(len(model_files) - 1):
+            models_compare.append(f"{model_files[ii].split(pipeline.output)[-1]:s}:output")
+            models_compare.append(f"{model_files[ii + 1].split(pipeline.output)[-1]:s}:output")
 
         if len(model_files) > 1:
             step = "aimfast-compare-models"
@@ -2187,7 +2168,7 @@ def worker(pipeline, recipe, config):
                 {
                     "compare-residuals": residuals_compare,
                     "area-factor": config["aimfast"]["area_factor"],
-                    "tigger-model": "{:s}:output".format(model_files[-1].split(pipeline.output)[-1]),
+                    "tigger-model": f"{model_files[-1].split(pipeline.output)[-1]:s}:output",
                 },
                 input=pipeline.input,
                 output=pipeline.output,
@@ -2199,7 +2180,7 @@ def worker(pipeline, recipe, config):
         model_files = []
         # Get models to compare
         for ii in range(1, cal_niter + 2):
-            model_file = glob.glob("{0:s}/image_{1:d}/{2:s}_{3:s}_?-pybdsm.lsm.html".format(pipeline.continuum, ii, prefix, field))
+            model_file = glob.glob(f"{pipeline.continuum:s}/image_{ii:d}/{prefix:s}_{field:s}_?-pybdsm.lsm.html")
             if model_file:
                 model_files.append(model_file[0].split(pipeline.output)[-1] + ":output")
         online_compare = sorted(model_files)
@@ -2225,7 +2206,7 @@ def worker(pipeline, recipe, config):
 
         step = "plot-solutions"
         gain_tables = glob.glob(
-            "{0:s}/{1:s}/{2:s}/{3:s}".format(
+            "{0:s}/{1:s}/{2:s}/{3:s}".format(  # noqa: UP030
                 pipeline.output,
                 get_dir_path(pipeline.continuum, pipeline),
                 "selfcal_products",
@@ -2250,7 +2231,7 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label="{0:s}:: Plot gaincal phase : {1:s}".format(step, gain_table_name),
+                    label=f"{step:s}:: Plot gaincal phase : {gain_table_name:s}",
                 )
 
     # decide which tool to use for calibration
@@ -2268,7 +2249,7 @@ def worker(pipeline, recipe, config):
     if not pipeline.enable_task(config, "extract_sources"):
         config["calibrate"]["output_data"] = [k.replace("CORR_RES", "CORR_DATA") for k in config["calibrate"]["output_data"]]
 
-    if pipeline.enable_task(config, "aimfast"):
+    if pipeline.enable_task(config, "aimfast"):  # noqa: SIM102
         # If aimfast plotting is enabled run source finder
         if config["aimfast"]["plot"]:
             config["extract_sources"]["enable"] = True
@@ -2286,14 +2267,14 @@ def worker(pipeline, recipe, config):
         trace_SN = []
         global trace_matrix
         trace_matrix = []
-        image_path = "{0:s}/image_{1:d}".format(pipeline.continuum, self_cal_iter_counter)
+        image_path = f"{pipeline.continuum:s}/image_{self_cal_iter_counter:d}"
         # I think it is best to always define selfcal_products as it might be needed for transfer gains or restore
 
-        selfcal_products = "{0:s}/{1:s}".format(pipeline.continuum, "selfcal_products")
+        selfcal_products = "{0:s}/{1:s}".format(pipeline.continuum, "selfcal_products")  # noqa: UP030
         # When we do not start at iteration 1 we need to restore the data set
         if self_cal_iter_counter != 1:
             if not os.path.exists(image_path):
-                raise IOError("Trying to restore step {0:d} but the correct direcory ({1:s}) does not exist.".format(self_cal_iter_counter - 1, image_path))
+                raise OSError(f"Trying to restore step {self_cal_iter_counter - 1:d} but the correct direcory ({image_path:s}) does not exist.")
             restore(self_cal_iter_counter - 1, selfcal_products, mslist, enable_inter=False)
 
         if not os.path.exists(image_path):
@@ -2302,9 +2283,7 @@ def worker(pipeline, recipe, config):
         mask_key = config["image"]["cleanmask_method"][self_cal_iter_counter - 1 if len(config["image"]["cleanmask_method"]) >= self_cal_iter_counter else -1]
         if pipeline.enable_task(config, "image"):
             if mask_key == "sofia":
-                image_path = "{0:s}/image_0".format(
-                    pipeline.continuum,
-                )
+                image_path = f"{pipeline.continuum:s}/image_0"
                 if not os.path.exists(image_path):
                     os.mkdir(image_path)
                 fake_image(target_iter, 0, get_dir_path(image_path, pipeline), mslist, field)
@@ -2315,11 +2294,11 @@ def worker(pipeline, recipe, config):
                     1,
                     config["image"]["cleanmask_method"][self_cal_iter_counter if len(config["image"]["cleanmask_method"]) > self_cal_iter_counter else -1],
                 )
-                image_path = "{0:s}/image_{1:d}".format(pipeline.continuum, self_cal_iter_counter)
+                image_path = f"{pipeline.continuum:s}/image_{self_cal_iter_counter:d}"
                 image(target_iter, self_cal_iter_counter, get_dir_path(image_path, pipeline), mslist, field)
             elif mask_key == "breizorro":
                 if self_cal_iter_counter == 1:
-                    image_path = "{0:s}/image_{1:d}".format(pipeline.continuum, 0)
+                    image_path = f"{pipeline.continuum:s}/image_{0:d}"
                     if not os.path.exists(image_path):
                         os.mkdir(image_path)
                     fake_image(target_iter, 0, get_dir_path(image_path, pipeline), mslist, field)
@@ -2328,7 +2307,7 @@ def worker(pipeline, recipe, config):
                     recipe.jobs = []
                     image(target_iter, self_cal_iter_counter, get_dir_path(image_path, pipeline), mslist, field)
                 else:
-                    image_path = "{0:s}/image_{1:d}".format(pipeline.continuum, self_cal_iter_counter)
+                    image_path = f"{pipeline.continuum:s}/image_{self_cal_iter_counter:d}"
                     image(target_iter, self_cal_iter_counter, get_dir_path(image_path, pipeline), mslist, field)
             else:
                 image(target_iter, self_cal_iter_counter, get_dir_path(image_path, pipeline), mslist, field)
@@ -2359,7 +2338,7 @@ def worker(pipeline, recipe, config):
                 recipe.run()
                 recipe.jobs = []
             self_cal_iter_counter += 1
-            image_path = "{0:s}/image_{1:d}".format(pipeline.continuum, self_cal_iter_counter)
+            image_path = f"{pipeline.continuum:s}/image_{self_cal_iter_counter:d}"
             if not os.path.exists(image_path):
                 os.mkdir(image_path)
             if pipeline.enable_task(config, "image"):
@@ -2371,14 +2350,14 @@ def worker(pipeline, recipe, config):
 
         # Copy plots from the selfcal_products to the diagnotic plots IF calibrate OR transfer_gains is enabled
         if pipeline.enable_task(config, "calibrate") or pipeline.enable_task(config, "transfer_apply_gains"):
-            selfcal_products = "{0:s}/{1:s}".format(pipeline.continuum, "selfcal_products")
-            plot_path = "{0:s}/{1:s}".format(pipeline.diagnostic_plots, "selfcal")
+            selfcal_products = "{0:s}/{1:s}".format(pipeline.continuum, "selfcal_products")  # noqa: UP030
+            plot_path = "{0:s}/{1:s}".format(pipeline.diagnostic_plots, "selfcal")  # noqa: UP030
             if not os.path.exists(plot_path):
                 os.mkdir(plot_path)
 
-            selfcal_plots = glob.glob("{0:s}/{1:s}*.png".format(selfcal_products, pipeline.prefix))
+            selfcal_plots = glob.glob(f"{selfcal_products:s}/{pipeline.prefix:s}*.png")
             for plot in selfcal_plots:
-                shutil.copyfile(plot, "{0:s}/{1:s}".format(plot_path, os.path.basename(plot)))
+                shutil.copyfile(plot, f"{plot_path:s}/{os.path.basename(plot):s}")
 
         if pipeline.enable_task(config, "transfer_apply_gains"):
             mslist_out = ms_dict_tgain[target]
@@ -2401,12 +2380,12 @@ def worker(pipeline, recipe, config):
                 recipe.jobs = []
 
             # Move the aimfast html plots
-            plot_path = "{0:s}/{1:s}".format(pipeline.diagnostic_plots, "selfcal")
+            plot_path = "{0:s}/{1:s}".format(pipeline.diagnostic_plots, "selfcal")  # noqa: UP030
             if not os.path.exists(plot_path):
                 os.mkdir(plot_path)
-            aimfast_plots = glob.glob("{0:s}/{1:s}".format(pipeline.output, "*.html"))
+            aimfast_plots = glob.glob("{0:s}/{1:s}".format(pipeline.output, "*.html"))  # noqa: UP030
             for plot in aimfast_plots:
-                shutil.copyfile(plot, "{0:s}/{1:s}".format(plot_path, os.path.basename(plot)))
+                shutil.copyfile(plot, f"{plot_path:s}/{os.path.basename(plot):s}")
                 os.remove(plot)
 
         try:
@@ -2427,20 +2406,20 @@ def worker(pipeline, recipe, config):
             else:
                 extract_sources = len(config["extract_sources"]["thr_isl"])
                 if extract_sources > 1:
-                    num = "{:d}+{:d}".format(self_cal_iter_counter - 1, self_cal_iter_counter)
+                    num = f"{self_cal_iter_counter - 1:d}+{self_cal_iter_counter:d}"
                 else:
                     num = self_cal_iter_counter
             if isinstance(num, str) and len(num.split("+")) == 2:
                 mm = num.split("+")
                 models = [
-                    "{0:s}/image_{1:s}/{2:s}_{3:s}_{4:s}-pybdsm.lsm.html\
-:output".format(get_dir_path(pipeline.continuum, pipeline), m, prefix, field, m)
+                    f"{get_dir_path(pipeline.continuum, pipeline):s}/image_{m:s}/{prefix:s}_{field:s}_{m:s}-pybdsm.lsm.html\
+:output"
                     for m in mm
                 ]
-                final = "{0:s}/image_{1:s}/{2:s}_{3:s}_final-pybdsm.lsm.html\
-:output".format(get_dir_path(pipeline.continuum, pipeline), mm[-1], prefix, field)
+                final = f"{get_dir_path(pipeline.continuum, pipeline):s}/image_{mm[-1]:s}/{prefix:s}_{field:s}_final-pybdsm.lsm.html\
+:output"
 
-                step = "create-final_lsm-{0:s}-{1:s}".format(*mm)
+                step = "create-final_lsm-{0:s}-{1:s}".format(*mm)  # noqa: UP030
                 recipe.add(
                     "cab/tigger_convert",
                     step,
@@ -2453,15 +2432,15 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label="{0:s}:: Combined models".format(step),
+                    label=f"{step:s}:: Combined models",
                 )
 
             elif isinstance(num, str) and num.isdigit():
-                inputlsm = "{0:s}/image_{1:s}/{2:s}_{3:s}_{4:s}-pybdsm.lsm.html\
-:output".format(get_dir_path(pipeline.continuum, pipeline), num, prefix, field, num)
-                final = "{0:s}/image_{1:s}/{2:s}_{3:s}_final-pybdsm.lsm.html\
-:output".format(get_dir_path(pipeline.continuum, pipeline), num, prefix, field)
-                step = "create-final_lsm-{0:s}".format(num)
+                inputlsm = f"{get_dir_path(pipeline.continuum, pipeline):s}/image_{num:s}/{prefix:s}_{field:s}_{num:s}-pybdsm.lsm.html\
+:output"
+                final = f"{get_dir_path(pipeline.continuum, pipeline):s}/image_{num:s}/{prefix:s}_{field:s}_final-pybdsm.lsm.html\
+:output"
+                step = f"create-final_lsm-{num:s}"
                 recipe.add(
                     "cab/tigger_convert",
                     step,
@@ -2473,25 +2452,24 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label="{0:s}:: Combined models".format(step),
+                    label=f"{step:s}:: Combined models",
                 )
             else:
                 raise ValueError("restore_model_model should be integer-valued string or indicate which models to be append, eg. 2+3")
 
             if config["restore_model"]["clean_model"]:
                 num = int(config["restore_model"]["clean_model"])
-                if num > self_cal_iter_counter:
-                    num = self_cal_iter_counter
+                num = min(num, self_cal_iter_counter)
 
-                conv_model = "{0:s}/image_{1:d}/{2:s}_{3:s}-convolved_model.fits\
-:output".format(get_dir_path(pipeline.continuum, pipeline), num, prefix, field)
+                conv_model = f"{get_dir_path(pipeline.continuum, pipeline):s}/image_{num:d}/{prefix:s}_{field:s}-convolved_model.fits\
+:output"
                 recipe.add(
                     "cab/fitstool",
                     "subtract-model",
                     {
                         "image": [
-                            "{0:s}/image_{1:d}/{2:s}_{3:s}_{4:d}{5:s}-{6:s}.fits\
-:output".format(get_dir_path(pipeline.continuum, pipeline), num, prefix, target, num, mfsprefix, im)
+                            f"{get_dir_path(pipeline.continuum, pipeline):s}/image_{num:d}/{prefix:s}_{target:s}_{num:d}{mfsprefix:s}-{im:s}.fits\
+:output"
                             for im in ("image", "residual")
                         ],
                         "output": conv_model,
@@ -2500,16 +2478,16 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label="{0:s}:: Make convolved model".format(step),
+                    label=f"{step:s}:: Make convolved model",
                 )
 
-                with_cc = "{0:s}/image_{1:d}/{2:s}_{3:s}-with_cc.fits:output".format(get_dir_path(pipeline.continuum, pipeline), num, prefix, field)
+                with_cc = f"{get_dir_path(pipeline.continuum, pipeline):s}/image_{num:d}/{prefix:s}_{field:s}-with_cc.fits:output"
                 recipe.add(
                     "cab/fitstool",
                     "add-cc",
                     {
                         "image": [
-                            "{0:s}/image_{1:d}/{2:s}_{3:s}_{4:d}{5:s}-image.fits:output".format(get_dir_path(pipeline.continuum, pipeline), num, prefix, field, num, mfsprefix),
+                            f"{get_dir_path(pipeline.continuum, pipeline):s}/image_{num:d}/{prefix:s}_{field:s}_{num:d}{mfsprefix:s}-image.fits:output",
                             conv_model,
                         ],
                         "output": with_cc,
@@ -2518,7 +2496,7 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label="{0:s}:: Add clean components".format(step),
+                    label=f"{step:s}:: Add clean components",
                 )
 
                 recipe.add(
@@ -2527,39 +2505,39 @@ def worker(pipeline, recipe, config):
                     {
                         "input-image": with_cc,
                         "input-skymodel": final,
-                        "output-image": "{0:s}/image_{1:d}/{2:s}_{3:s}.fullrest.fits".format(get_dir_path(pipeline.continuum, pipeline), num, prefix, field),
+                        "output-image": f"{get_dir_path(pipeline.continuum, pipeline):s}/image_{num:d}/{prefix:s}_{field:s}.fullrest.fits",
                         "force": True,
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label="{0:s}:: Add extracted skymodel".format(step),
+                    label=f"{step:s}:: Add extracted skymodel",
                 )
 
         for i, msname in enumerate(mslist):
             if pipeline.enable_task(config, "flagging_summary"):
-                step = "flagging_summary-selfcal-ms{0:d}".format(i)
+                step = f"flagging_summary-selfcal-ms{i:d}"
                 recipe.add(
                     "cab/flagstats",
                     step,
                     {
                         "msname": msname,
                         "plot": True,
-                        "outfile": ("{0:s}-{1:s}-selfcal-summary-{2:d}.json").format(prefix, wname, i),
-                        "htmlfile": ("{0:s}-{1:s}-selfcal-summary-plots-{2:d}.html").format(prefix, wname, i),
+                        "outfile": (f"{prefix:s}-{wname:s}-selfcal-summary-{i:d}.json"),
+                        "htmlfile": (f"{prefix:s}-{wname:s}-selfcal-summary-plots-{i:d}.html"),
                     },
                     input=pipeline.input,
                     output=pipeline.diagnostic_plots,
-                    label="{0:s}:: Flagging summary  ms={1:s}".format(step, msname),
+                    label=f"{step:s}:: Flagging summary  ms={msname:s}",
                 )
 
         if pipeline.enable_task(config, "transfer_model"):
-            image_path = "{0:s}/image_{1:d}".format(pipeline.continuum, self_cal_iter_counter)
+            image_path = f"{pipeline.continuum:s}/image_{self_cal_iter_counter:d}"
             crystalball_model = config["transfer_model"]["model"]
             mslist_out = ms_dict_tmodel[target]
             if crystalball_model == "auto":
-                crystalball_model = "{0:s}/{1:s}_{2:s}_{3:d}-sources.txt".format(get_dir_path(image_path, pipeline), prefix, field, self_cal_iter_counter)
+                crystalball_model = f"{get_dir_path(image_path, pipeline):s}/{prefix:s}_{field:s}_{self_cal_iter_counter:d}-sources.txt"
             for i, msname in enumerate(mslist_out):
-                step = "transfer_model-field{0:d}-ms{1:d}".format(target_iter, i)
+                step = f"transfer_model-field{target_iter:d}-ms{i:d}"
                 recipe.add(
                     "cab/crystalball",
                     step,
@@ -2576,21 +2554,21 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label="{0:s}:: Transfer model {2:s} to ms={1:s}".format(step, msname, crystalball_model),
+                    label=f"{step:s}:: Transfer model {crystalball_model:s} to ms={msname:s}",
                 )
 
-        target_iter += 1
+        target_iter += 1  # noqa: SIM113
 
     i = 0
     # Write and manage flag versions only if flagging tasks are being
     # executed on these .MS files
     if flag_main_ms:
         for i, m in enumerate(all_msfile):
-            substep = "save-{0:s}-ms{1:d}".format(flags_after_worker, i)
+            substep = f"save-{flags_after_worker:s}-ms{i:d}"
             manflags.add_cflags(pipeline, recipe, flags_after_worker, m, cab_name=substep, overwrite=config["overwrite_flagvers"])
 
     i += 1
     if pipeline.enable_task(config, "transfer_apply_gains"):
         for j, m in enumerate(all_msfile_tgain):
-            substep = "save-{0:s}-ms{1:d}".format(flags_after_worker, i + j)
+            substep = f"save-{flags_after_worker:s}-ms{i + j:d}"
             manflags.add_cflags(pipeline, recipe, flags_after_worker, m, cab_name=substep, overwrite=config["overwrite_flagvers"])

@@ -7,3 +7,9 @@ extend-select = [
     "E501",  # Line length
     "I"      # isort - sort imports
 ]
+
+ignore = [
+"E741",
+"E714",
+"E711",
+]

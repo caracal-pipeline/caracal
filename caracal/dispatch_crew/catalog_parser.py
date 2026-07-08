@@ -29,7 +29,7 @@ class catalog_parser:
         """Return multiline string describing the calibrator database"""
         lines = [""]
         lines.extend([
-            "\t%s\tEpoch:%d\tRA:%3.2f\tDEC:%3.2f\t"
+            "\t%s\tEpoch:%d\tRA:%3.2f\tDEC:%3.2f\t"  # noqa: UP031
             "S_v0:%.4f\tv0:%.4e\ta:%.4f\tb:%.4f\tc:%.4f\td:%.4f\t"
             "lsm:%s\tlsm epoch:%d"
             % (
@@ -113,7 +113,7 @@ class catalog_parser:
                             )
 
                             if not valset:
-                                raise RuntimeError("Illegal line encountered while parsingsouthern standard at line %d:'%s'" % (ln_no, line))
+                                raise RuntimeError("Illegal line encountered while parsingsouthern standard at line %d:'%s'" % (ln_no, line))  # noqa: UP031
                             else:
                                 cmd = "crystal"
                         else:
@@ -185,7 +185,7 @@ class catalog_parser:
                     src = valset.group("src")
                     dest = valset.group("dest")
                     if src not in calibrator_db:
-                        raise RuntimeError("%s has not been defined. Cannot alias %s to %s in line %d" % (src, dest, src, ln_no))
+                        raise RuntimeError("%s has not been defined. Cannot alias %s to %s in line %d" % (src, dest, src, ln_no))  # noqa: UP031
                     calibrator_db[dest] = calibrator_db[src]
                 elif cmd == "lsm":
                     src = valset.group("src")
@@ -200,7 +200,7 @@ class catalog_parser:
                     epoch = valset.group("epoch")
                     crystal = valset.group("lsmname")
                     if src not in calibrator_db:
-                        raise RuntimeError("%s has not been defined. Cannot link to crystalball model%s to %s in line %d" % (src, crystal, dest, ln_no))
+                        raise RuntimeError("%s has not been defined. Cannot link to crystalball model%s to %s in line %d" % (src, crystal, dest, ln_no))  # noqa: UP031
                     calibrator_db[name]["crystal"] = crystal
                     calibrator_db[name]["lsm_epoch"] = int(epoch)
                 else:
@@ -232,10 +232,10 @@ class catalog_parser:
         def pbspi(v, a, b, c, d):
             return 10 ** (a + b * np.log10(v) + c * np.log10(v) ** 2 + d * np.log10(v) ** 3)
 
-        def casaspi(v, v0, I, a, b, c, d):  # noqa: E741
+        def casaspi(v, v0, I, a, b, c, d):
             return I * (v / v0) ** (a + b * np.log10(v / v0) + c * np.log10(v / v0) ** 2 + d * np.log10(v / v0) ** 3)
 
-        I = pbspi(v0, a, b, c, d)  # noqa: E741
+        I = pbspi(v0, a, b, c, d)
 
         if a == 0 and b == 0 and c == 0 and d == 0:
             popt = [0.0, 0.0, 0.0, 0.0]

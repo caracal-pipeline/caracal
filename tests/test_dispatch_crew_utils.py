@@ -19,9 +19,9 @@ def test_Fields():
         dirs=MSDICT["FIELD"]["REFERENCE_DIR"],
     )
     assert len(fields.names) == len(fields.ids) == len(fields.dirs)
-    assert all([isinstance(item, str) for item in fields.names])
-    assert all([isinstance(item, int) for item in fields.ids])
-    assert all([isinstance(item, list) for item in fields.dirs])
+    assert all([isinstance(item, str) for item in fields.names])  # noqa: C419
+    assert all([isinstance(item, int) for item in fields.ids])  # noqa: C419
+    assert all([isinstance(item, list) for item in fields.dirs])  # noqa: C419
 
     idx = fields.nfields - 1
     assert fields.index(fields.names[idx]) == fields.index(fields.ids[idx])

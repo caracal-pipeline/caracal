@@ -3,7 +3,7 @@ import os.path
 import re
 from dataclasses import dataclass
 from dataclasses import field as dc_field
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any
 
 import astropy.io.fits as fitsio
 import numpy
@@ -17,15 +17,15 @@ np = numpy
 
 @dataclass
 class Fields:
-    ids: List[int]
-    names: List[str]
-    dirs: List[Any] = dc_field(default_factory=list)
+    ids: list[int]
+    names: list[str]
+    dirs: list[Any] = dc_field(default_factory=list)
     nfields: int = dc_field(init=False)
 
     def __post_init__(self):
         self.nfields = len(self.ids)
 
-    def index(self, field_val: Union[str, int]) -> int:
+    def index(self, field_val: str | int) -> int:
         if isinstance(field_val, str):
             return self.names.index(field_val)
         else:
@@ -87,7 +87,7 @@ def categorize_fields(info):
 def get_field_id(info, field_name):
     """Gets field id"""
     if not isinstance(field_name, (list, str)):
-        raise ValueError("field_name argument must be comma-separated string or list")
+        raise ValueError("field_name argument must be comma-separated string or list")  # noqa: TRY004
     elif isinstance(field_name, str):
         field_name = field_name.split(",")
 
@@ -154,7 +154,7 @@ def select_gcal(info, targets, calibrators, mode="nearest"):
     return gcal
 
 
-def observed_longest(info: Dict, calfields: List[Union[str, int]]):
+def observed_longest(info: dict, calfields: list[str | int]):
     """
     Select field with longest observation length from a
     MSUtils.summary() dictionary
@@ -187,7 +187,7 @@ def observed_longest(info: Dict, calfields: List[Union[str, int]]):
     return field
 
 
-def field_observation_length(info: Dict, field: Union[str, int], return_scans: bool = False) -> Union[Tuple[float, List], float]:
+def field_observation_length(info: dict, field: str | int, return_scans: bool = False) -> tuple[float, list] | float:
     """
     Calculate observation for a field from a MSUtils.summary() dictionary
 
@@ -217,7 +217,7 @@ def field_observation_length(info: Dict, field: Union[str, int], return_scans: b
         return tobs
 
 
-def closeby(radec_1: List[float], radec_2: List[float], tol: float = 2.9e-3) -> bool:
+def closeby(radec_1: list[float], radec_2: list[float], tol: float = 2.9e-3) -> bool:
     """
     Estimate whether two points on the celestial sphere are close to each other
 
@@ -228,7 +228,7 @@ def closeby(radec_1: List[float], radec_2: List[float], tol: float = 2.9e-3) -> 
     """
     ang_dist = angular_dist_pos_angle(radec_1[0], radec_1[1], radec_2[0], radec_2[1])[0]
 
-    if ang_dist < tol:
+    if ang_dist < tol:  # noqa: SIM103
         return True
     else:
         return False
@@ -255,7 +255,7 @@ def hetfield(info, field, db, tol=2.9e-3):
     firade[0] = numpy.mod(firade[0], 2 * numpy.pi)
 
     dbcp = db.db
-    for key in dbcp.keys():
+    for key in dbcp.keys():  # noqa: SIM118
         carade = [dbcp[key]["ra"], dbcp[key]["decl"]]
         if closeby(carade, firade, tol=tol):
             return key
@@ -299,7 +299,7 @@ def find_in_native_calibrators(info, field, mode="both"):
     if "crystal" in src and returncrystal:
         return src["crystal"]
     elif returnmod:
-        return dict(I=src["S_v0"], a=src["a_casa"], b=src["b_casa"], c=src["c_casa"], d=src["d_casa"], ref=src["v0"])
+        return dict(I=src["S_v0"], a=src["a_casa"], b=src["b_casa"], c=src["c_casa"], d=src["d_casa"], ref=src["v0"])  # noqa: C408
     else:
         return False
 
@@ -325,7 +325,7 @@ def find_in_casa_calibrators(info, field):
             standards = src["standards"]
             break
     else:
-        raise
+        raise  # noqa: PLE0704
     standard = standards.split(",")[0]
     return db["standards"][int(standard)]
 

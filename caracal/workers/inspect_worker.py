@@ -8,7 +8,7 @@ from caracal import ConfigurationError, log
 def check_config(config, name):
     shadems_cfg = config["shadems"]
     # dummy-process each plots sequence to catch any config errors
-    basesubst = dict(msbase="", all_fields="", all_corrs="", bpcal="", gcal="", fcal="", xcal="")
+    basesubst = dict(msbase="", all_fields="", all_corrs="", bpcal="", gcal="", fcal="", xcal="")  # noqa: C408
     for plot_cat in "plots", "plot_by_field", "plots_by_corr":
         _process_shadems_plot_list([], basesubst, shadems_cfg.get(plot_cat, []), {}, plot_cat)
 
@@ -352,8 +352,8 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
     fields = shade_cfg["fields"]
 
     # some user facing substitutions for fields, corrs, and base MS name
-    basesubst = dict(msbase=msbase, all_fields=",".join(fields.keys()), all_corrs=shade_cfg["corrs"])
-    for _f in fields.keys():
+    basesubst = dict(msbase=msbase, all_fields=",".join(fields.keys()), all_corrs=shade_cfg["corrs"])  # noqa: C408
+    for _f in fields.keys():  # noqa: SIM118
         for _ft in fields[_f]:
             basesubst[_ft] = _f
 
@@ -391,7 +391,7 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
         recipe.add(
             "cab/shadems_direct",
             step,
-            dict(ms=shade_cfg["ms"], args=plot_args, ignore_errors=shade_cfg["ignore_errors"]),
+            dict(ms=shade_cfg["ms"], args=plot_args, ignore_errors=shade_cfg["ignore_errors"]),  # noqa: C408
             input=pipeline.input,
             output=shade_cfg["output_dir"],
             label=f"{step}:: Plotting",
@@ -558,7 +558,7 @@ def worker(pipeline, recipe, config):
 
         for ms in mslist:
             if not ms_exists(pipeline.msdir, ms):
-                raise IOError(f"MS {ms} does not exist. Please check that is where it should be.")
+                raise OSError(f"MS {ms} does not exist. Please check that is where it should be.")
 
             log.info(f"Plotting MS: {ms}")
 

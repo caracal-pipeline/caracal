@@ -16,7 +16,7 @@ from caracal.dispatch_crew import utils
 REPORTS = True
 
 
-class WorkerAdministrator(object):
+class WorkerAdministrator:
     def __init__(
         self,
         config,
@@ -34,7 +34,7 @@ class WorkerAdministrator(object):
         self.config_file = configFileName
         self.singularity_image_dir = singularity_image_dir
         self.container_tech = container_tech
-        for key in "msdir input output".split():
+        for key in ["msdir", "input", "output"]:
             if not self.config["general"].get(key):
                 raise caracal.ConfigurationError(f"'general: {key}' must be specified")
 
@@ -53,14 +53,14 @@ class WorkerAdministrator(object):
         self.mosaic_continuum = f"{self.continuum}/mosaics"
         self.mosaic_line = f"{self.cubes}/mosaics"
         self.generate_reports = generate_reports
-        self.timeNow = "{:%Y%m%d-%H%M%S}".format(datetime.now())
+        self.timeNow = f"{datetime.now():%Y%m%d-%H%M%S}"  # noqa: DTZ005
         self.ms_extension = self.config["getdata"]["extension"]
         self.ignore_missing = self.config["getdata"]["ignore_missing"]
 
         self._msinfo_cache = {}
 
         self.logs_symlink = f"{self.output}/logs"
-        self.logs = "{}-{}".format(self.logs_symlink, self.timeNow)
+        self.logs = f"{self.logs_symlink}-{self.timeNow}"
 
         self.rawdatadir = self.config["general"]["rawdatadir"]
         if not self.rawdatadir:
@@ -79,10 +79,10 @@ class WorkerAdministrator(object):
         end_idx = len(self.config.keys())
         workers = []
 
-        if start_worker and start_worker not in self.config.keys():
-            raise RuntimeError("Requested --start-worker '{0:s}' is unknown. Please check your options".format(start_worker))
-        if end_worker and end_worker not in self.config.keys():
-            raise RuntimeError("Requested --end-worker '{0:s}' is unknown. Please check your options".format(end_worker))
+        if start_worker and start_worker not in self.config.keys():  # noqa: SIM118
+            raise RuntimeError(f"Requested --start-worker '{start_worker:s}' is unknown. Please check your options")
+        if end_worker and end_worker not in self.config.keys():  # noqa: SIM118
+            raise RuntimeError(f"Requested --end-worker '{end_worker:s}' is unknown. Please check your options")
         for i, name in enumerate(self.config):
             if name.find("general") >= 0 or name == "schema_version":
                 continue
@@ -117,10 +117,10 @@ class WorkerAdministrator(object):
                 wkr = __import__(_worker)
             except ImportError:
                 traceback.print_exc()
-                raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory))
+                raise ImportError(f'Worker "{_worker:s}" could not be found at {self.workers_directory:s}')
 
             if hasattr(wkr, "FLAG_NAMES"):
-                self.flags[_name] = ["_".join([_name, suffix]) if suffix else _name for suffix in wkr.FLAG_NAMES]
+                self.flags[_name] = ["_".join([_name, suffix]) if suffix else _name for suffix in wkr.FLAG_NAMES]  # noqa: FLY002
 
         self.recipes = {}
         # Workers to skip
@@ -185,7 +185,7 @@ class WorkerAdministrator(object):
                 f"No matching input data found in {self.rawdatadir} for {','.join(patterns)}. Check your  'general: msdir/rawdatadir' and/or 'getdata: dataid/extension' settings."
             )
 
-        for item in "refant fcal bpcal gcal target xcal".split():
+        for item in ["refant", "fcal", "bpcal", "gcal", "target", "xcal"]:
             value = getattr(self, item, None)
             if value and len(value) == 1:
                 value = value * self.nobs
@@ -257,7 +257,7 @@ class WorkerAdministrator(object):
         """Loads calibration library specified by name"""
         filename = self.get_callib_name(name)
         if not os.path.exists(filename):
-            raise IOError(f"Calibration library {filename} doesn't exist")
+            raise OSError(f"Calibration library {filename} doesn't exist")
         return main_utils.load_yaml(filename)
 
     def save_callib(self, callib, name):
@@ -281,14 +281,14 @@ class WorkerAdministrator(object):
                 version, tag = speclist[0]
                 if version is None:
                     log.info(f"  {name}: forcing tag {tag} for all invocations")
-                    cabspecs[name] = dict(tag=tag, force=True)
+                    cabspecs[name] = dict(tag=tag, force=True)  # noqa: C408
                     continue
                 elif tag is None:
                     log.info(f"  {name}: forcing version {version} for all invocations")
-                    cabspecs[name] = dict(version=version)
+                    cabspecs[name] = dict(version=version)  # noqa: C408
                     continue
             # else make dict of version: tag pairs
-            cabspecs[name] = dict(version={version: tag for version, tag in speclist}, force=True)
+            cabspecs[name] = dict(version={version: tag for version, tag in speclist}, force=True)  # noqa: C408
             for version, tag in speclist:
                 log.info(f"  {name}: using tag {tag} for version {version}")
         return cabspecs
@@ -299,11 +299,11 @@ class WorkerAdministrator(object):
                 if os.path.islink(link):
                     os.unlink(link)  # old symlink can go
                 else:
-                    log.warning("{} already exists and is not a symlink, can't relink".format(link))
+                    log.warning(f"{link} already exists and is not a symlink, can't relink")
                     return False
             if not os.path.lexists(link):
                 os.symlink(target, link)
-                log.info("{} links to {}".format(link, target))
+                log.info(f"{link} links to {target}")
 
         # First create input folders if they don't exist
         if not os.path.exists(self.input):
@@ -316,7 +316,7 @@ class WorkerAdministrator(object):
             os.mkdir(self.obsinfo)
         if not os.path.exists(self.logs):
             os.mkdir(self.logs)
-        log.info("output directory for logs is {}".format(self.logs))
+        log.info(f"output directory for logs is {self.logs}")
         make_symlink(self.logs_symlink, os.path.basename(self.logs))
         if not os.path.exists(self.reports):
             os.mkdir(self.reports)
@@ -351,7 +351,7 @@ class WorkerAdministrator(object):
         # Copy input data files into pipeline input folder
         if prep_input:
             log.info("Copying MeerKAT input files into input folder")
-            datadir = "{0:s}/data/meerkat_files".format(pckgdir)
+            datadir = f"{pckgdir:s}/data/meerkat_files"
             for filename in os.listdir(datadir):
                 src = os.path.join(datadir, filename)
                 dest = os.path.join(self.input, filename)
@@ -380,7 +380,7 @@ class WorkerAdministrator(object):
                 worker = __import__(_worker)
             except ImportError:
                 traceback.print_exc()
-                raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory))
+                raise ImportError(f'Worker "{_worker:s}" could not be found at {self.workers_directory:s}')
 
         if self.config["general"]["cabs"]:
             log.info("Configuring cab specification overrides")
@@ -394,11 +394,11 @@ class WorkerAdministrator(object):
             if "enable" in config and not config["enable"]:
                 self.skip.append(_worker)
                 continue
-            log.info("Configuring worker {}".format(_name))
+            log.info(f"Configuring worker {_name}")
             try:
                 worker = __import__(_worker)
             except ImportError:
-                log.error('Error importing worker "{0:s}" from {1:s}'.format(_worker, self.workers_directory))
+                log.error(f'Error importing worker "{_worker:s}" from {self.workers_directory:s}')
                 raise
             if hasattr(worker, "check_config"):
                 worker.check_config(config, name=_name)
@@ -436,11 +436,11 @@ class WorkerAdministrator(object):
             self.CURRENT_WORKER = _name
             # Don't allow pipeline-wide resume
             # functionality
-            os.system("rm -f {}".format(recipe.resume_file))
+            os.system(f"rm -f {recipe.resume_file}")
             # Get recipe steps
             # 1st get correct section of config file
             log_label = "" if _name == label or _name.startswith(label + "__") else f" ({label})"
-            log.info(f"{_name}{log_label}: initializing", extra=dict(color="GREEN"))
+            log.info(f"{_name}{log_label}: initializing", extra=dict(color="GREEN"))  # noqa: C408
             worker.worker(self, recipe, config)
             log.info(f"{_name}{log_label}: running")
             recipe.run()

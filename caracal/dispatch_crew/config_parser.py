@@ -180,6 +180,14 @@ class config_parser(object):
                     errs.append(message)
 
         if errors:
+            # Also re-log the warning about the schema version,
+            # if it's not the same as the one CARACal is running with.
+            if version != caracal.schema.SCHEMA_VERSION:
+                caracal.log.warning(
+                    "Configuration file schema version is {}, but CARACal is running with schema version {}. This may cause problems.".format(
+                        version, caracal.schema.SCHEMA_VERSION
+                    )
+                )
             raise ConfigErrors(config_file, errors)
 
         return validated_content, version

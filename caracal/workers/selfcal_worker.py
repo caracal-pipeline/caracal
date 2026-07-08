@@ -527,18 +527,14 @@ def worker(pipeline, recipe, config):
         if not config["img_mfs_weighting"]:
             fake_image_opts["nomfsweighting"] = True
         if maxuvl > 0.0:
-            fake_image_opts.update(
-                {
-                    "maxuv-l": maxuvl,
-                    "taper-tukey": transuvl,
-                }
-            )
+            fake_image_opts.update({
+                "maxuv-l": maxuvl,
+                "taper-tukey": transuvl,
+            })
         if float(taper) > 0.0:
-            fake_image_opts.update(
-                {
-                    "taper-gaussian": taper,
-                }
-            )
+            fake_image_opts.update({
+                "taper-gaussian": taper,
+            })
         if min_uvw > 0:
             fake_image_opts.update({"minuvw-m": min_uvw})
 
@@ -615,18 +611,14 @@ def worker(pipeline, recipe, config):
         if not config["img_mfs_weighting"]:
             image_opts["nomfsweighting"] = True
         if maxuvl > 0.0:
-            image_opts.update(
-                {
-                    "maxuv-l": maxuvl,
-                    "taper-tukey": transuvl,
-                }
-            )
+            image_opts.update({
+                "maxuv-l": maxuvl,
+                "taper-tukey": transuvl,
+            })
         if float(taper) > 0.0:
-            image_opts.update(
-                {
-                    "taper-gaussian": taper,
-                }
-            )
+            image_opts.update({
+                "taper-gaussian": taper,
+            })
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})
 
@@ -645,18 +637,14 @@ def worker(pipeline, recipe, config):
         mask_key = config[key]["cleanmask_method"][num - 1 if len(config[key]["cleanmask_method"]) >= num else -1]
 
         if mask_key == "wsclean":
-            image_opts.update(
-                {
-                    "auto-mask": config[key]["cleanmask_thr"][num - 1 if len(config[key]["cleanmask_thr"]) >= num else -1],
-                    "local-rms": config[key]["cleanmask_localrms"][num - 1 if len(config[key]["cleanmask_localrms"]) >= num else -1],
-                }
-            )
+            image_opts.update({
+                "auto-mask": config[key]["cleanmask_thr"][num - 1 if len(config[key]["cleanmask_thr"]) >= num else -1],
+                "local-rms": config[key]["cleanmask_localrms"][num - 1 if len(config[key]["cleanmask_localrms"]) >= num else -1],
+            })
             if config[key]["cleanmask_localrms"][num - 1 if len(config[key]["cleanmask_localrms"]) >= num else -1]:
-                image_opts.update(
-                    {
-                        "local-rms-window": config[key]["cleanmask_localrms_window"][num - 1 if len(config[key]["cleanmask_localrms_window"]) >= num else -1],
-                    }
-                )
+                image_opts.update({
+                    "local-rms-window": config[key]["cleanmask_localrms_window"][num - 1 if len(config[key]["cleanmask_localrms_window"]) >= num else -1],
+                })
         elif mask_key == "sofia":
             fits_mask = "masking/{0:s}_{1:s}_{2:d}_clean_mask.fits".format(prefix, field, num)
             if not os.path.isfile("{0:s}/{1:s}".format(pipeline.output, fits_mask)):
@@ -664,12 +652,10 @@ def worker(pipeline, recipe, config):
                     "SoFiA clean mask {0:s}/{1:s} not found. Something must have gone wrong with the SoFiA run"
                     " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output, fits_mask)
                 )
-            image_opts.update(
-                {
-                    "fitsmask": "{0:s}:output".format(fits_mask),
-                    "local-rms": False,
-                }
-            )
+            image_opts.update({
+                "fitsmask": "{0:s}:output".format(fits_mask),
+                "local-rms": False,
+            })
         elif mask_key == "breizorro":
             fits_mask = "masking/{0:s}_{1:s}_{2:d}_clean_mask.fits".format(prefix, field, num)
             if not os.path.isfile("{0:s}/{1:s}".format(pipeline.output, fits_mask)):
@@ -677,12 +663,10 @@ def worker(pipeline, recipe, config):
                     "Breizorro clean mask {0:s}/{1:s} not found. Something must have gone wrong with the Breizorro run"
                     " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output, fits_mask)
                 )
-            image_opts.update(
-                {
-                    "fitsmask": "{0:s}:output".format(fits_mask),
-                    "local-rms": False,
-                }
-            )
+            image_opts.update({
+                "fitsmask": "{0:s}:output".format(fits_mask),
+                "local-rms": False,
+            })
         else:
             fits_mask = "masking/{0:s}_{1:s}.fits".format(mask_key, field)
             if not os.path.isfile("{0:s}/{1:s}".format(pipeline.output, fits_mask)):
@@ -788,12 +772,10 @@ def worker(pipeline, recipe, config):
                     hdul.flush()
 
                 # update fitsmask keyword of wsclean
-                image_opts.update(
-                    {
-                        "fitsmask": "{0:s}/{1:s}:output".format(get_relative_path(pipeline.masking, pipeline), postGridMask.split("/")[-1]),
-                        "local-rms": False,
-                    }
-                )
+                image_opts.update({
+                    "fitsmask": "{0:s}/{1:s}:output".format(get_relative_path(pipeline.masking, pipeline), postGridMask.split("/")[-1]),
+                    "local-rms": False,
+                })
 
         recipe.add(
             "cab/wsclean",
@@ -1591,26 +1573,22 @@ def worker(pipeline, recipe, config):
             if min_uvw > 0:
                 cubical_opts.update({"sol-min-bl": min_uvw})
             if flags != "":
-                cubical_opts.update(
-                    {
-                        "flags-apply": flags,
-                    }
-                )
+                cubical_opts.update({
+                    "flags-apply": flags,
+                })
             if second_matrix_invoked:
-                cubical_opts.update(
-                    {
-                        "dd-update-type": "amp-diag",
-                        "dd-solvable": True,
-                        "dd-type": CUBICAL_MT[matrix_type],
-                        "dd-time-int": int(gasols_[0]),
-                        "dd-freq-int": int(gasols_[1]),
-                        "dd-save-to": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(msname)[0], prefix),
-                        "dd-clip-low": config["cal_gain_cliplow"],
-                        "dd-clip-high": config["cal_gain_cliphigh"],
-                        "dd-max-prior-error": config["cal_cubical"]["max_prior_error"],
-                        "dd-max-post-error": config["cal_cubical"]["max_post_error"],
-                    }
-                )
+                cubical_opts.update({
+                    "dd-update-type": "amp-diag",
+                    "dd-solvable": True,
+                    "dd-type": CUBICAL_MT[matrix_type],
+                    "dd-time-int": int(gasols_[0]),
+                    "dd-freq-int": int(gasols_[1]),
+                    "dd-save-to": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(msname)[0], prefix),
+                    "dd-clip-low": config["cal_gain_cliplow"],
+                    "dd-clip-high": config["cal_gain_cliphigh"],
+                    "dd-max-prior-error": config["cal_cubical"]["max_prior_error"],
+                    "dd-max-post-error": config["cal_cubical"]["max_post_error"],
+                })
             if config["cal_bjones"]:
                 if bupdate == "phase-diag":
                     b_table_name = "{0:s}/{3:s}-b-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(msname)[0], prefix)
@@ -1626,27 +1604,23 @@ def worker(pipeline, recipe, config):
                     )
                 else:
                     raise RuntimeError("Something has corrupted the selfcal run")
-                cubical_opts.update(
-                    {
-                        "b-update-type": bupdate,
-                        "b-solvable": True,
-                        "b-time-int": int(bsols_[0]),
-                        "b-freq-int": int(bsols_[1]),
-                        "b-type": CUBICAL_MT[matrix_type],
-                        "b-clip-low": config["cal_gain_cliplow"],
-                        "b-save-to": b_table_name,
-                        "b-clip-high": config["cal_gain_cliphigh"],
-                        "b-max-prior-error": config["cal_cubical"]["max_prior_error"],
-                        "b-max-post-error": config["cal_cubical"]["max_post_error"],
-                    }
-                )
+                cubical_opts.update({
+                    "b-update-type": bupdate,
+                    "b-solvable": True,
+                    "b-time-int": int(bsols_[0]),
+                    "b-freq-int": int(bsols_[1]),
+                    "b-type": CUBICAL_MT[matrix_type],
+                    "b-clip-low": config["cal_gain_cliplow"],
+                    "b-save-to": b_table_name,
+                    "b-clip-high": config["cal_gain_cliphigh"],
+                    "b-max-prior-error": config["cal_cubical"]["max_prior_error"],
+                    "b-max-post-error": config["cal_cubical"]["max_post_error"],
+                })
             # Time chunk and freq chunk have been checked and approved before so they are what they are
-            cubical_opts.update(
-                {
-                    "data-time-chunk": time_chunk,
-                    "data-freq-chunk": freq_chunk,
-                }
-            )
+            cubical_opts.update({
+                "data-time-chunk": time_chunk,
+                "data-freq-chunk": freq_chunk,
+            })
             recipe.add(
                 "cab/cubical",
                 step,
@@ -1879,15 +1853,13 @@ def worker(pipeline, recipe, config):
                         time_chunk_apply = int(max(int(ratio_timeslot * bsols_[0]), time_chunk_apply)) if not (int(bsols_[0]) == 0 or time_chunk_apply == 0) else 0
                         freq_chunk_apply = int(max(int(ratio_channelsize * bsols_[1]), freq_chunk_apply)) if not (int(bsols_[1]) == 0 or freq_chunk_apply == 0) else 0
 
-                cubical_gain_interp_opts.update(
-                    {
-                        "b-update-type": bupdate,
-                        "b-type": CUBICAL_MT[matrix_type],
-                        "b-time-int": int(bsols_apply[0]),
-                        "b-freq-int": int(bsols_apply[1]),
-                        "b-solvable": False,
-                    }
-                )
+                cubical_gain_interp_opts.update({
+                    "b-update-type": bupdate,
+                    "b-type": CUBICAL_MT[matrix_type],
+                    "b-time-int": int(bsols_apply[0]),
+                    "b-freq-int": int(bsols_apply[1]),
+                    "b-solvable": False,
+                })
                 # Set the table name
                 if bupdate == "phase-diag":
                     b_table_name = "{0:s}/{3:s}-b-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(fromname)[0], prefix)
@@ -1925,29 +1897,25 @@ def worker(pipeline, recipe, config):
                     time_chunk_apply = int(max(int(ratio_timeslot * gasols_[0]), time_chunk_apply)) if not (int(gasols_[0]) == 0 or time_chunk_apply == 0) else 0
                     freq_chunk_apply = int(max(int(ratio_channelsize * gasols_[1]), freq_chunk_apply)) if not (int(gasols_[1]) == 0 or freq_chunk_apply == 0) else 0
 
-                cubical_gain_interp_opts.update(
-                    {
-                        "dd-update-type": "amp-diag",
-                        "dd-type": CUBICAL_MT[matrix_type],
-                        "dd-time-int": int(gasols_apply[0]),
-                        "dd-freq-int": int(gasols_apply[1]),
-                        "dd-solvable": False,
-                    }
-                )
+                cubical_gain_interp_opts.update({
+                    "dd-update-type": "amp-diag",
+                    "dd-type": CUBICAL_MT[matrix_type],
+                    "dd-time-int": int(gasols_apply[0]),
+                    "dd-freq-int": int(gasols_apply[1]),
+                    "dd-solvable": False,
+                })
                 if config["transfer_apply_gains"]["interpolate"]["enable"]:
-                    cubical_gain_interp_opts.update(
-                        {"dd-xfer-from": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(fromname)[0], prefix)}
-                    )
+                    cubical_gain_interp_opts.update({
+                        "dd-xfer-from": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(fromname)[0], prefix)
+                    })
                 else:
-                    cubical_gain_interp_opts.update(
-                        {"dd-load-from": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(fromname)[0], prefix)}
-                    )
-            cubical_gain_interp_opts.update(
-                {
-                    "data-time-chunk": time_chunk_apply,
-                    "data-freq-chunk": int(freq_chunk_apply),
-                }
-            )
+                    cubical_gain_interp_opts.update({
+                        "dd-load-from": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path, pipeline), num, os.path.splitext(fromname)[0], prefix)
+                    })
+            cubical_gain_interp_opts.update({
+                "data-time-chunk": time_chunk_apply,
+                "data-freq-chunk": int(freq_chunk_apply),
+            })
             # ensure proper logging for restore or interpolation
             if not enable_inter:
                 step = "restore_cubical_gains-{0:d}-{1:d}".format(num, i)
@@ -2120,17 +2088,15 @@ def worker(pipeline, recipe, config):
                 aimfast_settings.update({"tigger-model": "{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.lsm.html:output".format(img_dir, prefix, field, num)})
             else:
                 # In the case of RES_DATA we need the combined models to compute the dynamic range.
-                aimfast_settings.update(
-                    {
-                        "tigger-model": "{0:s}/{1:s}_{2:s}_{3:d}-pybdsm{4:s}.lsm.html:output".format(
-                            img_dir,
-                            prefix,
-                            field,
-                            num if num <= len(config["calibrate"].get("model")) else len(config["calibrate"].get("model")),
-                            "-combined" if len(model.split("+")) >= 2 else "",
-                        )
-                    }
-                )
+                aimfast_settings.update({
+                    "tigger-model": "{0:s}/{1:s}_{2:s}_{3:d}-pybdsm{4:s}.lsm.html:output".format(
+                        img_dir,
+                        prefix,
+                        field,
+                        num if num <= len(config["calibrate"].get("model")) else len(config["calibrate"].get("model")),
+                        "-combined" if len(model.split("+")) >= 2 else "",
+                    )
+                })
 
         else:
             # Use the image

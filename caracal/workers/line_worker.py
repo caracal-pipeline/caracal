@@ -1022,12 +1022,10 @@ def worker(pipeline, recipe, config):
                     os.mkdir(cube_path)
                 cube_dir = "{0:s}/cube_{1:d}".format(get_relative_path(pipeline.cubes, pipeline), jj)
 
-                line_image_opts.update(
-                    {
-                        "msname": mslist,
-                        "prefix": "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}".format(cube_dir, pipeline.prefix, field, line_name, jj),
-                    }
-                )
+                line_image_opts.update({
+                    "msname": mslist,
+                    "prefix": "{0:s}/{1:s}_{2:s}_{3:s}_{4:d}".format(cube_dir, pipeline.prefix, field, line_name, jj),
+                })
 
                 if jj == 1:
                     own_line_clean_mask = config["make_cube"]["wscl_user_clean_mask"]
@@ -1266,14 +1264,12 @@ def worker(pipeline, recipe, config):
                                     hdul[0].header["CDELT3"] = hdul[0].header["CDELT3"] * binchans
                                     if binchans > 1:
                                         if (nchans % binchans) > 0:
-                                            rdata = (hdul[0].data[: -(nchans % binchans)]).reshape(
-                                                (
-                                                    nchans - 1 * (nchans % binchans),
-                                                    binchans,
-                                                    hdul[0].header["NAXIS1"],
-                                                    hdul[0].header["NAXIS2"],
-                                                )
-                                            )
+                                            rdata = (hdul[0].data[: -(nchans % binchans)]).reshape((
+                                                nchans - 1 * (nchans % binchans),
+                                                binchans,
+                                                hdul[0].header["NAXIS1"],
+                                                hdul[0].header["NAXIS2"],
+                                            ))
                                             rdata = np.nansum(rdata, axis=1)
                                             rdata = np.concatenate((rdata, np.nansum(hdul[0].data[-(nchans % binchans) :])), axis=0)
                                         else:
@@ -1467,14 +1463,12 @@ def worker(pipeline, recipe, config):
                                     if mm == "dirty":
                                         tobeblanked = (
                                             cubedata
-                                            == np.nanmean(cubedata, axis=(0, 2, 3)).reshape(
-                                                (
-                                                    1,
-                                                    cubedata.shape[1],
-                                                    1,
-                                                    1,
-                                                )
-                                            )
+                                            == np.nanmean(cubedata, axis=(0, 2, 3)).reshape((
+                                                1,
+                                                cubedata.shape[1],
+                                                1,
+                                                1,
+                                            ))
                                         ).all(axis=(0, 2, 3))
                                     cubedata[:, tobeblanked] = np.nan
                                     fits.writeto(
@@ -1656,12 +1650,10 @@ def worker(pipeline, recipe, config):
                 "restfreq": restfreq,
             }
             if config["make_cube"]["taper"] != "":
-                image_opts.update(
-                    {
-                        "uvtaper": True,
-                        "outertaper": config["make_cube"]["taper"],
-                    }
-                )
+                image_opts.update({
+                    "uvtaper": True,
+                    "outertaper": config["make_cube"]["taper"],
+                })
             recipe.add(
                 "cab/casa_clean",
                 step,

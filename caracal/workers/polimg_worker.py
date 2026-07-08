@@ -216,18 +216,14 @@ def worker(pipeline, recipe, config):
         if not config["make_images"]["img_mfs_weighting"]:
             image_opts["nomfsweighting"] = True
         if maxuvl > 0.0:
-            image_opts.update(
-                {
-                    "maxuv-l": maxuvl,
-                    "taper-tukey": transuvl,
-                }
-            )
+            image_opts.update({
+                "maxuv-l": maxuvl,
+                "taper-tukey": transuvl,
+            })
         if float(taper) > 0.0:
-            image_opts.update(
-                {
-                    "taper-gaussian": taper,
-                }
-            )
+            image_opts.update({
+                "taper-gaussian": taper,
+            })
         # if float(beam) > 0. :
         #     image_opts.update({
         #         "beam-size": beam,
@@ -241,20 +237,16 @@ def worker(pipeline, recipe, config):
 
         mask_key = config["make_images"]["cleanmask_method"]
         if mask_key == "wsclean":
-            image_opts.update(
-                {
-                    # "auto-mask": config['cleanmask_thr'],
-                    "local-rms": config["make_images"]["cleanmask_localrms"],
-                }
-            )
+            image_opts.update({
+                # "auto-mask": config['cleanmask_thr'],
+                "local-rms": config["make_images"]["cleanmask_localrms"],
+            })
             if config["make_images"]["cleanmask_thr"] != -1:
                 image_opts.update({"auto-mask": config["make_images"]["cleanmask_thr"]})
             if config["make_images"]["cleanmask_localrms"]:
-                image_opts.update(
-                    {
-                        "local-rms-window": config["make_images"]["cleanmask_localrms_window"],
-                    }
-                )
+                image_opts.update({
+                    "local-rms-window": config["make_images"]["cleanmask_localrms_window"],
+                })
         else:
             fits_mask = "masking/{0:s}.fits".format(mask_key)
             if not os.path.isfile("{0:s}/{1:s}".format(pipeline.output, fits_mask)):
@@ -263,12 +255,10 @@ def worker(pipeline, recipe, config):
                         pipeline.output, fits_mask
                     )
                 )
-            image_opts.update(
-                {
-                    "fitsmask": "{0:s}:output".format(fits_mask),
-                    "local-rms": False,
-                }
-            )
+            image_opts.update({
+                "fitsmask": "{0:s}:output".format(fits_mask),
+                "local-rms": False,
+            })
         recipe.add(
             "cab/wsclean",
             step,

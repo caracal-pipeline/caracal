@@ -4,7 +4,7 @@ import shutil
 import numpy as np
 
 import caracal
-import caracal.dispatch_crew.utils as utils
+from caracal.dispatch_crew import utils
 
 NAME = "Automatically Categorize Observed Fields"
 LABEL = "obsconf"
@@ -41,7 +41,7 @@ def worker(pipeline, recipe, config):
                         },
                         input=pipeline.input,
                         output=pipeline.msdir,
-                        label="{0:s}:: Get observation information ms={1:s}".format(step, msname),
+                        label=f"{step:s}:: Get observation information ms={msname:s}",
                     )
 
             if config["obsinfo"]["summary_json"]:
@@ -60,11 +60,11 @@ def worker(pipeline, recipe, config):
                         },
                         input=pipeline.input,
                         output=pipeline.msdir,
-                        label="{0:s}:: Get observation information as a json file ms={1:s}".format(step, msname),
+                        label=f"{step:s}:: Get observation information as a json file ms={msname:s}",
                     )
 
             if config["obsinfo"]["vampirisms"]:
-                step = "vampirisms-ms{0:d}".format(i)
+                step = f"vampirisms-ms{i:d}"
                 recipe.add(
                     "cab/sunblocker",
                     step,
@@ -77,14 +77,14 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.input,
                     output=pipeline.msdir,
-                    label="{0:s}:: Note sunrise and sunset".format(step),
+                    label=f"{step:s}:: Note sunrise and sunset",
                 )
 
             if pipeline.enable_task(config["obsinfo"], "plotelev"):
                 if os.path.exists(os.path.join(pipeline.msdir, elevplot)):
                     caracal.log.info(f"elevation plot {elevplot} exists, not regenerating")
                 else:
-                    step = "elevation-plots-ms{:d}".format(i)
+                    step = f"elevation-plots-ms{i:d}"
                     if config["obsinfo"]["plotelev"]["plotter"] in ["plotms"]:
                         recipe.add(
                             "cab/casa_plotms",
@@ -99,7 +99,7 @@ def worker(pipeline, recipe, config):
                             },
                             input=pipeline.input,
                             output=pipeline.msdir,
-                            label="{:s}:: Plotting elevation tracks".format(step),
+                            label=f"{step:s}:: Plotting elevation tracks",
                         )
                     elif config["obsinfo"]["plotelev"]["plotter"] in ["owlcat"]:
                         recipe.add(
@@ -108,7 +108,7 @@ def worker(pipeline, recipe, config):
                             {"msname": msname, "output-name": elevplot},
                             input=pipeline.input,
                             output=pipeline.msdir,
-                            label="{:s}:: Plotting elevation tracks".format(step),
+                            label=f"{step:s}:: Plotting elevation tracks",
                         )
 
     # if any steps at all were inserted, run the recipe
@@ -117,18 +117,18 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
     # initialse things
-    for item in "xcal fcal bpcal gcal target refant minbase maxdist".split():
+    for item in ["xcal", "fcal", "bpcal", "gcal", "target", "refant", "minbase", "maxdist"]:
         val = config[item]
         for attr in ["", "_ra", "_dec", "_id"]:
             setattr(pipeline, item + attr, repeat_val(val, pipeline.nobs))
 
-    setattr(pipeline, "nchans", repeat_val(None, pipeline.nobs))
-    setattr(pipeline, "firstchanfreq", repeat_val(None, pipeline.nobs))
-    setattr(pipeline, "lastchanfreq", repeat_val(None, pipeline.nobs))
-    setattr(pipeline, "chanwidth", repeat_val(None, pipeline.nobs))
-    setattr(pipeline, "specframe", repeat_val(None, pipeline.nobs))
-    setattr(pipeline, "startdate", repeat_val(None, pipeline.nobs))
-    setattr(pipeline, "enddate", repeat_val(None, pipeline.nobs))
+    pipeline.nchans = repeat_val(None, pipeline.nobs)
+    pipeline.firstchanfreq = repeat_val(None, pipeline.nobs)
+    pipeline.lastchanfreq = repeat_val(None, pipeline.nobs)
+    pipeline.chanwidth = repeat_val(None, pipeline.nobs)
+    pipeline.specframe = repeat_val(None, pipeline.nobs)
+    pipeline.startdate = repeat_val(None, pipeline.nobs)
+    pipeline.enddate = repeat_val(None, pipeline.nobs)
 
     for i, (msname, msroot) in enumerate(zip(pipeline.msnames, pipeline.msbasenames)):
         caracal.log.info(f"MS #{i}: {msname}")
@@ -152,34 +152,33 @@ def worker(pipeline, recipe, config):
             content = stdr.readlines()
         for line in content:
             info_on_line = [x for x in line.split() if x != ""]
-            if len(info_on_line) > 2:
-                if info_on_line[0].lower() == "observed" and info_on_line[1].lower() == "from":
-                    calender_month_abbr = [
-                        "jan",
-                        "feb",
-                        "mar",
-                        "apr",
-                        "may",
-                        "jun",
-                        "jul",
-                        "aug",
-                        "sep",
-                        "oct",
-                        "nov",
-                        "dec",
-                    ]
-                    startdate, starttime = info_on_line[2].split("/")
-                    hr, minute, sec = starttime.split(":")
-                    day, month_abbr, year = startdate.split("-")
-                    month_num = "{:02d}".format(calender_month_abbr.index(month_abbr.lower()) + 1)
-                    correct_date = "".join([year, month_num, day, hr, minute, sec])
-                    pipeline.startdate[i] = float(correct_date)
-                    enddate, endtime = info_on_line[4].split("/")
-                    hr, minute, sec = endtime.split(":")
-                    day, month_abbr, year = enddate.split("-")
-                    month_num = "{:02d}".format(calender_month_abbr.index(month_abbr.lower()) + 1)
-                    correct_date = "".join([year, month_num, day, hr, minute, sec])
-                    pipeline.enddate[i] = float(correct_date)
+            if len(info_on_line) > 2 and info_on_line[0].lower() == "observed" and info_on_line[1].lower() == "from":
+                calender_month_abbr = [
+                    "jan",
+                    "feb",
+                    "mar",
+                    "apr",
+                    "may",
+                    "jun",
+                    "jul",
+                    "aug",
+                    "sep",
+                    "oct",
+                    "nov",
+                    "dec",
+                ]
+                startdate, starttime = info_on_line[2].split("/")
+                hr, minute, sec = starttime.split(":")
+                day, month_abbr, year = startdate.split("-")
+                month_num = f"{calender_month_abbr.index(month_abbr.lower()) + 1:02d}"
+                correct_date = "".join([year, month_num, day, hr, minute, sec])  # noqa: FLY002
+                pipeline.startdate[i] = float(correct_date)
+                enddate, endtime = info_on_line[4].split("/")
+                hr, minute, sec = endtime.split(":")
+                day, month_abbr, year = enddate.split("-")
+                month_num = f"{calender_month_abbr.index(month_abbr.lower()) + 1:02d}"
+                correct_date = "".join([year, month_num, day, hr, minute, sec])  # noqa: FLY002
+                pipeline.enddate[i] = float(correct_date)
 
         # get reference antenna LEAVING THIS LINE HERE
         # FOR WHEN WE COME UP WITH A WAY TO AUTOSELECT
@@ -189,7 +188,7 @@ def worker(pipeline, recipe, config):
         # Get channels in MS
         spw = msdict["SPW"]["NUM_CHAN"]
         pipeline.nchans[i] = spw
-        caracal.log.info("  {0:d} spectral windows, with NCHAN={1:s}".format(len(spw), ",".join(map(str, spw))))
+        caracal.log.info("  {0:d} spectral windows, with NCHAN={1:s}".format(len(spw), ",".join(map(str, spw))))  # noqa: UP030
 
         # Get first chan, last chan, chan width
         chfr = msdict["SPW"]["CHAN_FREQ"]
@@ -200,7 +199,7 @@ def worker(pipeline, recipe, config):
         pipeline.lastchanfreq[i] = lastchanfreq
         pipeline.chanwidth[i] = chanwidth
         caracal.log.info(
-            "  CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz".format(
+            "  CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz".format(  # noqa: UP030
                 ",".join(map(str, firstchanfreq)), ",".join(map(str, lastchanfreq)), ",".join(map(str, chanwidth))
             )
         )
@@ -221,7 +220,7 @@ def worker(pipeline, recipe, config):
         # Save all fields in a list
         all_fields = msdict["FIELD"]["NAME"]
         # The order of fields here is important
-        for term in "target gcal fcal bpcal xcal".split():
+        for term in ["target", "gcal", "fcal", "bpcal", "xcal"]:
             conf_fields = getattr(pipeline, term)[i]
             conf_fields_str = ",".join(conf_fields)
             label, fields = intents[term]

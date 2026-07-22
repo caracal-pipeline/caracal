@@ -8,7 +8,7 @@ def checkimport(package):
     Check if a package is installed.
     """
     exists = importlib.util.find_spec(package)
-    if exists:
+    if exists:  # noqa: SIM103
         return True
     else:
         return False

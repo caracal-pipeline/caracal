@@ -15,6 +15,13 @@ NAME = "Flag"
 LABEL = "flag"
 
 
+def _build_inspect_outlabel(label, index, field, field_count):
+    safe_label = f"{label}_" if label else ""
+    if field_count == 1:
+        return "_{0:s}{1:d}".format(safe_label, index)
+    return "_{0:s}{1:d}_{2:s}".format(safe_label, index, field)
+
+
 def worker(pipeline, recipe, config):
     label = config["label_in"]
     wname = pipeline.CURRENT_WORKER
@@ -598,8 +605,9 @@ def worker(pipeline, recipe, config):
                             utils.get_field_id(msdict, manfields.get_field(pipeline, i, config["inspect"]["field"]).split(",")),
                         )
                     )
+                field_count = len(field.split(","))
                 for f in field.split(","):
-                    outlabel = "_{0:d}".format(i) if len(field.split(",")) == 1 else "_{0:d}_{1:s}".format(i, f)
+                    outlabel = _build_inspect_outlabel(label, i, f, field_count)
                     recipe.add(
                         "cab/rfinder",
                         step,

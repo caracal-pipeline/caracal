@@ -47,11 +47,11 @@ sortedWorkers = [
 
 # Get and adapt Caracal README.rst
 def getCaracalReadme(pipeDr, dcsDr):
-    print("  INFO: Getting and adapting {0:s}/README.rst ...".format(pipeDr))
-    f = open(pipeDr + "/README.rst")
+    print(f"  INFO: Getting and adapting {pipeDr:s}/README.rst ...")
+    f = open(pipeDr + "/README.rst")  # noqa: SIM115
     readme = f.readlines()
     f.close()
-    f = open(dcsDr + "caracalREADME.rst", "w")
+    f = open(dcsDr + "caracalREADME.rst", "w")  # noqa: SIM115
     nn = readme.index("Installation & Run\n")
     while nn < len(readme) and "Running" not in readme[nn]:
         f.write(readme[nn])
@@ -80,11 +80,10 @@ def writeWorkerPageIndex(srtWrks, wrkDr):
     ]
 
     for wrk in srtWrks:
-        writeLines.append("   {0:s}/index.rst".format(wrk))
+        writeLines.append(f"   {wrk:s}/index.rst")
 
-    f = open(wrkDr + "index.rst", "w")
-    for ll in writeLines:
-        f.write(ll + "\n")
+    f = open(wrkDr + "index.rst", "w")  # noqa: SIM115
+    f.writelines(ll + "\n" for ll in writeLines)
     f.close()
 
 
@@ -92,60 +91,60 @@ def writeWorkerPageIndex(srtWrks, wrkDr):
 def writeWorkerLevel(writeFile, parameter, indentLevel=""):
     # write parameter type, required, default
     if "enum" in parameter:
-        writeFile.write("{0:s}*{{".format(indentLevel))
+        writeFile.write(f"{indentLevel:s}*{{")
         for ee in range(len(parameter["enum"])):
             if ee:
                 writeFile.write(", ")
             if parameter["enum"][ee] == "":
                 writeFile.write('""')
             elif parameter["type"] == "str":
-                writeFile.write('"{0:s}"'.format(parameter["enum"][ee]))
+                writeFile.write('"{0:s}"'.format(parameter["enum"][ee]))  # noqa: UP030
             else:
-                writeFile.write("{0:s}".format(parameter["enum"][ee]))
+                writeFile.write("{0:s}".format(parameter["enum"][ee]))  # noqa: UP030
         writeFile.write("}*")
         if "required" in parameter and not parameter["required"]:
             writeFile.write(", *optional*")
             if "example" in parameter:
                 if len(parameter["example"]):
-                    writeFile.write(", *default = {0}*".format(parameter["example"]))
+                    writeFile.write(", *default = {0}*".format(parameter["example"]))  # noqa: UP030
                 else:
                     writeFile.write(", *default = ' '*")
         writeFile.write("\n\n")
     elif "type" in parameter and parameter["type"] != "map":
-        writeFile.write("{1:s}*{0:s}*".format(parameter["type"], indentLevel))
+        writeFile.write("{1:s}*{0:s}*".format(parameter["type"], indentLevel))  # noqa: UP030
         if "required" in parameter and not parameter["required"]:
             writeFile.write(", *optional*")
             if "example" in parameter:
                 if len(parameter["example"]):
-                    writeFile.write(", *default = {0}*".format(parameter["example"]))
+                    writeFile.write(", *default = {0}*".format(parameter["example"]))  # noqa: UP030
                 else:
                     writeFile.write(", *default = ' '*")
         writeFile.write("\n\n")
     elif "seq" in parameter:
-        writeFile.write("{0:s}*list*".format(indentLevel))
+        writeFile.write(f"{indentLevel:s}*list*")
         for ee in parameter["seq"]:
             if "type" in ee:
-                writeFile.write(" *of {0:s}*".format(ee["type"]))
+                writeFile.write(" *of {0:s}*".format(ee["type"]))  # noqa: UP030
         if "required" in parameter and not parameter["required"]:
             writeFile.write(", *optional*")
             if "example" in parameter:
                 if len(parameter["example"]):
-                    writeFile.write(", *default = {0}*".format(parameter["example"]))
+                    writeFile.write(", *default = {0}*".format(parameter["example"]))  # noqa: UP030
                 else:
                     writeFile.write(", *default = ' '*")
         writeFile.write("\n\n")
     elif "required" in parameter and not parameter["required"]:
-        writeFile.write("{0:s}*optional*".format(indentLevel))
+        writeFile.write(f"{indentLevel:s}*optional*")
         if "example" in parameter:
             if len(parameter["example"]):
-                writeFile.write("*default = {0}*".format(parameter["example"]))
+                writeFile.write("*default = {0}*".format(parameter["example"]))  # noqa: UP030
             else:
                 writeFile.write(", *default = ' '*")
         writeFile.write("\n\n")
 
     # write parameter description
     if "desc" in parameter:
-        writeFile.write("{1:s}{0:s}\n\n".format(parameter["desc"].replace("*", "\*"), indentLevel))
+        writeFile.write("{1:s}{0:s}\n\n".format(parameter["desc"].replace("*", r"\*"), indentLevel))  # noqa: UP030
 
 
 # Write the individual workers' index.rst files
@@ -160,7 +159,7 @@ def writeWorkersIndex(srtWrks, wrkDr, schms, schDr):
             "   You can adapt this file completely to your liking, but it should at least",
             "   contain the root `toctree` directive.",
             " ",
-            ".. _{0:s}:".format(wrk),
+            f".. _{wrk:s}:",
             " ",
             "==========================================",
             wrk,
@@ -170,9 +169,8 @@ def writeWorkersIndex(srtWrks, wrkDr, schms, schDr):
             "   :maxdepth: 1",
             " ",
         ]
-        f = open(wrkDr + wrk + "/index.rst", "w")
-        for ll in writeLines:
-            f.write(ll + "\n")
+        f = open(wrkDr + wrk + "/index.rst", "w")  # noqa: SIM115
+        f.writelines(ll + "\n" for ll in writeLines)
 
         # Find matching schema file and open it with ruamel.yaml
         matchingSchema = []
@@ -180,19 +178,19 @@ def writeWorkersIndex(srtWrks, wrkDr, schms, schDr):
             if wrk in schms[nn]:
                 matchingSchema.append(schms[nn])
         if len(matchingSchema) > 1:
-            print("  ERROR: Multiple matching schemas for worker {0:s}".format(wrk))
+            print(f"  ERROR: Multiple matching schemas for worker {wrk:s}")
             sys.exit()
         elif len(matchingSchema) == 0:
-            print("  ERROR: No matching schemas for worker {0:s}".format(wrk))
+            print(f"  ERROR: No matching schemas for worker {wrk:s}")
             sys.exit()
         else:
             matchingSchema = matchingSchema[0]
-        print("        {0:s}{1:s}".format(schDr, matchingSchema))
+        print(f"        {schDr:s}{matchingSchema:s}")
 
         # write worker description
         with open(schDr + matchingSchema) as stdr:
             schm = yaml.load(stdr)["mapping"][wrk]
-        f.write("{0:s}\n\n".format(schm["desc"]))
+        f.write("{0:s}\n\n".format(schm["desc"]))  # noqa: UP030
 
         # the initial type must be 'map'
         # if that's the case proceed reading the parameters
@@ -205,26 +203,26 @@ def writeWorkersIndex(srtWrks, wrkDr, schms, schDr):
         # enter the nested structure of the schema and get all relevant info
         for parLev1 in schm:
             f.write("\n\n")
-            f.write(".. _{0:s}_{1:s}:\n".format(wrk, parLev1))
+            f.write(f".. _{wrk:s}_{parLev1:s}:\n")
             f.write("\n")
             f.write("--------------------------------------------------\n")
-            f.write("**{0:s}**\n".format(parLev1))
+            f.write(f"**{parLev1:s}**\n")
             f.write("--------------------------------------------------\n\n")
             writeWorkerLevel(f, schm[parLev1], indentLevel="  ")
 
             if "type" in schm[parLev1] and schm[parLev1]["type"] == "map":
                 for parLev2 in schm[parLev1]["mapping"]:
-                    f.write("  **{0:s}**\n\n".format(parLev2))
+                    f.write(f"  **{parLev2:s}**\n\n")
                     writeWorkerLevel(f, schm[parLev1]["mapping"][parLev2], indentLevel="    ")
 
                     if "type" in schm[parLev1]["mapping"][parLev2] and schm[parLev1]["mapping"][parLev2]["type"] == "map":
                         for parLev3 in schm[parLev1]["mapping"][parLev2]["mapping"]:
-                            f.write("    **{0:s}**\n\n".format(parLev3))
+                            f.write(f"    **{parLev3:s}**\n\n")
                             writeWorkerLevel(f, schm[parLev1]["mapping"][parLev2]["mapping"][parLev3], indentLevel="      ")
 
                             if "type" in schm[parLev1]["mapping"][parLev2]["mapping"][parLev3] and schm[parLev1]["mapping"][parLev2]["mapping"][parLev3]["type"] == "map":
                                 for parLev4 in schm[parLev1]["mapping"][parLev2]["mapping"][parLev3]["mapping"]:
-                                    f.write("      **{0:s}**\n\n".format(parLev4))
+                                    f.write(f"      **{parLev4:s}**\n\n")
                                     writeWorkerLevel(
                                         f,
                                         schm[parLev1]["mapping"][parLev2]["mapping"][parLev3]["mapping"][parLev4],
@@ -240,7 +238,7 @@ def writeWorkersIndex(srtWrks, wrkDr, schms, schDr):
 
 schemaDir = caracalDir + "/caracal/schema/"
 
-print("  INFO: Browsing Caracal schema directory {0:s} ...".format(schemaDir))
+print(f"  INFO: Browsing Caracal schema directory {schemaDir:s} ...")
 # Get list of workers and their .yml files from the schema directory
 schemas = [ww.replace(schemaDir, "") for ww in glob(schemaDir + "*.yml")]
 workers = [ww.split("_schema")[0] for ww in schemas]
@@ -261,7 +259,7 @@ for ww in workers:
 # Write out message about which workers will be included in the docs
 print("  INFO: Will include the following workers in the documentation:")
 for ww in sortedWorkers:
-    print("        {0:s}".format(ww))
+    print(f"        {ww:s}")
 
 # For each docs (sub-)directories
 print('  INFO: Creating "Download & Install" and "Workers" (sub-)directories ...')

@@ -8,7 +8,7 @@ def get_field(pipeline, i, field):
     return ",".join(
         filter(
             lambda s: s != "",
-            map(
+            map(  # noqa: C417
                 lambda x: (
                     ",".join(getattr(pipeline, x)[i].split(",") if isinstance(getattr(pipeline, x)[i], str) and getattr(pipeline, x)[i] != "" else getattr(pipeline, x)[i])
                     if x in ["bpcal", "gcal", "target", "fcal", "xcal"]

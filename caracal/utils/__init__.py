@@ -1,4 +1,6 @@
-from typing import Any, Union
+from __future__ import annotations
+
+from typing import Any, Union  # noqa: F401
 
 from ruamel.yaml import YAML
 
@@ -18,7 +20,7 @@ def write_yaml(data: dict, fname: str):
 
 
 # from https://github.com/omry/omegaconf/discussions/1155#discussioncomment-8560712
-def to_regular_dict(container: Any) -> Union[dict, list]:
+def to_regular_dict(container: Any) -> dict | list:
     """Replace dict/list containers like OderedDicts to standard python dict/list objects
 
     Args:

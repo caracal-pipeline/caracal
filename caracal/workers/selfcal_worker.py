@@ -109,7 +109,7 @@ def check_config(config, name):
                 amount_sols = len(config["calibrate"]["gasols_timeslots"])
             else:
                 amount_sols = int(config["cal_niter"])
-            for i, val in enumerate(config["calibrate"]["gasols_timeslots"][:amount_sols]):
+            for val in config["calibrate"]["gasols_timeslots"][:amount_sols]:
                 if val >= 0:
                     solutions.append(val)
         # then we assign the timechunk
@@ -158,7 +158,7 @@ def check_config(config, name):
                     amount_sols = len(config["calibrate"]["gasols_chan"])
                 else:
                     amount_sols = int(config["cal_niter"])
-                for i, val in enumerate(config["calibrate"]["gasols_chan"][:amount_sols]):
+                for val in config["calibrate"]["gasols_chan"][:amount_sols]:
                     if val >= 0:
                         solutions.append(val)
             # then we assign the timechunk
@@ -1489,7 +1489,7 @@ def worker(pipeline, recipe, config):
             sol_terms_add.append(str(solterm_niter[SOL_TERMS_INDEX[term]]))
         flags = "-cubical"
 
-        for i, msname in enumerate(mslist):
+        for msname in mslist:
             # Due to a bug in cubical full polarization datasets are not compliant with sel-diag: True
             # Hence this temporary fix.
             corrs = pipeline.get_msinfo(msname)["CORR"]["CORR_TYPE"]

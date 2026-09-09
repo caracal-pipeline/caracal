@@ -893,7 +893,7 @@ with open(outfile, 'w') as json_file:
         recipe.run()
         recipe.jobs = []
 
-        with open(os.path.join(pipeline.caltables, prefix) + "_bestscan.json", "r") as json_file:
+        with open(os.path.join(pipeline.caltables, prefix) + "_bestscan.json") as json_file:
             data = json.load(json_file)
             bestscan = data["bestscan"]
 
@@ -1422,7 +1422,7 @@ def worker(pipeline, recipe, config):
                 caracal.log.info("Setting model pol")
                 if config["set_model_pol"]["nrao_model"]:
                     file_path = caracal.pckgdir + "/data/nrao_xcal.yml"
-                    polarized_calibrators = yaml.safe_load(open(file_path, "r", encoding="utf-8"))  # noqa: SIM115
+                    polarized_calibrators = yaml.safe_load(open(file_path, encoding="utf-8"))  # noqa: SIM115
                     polarized_calibrators["J1331+3030"] = polarized_calibrators["3C286"]
                     polarized_calibrators["J0521+1638"] = polarized_calibrators["3C138"]
                 elif config["set_model_pol"]["taylor_legodi_model"]:

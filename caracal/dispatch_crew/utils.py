@@ -341,7 +341,7 @@ def read_taylor_legodi_row(info, field):
 
     file_path = caracal.pckgdir + "/data/taylor_legodi_2024.txt"
 
-    with open(file_path, mode="r", encoding="utf-8") as file:
+    with open(file_path, encoding="utf-8") as file:
         lines = file.readlines()
 
         if not lines:

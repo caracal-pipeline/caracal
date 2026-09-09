@@ -25,7 +25,7 @@ def setup_default_notebooks(notebooks, output_dir, prefix, config):
 
     for notebook in notebooks:
         nbfile = notebook + ".ipynb"
-        nbdest = os.path.join(output_dir, "{}-{}".format(prefix, nbfile) if prefix else nbfile)
+        nbdest = os.path.join(output_dir, f"{prefix}-{nbfile}" if prefix else nbfile)
 
         # overwrite destination only if source is newer
         dest_mtime = os.path.getmtime(nbdest) if os.path.exists(nbdest) else 0
@@ -42,32 +42,32 @@ def setup_default_notebooks(notebooks, output_dir, prefix, config):
                     )
 
                 template = _j2env.get_template(nbfile + ".j2")
-                log.info("Creating standard notebook {} from template".format(nbdest))
+                log.info(f"Creating standard notebook {nbdest} from template")
 
                 with open(nbdest, "wt") as file:
                     try:
                         print(template.render(**config), file=file)
                     except jinja2.TemplateError as exc:
-                        log.error("Error rendering notebook template: {}".format(exc), extra=dict(boldface=True))
-                        log.info("  More information can be found in the logfile at {0:s}".format(caracal.CARACAL_LOG))
+                        log.error(f"Error rendering notebook template: {exc}", extra=dict(boldface=True))  # noqa: C408
+                        log.info(f"  More information can be found in the logfile at {caracal.CARACAL_LOG:s}")
                         for line in traceback.format_exc().splitlines():
-                            log.error(line, extra=dict(traceback_report=True))
+                            log.error(line, extra=dict(traceback_report=True))  # noqa: C408
                         log.info("This is not fatal, continuing")
             else:
-                log.info("Standard notebook {} already exists, won't overwrite".format(nbdest))
+                log.info(f"Standard notebook {nbdest} already exists, won't overwrite")
             continue
 
         # if source exists as is, copy
         nbsrc = os.path.join(SOURCE_NOTEBOOK_DIR, nbfile)
         if os.path.exists(nbsrc):
             if os.path.getmtime(nbsrc) > dest_mtime:
-                log.info("Creating standard notebook {}".format(nbdest))
+                log.info(f"Creating standard notebook {nbdest}")
                 shutil.copyfile(nbsrc, nbdest)
             else:
-                log.info("Standard notebook {} already exists, won't overwrite".format(nbdest))
+                log.info(f"Standard notebook {nbdest} already exists, won't overwrite")
             continue
 
-        log.error("Standard notebook {} does not exist".format(nbsrc))
+        log.error(f"Standard notebook {nbsrc} does not exist")
 
 
 _radiopadre_updated = False
@@ -98,18 +98,18 @@ def generate_report_notebooks(notebooks, output_dir, prefix, container_tech):
     log.info("Rendering report(s)")
     for notebook in notebooks:
         if prefix:
-            notebook = "{}-{}".format(prefix, notebook)
+            notebook = f"{prefix}-{notebook}"
         nbdest = os.path.join(output_dir, notebook + ".ipynb")
         nbhtml = os.path.join(output_dir, notebook + ".html")
         if os.path.exists(nbdest):
             try:
                 xrun("run-radiopadre", opts + ["--nbconvert", nbdest], log=log)
             except StimelaCabRuntimeError as exc:
-                log.warning("Report {} failed to render ({}). HTML report will not be available.".format(nbhtml, exc))
+                log.warning(f"Report {nbhtml} failed to render ({exc}). HTML report will not be available.")
             # check that HTML file actually showed up (sometimes the container doesn't report an error)
             if os.path.exists(nbhtml) and os.path.getmtime(nbhtml) >= start_time:
-                log.info("Rendered report {}".format(nbhtml))
+                log.info(f"Rendered report {nbhtml}")
             else:
-                log.warning("Report {} failed to render".format(nbhtml))
+                log.warning(f"Report {nbhtml} failed to render")
         else:
-            log.warning("Report notebook {} not found, skipping report rendering".format(nbdest))
+            log.warning(f"Report notebook {nbdest} not found, skipping report rendering")

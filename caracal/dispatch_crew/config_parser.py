@@ -20,7 +20,7 @@ DEFAULT_CONFIG = caracal.DEFAULT_CONFIG
 
 class ConfigErrors(RuntimeError):
     def __init__(self, config_file, error_dict):
-        RuntimeError.__init__(self, "configuration file {} fails to validate".format(config_file))
+        RuntimeError.__init__(self, f"configuration file {config_file} fails to validate")
         self.config_file = config_file
         self.errors = error_dict
 
@@ -45,7 +45,7 @@ then edit the file to suit your needs.
         add_help=add_help,
     )
     add = parser.add_argument
-    add("-v", "--version", action="version", version="{0:s} version {1:s}".format(parser.prog, caracal.__version__))
+    add("-v", "--version", action="version", version=f"{parser.prog:s} version {caracal.__version__:s}")
 
     add(
         "-c",
@@ -106,11 +106,11 @@ then edit the file to suit your needs.
 
 def is_valid_file(parser, arg):
     if not os.path.exists(arg):
-        parser.error("The file '%s' does not exist!" % arg)
+        parser.error("The file '%s' does not exist!" % arg)  # noqa: UP031
     return arg
 
 
-class config_parser(object):
+class config_parser:
     def __init__(self):
         """Configuration parser. Sets up command line interface for CARACal"""
 
@@ -132,7 +132,7 @@ class config_parser(object):
         """
         try:
             config_content = utils.load_yaml(config_file)
-        except BaseException as exc:
+        except BaseException as exc:  # noqa: BLE001
             raise ConfigErrors(config_file, {"at top level": [str(exc)]})
 
         version = None
@@ -154,7 +154,7 @@ class config_parser(object):
             elif _worker in self._schemas:
                 schema_fn, _ = self._schemas[worker] = self._schemas[_worker]
             else:
-                schema_fn = os.path.join(caracal.pckgdir, "schema", "{0:s}_schema.yml".format(_worker))
+                schema_fn = os.path.join(caracal.pckgdir, "schema", f"{_worker:s}_schema.yml")
 
                 if _worker == "worker" or not os.path.exists(schema_fn):
                     errors[worker] = ["this is not a recognized worker name, or its schema file is missing"]
@@ -176,10 +176,16 @@ class config_parser(object):
                 for message in core.validation_errors:
                     # crude hack: we're already fooling the schema by using "flag" for the worker name
                     # when the name is e.g. "flag__2", so the message is misleading. Substitute the hack back.
-                    message = message.replace("'/{}'".format(_worker), "'/{}'".format(worker))
+                    message = message.replace(f"'/{_worker}'", f"'/{worker}'")
                     errs.append(message)
 
         if errors:
+            # Also re-log the warning about the schema version,
+            # if it's not the same as the one CARACal is running with.
+            if version != caracal.schema.SCHEMA_VERSION:
+                caracal.log.warning(
+                    f"Configuration file schema version is {version}, but CARACal is running with schema version {caracal.schema.SCHEMA_VERSION}. This may cause problems."
+                )
             raise ConfigErrors(config_file, errors)
 
         return validated_content, version
@@ -256,7 +262,7 @@ class config_parser(object):
                 if key in cfgVars:  # check if enabled in config file
                     sub_vars = cfgVars[key]
                 else:
-                    sub_vars = {key: {} for key in cfgVars.keys()}
+                    sub_vars = {key: {} for key in cfgVars.keys()}  # noqa: SIM118
                 # recurse with the set of variables of the nest
                 groups[key] = self._process_subparser_tree(sub_vars, subVars, base_section=option_name, options=options)
                 continue
@@ -269,17 +275,17 @@ class config_parser(object):
             def typecast(val):
                 """Helper function to cast value to expected type.
                 If string=True, bools are cast to string bools, so value is suitable for command-line parsing"""
-                if is_list and isinstance(val, list):
+                if is_list and isinstance(val, list):  # noqa: B023
                     return [typecast(x) for x in val]
-                if dtype is any:  # "any" type is uncast
+                if dtype is any:  # "any" type is uncast  # noqa: B023
                     return val
-                if dtype is bool and isinstance(val, str):
+                if dtype is bool and isinstance(val, str):  # noqa: B023
                     return val.lower() in {"true", "yes", "1"}
-                return dtype(val)
+                return dtype(val)  # noqa: B023
 
             def value2str(val):
                 """Converts value to string representation. Bools get special lowercase treatment."""
-                return str(bool(val)).lower() if dtype is bool else str(val)
+                return str(bool(val)).lower() if dtype is bool else str(val)  # noqa: B023
 
             def str2list(val):
                 """Converts lists in string representation, e.g. "[a, b]" and "a,b", to lists of strings"""
@@ -325,7 +331,7 @@ class config_parser(object):
                     # ...and typecast to expected type
                     option_value = typecast(optval)
                     if option_value != default_value:
-                        caracal.log.info("  command line sets --{} = {}".format(option_name, option_value))
+                        caracal.log.info(f"  command line sets --{option_name} = {option_value}")
                     groups[key] = option_value
             # else populate parser with default value
             else:
@@ -342,7 +348,7 @@ class config_parser(object):
                     self._parser.add_argument(
                         "--" + option_name,
                         help=argparse.SUPPRESS,
-                        choices="true yes 1 false no 0".split(),
+                        choices=["true", "yes", "1", "false", "no", "0"],
                         default=value2str(bool(default_value)),
                     )
                 # all others passed with native dtype
@@ -362,8 +368,8 @@ class config_parser(object):
         indent0 = "  "
 
         def _tree_print(branch, indent=indent0):
-            dicts = dict([(k, v) for k, v in branch.items() if isinstance(v, dict)])
-            other = dict([(k, v) for k, v in branch.items() if not isinstance(v, dict)])
+            dicts = dict([(k, v) for k, v in branch.items() if isinstance(v, dict)])  # noqa: C404
+            other = dict([(k, v) for k, v in branch.items() if not isinstance(v, dict)])  # noqa: C404
 
             def _printval(k, v):
                 if isinstance(v, dict):
@@ -371,7 +377,7 @@ class config_parser(object):
                         return
                     if indent == indent0:
                         caracal.log.info("")
-                        extra = dict(color="GREEN")
+                        extra = dict(color="GREEN")  # noqa: C408
                     else:
                         extra = {}
                     caracal.log.info(f"{indent}{k}:", extra=extra)
@@ -395,5 +401,5 @@ class config_parser(object):
             for k, v in dicts.items():
                 _printval(k, v)
 
-        ordered_groups = dict(sorted(list(config.items()), key=lambda p: p[1].get("order", 0)))
+        ordered_groups = dict(sorted(list(config.items()), key=lambda p: p[1].get("order", 0)))  # noqa: C414
         _tree_print(ordered_groups)

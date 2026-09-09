@@ -34,7 +34,7 @@ def getfield_coords(info, field, db, tol=2.9e-3, tol_diff=4.8481e-6):
     dbcp = db.db
     caracal.log.info("Checking for crossmatch")
     caracal.log.info(f"Database keys: {dbcp.keys()}")
-    for key in dbcp.keys():
+    for key in dbcp.keys():  # noqa: SIM118
         carade = [dbcp[key]["ra"], dbcp[key]["decl"]]
         if closeby(carade, firade, tol=tol):
             if not closeby(carade, firade, tol=tol_diff):
@@ -57,7 +57,7 @@ def worker(pipeline, recipe, config):
         for msname in mslist:
             if not os.path.exists(os.path.join(msdir, msname)):
                 caracal.log.error(f"MS file {msdir}/{msname} does not exist. Please check that is where it should be.")
-                raise IOError
+                raise OSError
 
             # if pipeline.enable_task(config, 'fixcalcoords'):
             tol = config["tol"]
@@ -88,11 +88,11 @@ def worker(pipeline, recipe, config):
                             def needs_astropy():
                                 from astropy.coordinates import SkyCoord
 
-                                return SkyCoord(ra_corr, dec_corr, unit="deg")
+                                return SkyCoord(ra_corr, dec_corr, unit="deg")  # noqa: B023
 
                             c = needs_astropy()
                             coordstring = "J2000 " + c.to_string("hmsdms")
-                            step = "fixuvw-ms{0:d}-{1:s}".format(i, f)
+                            step = f"fixuvw-ms{i:d}-{f:s}"
                             recipe.add(
                                 "cab/casa_fixvis",
                                 step,
@@ -105,14 +105,14 @@ def worker(pipeline, recipe, config):
                                 },
                                 input=pipeline.input,
                                 output=pipeline.output,
-                                label="{0:s}:: Fix bpcal coordinates ms={1:s}".format(step, msname),
+                                label=f"{step:s}:: Fix bpcal coordinates ms={msname:s}",
                             )
                         else:
                             caracal.log.error("###### WE RECOMMEND SWITCHING ON THE fixcalcoords OPTION #######")
 
             if pipeline.enable_task(config, "fixuvw"):
                 # fielddb, ra_corr, dec_corr = getfield_coords(msdict, f, db)
-                step = "fixuvw-ms{:d}".format(i)
+                step = f"fixuvw-ms{i:d}"
                 recipe.add(
                     "cab/casa_fixvis",
                     step,
@@ -123,7 +123,7 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label="{0:s}:: Fix UVW coordinates ms={1:s}".format(step, msname),
+                    label=f"{step:s}:: Fix UVW coordinates ms={msname:s}",
                 )
 
             if pipeline.enable_task(config, "manage_flags"):
@@ -134,15 +134,15 @@ def worker(pipeline, recipe, config):
                     version = "caracal_legacy"
                     if version not in available_flagversions:
                         caracal.log.info(f"The file {msname} does not yet have a flag version called 'caracal_legacy'.Saving the current FLAG column to 'caracal_legacy'.")
-                        step = "save-legacy-{0:s}-ms{1:d}".format(wname, i)
+                        step = f"save-legacy-{wname:s}-ms{i:d}"
                         manflags.add_cflags(pipeline, recipe, version, msname, cab_name=step)
                     else:
-                        caracal.log.info("The file {0:s} already has a flag version called 'caracal_legacy'. Restoring it.".format(msname))
+                        caracal.log.info(f"The file {msname:s} already has a flag version called 'caracal_legacy'. Restoring it.")
                         version = "caracal_legacy"
-                        step = "restore-flags-{0:s}-ms{1:d}".format(wname, i)
+                        step = f"restore-flags-{wname:s}-ms{i:d}"
                         manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=step)
                         if available_flagversions[-1] != version:
-                            step = "delete-flag_versions-after-{0:s}-ms{1:d}".format(version, i)
+                            step = f"delete-flag_versions-after-{version:s}-ms{i:d}"
                             manflags.delete_cflags(
                                 pipeline,
                                 recipe,
@@ -153,12 +153,12 @@ def worker(pipeline, recipe, config):
                 elif mode == "restore":
                     version = config["manage_flags"]["version"]
                     if version == "auto":
-                        version = "{0:s}_{1:s}_before".format(pipeline.prefix, wname)
+                        version = f"{pipeline.prefix:s}_{wname:s}_before"
                     if version in available_flagversions:
-                        step = "restore-flags-{0:s}-ms{1:d}".format(wname, i)
+                        step = f"restore-flags-{wname:s}-ms{i:d}"
                         manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=step)
                         if available_flagversions[-1] != version:
-                            step = "delete-flag_versions-after-{0:s}-ms{1:d}".format(version, i)
+                            step = f"delete-flag_versions-after-{version:s}-ms{i:d}"
                             manflags.delete_cflags(
                                 pipeline,
                                 recipe,
@@ -167,14 +167,14 @@ def worker(pipeline, recipe, config):
                                 cab_name=step,
                             )
                     else:
-                        caracal.log.error("The flag version {0:s} you asked to restore does not exist for {1:s}.".format(version, msname))
+                        caracal.log.error(f"The flag version {version:s} you asked to restore does not exist for {msname:s}.")
                         if version == "caracal_legacy":
                             caracal.log.error("You may actually want to create that 'caracal legacy' flag version with:")
                             caracal.log.error("    prepare_data: manage_flags: mode: save_legacy_flags")
                         raise RuntimeError("Flag version conflicts")
 
             if pipeline.enable_task(config, "clearcal"):
-                step = "clearcal-ms{:d}".format(i)
+                step = f"clearcal-ms{i:d}"
                 fields = set(pipeline.fcal[i] + pipeline.bpcal[i])
                 recipe.add(
                     "cab/casa_clearcal",
@@ -182,28 +182,28 @@ def worker(pipeline, recipe, config):
                     {"vis": msname, "field": ",".join(fields), "addmodel": config["clearcal"]["addmodel"]},
                     input=pipeline.input,
                     output=pipeline.output,
-                    label="{0:s}:: Reset MODEL_DATA ms={1:s}".format(step, msname),
+                    label=f"{step:s}:: Reset MODEL_DATA ms={msname:s}",
                 )
 
             if pipeline.enable_task(config, "specweights"):
                 specwts = config["specweights"]["mode"]
                 if specwts == "uniform":
-                    step = "init_ws-ms{:d}".format(i)
+                    step = f"init_ws-ms{i:d}"
                     recipe.add(
                         "cab/casa_script",
                         step,
                         {
                             "vis": msname,
-                            "script": "vis = os.path.join(os.environ['MSDIR'], '{:s}')\ninitweights(vis=vis, wtmode='ones', dowtsp=True)".format(msname),
+                            "script": f"vis = os.path.join(os.environ['MSDIR'], '{msname:s}')\ninitweights(vis=vis, wtmode='ones', dowtsp=True)",
                         },
                         input=pipeline.input,
                         output=pipeline.output,
-                        label="{0:s}:: Adding Spectral weights using MeerKAT noise specs ms={1:s}".format(step, msname),
+                        label=f"{step:s}:: Adding Spectral weights using MeerKAT noise specs ms={msname:s}",
                     )
 
                 elif specwts == "calculate":
                     _config = config["specweights"]
-                    step = "calculate_ws-ms{:d}".format(i)
+                    step = f"calculate_ws-ms{i:d}"
                     recipe.add(
                         "cab/msutils",
                         step,
@@ -218,11 +218,11 @@ def worker(pipeline, recipe, config):
                         },
                         input=pipeline.input,
                         output=pipeline.diagnostic_plots,
-                        label="{0:s}:: Adding Spectral weights using MeerKAT noise specs ms={1:s}".format(step, msname),
+                        label=f"{step:s}:: Adding Spectral weights using MeerKAT noise specs ms={msname:s}",
                     )
 
                 elif specwts == "delete":
-                    step = "delete_ws-ms{:d}".format(i)
+                    step = f"delete_ws-ms{i:d}"
                     recipe.add(
                         "cab/casa_script",
                         step,
@@ -241,7 +241,7 @@ def worker(pipeline, recipe, config):
                         },
                         input=pipeline.input,
                         output=pipeline.output,
-                        label="{0:s}:: deleting WEIGHT_SPECTRUM if it exists ms={1:s}".format(step, msname),
+                        label=f"{step:s}:: deleting WEIGHT_SPECTRUM if it exists ms={msname:s}",
                     )
                 else:
-                    raise RuntimeError("Specified specweights [{0:s}] mode is unknown".format(specwts))
+                    raise RuntimeError(f"Specified specweights [{specwts:s}] mode is unknown")

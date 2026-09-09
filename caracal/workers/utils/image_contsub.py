@@ -11,8 +11,8 @@ version = "1.0.2"
 
 
 def printime(string):
-    now = datetime.now().strftime("%H:%M:%S")
-    print("{} {}".format(now, string))
+    now = datetime.now().strftime("%H:%M:%S")  # noqa: DTZ005
+    print(f"{now} {string}")
 
 
 def imcontsub(
@@ -87,12 +87,12 @@ def imcontsub(
     import scipy.signal as scipy_signal
 
     # Read cube
-    begin = datetime.now()
-    print("")
+    begin = datetime.now()  # noqa: DTZ005
+    print()
     print("Welcome to image_contsub.py")
 
-    if isinstance(incubus, type("")):
-        printime("Reading input cube {}".format(incubus))
+    if isinstance(incubus, str):
+        printime(f"Reading input cube {incubus}")
         hdul_incubus = astropy_io_fits.open(incubus)
     else:
         hdul_incubus = incubus
@@ -106,9 +106,9 @@ def imcontsub(
         incubus_data = incubus_data[0, :]
 
     # Read mask and apply
-    if not isinstance(mask, type(None)):
-        if isinstance(mask, type("")):
-            printime("Reading and applying mask {}".format(mask))
+    if not (mask is None):
+        if isinstance(mask, str):
+            printime(f"Reading and applying mask {mask}")
             hdul_mask = astropy_io_fits.open(mask)
         else:
             hdul_mask = mask
@@ -128,14 +128,14 @@ def imcontsub(
         # incubus_data_masked = incubus_data
 
     if fitmode == "poly":
-        if isinstance(polyorder, type(None)):
+        if polyorder is None:
             polyorder = length
 
         # Flatten and fit
         incubus_data_flat = incubus_data_masked.reshape((incubus_data.shape[0], incubus_data.shape[1] * incubus_data.shape[2]))
         x = np.ma.masked_array(np.arange(incubus_data.shape[0]), False)
 
-        printime("Fitting polynomial of order {}".format(polyorder))
+        printime(f"Fitting polynomial of order {polyorder}")
         fitpars = np.array(np.flip(np.ma.polyfit(x, incubus_data_flat, polyorder)))
 
         printime("Creating continuum cube")
@@ -164,13 +164,13 @@ def imcontsub(
 
             fit = scipy.ndimage.median_filter(incubus_data, (length, 1, 1))
     elif fitmode == "savgol":
-        if isinstance(polyorder, type(None)):
+        if polyorder is None:
             polyorder = 0
 
         if length == 0:
             printime("Length is 0, no Savitzky-Golay-filtering.")
         else:
-            printime("Savitzky-Golay-filtering cube (order {})".format(polyorder))
+            printime(f"Savitzky-Golay-filtering cube (order {polyorder})")
 
             sgmask = np.ma.getmask(incubus_data_masked)
             sgincubus = incubus_data.copy()
@@ -183,7 +183,7 @@ def imcontsub(
                 # Then iterate n times with better guesses for the
                 # stitched data
                 for i in range(sgiters):
-                    print("Iteration {}".format(i))
+                    print(f"Iteration {i}")
 
                     sgincubus = fit
 
@@ -195,7 +195,7 @@ def imcontsub(
         printime("No valid filter chosen, not filtering.")
         fit = incubus_data_masked * 0.0
 
-    if not isinstance(fitted, type(None)):
+    if not (fitted is None):
         printime("Writing continuum cube")
         if stokes:
             hdul_incubus[0].data = fit.astype("float32").reshape((1, fit.shape[0], fit.shape[1], fit.shape[2]))
@@ -223,7 +223,7 @@ def imcontsub(
     else:
         convolved = fit
 
-    if not isinstance(confit, type(None)):
+    if not (confit is None):
         printime("Writing convolved continuum cube")
         if stokes:
             hdul_incubus[0].data = convolved.astype("float32").reshape((1, convolved.shape[0], convolved.shape[1], convolved.shape[2]))
@@ -245,9 +245,9 @@ def imcontsub(
     hdul_incubus[0].header["DATAMIN"] = np.nanmax(hdul_incubus[0].data)
     hdul_incubus.writeto(outcubus, overwrite=clobber)
     hdul_incubus.close()
-    now = datetime.now()
-    printime("Time elapsed: {:.1f} minutes".format((now - begin).total_seconds() / 60.0))
-    print("")
+    now = datetime.now()  # noqa: DTZ005
+    printime(f"Time elapsed: {(now - begin).total_seconds() / 60.0:.1f} minutes")
+    print()
 
 
 def description():
@@ -326,7 +326,7 @@ def parsing():
     for key in list(inpars.keys()):
         try:
             result = eval(inpars[key])
-        except Exception:
+        except Exception:  # noqa: BLE001
             result = inpars[key]
         inpars[key] = result
 
@@ -341,6 +341,6 @@ def parsing():
 if __name__ == "__main__":
     kwargs = parsing()
     for argument in ["help", "version"]:
-        if argument in kwargs.keys():
+        if argument in kwargs.keys():  # noqa: SIM118
             sys.exit()
     imcontsub(**kwargs)

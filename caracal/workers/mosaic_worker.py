@@ -39,14 +39,13 @@ def worker(pipeline, recipe, config):
             # In case there is one or more '_' in the directory name, want to get the last portion
             number = split_subdirectory[-1]
             num = int(number)
-            if num > max_num and len(glob.glob("{0:s}/{1:s}*.fits".format(subdirectory, prfx))):
+            if num > max_num and len(glob.glob(f"{subdirectory:s}/{prfx:s}*.fits")):
                 max_num = num
 
         last_subdirectory = subdirectory_prefix + str(max_num)
         return max_num, last_subdirectory
 
     def make_gaussian_pb(filename, obs_freq, out_beam):
-
         # Create rudimentary primary-beam, which is assumed to be a Gaussian with FWMH = 1.02*lambda/D
         image_header = fits.getheader(filename)
         # i.e. [ RA, Dec ]. Assuming that these are in units of deg.
@@ -106,37 +105,37 @@ def worker(pipeline, recipe, config):
             FWHM_pb = (57.5 / 60) * (freq / 1.5e9) ** -1  # Eqn 4 of Mauch et al. (2020), but in deg   # freq is just a float for the 2D case
             pb_image = (np.cos(1.189 * np.pi * (ang_offset / FWHM_pb)) / (1 - 4 * (1.189 * ang_offset / FWHM_pb) ** 2)) ** 2  # Eqn 3 of Mauch et al. (2020)
             fits.writeto(out_beam, pb_image, header=headimage, overwrite=True)
-            caracal.log.info("Created Mauchian primary-beam  FITS {0:s}".format(filename.replace("image.fits", "pb.fits")))
+            caracal.log.info("Created Mauchian primary-beam  FITS {0:s}".format(filename.replace("image.fits", "pb.fits")))  # noqa: UP030
 
     def consistent_cdelt3(image_filenames, nrdecimals):
         caracal.log.info("Checking whether all cubes have the same CDELT3. This is required in order for mosaicking to work.")
         cdelt3s = []
         for ff in image_filenames:
-            caracal.log.info("    {0:s}".format(ff))
+            caracal.log.info(f"    {ff:s}")
             cc = fits.getval(ff, "cdelt3")
             if cc not in cdelt3s:
                 cdelt3s.append(cc)
         if len(cdelt3s) > 1:
             if nrdecimals:
                 caracal.log.warn("Not all input cubes have the same CDELT3. Values found:")
-                caracal.log.warn("    {0:}".format(cdelt3s))
-                caracal.log.warn("Rounding up the CDELT3 values to {0:d} decimals:".format(nrdecimals))
+                caracal.log.warn(f"    {cdelt3s}")
+                caracal.log.warn(f"Rounding up the CDELT3 values to {nrdecimals:d} decimals:")
                 cdelt3s_r = []
                 for cc in cdelt3s:
                     if round(cc, nrdecimals) not in cdelt3s_r:
                         cdelt3s_r.append(round(cc, nrdecimals))
-                caracal.log.warn("    {0:}".format(cdelt3s_r))
+                caracal.log.warn(f"    {cdelt3s_r}")
                 if len(cdelt3s_r) > 1:
                     caracal.log.error("Rounding was insufficient, cannot proceed.")
                     raise caracal.BadDataError("Inconsistent CDELT3 values in input cubes.")
                 else:
-                    caracal.log.warn("Changing CDELT3 of all input image.fits and pb.fits cubes to {0:}".format(cdelt3s_r[0]))
+                    caracal.log.warn(f"Changing CDELT3 of all input image.fits and pb.fits cubes to {cdelt3s_r[0]}")
                     for ff in image_filenames:
                         fits.setval(ff, "cdelt3", value=cdelt3s_r[0])
                         fits.setval(ff.replace("image.fits", "pb.fits"), "cdelt3", value=cdelt3s_r[0])
             else:
                 caracal.log.error("Not all input cubes have the same CDELT3. Values found:")
-                caracal.log.error("    {0:}".format(cdelt3s))
+                caracal.log.error(f"    {cdelt3s}")
                 caracal.log.error("To proceed Please set mosaic:round_cdelt3 to round the CDELT3 values to an adequate number of decimals.")
                 caracal.log.error("WARNING: This will overwrite CDELT3 in the input cubes. Choose the rounding wisely to make sure that the change does not impact your science.")
                 raise caracal.BadDataError("Inconsistent CDELT3 values in input cubes.")
@@ -148,10 +147,10 @@ def worker(pipeline, recipe, config):
             os.remove(link_name)
         # convert target from absolute path to path relative to the directory of the link
         target_name_rel = os.path.relpath(target_name, start=os.path.dirname(link_name))
-        symlink_command = "ln -sf {0:s} {1:s}".format(target_name_rel, link_name)
-        caracal.log.info("    {0:s}".format(symlink_command))
+        symlink_command = f"ln -sf {target_name_rel:s} {link_name:s}"
+        caracal.log.info(f"    {symlink_command:s}")
         if not os.path.exists(target_name):
-            raise caracal.UserInputError("Symlink could not be created because the target file {0:s} does not exist".format(target_name))
+            raise caracal.UserInputError(f"Symlink could not be created because the target file {target_name:s} does not exist")
         else:
             os.system(symlink_command)
 
@@ -200,7 +199,7 @@ def worker(pipeline, recipe, config):
     # If nothing is passed via the config file, then specified_images[0] adopts this via the schema
     if not len(specified_images):
         caracal.log.info(
-            "No {0:s} names were specified via the config file, so they are going to be selected automatically.".format("image" if specified_mosaictype == "continuum" else "cube")
+            "No {0:s} names were specified via the config file, so they are going to be selected automatically.".format("image" if specified_mosaictype == "continuum" else "cube")  # noqa: UP030
         )
         caracal.log.info(
             "It is assumed that they are all in the highest-N directory {1:s}/{0:s}_N containing {0:s}s whose name starts with the prefix {2:s}.".format(
@@ -208,14 +207,14 @@ def worker(pipeline, recipe, config):
             )
         )
         caracal.log.info(
-            "You should check the selected {0:s} names. If unhappy with the selection, please specify the correct ones with mosaic:target_images.".format(
+            "You should check the selected {0:s} names. If unhappy with the selection, please specify the correct ones with mosaic:target_images.".format(  # noqa: UP030
                 "image" if specified_mosaictype == "continuum" else "cube"
             )
         )
 
         # Needed for working out the field names for the targets, so that the correct files can be selected
         all_targets = pipeline.get_target_mss(label_in)[0]
-        caracal.log.info("The number of targets to be mosaicked is {0:d}".format(len(all_targets)))
+        caracal.log.info(f"The number of targets to be mosaicked is {len(all_targets):d}")
 
         # Where the targets are in the output directory
         max_num, last_subdirectory = identify_last_subdirectory(specified_mosaictype, prefix)
@@ -226,19 +225,19 @@ def worker(pipeline, recipe, config):
 
             # Use the mosaictype to infer the filenames of the images
             if specified_mosaictype == "continuum":  # Add name of 2D image output by selfcal_worker
-                image_name = "{5:s}/{0:s}/{1:s}_{2:s}_{3:s}{4:s}-image.fits".format(last_subdirectory, prefix, field, str(max_num), mfsprefix, pipeline.continuum)
+                image_name = f"{pipeline.continuum:s}/{last_subdirectory:s}/{prefix:s}_{field:s}_{max_num!s:s}{mfsprefix:s}-image.fits"
                 specified_images.append(image_name)
 
             else:  # i.e. mosaictype = 'line', so add name of cube output by line_worker
-                image_name = "{5:s}/{0:s}/{1:s}_{2:s}_{3:s}{4:s}-image.fits".format(last_subdirectory, prefix, field, line_name, mfsprefix, pipeline.cubes)
+                image_name = f"{pipeline.cubes:s}/{last_subdirectory:s}/{prefix:s}_{field:s}_{line_name:s}{mfsprefix:s}-image.fits"
                 if mfsprefix == "":
                     # Following the naming in line_worker
                     image_name = image_name.replace("-image", ".image")
                 specified_images.append(image_name)
 
-    caracal.log.info("PLEASE CHECK -- {0:s} to be mosaicked are:".format("Images" if specified_mosaictype == "continuum" else "Cubes"))
+    caracal.log.info("PLEASE CHECK -- {0:s} to be mosaicked are:".format("Images" if specified_mosaictype == "continuum" else "Cubes"))  # noqa: UP030
     for ii in specified_images:
-        caracal.log.info("    {0:s}".format(ii))
+        caracal.log.info(f"    {ii:s}")
 
     # Although MosaicQueen checks whether pb.fits files are present, we need to do this earlier in the worker,
     # so that we can create simple Gaussian or Mauchian primary beams if need be
@@ -247,16 +246,16 @@ def worker(pipeline, recipe, config):
         pb_name = image_name.replace("image.fits", "pb.fits")
 
         if os.path.exists(pb_name):
-            caracal.log.info("Primary beam {0:s} is already in place, and will be used by MosaicQueen.".format(pb_name))
+            caracal.log.info(f"Primary beam {pb_name:s} is already in place, and will be used by MosaicQueen.")
 
         else:
             if specified_mosaictype == "line":
-                caracal.log.error("Primary beam {0:s} does not exist. Please make sure that it is in place before proceeding.".format(pb_name))
+                caracal.log.error(f"Primary beam {pb_name:s} does not exist. Please make sure that it is in place before proceeding.")
                 caracal.log.error("You may need to re-run the line_worker with pb_cube enabled. EXITING.")
-                raise caracal.ConfigurationError("missing primary beam file {}".format(pb_name))
+                raise caracal.ConfigurationError(f"missing primary beam file {pb_name}")
 
             else:  # i.e. mosaictype == 'continuum'
-                caracal.log.info("Primary beam {0:s} does not exist, so going to create it.".format(pb_name))
+                caracal.log.info(f"Primary beam {pb_name:s} does not exist, so going to create it.")
 
                 if pb_type == "gaussian":
                     recipe.add(
@@ -270,11 +269,11 @@ def worker(pipeline, recipe, config):
                         },
                         input=pipeline.input,
                         output=pipeline.output,
-                        label="build_gaussian_pb:: Generating {0:s}".format(pb_name),
+                        label=f"build_gaussian_pb:: Generating {pb_name:s}",
                     )
 
                     # Confirming freq and dish_diameter values being used for the primary beam
-                    caracal.log.info("Observing frequency = {0:f} Hz, dish diameter = {1:f} m".format(config["ref_frequency"], config["dish_diameter"]))
+                    caracal.log.info("Observing frequency = {0:f} Hz, dish diameter = {1:f} m".format(config["ref_frequency"], config["dish_diameter"]))  # noqa: UP030
                     caracal.log.info(
                         "If these are not the values that you were expecting to be used for primary-beam creation, then"
                         " please delete the newly-created beams and re-run the mosaic worker with ref_frequency and"
@@ -293,11 +292,11 @@ def worker(pipeline, recipe, config):
                         },
                         input=pipeline.input,
                         output=pipeline.output,
-                        label="build_mauchian_pb:: Generating {0:s}".format(pb_name),
+                        label=f"build_mauchian_pb:: Generating {pb_name:s}",
                     )
 
                     # Confirming freq value being used for the primary beam
-                    caracal.log.info("Observing frequency = {0:f} Hz".format(config["ref_frequency"]))
+                    caracal.log.info("Observing frequency = {0:f} Hz".format(config["ref_frequency"]))  # noqa: UP030
                     if config["ref_frequency"] == 1383685546.875:  # i.e. if the default value was used
                         caracal.log.info(
                             "If you did not want this value (i.e. the default) to be used for primary-beam creation,"
@@ -316,13 +315,13 @@ def worker(pipeline, recipe, config):
 
     # Create symlinks of input images / cubes
     caracal.log.info("Creating / replacing symlinks to images and beams -- strictly needed only when they are distributed across multiple subdirectories.")
-    mosaic_input_directory = "{0:s}/mosaic_input".format(pipeline.mosaic_continuum if specified_mosaictype == "continuum" else pipeline.mosaic_line)
+    mosaic_input_directory = "{0:s}/mosaic_input".format(pipeline.mosaic_continuum if specified_mosaictype == "continuum" else pipeline.mosaic_line)  # noqa: UP030
     if not os.path.exists(mosaic_input_directory):
         os.mkdir(mosaic_input_directory)
     for specified_image in specified_images:
         # define both target and link as absolute paths
         target_image = os.path.abspath(specified_image)
-        link_image = "{0:s}/{1:s}".format(os.path.abspath(mosaic_input_directory), os.path.basename(target_image))
+        link_image = f"{os.path.abspath(mosaic_input_directory):s}/{os.path.basename(target_image):s}"
 
         # create symlink for image / cube
         create_symlink(link_image, target_image)
@@ -347,8 +346,8 @@ def worker(pipeline, recipe, config):
         # create symlink for mask if requested
         if "mask" in config["associated_mosaics"]:
             if specified_mosaictype == "continuum":
-                target_mask = "{0:s}_clean_mask.fits".format(os.path.basename(target_image).split("-")[0])
-                target_mask = os.path.abspath("{0:s}/{1:s}".format(pipeline.masking, target_mask))
+                target_mask = "{0:s}_clean_mask.fits".format(os.path.basename(target_image).split("-")[0])  # noqa: UP030
+                target_mask = os.path.abspath(f"{pipeline.masking:s}/{target_mask:s}")
             else:
                 target_mask = target_image.replace("image.fits", "image_clean_mask.fits")
             link_mask = link_image.replace("image.fits", "mask.fits")
@@ -359,7 +358,7 @@ def worker(pipeline, recipe, config):
     # List of images in place, and have ensured that there are corresponding pb.fits files,
     # so now ready to add MosaicQueen to the caracal recipe
 
-    image_filenames = ["{0:s}/{1:s}".format(mosaic_input_directory, os.path.basename(ff)) for ff in specified_images]
+    image_filenames = [f"{mosaic_input_directory:s}/{os.path.basename(ff):s}" for ff in specified_images]
     if specified_mosaictype == "line":
         recipe.add(
             consistent_cdelt3,
@@ -379,14 +378,14 @@ def worker(pipeline, recipe, config):
     if mosaic_prefix == "":
         mosaic_prefix = pipeline.prefix
 
-    mosaic_folder_from_output = "{0:s}/{1:s}/mosaics".format(basename_of_output, "continuum" if specified_mosaictype == "continuum" else "cubes")
+    mosaic_folder_from_output = "{0:s}/{1:s}/mosaics".format(basename_of_output, "continuum" if specified_mosaictype == "continuum" else "cubes")  # noqa: UP030
     recipe.add(
         "stimela/mosaic_queen",
         "mosaic-queen",
         {
-            "input": "{0:s}/mosaic_input:output".format(mosaic_folder_from_output),
-            "target-images": ["{0:s}".format(os.path.basename(ii)) for ii in image_filenames],
-            "output": "{0:s}/mosaic_output".format(mosaic_folder_from_output),
+            "input": f"{mosaic_folder_from_output:s}/mosaic_input:output",
+            "target-images": [f"{os.path.basename(ii):s}" for ii in image_filenames],
+            "output": f"{mosaic_folder_from_output:s}/mosaic_output",
             "name": mosaic_prefix,
             "num-workers": config["num_workers"],
             "regrid": False,

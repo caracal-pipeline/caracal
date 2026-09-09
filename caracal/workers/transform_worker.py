@@ -36,7 +36,7 @@ table_suffix = {
 }
 
 _target_fields = {"target"}
-_cal_fields = set("fcal bpcal gcal xcal".split())
+_cal_fields = set(["fcal", "bpcal", "gcal", "xcal"])  # noqa: C405
 
 
 def get_fields_to_split(config, name):
@@ -64,11 +64,11 @@ def check_config(config, name):
 
 def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
-    flags_before_worker = "{0:s}_{1:s}_before".format(pipeline.prefix, wname)
-    flags_after_worker = "{0:s}_{1:s}_after".format(pipeline.prefix, wname)
+    flags_before_worker = f"{pipeline.prefix:s}_{wname:s}_before"
+    flags_after_worker = f"{pipeline.prefix:s}_{wname:s}_after"
     label_in = config["label_in"]
     label_out = config["label_out"]
-    from_target = True if label_in and config["field"] == "target" else False
+    from_target = True if label_in and config["field"] == "target" else False  # noqa: SIM210
     field_to_split = get_fields_to_split(config, wname)
     # are we splitting calibrators
     splitting_cals = field_to_split.intersection(_cal_fields)
@@ -127,7 +127,7 @@ def worker(pipeline, recipe, config):
             if dcol != "corrected":
                 caracal.log.warning(f"split_field: col set to '{dcol}' but OTF calibration is enabled. Forcing to 'corrected'")
                 dcol = "corrected"
-            crosscal_lib, (caltablelist, gainfieldlist, interplist, calwtlist, applyfield) = resolve_calibration_library(
+            crosscal_lib, (caltablelist, gainfieldlist, interplist, calwtlist, applyfield) = resolve_calibration_library(  # noqa: RUF059
                 pipeline,
                 prefix_msbase,
                 config["split_field"]["otfcal"]["callib"],
@@ -160,10 +160,10 @@ def worker(pipeline, recipe, config):
             if config["rewind_flags"]["enable"] and label_in:
                 version = config["rewind_flags"]["version"]
                 if version in available_flagversions:
-                    substep = "rewind-{0:s}-ms{1:d}".format(version, target_iter)
+                    substep = f"rewind-{version:s}-ms{target_iter:d}"
                     manflags.restore_cflags(pipeline, recipe, version, from_ms, cab_name=substep)
                     if available_flagversions[-1] != version:
-                        substep = "delete-flag_versions-after-{0:s}-ms{1:d}".format(version, target_iter)
+                        substep = f"delete-flag_versions-after-{version:s}-ms{target_iter:d}"
                         manflags.delete_cflags(
                             pipeline,
                             recipe,
@@ -194,7 +194,7 @@ def worker(pipeline, recipe, config):
             obsinfo_file = f"{msbase}-obsinfo.txt"
 
             if pipeline.enable_task(config, "split_field"):
-                step = "split_field-ms{0:d}-{1:d}".format(i, target_iter)
+                step = f"split_field-ms{i:d}-{target_iter:d}"
                 # If the output of this run of mstransform exists, delete it first
                 remove_output_products((to_ms, tmp_ms, flagv, tmpflagv, summary_file, obsinfo_file), directory=pipeline.msdir, log=log)
                 if not polcal_lib:
@@ -286,12 +286,11 @@ def worker(pipeline, recipe, config):
                             pinter = []
                             pcalwt = []
                             for idx, f in enumerate(papplyfield):
-                                if f == "" or f == fld:
-                                    if pcaltablelist[idx] not in pcal:
-                                        pcal.append(pcaltablelist[idx])
-                                        pgain.append(pgainfieldlist[idx])
-                                        pinter.append(pinterplist[idx])
-                                        pcalwt.append(pcalwtlist[idx])
+                                if (f == "" or f == fld) and pcaltablelist[idx] not in pcal:
+                                    pcal.append(pcaltablelist[idx])
+                                    pgain.append(pgainfieldlist[idx])
+                                    pinter.append(pinterplist[idx])
+                                    pcalwt.append(pcalwtlist[idx])
                             recipe.add(
                                 "cab/casa_applycal",
                                 step + "_apply_polcal_" + str(ii),
@@ -300,7 +299,7 @@ def worker(pipeline, recipe, config):
                                     "field": fld,
                                     "docallib": False,
                                     "calwt": pcalwt,
-                                    "gaintable": ["%s:output" % ct for ct in pcal],
+                                    "gaintable": ["%s:output" % ct for ct in pcal],  # noqa: UP031
                                     "gainfield": pgain,
                                     "interp": pinter,
                                     "parang": config["split_field"]["otfcal"]["derotate_pa"],
@@ -340,7 +339,7 @@ def worker(pipeline, recipe, config):
                         if output_pcal_ms == "final":
                             remove_output_products((tmp_ms, tmpflagv), directory=pipeline.msdir, log=log)
 
-                substep = "save-{0:s}-ms{1:d}".format("caracal_legacy", target_iter)
+                substep = "save-{0:s}-ms{1:d}".format("caracal_legacy", target_iter)  # noqa: UP030
                 manflags.add_cflags(pipeline, recipe, "caracal_legacy", to_ms, cab_name=substep, overwrite=False)
 
             obsinfo_msname = to_ms if pipeline.enable_task(config, "split_field") else from_ms
@@ -348,27 +347,27 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, "changecentre"):
                 if config["changecentre"]["ra"] == "" or config["changecentre"]["dec"] == "":
                     caracal.log.error("Wrong format for RA and/or Dec you want to change to. Check your settings of split_target:changecentre:ra and split_target:changecentre:dec")
-                    caracal.log.error("Current settings for ra,dec are {0:s},{1:s}".format(config["changecentre"]["ra"], config["changecentre"]["dec"]))
+                    caracal.log.error("Current settings for ra,dec are {0:s},{1:s}".format(config["changecentre"]["ra"], config["changecentre"]["dec"]))  # noqa: UP030
                     sys.exit(1)
-                step = "changecentre-ms{0:d}-{1:d}".format(i, target_iter)
+                step = f"changecentre-ms{i:d}-{target_iter:d}"
                 recipe.add(
                     "cab/casa_fixvis",
                     step,
                     {
                         "msname": to_ms,
                         "outputvis": to_ms,
-                        "phasecenter": "J2000 {0:s} {1:s}".format(config["changecentre"]["ra"], config["changecentre"]["dec"]),
+                        "phasecenter": "J2000 {0:s} {1:s}".format(config["changecentre"]["ra"], config["changecentre"]["dec"]),  # noqa: UP030
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label="{0:s}:: Change phase centre ms={1:s}".format(step, to_ms),
+                    label=f"{step:s}:: Change phase centre ms={to_ms:s}",
                 )
 
             if pipeline.enable_task(config, "concat"):
                 concat_labels = label_in.split(",")
 
-                step = "concat-ms{0:d}-{1:d}".format(i, target_iter)
-                concat_ms = [from_ms.replace(".ms", "-{0:s}.ms".format(cl)) for cl in concat_labels]
+                step = f"concat-ms{i:d}-{target_iter:d}"
+                concat_ms = [from_ms.replace(".ms", f"-{cl:s}.ms") for cl in concat_labels]
                 recipe.add(
                     "cab/casa_concat",
                     step,
@@ -378,14 +377,14 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label="{0:s}:: Concatenate {1:}".format(step, concat_ms),
+                    label=f"{step:s}:: Concatenate {concat_ms}",
                 )
 
                 # If the output of this run of mstransform exists, delete it first
-                if os.path.exists("{0:s}/{1:s}".format(pipeline.msdir, to_ms)) or os.path.exists("{0:s}/{1:s}".format(pipeline.msdir, flagv)):
-                    os.system("rm -rf {0:s}/{1:s} {0:s}/{2:s}".format(pipeline.msdir, to_ms, flagv))
+                if os.path.exists(f"{pipeline.msdir:s}/{to_ms:s}") or os.path.exists(f"{pipeline.msdir:s}/{flagv:s}"):
+                    os.system(f"rm -rf {pipeline.msdir:s}/{to_ms:s} {pipeline.msdir:s}/{flagv:s}")
 
-                step = "singlespw-ms{0:d}-{1:d}".format(i, target_iter)
+                step = f"singlespw-ms{i:d}-{target_iter:d}"
                 recipe.add(
                     "cab/casa_mstransform",
                     step,
@@ -397,28 +396,28 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label="{0:s}:: Single SPW {1:}".format(step, concat_ms),
+                    label=f"{step:s}:: Single SPW {concat_ms}",
                 )
 
-                substep = "save-{0:s}-ms{1:d}".format("caracal_legacy", target_iter)
+                substep = "save-{0:s}-ms{1:d}".format("caracal_legacy", target_iter)  # noqa: UP030
                 manflags.add_cflags(pipeline, recipe, "caracal_legacy", to_ms, cab_name=substep, overwrite=False)
 
                 # Delete the tobedeleted file, but first we need to have created it, thus...
                 recipe.run()
                 # Empty job que after execution
                 recipe.jobs = []
-                os.system("rm -rf {0:s}/tobedeleted-{1:s}".format(pipeline.msdir, to_ms))
+                os.system(f"rm -rf {pipeline.msdir:s}/tobedeleted-{to_ms:s}")
 
                 obsinfo_msname = to_ms
 
             if pipeline.enable_task(config, "obsinfo"):
                 if config["obsinfo"]["listobs"]:
                     if pipeline.enable_task(config, "split_field") or transform_mode == "concat":
-                        listfile = "{0:s}-obsinfo.txt".format(os.path.splitext(to_ms)[0])
+                        listfile = f"{os.path.splitext(to_ms)[0]:s}-obsinfo.txt"
                     else:
-                        listfile = "{0:s}-obsinfo.txt".format(pipeline.msbasenames[i])
+                        listfile = f"{pipeline.msbasenames[i]:s}-obsinfo.txt"
 
-                    step = "listobs-ms{0:d}-{1:d}".format(i, target_iter)
+                    step = f"listobs-ms{i:d}-{target_iter:d}"
                     recipe.add(
                         "cab/casa_listobs",
                         step,
@@ -429,16 +428,16 @@ def worker(pipeline, recipe, config):
                         },
                         input=pipeline.input,
                         output=pipeline.obsinfo,
-                        label="{0:s}:: Get observation information ms={1:s}".format(step, obsinfo_msname),
+                        label=f"{step:s}:: Get observation information ms={obsinfo_msname:s}",
                     )
 
                 if config["obsinfo"]["summary_json"]:
                     if pipeline.enable_task(config, "split_field") or transform_mode == "concat":
-                        listfile = "{0:s}-summary.json".format(os.path.splitext(to_ms)[0])
+                        listfile = f"{os.path.splitext(to_ms)[0]:s}-summary.json"
                     else:
-                        listfile = "{0:s}-summary.json".format(pipeline.msbasenames[i])
+                        listfile = f"{pipeline.msbasenames[i]:s}-summary.json"
 
-                    step = "summary_json-ms{0:d}-{1:d}".format(i, target_iter)
+                    step = f"summary_json-ms{i:d}-{target_iter:d}"
                     recipe.add(
                         "cab/msutils",
                         step,
@@ -450,5 +449,5 @@ def worker(pipeline, recipe, config):
                         },
                         input=pipeline.input,
                         output=pipeline.obsinfo,
-                        label="{0:s}:: Get observation information as a json file ms={1:s}".format(step, obsinfo_msname),
+                        label=f"{step:s}:: Get observation information as a json file ms={obsinfo_msname:s}",
                     )

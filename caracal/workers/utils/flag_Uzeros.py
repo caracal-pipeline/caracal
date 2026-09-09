@@ -1,25 +1,23 @@
 #!/bin/bash
-
+# noqa: EXE001, N999
 import gc
 import os
 import shutil
 import time
 
 import astropy.io.ascii as astasc
-import casacore.measures as measures
-import casacore.tables as tables
 import numpy as np
 import scipy.constants as scconstants
-import scipy.optimize as optimize
 import stimela.recipe
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
 from astropy.wcs import WCS
+from casacore import measures, tables
 from matplotlib import gridspec
 from matplotlib import pyplot as plt
-from scipy import stats
+from scipy import optimize, stats
 
 import caracal
 from caracal.workers.utils import remove_output_products
@@ -30,8 +28,8 @@ timeInit = time.time()
 
 
 class UzeroFlagger:
-    global u, SkyCoord, astviz, WCS, Table, Column, fits, astasc
-    global optimize, scconstants, stats
+    global u, SkyCoord, astviz, WCS, Table, Column, fits, astasc  # noqa: PLW0602
+    global optimize, scconstants, stats  # noqa: PLW0602
 
     def __init__(self, config):
         self.config = config
@@ -68,8 +66,6 @@ class UzeroFlagger:
         self.config["flag_u_zeros"]["stripeSofiaDir"] = self.config["flag_u_zeros"]["stripeDir"] + "sofiaOut/"
         if not os.path.exists(self.config["flag_u_zeros"]["stripeSofiaDir"]):
             os.mkdir(self.config["flag_u_zeros"]["stripeSofiaDir"])
-
-        return
 
     def saveFlags(self, pipeline, inVis, msdir, flagname):
         recipe = stimela.Recipe(
@@ -186,7 +182,7 @@ class UzeroFlagger:
                 },
                 input=msdir,
                 output=self.config["flag_u_zeros"]["stripeMSDir"],
-                label="{0:s}:: Image Line".format(step),
+                label=f"{step:s}:: Image Line",
             )
             recipe.run()
 
@@ -242,7 +238,7 @@ class UzeroFlagger:
             "prefix": outCubePrefix,
             "npix": imsize,
             "scale": cell,
-            "weight": "briggs {0:.3f}".format(robust),
+            "weight": f"briggs {robust:.3f}",
             "channelsout": 1,
             "channelrange": [chanMin, chanMax],
             "niter": 0,
@@ -265,7 +261,7 @@ class UzeroFlagger:
             line_image_opts,
             input=pipeline.input,
             output=self.config["flag_u_zeros"]["stripeCubeDir"],
-            label="{0:s}:: Image Line".format(step),
+            label=f"{step:s}:: Image Line",
         )
         recipe.run()
 
@@ -287,7 +283,7 @@ class UzeroFlagger:
             hdr["CRPIX2"] = hdu.header["NAXIS2"] / 2
             hdr["CUNIT2"] = "lambda"
 
-        caracal.log.info("\tFFT cell size = {0:.2f}".format(hdr["CDELT2"]))
+        caracal.log.info("\tFFT cell size = {0:.2f}".format(hdr["CDELT2"]))  # noqa: UP030
         caracal.log.info("FFT Done")
         gc.collect()
 
@@ -340,7 +336,7 @@ class UzeroFlagger:
             )
         if type == "postFlag":
             ax.annotate(
-                r"Flags {percent} $\%$".format(percent=str(np.round(percent, 2))),
+                rf"Flags {np.round(percent, 2)!s} $\%$",
                 xy=(0.95, 0.05),
                 xycoords="axes fraction",
                 horizontalalignment="right",
@@ -446,7 +442,7 @@ class UzeroFlagger:
         axBase.plot(bins[:-1], nPerc, "k-", drawstyle="steps-pre")
 
         axBase.set_autoscale_on(False)
-        outPlot = "{0}baselines_plot_{1}.png".format(self.config["flag_u_zeros"]["stripePlotDir"], galaxy)
+        outPlot = "{0}baselines_plot_{1}.png".format(self.config["flag_u_zeros"]["stripePlotDir"], galaxy)  # noqa: UP030
         figBase.savefig(outPlot, bbox_inches="tight", overwrite=True, dpi=200)  # save the figure to file
         plt.close(figBase)
 
@@ -499,13 +495,13 @@ class UzeroFlagger:
         dt = np.dtype([("BIN_ID", np.int32), ("U", np.int32), ("V", np.int32)])
         tabGen = np.array(list(map(tuple, tabGen)), dtype=dt)
 
-        namBins = tuple(["BIN_ID", "U", "V", "Amp"])
+        namBins = tuple(["BIN_ID", "U", "V", "Amp"])  # noqa: C409
 
         tabArr = np.zeros([len(tabGen)], dtype={"names": namBins, "formats": ("i4", "f8", "f8", "f8")})
 
         indexBin = 0
-        for i in range(0, len(U)):
-            for j in range(0, len(V)):
+        for i in range(len(U)):
+            for j in range(len(V)):
                 tabArr["BIN_ID"][indexBin] = indexBin
                 tabArr["U"][indexBin] = U[i]
                 tabArr["V"][indexBin] = V[j]
@@ -595,9 +591,9 @@ class UzeroFlagger:
         ax.set_xlim(min(bin_edges), max(bin_edges))
         plt.legend(
             [
-                "avg,std: {0:.1e}, {1:.1e}".format(average, stdev),
-                "fit:  {0:.1e}, {1:.1e}".format(popt[0], popt[2]),
-                "med,mad: {0:.1e}, {1:.1e}".format(med, mad),
+                f"avg,std: {average:.1e}, {stdev:.1e}",
+                f"fit:  {popt[0]:.1e}, {popt[2]:.1e}",
+                f"med,mad: {med:.1e}, {mad:.1e}",
             ],
             loc="upper right",
         )
@@ -634,7 +630,7 @@ class UzeroFlagger:
         # av = np.nanmean(ampar,axis=1)
         npoints = inFFTData[np.isfinite(inFFTData)].size
         if verb:
-            caracal.log.info("\tFFT grid has {:d} nonzero points.".format(npoints))
+            caracal.log.info(f"\tFFT grid has {npoints:d} nonzero points.")
         if npoints < 3:
             caracal.log.info("\tThis is not sufficient for any statistics, returning no flags.")
             return np.zeros(av.shape, dtype=bool)
@@ -643,11 +639,11 @@ class UzeroFlagger:
         average = np.nanmean(inFFTData)
         stdev = np.nanstd(inFFTData)
 
-        if average == np.nan:
+        if average == np.nan:  # noqa: PLW0177
             caracal.log.info("\tCannot calculate average, returning no flags.")
             return np.zeros(av.shape, dtype=bool)
 
-        if stdev == np.nan:
+        if stdev == np.nan:  # noqa: PLW0177
             caracal.log.info("\tCannot calculate standard deviation, returing no flags.")
             return np.zeros(av.shape, dtype=bool)
 
@@ -663,8 +659,8 @@ class UzeroFlagger:
 
         # Fit a Gaussian
         try:
-            popt, pcov = optimize.curve_fit(self.gaussian, bin_centers, hist, p0=[maxhiposval, maxhi, stdev / 2.0])
-        except BaseException:
+            popt, pcov = optimize.curve_fit(self.gaussian, bin_centers, hist, p0=[maxhiposval, maxhi, stdev / 2.0])  # noqa: RUF059
+        except BaseException:  # noqa: BLE001
             popt = np.array([average, widthes[0] * npoints / (np.sqrt(2 * np.pi) * stdev), stdev])
 
         if threshmode == "abs":
@@ -683,7 +679,7 @@ class UzeroFlagger:
             ave = popt[0]
 
         try:
-            makePlots
+            makePlots  # noqa: B018
         except NameError:
             makePlots = None
 
@@ -709,7 +705,7 @@ class UzeroFlagger:
         else:
             caracal.log.warn("For some reasons I am not making the fftstats plots!")
 
-        caracal.log.info("FFT image flagging cutoff = median + {threshold} * mad = {cutoff:.5f}".format(threshold=float(threshold), cutoff=ave + float(threshold) * std))
+        caracal.log.info(f"FFT image flagging cutoff = median + {float(threshold)} * mad = {ave + float(threshold) * std:.5f}")
 
         return ave + float(threshold) * std
 
@@ -724,23 +720,23 @@ class UzeroFlagger:
         percTot = np.nansum(flags) / float(flags.shape[0] * flags.shape[1] * flags.shape[2]) * 100.0
         # Reset to no flags and build up stripe flags
         flags = np.zeros(flags.shape, bool)
-        caracal.log.info("Scan flags before stripe-flagging: {percent:.3f}%".format(percent=percTot))
+        caracal.log.info(f"Scan flags before stripe-flagging: {percTot:.3f}%")
         # uvw=np.array(t.getcol('UVW'),dtype=float) # This is never used
         spw = tables.table(inVis + "/SPECTRAL_WINDOW", ack=False)
         avspecchan = np.average(spw.getcol("CHAN_FREQ"))
         uv = t.getcol("UVW")[:, :2] * avspecchan / scconstants.c
 
-        caracal.log.info("{0:d} UV cells in the FFT image selected for flagging".format(U.shape[0]))
+        caracal.log.info(f"{U.shape[0]:d} UV cells in the FFT image selected for flagging")
 
         if qrtdebug and U.shape[0]:
-            caracal.log.info("\tamplitude of selected cells in range {0:.3f} - {1:.3f}".format(np.nanmin(tableFlags["amp"]), np.nanmax(tableFlags["amp"])))
-            caracal.log.info("\t{0} total rows in scan MS".format(flags.shape))
+            caracal.log.info("\tamplitude of selected cells in range {0:.3f} - {1:.3f}".format(np.nanmin(tableFlags["amp"]), np.nanmax(tableFlags["amp"])))  # noqa: UP030
+            caracal.log.info(f"\t{flags.shape} total rows in scan MS")
 
         if U.shape[0]:
-            caracal.log.info("Finding MS rows within flagged cells +/- {0:d} U cell(s) and +/- {1:d} V cell(s)".format(dilateU, dilateV))
+            caracal.log.info(f"Finding MS rows within flagged cells +/- {dilateU:d} U cell(s) and +/- {dilateV:d} V cell(s)")
 
         percent = 0.0
-        for i in range(0, UV.shape[1]):
+        for i in range(UV.shape[1]):
             indexU = np.where(
                 np.logical_and(
                     uv[:, 0] > UV[0, i] - (1 / 2 + dilateU) * inFFTHeader["CDELT2"],
@@ -755,15 +751,15 @@ class UzeroFlagger:
             )[0]
 
             if qrtdebug:
-                caracal.log.info("\tcell {0:d}, [U,V] = {1}".format(i, UV[:, i]))
+                caracal.log.info(f"\tcell {i:d}, [U,V] = {UV[:, i]}")
                 caracal.log.info(
-                    "\t\tflagging u range = {0:.3f} - {1:.3f}".format(
+                    "\t\tflagging u range = {0:.3f} - {1:.3f}".format(  # noqa: UP030
                         UV[0, i] - (1 / 2 + dilateU) * inFFTHeader["CDELT2"],
                         UV[0, i] + (1 / 2 + dilateU) * inFFTHeader["CDELT2"],
                     )
                 )
                 caracal.log.info(
-                    "\t\tflagging v range = {0:.3f} - {1:.3f}".format(
+                    "\t\tflagging v range = {0:.3f} - {1:.3f}".format(  # noqa: UP030
                         UV[1, i] - (1 / 2 + dilateV) * inFFTHeader["CDELT2"],
                         UV[1, i] + (1 / 2 + dilateV) * inFFTHeader["CDELT2"],
                     )
@@ -773,11 +769,11 @@ class UzeroFlagger:
             indexTot = np.intersect1d(indexU, indexV)
 
             if qrtdebug:
-                caracal.log.info("\t\t{0:d} rows found".format(indexTot.shape[0]))
+                caracal.log.info(f"\t\t{indexTot.shape[0]:d} rows found")
                 if indexTot.shape[0]:
                     caracal.log.info("\t\tSelected rows have uv in the following ranges")
-                    caracal.log.info("\t\tu: {0:.3f} - {1:.3f}".format(np.nanmin(uv[indexTot, 0]), np.nanmax(uv[indexTot, 0])))
-                    caracal.log.info("\t\tv: {0:.3f} - {1:.3f}".format(np.nanmin(uv[indexTot, 1]), np.nanmax(uv[indexTot, 1])))
+                    caracal.log.info(f"\t\tu: {np.nanmin(uv[indexTot, 0]):.3f} - {np.nanmax(uv[indexTot, 0]):.3f}")
+                    caracal.log.info(f"\t\tv: {np.nanmin(uv[indexTot, 1]):.3f} - {np.nanmax(uv[indexTot, 1]):.3f}")
 
             # Add to stripe flags of this scan
             flags[indexTot, :, :] = True
@@ -794,10 +790,10 @@ class UzeroFlagger:
         t = tables.table(pf_inVis, readonly=False, ack=False)
         flagOld = t.getcol("FLAG")
         percTotBefore = np.nansum(flagOld) / float(flagOld.shape[0] * flagOld.shape[1] * flagOld.shape[2]) * 100.0
-        caracal.log.info("Total Flags Before: {percent:.3f} %".format(percent=percTotBefore))
+        caracal.log.info(f"Total Flags Before: {percTotBefore:.3f} %")
         flagNew = np.sum([pf_stripeFlags, flagOld], axis=0)
         percTotAfter = np.nansum(flagNew) / float(flagNew.shape[0] * flagNew.shape[1] * flagNew.shape[2]) * 100.0
-        caracal.log.info("Total Flags After: {percent:.3f} %".format(percent=percTotAfter))
+        caracal.log.info(f"Total Flags After: {percTotAfter:.3f} %")
         t.putcol("FLAG", flagNew)
         del flagOld
         del flagNew
@@ -877,16 +873,16 @@ class UzeroFlagger:
         lws = [self.config["label_in"]] + lws
 
         stripeFlags = None
-        for ii in range(0, len(obsIDs)):
+        for ii in range(len(obsIDs)):
             track = lws[ii]
             inVis = pipeline.msdir + "/" + obsIDs[ii]
             inVisName = obsIDs[ii]
             caracal.log.info("====================================================")
-            caracal.log.info("\tWorking on {} ".format(inVisName))
+            caracal.log.info(f"\tWorking on {inVisName} ")
             caracal.log.info("====================================================")
 
             if os.path.exists(inVis + ".flagversions"):
-                fvers = [ii.split(" :")[0] for ii in open(inVis + ".flagversions/FLAG_VERSION_LIST").readlines()]
+                fvers = [ii.split(" :")[0] for ii in open(inVis + ".flagversions/FLAG_VERSION_LIST")]  # noqa: SIM115
                 if "stripe_flag_before" in fvers:
                     caracal.log.info("Before we start, restore existing flag version 'stripe_flag_before'")
                     self.restoreFlags(pipeline, inVisName, msdir=pipeline.msdir, flagname="stripe_flag_before")
@@ -916,7 +912,7 @@ class UzeroFlagger:
             t.close()
 
             percTot = np.nansum(FlagTot) / float(FlagTot.shape[0] * FlagTot.shape[1] * FlagTot.shape[2]) * 100.0
-            caracal.log.info("Flagged visibilites so far: {percTot:.3f} %".format(percTot=percTot))
+            caracal.log.info(f"Flagged visibilites so far: {percTot:.3f} %")
 
             anttab = tables.table(inVis + "::ANTENNA", ack=False)
             anttab.close()
@@ -954,7 +950,7 @@ class UzeroFlagger:
                         type=None,
                     )
                 else:
-                    outPlot = "{0}{1}_tot.png".format(self.config["flag_u_zeros"]["stripePlotDir"], mfsOb)
+                    outPlot = "{0}{1}_tot.png".format(self.config["flag_u_zeros"]["stripePlotDir"], mfsOb)  # noqa: UP030
                     fig0 = plt.figure(figsize=(7.24409, 7.24409), constrained_layout=False)
                     fig0.set_tight_layout(False)
                     gs0 = gridspec.GridSpec(nrows=1, ncols=2, figure=fig0, hspace=0, wspace=0.0)
@@ -1005,7 +1001,7 @@ class UzeroFlagger:
             for kk in range(len(scanNums)):
                 scan = scanNums[kk]
                 caracal.log.info("----------------------------------------------------")
-                caracal.log.info("\tWorking on scan {}".format(str(scan)))
+                caracal.log.info(f"\tWorking on scan {scan!s}")
                 visName = scanVisNames[kk]
                 visAddress = scanVisList[kk]
                 caracal.log.info("----------------------------------------------------")
@@ -1036,20 +1032,20 @@ class UzeroFlagger:
                 rms_thresh = []
 
                 if len(thresholds) > 1:
-                    caracal.log.info("Start iterating over all requested thresholds {} to find the optimal one".format(thresholds))
+                    caracal.log.info(f"Start iterating over all requested thresholds {thresholds} to find the optimal one")
                 # iterate over all thresholds
                 for threshold in thresholds:
                     if len(thresholds) > 1:
                         caracal.log.info("New iter")
                     # Rewind flags of this scan to their initial state
-                    fvers = [ii.split(" :")[0] for ii in open(visAddress + ".flagversions/FLAG_VERSION_LIST").readlines()]
+                    fvers = [ii.split(" :")[0] for ii in open(visAddress + ".flagversions/FLAG_VERSION_LIST")]  # noqa: SIM115
                     self.restoreFlags(pipeline, visName, msdir=self.config["flag_u_zeros"]["stripeMSDir"], flagname="scan_flags_start")
 
                     while fvers[-1] != "scan_flags_start":
                         self.deleteFlags(pipeline, visName, msdir=self.config["flag_u_zeros"]["stripeMSDir"], flagname=fvers[-1])
                         fvers = fvers[:-1]
 
-                    caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
+                    caracal.log.info(f"Computing statistics on FFT and flagging scan for threshold {threshold}")
                     # scanFlags below are the stripe flags for this scan
                     statsArray, scanFlags, percent, cutoff_scan = self.saveFFTTable(
                         inFFTData,
@@ -1069,7 +1065,7 @@ class UzeroFlagger:
                         dilateV,
                         makePlots,
                     )
-                    caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
+                    caracal.log.info(f"Scan flags from stripe-flagging: {percent:.3f}%")
                     caracal.log.info("Making post-flagging image")
 
                     if os.path.exists(outCubeName):
@@ -1077,17 +1073,17 @@ class UzeroFlagger:
                     self.makeCube(pipeline, self.config["flag_u_zeros"]["stripeMSDir"], visName, outCubePrefix)
                     fitsdata = fits.open(outCubeName)
                     rms_thresh.append(np.std(fitsdata[0].data[0, 0]))
-                    caracal.log.info("Image noise = {0:.3e} Jy/beam".format(rms_thresh[-1]))
+                    caracal.log.info(f"Image noise = {rms_thresh[-1]:.3e} Jy/beam")
                     fitsdata.close()
 
                 # Select best threshold (minimum noise), re-flag and re-image
                 if len(thresholds) > 1:
                     caracal.log.info("Done iterating over all requested thresholds")
                     threshold = thresholds[rms_thresh.index(min(rms_thresh))]
-                    caracal.log.info("\tThe threshold that minimises the image noise is {}".format(threshold))
+                    caracal.log.info(f"\tThe threshold that minimises the image noise is {threshold}")
                     caracal.log.info("Repeating flagging and imaging steps with the selected threshold(yes, the must be a better way...)")
                     # Rewind flags of this scan to their initial state
-                    fvers = [ii.split(" :")[0] for ii in open(visAddress + ".flagversions/FLAG_VERSION_LIST").readlines()]
+                    fvers = [ii.split(" :")[0] for ii in open(visAddress + ".flagversions/FLAG_VERSION_LIST")]  # noqa: SIM115
                     self.restoreFlags(pipeline, visName, msdir=self.config["flag_u_zeros"]["stripeMSDir"], flagname="scan_flags_start")
 
                     while fvers[-1] != "scan_flags_start":
@@ -1095,7 +1091,7 @@ class UzeroFlagger:
 
                         fvers = fvers[:-1]
                     # Re-flag with selected threshold
-                    caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
+                    caracal.log.info(f"Computing statistics on FFT and flagging scan for threshold {threshold}")
                     statsArray, scanFlags, percent, cutoff_scan = self.saveFFTTable(
                         inFFTData,
                         inFFTHeader,
@@ -1114,7 +1110,7 @@ class UzeroFlagger:
                         dilateV,
                         makePlots,
                     )
-                    caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
+                    caracal.log.info(f"Scan flags from stripe-flagging: {percent:.3f}%")
                     # Re-image
                     caracal.log.info("Making post-flagging image")
                     if os.path.exists(outCubeName):
@@ -1171,8 +1167,8 @@ class UzeroFlagger:
             if makePlots:
                 caracal.log.info("----------------------------------------------------")
                 caracal.log.info("Saving scans diagnostic plots")
-                outPlot = "{0}{1}_perscan_preFlag.png".format(self.config["flag_u_zeros"]["stripePlotDir"], mfsOb)
-                outPlotFlag = "{0}{1}_perscan_postFlag.png".format(self.config["flag_u_zeros"]["stripePlotDir"], mfsOb)
+                outPlot = "{0}{1}_perscan_preFlag.png".format(self.config["flag_u_zeros"]["stripePlotDir"], mfsOb)  # noqa: UP030
+                outPlotFlag = "{0}{1}_perscan_postFlag.png".format(self.config["flag_u_zeros"]["stripePlotDir"], mfsOb)  # noqa: UP030
 
                 fig1.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
                 fig1.savefig(outPlot, bbox_inches="tight", dpi=200)  # save the figure to file
@@ -1189,7 +1185,7 @@ class UzeroFlagger:
 
             if flagCmd:
                 caracal.log.info("====================================================")
-                caracal.log.info("\tWorking on {}".format(inVisName))
+                caracal.log.info(f"\tWorking on {inVisName}")
                 caracal.log.info("====================================================")
                 self.putFlags(pipeline, inVis, inVisName, stripeFlags)
                 caracal.log.info("Making post-flagging image")
@@ -1211,16 +1207,16 @@ class UzeroFlagger:
                 caracal.log.info("Saving total stripe flagging diagnostic plots".format())
 
                 percTotAfter = np.nansum(stripeFlags) / float(stripeFlags.shape[0] * stripeFlags.shape[1] * stripeFlags.shape[2]) * 100.0
-                caracal.log.info("Total stripe flags: {percent:.3f} %".format(percent=percTotAfter))
+                caracal.log.info(f"Total stripe flags: {percTotAfter:.3f} %")
                 caracal.log.info("----------------------------------------------------")
 
-                caracal.log.info("Mean stripe flagging per scan: {percent:.3f}%".format(percent=np.nanmean(percTotAv)))
+                caracal.log.info(f"Mean stripe flagging per scan: {np.nanmean(percTotAv):.3f}%")
 
                 if makePlots:
                     caracal.log.info("----------------------------------------------------")
                     caracal.log.info("----------------------Plotting----------------------")
 
-                    outPlot = "{0}{1}_fullMS_prepostFlag.png".format(self.config["flag_u_zeros"]["stripePlotDir"], mfsOb)
+                    outPlot = "{0}{1}_fullMS_prepostFlag.png".format(self.config["flag_u_zeros"]["stripePlotDir"], mfsOb)  # noqa: UP030
                     fig0, comvmax_tot = self.plotAll(
                         fig0,
                         gs0,

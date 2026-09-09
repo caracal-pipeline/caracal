@@ -133,7 +133,7 @@ class config_parser:
         try:
             config_content = utils.load_yaml(config_file)
         except BaseException as exc:  # noqa: BLE001
-            raise ConfigErrors(config_file, {"at top level": [str(exc)]})
+            raise ConfigErrors(config_file, {"at top level": [str(exc)]}) from exc
 
         version = None
         # Validate each worker section against the schema and

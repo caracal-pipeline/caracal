@@ -44,7 +44,7 @@ def setup_default_notebooks(notebooks, output_dir, prefix, config):
                 template = _j2env.get_template(nbfile + ".j2")
                 log.info(f"Creating standard notebook {nbdest} from template")
 
-                with open(nbdest, "wt") as file:
+                with open(nbdest, "w") as file:
                     try:
                         print(template.render(**config), file=file)
                     except jinja2.TemplateError as exc:

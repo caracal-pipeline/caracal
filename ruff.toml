@@ -1,15 +1,40 @@
 line-length = 180
-target-version = "py310"
+target-version = "py39"  # must not exceed pyproject requires-python (>=3.9)
+
+# Ruff's *default* rule selection is not stable across releases: 0.16.0 widened
+# it from 59 rules to 413. Because CI installs the latest ruff, that silently
+# turned green branches red without anyone touching this file. So: select
+# explicitly, pin the ruff version (pyproject + python-ci.yml), and widen the
+# set deliberately, one tier at a time.
+#
+# Ramp plan (see docs/ or the linting issue for the schedule):
+#   Phase 0  (done)  E4,E7,E9,E501,F,I
+#   Phase 1  (done)  + "B", "UP"                   -- 18 violations cleared
+#   Phase 2  (next)  + "C4", "SIM" (minus SIM108)  -- 6 violations to clear
+# SIM108 (if-else -> ternary) stays excluded for good: 78 hits, all of them
+# rewriting readable blocks into ternaries. Not worth it.
+# The next phase runs advisory-only in CI (continue-on-error) so the team can
+# see what is coming without being blocked by it.
+
+[format]
+# The tree was formatted with the preview formatter; keep it so dropping
+# preview from the *linter* does not churn 6 unrelated files.
 preview = true
 
 [lint]
-extend-select = [
-    "E501",  # Line length
-    "I"      # isort - sort imports
+preview = false
+select = [
+    "E4",    # pycodestyle: imports
+    "E7",    # pycodestyle: statement-level mistakes
+    "E9",    # pycodestyle: syntax / IO errors
+    "E501",  # line too long (at 180, so only egregious cases)
+    "F",     # pyflakes: undefined names, unused imports -- real bugs
+    "I",     # isort: import ordering
+    "B",     # flake8-bugbear: likely bugs (unused loop vars, bad except chains)
+    "UP",    # pyupgrade: keep syntax current with target-version
 ]
 
 ignore = [
-"E741",
-"E714",
-"E711",
+    "E741",  # ambiguous name `l`/`I` -- `I` is intensity in radio astronomy
+    "E714",  # `not x is None` -- 3 sites left; fix them, then drop this ignore
 ]

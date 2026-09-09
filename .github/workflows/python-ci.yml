@@ -16,14 +16,33 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        # Keep in step with requires-python in pyproject.toml (>=3.9,<3.13).
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
 
     steps:
     - uses: actions/checkout@v4
-    - uses: astral-sh/ruff-action@v3
+    # Pin ruff. Its default rule set is not stable across releases (0.16.0 went
+    # from 59 to 413 default rules), so an unpinned action turns green branches
+    # red with no config change. Bump this and pyproject together, deliberately.
     - uses: astral-sh/ruff-action@v3
       with:
+        version: "0.16.6"
+    - uses: astral-sh/ruff-action@v3
+      with:
+        version: "0.16.6"
         args: "format --check --diff"
+    # Buffer phase: phase 2 (C4, SIM), advisory only. This never fails the build
+    # -- it is here so the team can see what the next tier will ask for before
+    # it becomes blocking. Promote these into ruff.toml's `select` once the
+    # backlog is cleared, as phase 1 (B, UP) already was.
+    # `--output-format concise` is required: the action exports
+    # RUFF_OUTPUT_FORMAT=github, which --statistics rejects with exit code 2.
+    - name: Lint (phase 2, advisory)
+      continue-on-error: true
+      uses: astral-sh/ruff-action@v3
+      with:
+        version: "0.16.6"
+        args: "check --extend-select C4,SIM --ignore SIM108 --output-format concise"
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
@@ -33,6 +52,6 @@ jobs:
       with:
         version: "0.10.8"
     - name: Install package
-      run: uv sync --group tests --group dev
+      run: uv sync --python ${{ matrix.python-version }} --group tests --group dev
     - name: Test with pytest
       run: uv run pytest tests

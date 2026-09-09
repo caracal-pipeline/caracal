@@ -301,7 +301,7 @@ def worker(pipeline, recipe, config):
 
         for i, msfile in enumerate(all_msfiles):
             msinfo = f"{pipeline.msdir:s}/{os.path.splitext(msfile)[0]:s}-obsinfo.txt"
-            with open(msinfo, "r") as searchfile:
+            with open(msinfo) as searchfile:
                 for longdatexp in searchfile:
                     if "Observed from" in longdatexp:
                         dates = longdatexp
@@ -1876,7 +1876,7 @@ def worker(pipeline, recipe, config):
                                 # if cube in m/s then convert the velocity_range in km/s
                                 vel_range = vel_range / 1e3
 
-                        for item in config["imcontsub"]["segments"]:
+                        for _item in config["imcontsub"]["segments"]:
                             if vel_range < config["imcontsub"]["segments"]:
                                 caracal.log.warning("The width of the spline is larger than the spectral width of the cube, please check your segments keyword")
 
@@ -1932,7 +1932,7 @@ def worker(pipeline, recipe, config):
                             if "km" in hdul_cube["cdelt3"].lower():
                                 # if cube in m/s then convert the velocity_range in km/s
                                 vel_range = vel_range / 1e3
-                        for item in config["imcontsub"]["segments"]:
+                        for _item in config["imcontsub"]["segments"]:
                             if vel_range < config["imcontsub"]["segments"]:
                                 caracal.log.warning("The width of the spline is larger than the spectral width of the cube, please check your segments keyword")
 

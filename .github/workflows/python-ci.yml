@@ -20,10 +20,26 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: astral-sh/ruff-action@v3
+    # Pin ruff. Its default rule set is not stable across releases (0.16.0 went
+    # from 59 to 413 default rules), so an unpinned action turns green branches
+    # red with no config change. Bump this and pyproject together, deliberately.
     - uses: astral-sh/ruff-action@v3
       with:
+        version: "0.16.6"
+    - uses: astral-sh/ruff-action@v3
+      with:
+        version: "0.16.6"
         args: "format --check --diff"
+    # Buffer phase: the next tier of rules, advisory only. This never fails the
+    # build -- it is here so the team can see what Phase 1 will ask for before
+    # it becomes blocking. Promote these into ruff.toml's `select` once the
+    # backlog is cleared -- as Phase 1 (B, UP) already was.
+    - name: Lint (next phase, advisory)
+      continue-on-error: true
+      uses: astral-sh/ruff-action@v3
+      with:
+        version: "0.16.6"
+        args: "check --extend-select C4,SIM --ignore SIM108 --statistics"
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:

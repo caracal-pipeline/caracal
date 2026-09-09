@@ -112,12 +112,12 @@ class WorkerAdministrator:
 
         # Get possible flagsets for reduction
         self.flags = {"legacy": ["legacy"]}
-        for _name, _worker, i in self.workers:
+        for _name, _worker, _i in self.workers:
             try:
                 wkr = __import__(_worker)
             except ImportError:
                 traceback.print_exc()
-                raise ImportError(f'Worker "{_worker:s}" could not be found at {self.workers_directory:s}')
+                raise ImportError(f'Worker "{_worker:s}" could not be found at {self.workers_directory:s}') from None
 
             if hasattr(wkr, "FLAG_NAMES"):
                 self.flags[_name] = ["_".join([_name, suffix]) if suffix else _name for suffix in wkr.FLAG_NAMES]  # noqa: FLY002
@@ -375,12 +375,12 @@ class WorkerAdministrator:
         """Runs the  workers"""
         report_updated = False
 
-        for _name, _worker, i in self.workers:
+        for _name, _worker, _i in self.workers:
             try:
                 worker = __import__(_worker)
             except ImportError:
                 traceback.print_exc()
-                raise ImportError(f'Worker "{_worker:s}" could not be found at {self.workers_directory:s}')
+                raise ImportError(f'Worker "{_worker:s}" could not be found at {self.workers_directory:s}') from None
 
         if self.config["general"]["cabs"]:
             log.info("Configuring cab specification overrides")
@@ -389,7 +389,7 @@ class WorkerAdministrator:
             cabspecs_general = {}
         active_workers = []
         # first, check that workers import, and check their configs
-        for _name, _worker, i in self.workers:
+        for _name, _worker, _i in self.workers:
             config = self.config[_name]
             if "enable" in config and not config["enable"]:
                 self.skip.append(_worker)

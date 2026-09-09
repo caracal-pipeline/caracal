@@ -238,7 +238,7 @@ def worker(pipeline, recipe, config):
                 if config["flag_shadow"]["full_mk64"]:
                     addantennafile = f"{pipeline.input:s}/mk64.txt"
                     subarray = msdict["ANT"]["NAME"]
-                    idleants = open(addantennafile, "r").readlines()  # noqa: SIM115
+                    idleants = open(addantennafile).readlines()  # noqa: SIM115
                     for aa in subarray:
                         for kk in range(len(idleants)):
                             if aa in idleants[kk]:

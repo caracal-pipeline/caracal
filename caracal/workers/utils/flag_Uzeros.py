@@ -377,6 +377,13 @@ class UzeroFlagger:
         extent = [-w * udelt, w * udelt, -w * vdelt, w * vdelt]
         if common_vmax == 0:
             common_vmax = np.nanpercentile(inFFTData[cx - w : cx + w + 1, cy - w : cy + w + 1], 99)
+        ax2.imshow(
+            inFFTData[cx - w : cx + w + 1, cy - w : cy + w + 1],
+            vmin=0,
+            vmax=common_vmax,
+            extent=extent,
+            origin="upper",
+        )
         if ctff:
             ax2.contour(
                 inFFTData[cx - w : cx + w + 1, cy - w : cy + w + 1],

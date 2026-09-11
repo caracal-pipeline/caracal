@@ -34,33 +34,9 @@ Mosaic the 2D-images (or cubes) made with the selfcal/crosscal (or line) worker.
 **mosaic_type**
 --------------------------------------------------
 
-  *{"continuum", "spectral"}*
+  *{"continuum", "line"}*
 
-  Type of mosaic to be made, either continuum (2D) or spectral (3D).
-
-
-
-.. _mosaic_target_images:
-
---------------------------------------------------
-**target_images**
---------------------------------------------------
-
-  *list* *of str*, *optional*, *default = ' '*
-
-  List of .FITS images/cubes to be mosaicked. Their file names must end with "image.fits" and must include the path relative to the current working directory. These images/cubes MUST be located within (sub-directories of) the current working directory.
-
-
-
-.. _mosaic_label_in:
-
---------------------------------------------------
-**label_in**
---------------------------------------------------
-
-  *str*, *optional*, *default = corr*
-
-  For autoselection of images, this needs to match the label/label_cal setting used for the selfcal/crosscal worker (when mosaicking continuum images) or the label setting used for the line worker (when mosaicking cubes).
+  Type of mosaic to be made, either continuum (2D) or line (3D).
 
 
 
@@ -72,7 +48,7 @@ Mosaic the 2D-images (or cubes) made with the selfcal/crosscal (or line) worker.
 
   *str*, *optional*, *default = HI*
 
-  Spectral mode only -- If autoselection is used to find the final cubes, this needs to match the line_name parameter used for the line worker.
+  Line mode only -- If autoselection is used to find the final cubes, this needs to match the line_name parameter used for the line worker.
 
 
 
@@ -82,9 +58,33 @@ Mosaic the 2D-images (or cubes) made with the selfcal/crosscal (or line) worker.
 **use_mfs**
 --------------------------------------------------
 
-  *bool*, *optional*, *default = False*
+  *bool*, *optional*, *default = True*
 
-  Continuum mode only -- If the images to be mosaicked were created using MFS, in the selfcal or crosscal worker, then this needs to be indicated via this parameter.
+  If the images to be mosaicked were created using MFS, in the selfcal or crosscal worker, then this needs to be indicated via this parameter. Ignored if mosaic_type:line.
+
+
+
+.. _mosaic_label_in:
+
+--------------------------------------------------
+**label_in**
+--------------------------------------------------
+
+  *str*, *optional*, *default = corr*
+
+  For autoselection of images/cubes to be mosaicked. For mosaic_type:continuum it should match selfcal:label_in, for mosaic_type:line it should match line:label_in.
+
+
+
+.. _mosaic_target_images:
+
+--------------------------------------------------
+**target_images**
+--------------------------------------------------
+
+  *list* *of str*, *optional*, *default = ' '*
+
+  For manual selection images/cubes to be mosaicked. They must be located within (sub-directories of) the parent of "general:output". Their file names must end with "image.fits" and must include the path relative to the parent of "general:output".
 
 
 
@@ -96,35 +96,55 @@ Mosaic the 2D-images (or cubes) made with the selfcal/crosscal (or line) worker.
 
   *str*, *optional*, *default = ' '*
 
-  The prefix to be used for output files. Default is the pipeline prefix, as set for the general worker.
+  The prefix to be used for all output files. Default is the global pipeline prefix general:prefix.
 
 
 
-.. _mosaic_domontage:
-
---------------------------------------------------
-**domontage**
---------------------------------------------------
-
-  Re-grid the input images, and associated beams.
-
-  **enable**
-
-    *bool*, *optional*, *default = True*
-
-    Enable the 'domontage' (i.e. re-gridding) segment.
-
-
-
-.. _mosaic_cutoff:
+.. _mosaic_num_workers:
 
 --------------------------------------------------
-**cutoff**
+**num_workers**
+--------------------------------------------------
+
+  *int*, *optional*, *default = 0*
+
+  Number of worker threads to distribute the regridding of the input images / cubes to the output mosaic pixel grid. Default=0 means all available threads. The more the workers, the higher the RAM usage.
+
+
+
+.. _mosaic_beam_cutoff:
+
+--------------------------------------------------
+**beam_cutoff**
 --------------------------------------------------
 
   *float*, *optional*, *default = 0.1*
 
-  The cutoff in the primary beam. It should be a number between 0 and 1.
+  The cutoff in the primary beam. The default of 0.1 means going down to the 10 percent level for each pointing. Set to zero for no primary beam cutoff.
+
+
+
+.. _mosaic_mosaic_cutoff:
+
+--------------------------------------------------
+**mosaic_cutoff**
+--------------------------------------------------
+
+  *float*, *optional*, *default = 0.2*
+
+  Sensitivity cutoff in the final mosaic. Pixels with a noise level > minimum mosaic noise / cutoff are blanked in all final products. E.g. The default of 0.2 means blanking in the mosaic all pixels with a noise level > 5x the minimum mosaic noise level. Set to zero for no cutoff (but some cutoff may still result from mosaic:beam_cutoff setting).
+
+
+
+.. _mosaic_associated_mosaics:
+
+--------------------------------------------------
+**associated_mosaics**
+--------------------------------------------------
+
+  *list* *of str*, *optional*, *default = ' '*
+
+  Also make mosaics of the associated .fits files, selecting between 'mask', 'model' and 'residual'. Multiple choices allowed. Give user choice as a list. The default is to not make any associated mosaics.
 
 
 
@@ -136,7 +156,7 @@ Mosaic the 2D-images (or cubes) made with the selfcal/crosscal (or line) worker.
 
   *{"gaussian", "mauchian"}*, *optional*, *default = gaussian*
 
-  If no continuum pb.fits are already in place, user needs to choose whether a rudimentary primary beam is created ('gaussian') or one that follows the model of Mauch et al. (2020), relevant for MeerKAT data ('mauchian').
+  For mosaic_type:continuum only. If no continuum pb.fits are in place create them either as 2D Gaussians or as in Mauch et al. (2020).
 
 
 
@@ -160,7 +180,7 @@ Mosaic the 2D-images (or cubes) made with the selfcal/crosscal (or line) worker.
 
   *float*, *optional*, *default = 1383685546.875*
 
-  If no continuum pb.fits are already in place, user needs to specify the reference frequency (in units of Hz) so that primary beams can be created.
+  If continuum pb.fits need to be created, specify the reference frequency (in Hz) for appropriate scaling of the PB shape.
 
 
 
@@ -172,7 +192,7 @@ Mosaic the 2D-images (or cubes) made with the selfcal/crosscal (or line) worker.
 
   *int*, *optional*, *default = 0*
 
-  If mosaic_type is "spectral", round CDELT3 in the header of the input cubes to the number of decimal digits given by this parameter (0 means do not round). This is useful when the CDELT3 values of the input cubes are not identical (which would make the mosaicking algorithm crash) but the differences are small and can be ignored. Note that the CDELT3 values of the input cubes are overwritten with the common, rounded value (if the rounding is sufficient to find a common value).
+  For mosaic_type:line only. Round CDELT3 in the header of the input cubes to the number of decimal digits given by this parameter (0 means do not round). This is useful when the CDELT3 values of the input cubes are not identical (which would make the mosaicking algorithm crash) but the differences are small and can be removed with no impact on the science. Note that the CDELT3 values of the input cubes are overwritten with the common, rounded value (if the rounding is sufficient to find a common value). Use with caution.
 
 
 

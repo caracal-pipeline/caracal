@@ -52,10 +52,12 @@ def getCaracalReadme(pipeDr, dcsDr):
     readme = f.readlines()
     f.close()
     f = open(dcsDr + "caracalREADME.rst", "w")  # noqa: SIM115
-    nn = readme.index("Installation & Run\n")
-    while nn < len(readme) and "Running" not in readme[nn]:
-        f.write(readme[nn])
-        nn += 1
+    start = readme.index("Installation & Run\n")
+    end = readme.index("Running\n", start)
+    # Exclude the Running heading's overline from the installation excerpt.
+    if readme[end - 1].strip() == "=" * len("Running"):
+        end -= 1
+    f.write("".join(readme[start:end]).rstrip() + "\n")
     f.close()
 
 

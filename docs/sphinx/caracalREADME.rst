@@ -2,9 +2,16 @@ Installation & Run
 ==================
 
 Usage and publication policy
--------------------------------
+----------------------------
 
 When using CARACal please be aware of and adhere to the `CARACal publication policy <https://docs.google.com/document/d/e/2PACX-1vTqZoKhdewnWvxvEI4C9DxI-IHP1FTCoC5Iqz_MqlX63q8UnnpcqoZvVf-sSfqACu8sA_nufkXICUH6/pub>`_.
+
+
+CARACal is academic research software. As a matter of academic integrity, we expect any published or shared work that uses CARACal, or copies or adapts any part of its code, configuration schemas, or documentation, to formally cite CARACal and clearly identify the material used or adapted. This includes papers, theses, and software made available to others, including renamed or rewritten derivatives. In shared software, place the citation and acknowledgment of provenance in the
+README or accompanying documentation. See the `academic citation guidance <docs/sphinx/credits/crediting/index.rst>`_ for details.
+
+These academic credit expectations do not add restrictions to the GNU GPL v2 license or limit the rights it grants. Citation does not replace compliance with the license's copyright notice, modification notice, and redistribution
+requirements.
 
 Requirements
 ------------
@@ -56,7 +63,7 @@ And CARACal developer version which is not recommended for users:
 *Ignore any error messages concerning `pyregion`.*
 
 1.1 container configuration 
-------------------------
+---------------------------
 
 In case you are *not* carrying out a fresh installation, remove earlier Stimela images with:
 
@@ -109,32 +116,46 @@ If using `Singularity <https://github.com/sylabs/singularity>`_:
     caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f -kh
 
 
-3. Poetry (For developers)
---------------------------
+3. Dev Installation (For developers)
+------------------------------------
 
-Installation from source using `poetry`. First, install poetry:
-
-..  code-block:: bash
-
-    pip install poetry
-
-
-In the working directory where source is checked out run `poetry install` or to include all optional dependencies:
+Installation from source in editable mode inside a venv:
 
 ..  code-block:: bash
 
-    poetry install
+    pip install --editable . --with dev --with tests
+
+Installation from source using `uv` or `poetry`. First, install with:
+
+..  code-block:: bash
+
+    pip install uv # or pip install poetry
+
+
+In the working directory where source is checked out run `uv sync` or to include all group dependencies, such as tests:
+
+..  code-block:: bash
+
+    uv sync --group dev --group tests
+    # or, using poetry:
+    poetry install --with dev,tests
+
+Finally, to install pre-commit hooks run:
+
+..  code-block:: bash
+
+   pre-commit install # or uv run pre-commit install # or poetry run pre-commit install
 
 =========================================
 Installation on (ILIFU) slurm environment
 =========================================
 
-The installation of CARACal on ilifu has been tried and tested on the Ubuntu 20.0 operating system, although, it should also work on other OS versions. On the login node, follow these instructions:
+The installation of CARACal on ilifu has been tried and tested on the Ubuntu 22.04.5 LTS operating system, although, it should also work on other OS versions. On the login node, follow these instructions:
 
 ..  code-block:: bash
 
     cd /path/to/working/area
-    module add python/3.9.4
+    module add python/3.10.4
     python3 -m venv <venv-name>
     source <venv-name>/bin/activate
     pip install -U pip setuptools wheel
@@ -144,16 +165,12 @@ The installation of CARACal on ilifu has been tried and tested on the Ubuntu 20.
 
 where ``/path/to/working/area`` is the actual path to the directory where you wish to install CARACal.
 In principle, this can also be done in the Slurm environment of ILIFU by submitting an *sbatch* script.
-Please amend your `pip install` command with `[all]` option when needed in accordance with the instructions above.
 Install the latest release with:
 
 ..  code-block:: bash
 
     pip install -U caracal
 
-
 NB: The latest version of stimela singularity images needed for CARACal are stored in this location:
 ``/idia/software/containers/STIMELA_IMAGES/``. For older versions, refer to the legacy directory:
-``/idia/software/containers/STIMELA_IMAGES_legacy/``. 
-
-=======
+``/idia/software/containers/STIMELA_IMAGES_legacy/``.

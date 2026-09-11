@@ -356,7 +356,7 @@ Perform self-calibration on the data.
 **img_stokes**
 --------------------------------------------------
 
-  *{"I"}*, *optional*, *default = I*
+  *{"I", "Q"}*, *optional*, *default = I*
 
   Stokes image to create.
 

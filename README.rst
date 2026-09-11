@@ -23,6 +23,13 @@ Usage and publication policy
 
 When using CARACal please be aware of and adhere to the `CARACal publication policy <https://docs.google.com/document/d/e/2PACX-1vTqZoKhdewnWvxvEI4C9DxI-IHP1FTCoC5Iqz_MqlX63q8UnnpcqoZvVf-sSfqACu8sA_nufkXICUH6/pub>`_.
 
+
+CARACal is academic research software. As a matter of academic integrity, we expect any published or shared work that uses CARACal, or copies or adapts any part of its code, configuration schemas, or documentation, to formally cite CARACal and clearly identify the material used or adapted. This includes papers, theses, and software made available to others, including renamed or rewritten derivatives. In shared software, place the citation and acknowledgment of provenance in the
+README or accompanying documentation. See the `academic citation guidance <docs/sphinx/credits/crediting/index.rst>`_ for details.
+
+These academic credit expectations do not add restrictions to the GNU GPL v2 license or limit the rights it grants. Citation does not replace compliance with the license's copyright notice, modification notice, and redistribution
+requirements.
+
 Requirements
 ------------
 * `Python <https://www.python.org>`_ 3.9 - 3.12. (For Python version below 3.12 if working on Ubuntu> 22.04. Install the earlier Python version through this `link <https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa>`_)

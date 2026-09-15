@@ -506,7 +506,7 @@ Process visibilities for spectral line work and create line cubes and images.
 **make_cube**
 --------------------------------------------------
 
-  Make a line cube using either WSClean + SoFiA (optional for clean masks) or CASA Clean.
+  Make a line cube using either WSClean + SoFiA-2 (optional for clean masks) or CASA Clean.
 
   **enable**
 
@@ -518,7 +518,7 @@ Process visibilities for spectral line work and create line cubes and images.
 
     *{"wsclean", "casa"}*, *optional*, *default = wsclean*
 
-    Choose whether to image with WSClean + SoFiA ('wsclean') or with CASA Clean ('casa').
+    Choose whether to image with WSClean + SoFiA-2 ('wsclean') or with CASA Clean ('casa').
 
   **use_mstransform**
 
@@ -620,25 +620,25 @@ Process visibilities for spectral line work and create line cubes and images.
 
     *int*, *optional*, *default = 2*
 
-    Maximum number of WSClean + SoFiA iterations. The initial cleaning is done with WSClean automasking or with a user-provided clean mask. Subsequent iterations use a SoFiA clean mask. A value of 1 means that WSClean is only executed once and SoFiA is not used. The value of this parameter must be >= 1. Values < 1 will be ignored, and a value of 1 will be used instead.
+    Maximum number of WSClean + SoFiA-2 iterations. The initial cleaning is done with WSClean automasking or with a user-provided clean mask. Subsequent iterations use a SoFiA-2 clean mask. A value of 1 means that WSClean is only executed once and SoFiA-2 is not used. The value of this parameter must be >= 1. Values < 1 will be ignored, and a value of 1 will be used instead.
 
   **wscl_sofia_converge**
 
     *float*, *optional*, *default = 1.1*
 
-    Stop the WSClean + SoFiA iterations if the cube RMS has dropped by a factor < wscl_sofia_converge when comparing the last two iterations (considering only channels that were cleaned). If set to 0 then the maximum number of iterations is performed regardless of the change in RMS.
+    Stop the WSClean + SoFiA-2 iterations if the cube RMS has dropped by a factor < wscl_sofia_converge when comparing the last two iterations (considering only channels that were cleaned). If set to 0 then the maximum number of iterations is performed regardless of the change in RMS.
 
   **wscl_removeintermediate**
 
     *bool*, *optional*, *default = False*
 
-    If set to true, WSClean + SoFiA intermediate-cubes are deleted from the output directory. If set to false, WSClean + SoFiA intermediate-cubes are retained in the output directory.
+    If set to true, WSClean + SoFiA-2 intermediate-cubes are deleted from the output directory. If set to false, WSClean + SoFiA-2 intermediate-cubes are retained in the output directory.
 
   **wscl_user_clean_mask**
 
     *str*, *optional*, *default = ' '*
 
-    User-provided WSClean clean-mask for the first WSClean + SoFiA iteration (i.e. give the filename of the clean-mask, which is to be located in the output/masking folder).
+    User-provided WSClean clean-mask for the first WSClean + SoFiA-2 iteration (i.e. give the filename of the clean-mask, which is to be located in the output/masking folder).
 
   **wscl_auto_mask**
 
@@ -802,7 +802,7 @@ Process visibilities for spectral line work and create line cubes and images.
 
   **label_out**
 
-    *str*, *optional*, *default = imsub*
+    *str*, *optional*, *default = ' '*
 
     Name of ouput image
 
@@ -810,13 +810,13 @@ Process visibilities for spectral line work and create line cubes and images.
 
     *str*, *optional*, *default = ' '*
 
-    name of input datacube located in /output/ (preferentially in outpupt/cubes/cube_xx/ . Where xx is the highest number. To use when running imcontsub independently.
+    (EXPERIMENTAL - Succesfully tested only for single-target MS files. Use at own risk in all other cases.) Name of input datacube located in /output/ (preferentially in outpupt/cubes/cube_xx/ . Where xx is the highest number. To use when running imcontsub independently.
 
   **mask_image**
 
-    *str*, *optional*, *default = sofia*
+    *str*, *optional*, *default = ' '*
 
-    1) 'sofia' to use the mask output of SoFiA  2) a prefix string to use an existing .FITS mask located in output/masking and called prefix_target.fits, where the name of the target is set automatically by the pipeline. The latter .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this third  maskingm ethod can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output/masking.
+    1) 'sofia' to use the mask output of SoFiA  2) a prefix string to use an existing .FITS mask located in output_label/masking and called prefix_target.fits (name of the target is set automatically by the pipeline and the mask should be named accordingly). The .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this second masking method can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output_label/masking.
 
   **sigma_clip**
 
@@ -832,17 +832,11 @@ Process visibilities for spectral line work and create line cubes and images.
 
   **segments**
 
-    *seq*, *optional*, *default = 0.*
+    *seq*, *optional*, *default = 1000.*
 
-    Width of spline segments in km/s. Default is datacube velocity range / order of spline. Must be given as list of same size --order.
+    Width of spline segments in km/s. Ideally, this is larger than the largest single-sightline line-width in the data cube. Default is 1000 km/s. Must be given as list of the same size as --order.
 
-  **automask-per-iter**
-
-    *bool*, *optional*, *default = False*
-
-    Generate a new mask per iteration.
-
-  **cont-fit-tol**
+  **cont_fit_tol**
 
     *float*, *optional*, *default = 0*
 
@@ -854,35 +848,17 @@ Process visibilities for spectral line work and create line cubes and images.
 
     Overwrite output image if it already exists
 
-  **stokes-index**
-
-    *int*, *optional*, *default = 0*
-
-    Index of stokes channel (zero-based) to use, choose between 0,1,2,3
-
-  **rest-freq**
+  **rest_freq**
 
     *float*, *optional*, *default = 1420.4057*
 
     Cube rest frequency in MHz. Will ignore the one in the FITS header if it exists.
 
-  **stokes-axis**
+  **ra_chunks**
 
-    *bool*, *optional*, *default = False*
+    *int*, *optional*, *default = 4*
 
-    DEPRECATED  Set this flag if the input image has a stokes dimension. (Default is True).
-
-  **hdu-index**
-
-    *int*, *optional*, *default = 0*
-
-    FITS primary HDU index, Abbreviation - hi
-
-  **ra-chunks**
-
-    *int*, *optional*, *default = 64*
-
-    Chunking along RA-axis. If set to zero, no Chunking is perfomed.
+    Chunking along RA-axis. If set to 1, no Chunking is perfomed.
 
   **ncpus**
 
@@ -892,19 +868,25 @@ Process visibilities for spectral line work and create line cubes and images.
 
 
 
-.. _line_sofia:
+.. _line_do_sourcefinding:
 
 --------------------------------------------------
-**sofia**
+**do_sourcefinding**
 --------------------------------------------------
 
-  Run SoFiA source-finder on the final HI cubes to produce a detection mask, moment images and catalogues. Note that these settings are not used to make clean masks.
+  *bool*, *optional*, *default = False*
 
-  **enable**
+  Use sofia2 to do source finding. Settings taken from sofia2_settings. The output products are placed in the sofia directory in the same directory as the input image.
 
-    *bool*, *optional*, *default = False*
 
-    Enable the 'sofia' segment.
+
+.. _line_sofia2_settings:
+
+--------------------------------------------------
+**sofia2_settings**
+--------------------------------------------------
+
+  Settings to be used in the making of a clean_mask and / or source finding for moment maps and HI characterisation.
 
   **imcontsub**
 
@@ -912,89 +894,317 @@ Process visibilities for spectral line work and create line cubes and images.
 
     Use results of imcontsub instead of image cubes if available
 
-  **flag**
+  **input_mask**
 
-    *bool*, *optional*, *default = False*
+    *str*, *optional*, *default = ' '*
 
-    Use flag regions?
+    Name of input mask cube. Needs to be located in the same directory as the input cube i.e. output/cubes/cube_<n>.
 
-  **flagregion**
+  **input_noise**
+
+    *str*, *optional*, *default = ' '*
+
+    Name of input noise cube. Needs to be located in the same directory as the input cube i.e. output/cubes/cube_<n>.
+
+  **input_weights**
+
+    *str*, *optional*, *default = ' '*
+
+    Name of input weights cube. Needs to be located in the same directory as the input cube i.e. output/cubes/cube_<n>.
+
+  **flag_auto**
+
+    *{"true", "false", "channels", "pixels"}*, *optional*, *default = false*
+
+    SoFiA-2 will attempt to automatically flag spectral channels and spatial pixels affected by interference or artefacts based on their RMS noise level. If set to channels, only spectral channels will be flagged. If set to pixels, only spatial pixels will be flagged.
+
+  **flag_catalog**
+
+    *str*, *optional*, *default = ' '*
+
+    Name of catalogue file containing two columns that specify the longitude and latitude coordinates of sky positions to be flagged in the native coordinate system and units of the input data cube. The two columns can be separated by spaces, tabulators or commas.  Needs to be located in <>.
+
+  **flag_radius**
+
+    *int*, *optional*, *default = 5*
+
+    Radius around the sky positions listed in the catalogue provided by flag_catalog that should be flagged. If 0, then only the nearest pixel to the position will be flagged. Otherwise, pixels within the specified radius around the nearest pixel will be flagged.
+
+  **flag_region**
 
     *list* *of int*, *optional*, *default = 0, 0, 0, 0, 0, 0*
 
-    Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...].
+    Region(s) to be flagged in the input data cube prior to processing. The flagging region must contain a multiple of six comma-separated integer values of the following format; x_min, x_max, y_min, y_max, z_min, z_max, ... (all in units of pixels and 0-based). Pixels within those regions will be set to blank in the input cube.
 
-  **rmsMode**
+  **flag_threshold**
 
-    *str*, *optional*, *default = mad*
+    *float*, *optional*, *default = 5.0*
 
-    Method to determine rms ('mad' for using median absolute deviation, 'std' for using standard deviation, 'negative' for using Gaussian fit to negative voxels).
+    Relative threshold in multiples of the standard deviation to be applied by the automatic flagging algorithm. Only relevant if flag_auto is enabled.
 
-  **thr**
+  **scaleNoise**
 
-    *float*, *optional*, *default = 4.0*
+    the noise scaling modules is to measure the noise level in the input cube and then divide the input cube by the noise. This can be used to correct for spatial or spectral noise variations across the input cube prior to running the source finder.
 
-    SoFiA source-finding threshold, in terms of the number of sigma_rms to go down to (i.e. the minimum signal-to-noise ratio).
+    **enable**
 
-  **merge**
+      *bool*, *optional*, *default = True*
+
+      Enable the noise scaling section.
+
+    **mode**
+
+      *{"spectral", "local"}*, *optional*, *default = spectral*
+
+      If set to spectral, the noise level will be determined for each spectral channel by measuring the noise within each image plane. This is useful for data cubes where the noise varies with frequency. If set to local, the noise level will be measured locally in window running across the entire cube in all three dimensions. This is useful for data cubes with more complex noise variations, such as interferometric images with primary-beam correction applied.
+
+    **statistic**
+
+      *{"std", "mad", "gauss"}*, *optional*, *default = mad*
+
+      Standard deviation, median absolute deviation and Gaussian fitting to the flux histogram, respectively. Standard deviation is by far the fastest algorithm, but it is also the least robust one with respect to emission and artefacts in the data. Median absolute deviation and Gaussian fitting are far more robust in the presence of strong, extended emission or artefacts, but will usually take longer.
+
+    **fluxRange**
+
+      *{"positive", "negative", "full"}*, *optional*, *default = negative*
+
+      Flux range to be used in the noise measurement. If set to negative or positive, only pixels with negative or positive flux will be used, respectively. This can be useful to prevent real emission or artefacts from affecting the noise measurement. If set to full, all pixels will be used in the noise measurement irrespective of their flux.
+
+    **windowXY**
+
+      *int*, *optional*, *default = 25*
+
+      Standard deviation, median absolute deviation and Gaussian fitting to the flux histogram, respectively. Standard deviation is by far the fastest algorithm, but it is also the least robust one with respect to emission and artefacts in the data. Median absolute deviation and Gaussian fitting are far more robust in the presence of strong, extended emission or artefacts, but will usually take longer.
+
+    **windowZ**
+
+      *int*, *optional*, *default = 15*
+
+      Standard deviation, median absolute deviation and Gaussian fitting to the flux histogram, respectively. Standard deviation is by far the fastest algorithm, but it is also the least robust one with respect to emission and artefacts in the data. Median absolute deviation and Gaussian fitting are far more robust in the presence of strong, extended emission or artefacts, but will usually take longer.
+
+    **interpolate**
+
+      *bool*, *optional*, *default = False*
+
+      If set to true, linear interpolation will be used to interpolate the measured local noise values in between grid points. If set to false, the entire grid cell will instead be filled with the measured noise value.
+
+    **scfind**
+
+      *bool*, *optional*, *default = False*
+
+      If true and global or local noise scaling is enabled, then noise scaling will additionally be applied after each smoothing operation in the S+C finder. This might be useful in certain situations where large-scale artefacts are present in interferometric data. However, this feature should be used with great caution, as it has the potential to do more harm than good.
+
+  **scfind**
+
+    The S+C finder operates by iteratively smoothing the data cube with a user-defined set of smoothing kernels, measuring the noise level on each smoothing scale, and adding all pixels with an absolute flux above a user-defined relative threshold to the source detection mask.
+
+    **enable**
+
+      *bool*, *optional*, *default = True*
+
+      Enable the Smooth + Clip (S+C) finder section.
+
+    **kernelsXY**
+
+      *list* *of int*, *optional*, *default = [0, 3, 6]*
+
+      Comma-separated list of spatial Gaussian kernel sizes to apply. The individual kernel sizes must be floating-point values and denote the full width at half maximum (FWHM) of the Gaussian used to smooth the data in the spatial domain. A value of 0 means that no spatial smoothing will be applied.
+
+    **kernelsZ**
+
+      *list* *of int*, *optional*, *default = [0, 3, 7, 15]*
+
+      Comma-separated list of spectral Boxcar kernel sizes to apply. The individual kernel sizes must be odd integer values of 3 or greater and denote the full width of the Boxcar filter used to smooth the data in the spectral domain. A value of 0 means that no spectral smoothing will be applied.
+
+    **threshold**
+
+      *float*, *optional*, *default = 4.0*
+
+      Flux threshold to be used by the S+C finder relative to the measured noise level in each smoothing iteration. In practice, values in the range of about 3 to 5 have proven to be useful in most situations, with lower values in that range requiring use of the reliability filter to reduce the number of false detections.
+
+    **statistic**
+
+      *{"std", "mad", "gauss"}*, *optional*, *default = mad*
+
+      Standard deviation, median absolute deviation and Gaussian fitting to the flux histogram, respectively. Standard deviation is by far the fastest algorithm, but it is also the least robust one with respect to emission and artefacts in the data. Median absolute deviation and Gaussian fitting are far more robust in the presence of strong, extended emission or artefacts, but will usually take longer.
+
+    **fluxRange**
+
+      *{"positive", "negative", "full"}*, *optional*, *default = negative*
+
+      Flux range to be used in the noise measurement. If set to negative or positive, only pixels with negative or positive flux will be used, respectively. This can be useful to prevent real emission or artefacts from affecting the noise measurement. If set to full, all pixels will be used in the noise measurement irrespective of their flux.
+
+  **linker**
+
+    The linker will be run to merge the pixels detected by the source finder into coherent detections that can then be parameterised and catalogued. If false, the pipeline will be terminated after source finding, and no catalogue or source products will be created. Disabling the linker can be useful if only the raw mask from the source finder is needed.
+
+    **enable**
+
+      *bool*, *optional*, *default = True*
+
+      Enable the linker section.
+
+    **radiusXY**
+
+      *int*, *optional*, *default = 3*
+
+      Maximum merging length in the spatial dimension. Pixels with a separation of up to this value will be merged into the same source.
+
+    **radiusZ**
+
+      *int*, *optional*, *default = 3*
+
+      Maximum merging length in the spectral dimension. Pixels with a separation of up to this value will be merged into the same source.
+
+    **minSizeXY**
+
+      *int*, *optional*, *default = 2*
+
+      Minimum size of sources in the spatial dimension in pixels. Sources that fall below this limit will be discarded by the linker.
+
+    **minSizeZ**
+
+      *int*, *optional*, *default = 2*
+
+      Minimum size of sources in the spectral dimension in pixels. Sources that fall below this limit will be discarded by the linker.
+
+    **maxSizeXY**
+
+      *int*, *optional*, *default = 0*
+
+      Maximum size of sources in the spatial dimension in pixels. Sources that exceed this limit will be discarded by the linker. If the value is set to 0, maximum size filtering will be disabled.
+
+    **maxSizeZ**
+
+      *int*, *optional*, *default = 0*
+
+      Maximum size of sources in the spectral dimension in pixels. Sources that exceed this limit will be discarded by the linker. If the value is set to 0, maximum size filtering will be disabled.
+
+  **reliability**
+
+    Determine the reliability of each detection with positive total flux by comparing the density of positive and negative detections in a three-dimensional parameter space. Sources below the specified reliability threshold will then be discarded. Note that this will require a sufficient number of negative detections, which can usually be achieved by setting the source finding threshold to somewhere around 3 to 4 times the noise level.
+
+    **enable**
+
+      *bool*, *optional*, *default = False*
+
+      Enable the reliability section.
+
+    **threshold**
+
+      *float*, *optional*, *default = 0.9*
+
+      Reliability threshold in the range of 0 to 1. Sources with a reliability below this threshold will be discarded.
+
+    **scaleKernel**
+
+      *float*, *optional*, *default = 0.4*
+
+      When estimating the density of positive and negative detections in parameter space, the size of the Gaussian kernel used in this process is determined from the covariance of the distribution of negative detections in parameter space. This parameter setting can be used to scale that kernel by a constant factor.
+
+    **autoKernel**
+
+      *bool*, *optional*, *default = False*
+
+      If set to true, SoFiA-2 will try to automatically determine the optimal reliability kernel scale factor. If the algorithm fails to converge, then the default value of scaleKernel will be used instead.
+
+    **minPixels**
+
+      *int*, *optional*, *default = 0*
+
+      Minimum total number of spatial and spectral pixels within the source mask for detections to be considered reliable. The reliability of any detection with fewer pixels will be set to zero by default.
+
+    **minSNR**
+
+      *float*, *optional*, *default = 3.0*
+
+      Lower signal-to-noise limit for reliable sources. Detections that fall below this threshold will be deemed unreliable and assigned a reliability of 0.
+
+    **plot**
+
+      *bool*, *optional*, *default = True*
+
+      Diagnostic plots (in EPS format) will be created to allow the quality of the reliability estimation to be assessed. It is advisable to generate and inspect these plots to ensure that the outcome of the reliability filtering procedure is satisfactory.
+
+  **dilation**
+
+    Source mask dilation whereby the mask of each source will be grown outwards until the resulting increase in integrated flux drops below a given threshold or the maximum number of iterations is reached.
+
+    **enable**
+
+      *bool*, *optional*, *default = False*
+
+      Enable the dilation section.
+
+    **iterationsXY**
+
+      *int*, *optional*, *default = 10*
+
+      Sets the maximum number of spatial iterations for the mask dilation algorithm. Once this number of iterations has been reached, mask dilation in the spatial plane will stop even if the flux increase still exceeds the threshold set by threshold.
+
+    **iterationsZ**
+
+      *int*, *optional*, *default = 5*
+
+      Sets the maximum number of spectral iterations for the mask dilation algorithm. Once this number of iterations has been reached, mask dilation in the spatial plane will stop even if the flux increase still exceeds the threshold set by threshold.
+
+    **threshold**
+
+      *float*, *optional*, *default = 0.001*
+
+      If a positive value is provided, mask dilation will end when the increment in the integrated flux during a single iteration drops below this value times the total integrated flux (from the previous iteration), or when the maximum number of iterations has been reached. Specifying a negative threshold will disable flux checking altogether and always carry out the maximum number of iterations.
+
+  **parameter**
+
+    The parametrisation module will be enabled to measure the basic phyiscal parameters of each detected source.
+
+    **enable**
+
+      *bool*, *optional*, *default = False*
+
+      Enable the parametrisation section.
+
+  **output_writeCubelets**
 
     *bool*, *optional*, *default = False*
 
-    Merge pixels detected by any of the SoFiA source-finding algorithms into objects. If enabled, pixels with a separation of less than mergeX pixels in the X direction, mergeY pixels in the Y direction, and mergeZ channels in the Z direction will be merged and identified as a single object in the mask. Objects whose extent is smaller than minSizeX, minSizeY or minSizeZ will be removed from the mask.
+    Create individual source products for each detected source, including sub-cubes, masks, moment maps and integrated spectra. The source products will be written to a sub-directory with the suffix _cubelets. Each source product will be labelled with the source ID number for identification.
 
-  **mergeX**
+  **output_thresholdMom12**
 
-    *int*, *optional*, *default = 2*
+    *float*, *optional*, *default = 0.0*
 
-    Merging radius (in pixels) in the X direction (RA axis).
+    Create the moment 1 and 2 maps for each individual detection will be created using only those spectral channels where the flux density exceeds this value times the local RMS noise level. E.g., setting output.thresholdMom12 to a value of 3.0 would set a 3-sigma flux density threshold for moments 1 and 2. Note that this setting has no effect on moment 0 maps or global moment 1 and 2 maps.
 
-  **mergeY**
+  **output_writeCatASCII**
 
-    *int*, *optional*, *default = 2*
+    *bool*, *optional*, *default = False*
 
-    Merging radius (in pixels) in the Y direction (Dec axis).
+    Create a source catalogue will be produced in human-readable ASCII format. The catalogue file will have the suffix _cat.txt.
 
-  **mergeZ**
+  **output_writeCatXML**
 
-    *int*, *optional*, *default = 3*
+    *bool*, *optional*, *default = False*
 
-    Merging radius (in channels) in Z direction (spectral axis).
+    Create a source catalogue will be produced in VO-compatible XML format. The catalogue file will have the suffix _cat.xml.
 
-  **minSizeX**
+  **output_writeRawMask**
 
-    *int*, *optional*, *default = 3*
+    *bool*, *optional*, *default = False*
 
-    Minimum size (in pixels) in the X direction (RA axis).
+    Create a data cube containing the raw, binary source mask produced by the source finder prior to linking will be written in FITS format. The raw mask cube will have the suffix _mask-raw.fits.
 
-  **minSizeY**
+  **output_writeMask2d**
 
-    *int*, *optional*, *default = 3*
+    *bool*, *optional*, *default = False*
 
-    Minimum size (in pixels) in the Y direction (Dec axis).
+    Create an image containing a two-dimensional projection of the 3D mask cube will be written in FITS format. The 2D mask image will have the suffix _mask-2d.fits. Note that some sources may be hidden behind others in this 2D projection.
 
-  **minSizeZ**
+  **output_writeMoments**
 
-    *int*, *optional*, *default = 3*
+    *bool*, *optional*, *default = False*
 
-    Minimum size (in channels) in the Z direction (spectral axis).
-
-  **cubelets**
-
-    *bool*, *optional*, *default = True*
-
-    Create a cubelet for each detected emission-line object.
-
-  **mom0**
-
-    *bool*, *optional*, *default = True*
-
-    Create a moment-0 image of the field.
-
-  **mom1**
-
-    *bool*, *optional*, *default = True*
-
-    Create a moment-1 image of the field.
+    Create images of the spectral moments 0, 1 and 2 and the number of channels in each pixel of the moment 0 map will be written in FITS format. The maps will have the suffix _mom0.fits, _mom1.fits, _mom2.fits and _chan.fits. Note that moments 1 and 2 and the number of channels will not be produced if the input data cube is only two-dimensional.
 
 
 

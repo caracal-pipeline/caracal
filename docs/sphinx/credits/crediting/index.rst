@@ -16,6 +16,25 @@ Please notice that users that have been using CARACal/MeerKATHI before its relea
 Acknowledging CARACal
 _____________________
 
+CARACal is academic research software. As a matter of academic integrity, we
+expect any published or shared work that uses CARACal, or copies or adapts any
+part of its code, configuration schemas, or documentation, to formally cite
+CARACal and clearly identify the material used or adapted. This includes papers,
+theses, and software made available to others, including renamed or rewritten
+derivatives.
+
+For publications, cite the CARACal publication listed below and explain how
+CARACal contributed to the work. For shared software, include that citation,
+a link to https://github.com/caracal-pipeline/caracal, and a description of the
+material used or adapted in the README or accompanying documentation. Clearly
+distinguish CARACal's contributions from your own; do not present borrowed
+material as original work.
+
+These academic credit expectations do not add restrictions to the GNU GPL v2
+license or limit the rights it grants. Citation does not replace compliance
+with the license's copyright notice, modification notice, and redistribution
+requirements.
+
 We request the usage of CARACal to be acknowledged:
 
 In journal papers:

@@ -2,7 +2,15 @@
 
 Make sure that you've got the latest `caracal`.
 
-Go into the `docs` directory and type the following (having installed some python modules to be listed here soon):
+Build the documentation with Python 3.12. From the repository root, install the
+documentation dependencies:
+
+```bash
+uv sync --python 3.12 --group docs
+source .venv/bin/activate
+```
+
+Then go into the `docs` directory and run:
 ```
 python make_caracal_docs.py
 cd sphinx

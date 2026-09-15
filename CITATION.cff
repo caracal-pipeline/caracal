@@ -1,0 +1,55 @@
+cff-version: 1.2.0
+message: >-
+  If you use CARACal in published or shared work, or copy or adapt its code,
+  configuration schemas, or documentation, please cite the publication below
+  and clearly acknowledge the material used or adapted. See README.rst and
+  docs/sphinx/credits/crediting/index.rst for academic credit guidance.
+type: software
+title: "CARACal: Containerized Automated Radio Astronomy Calibration"
+authors:
+  - name: "The CARACal Team"
+repository-code: "https://github.com/caracal-pipeline/caracal"
+url: "https://caracal.readthedocs.io"
+license: GPL-2.0
+preferred-citation:
+  type: conference-paper
+  title: "MeerKATHI - an end-to-end data reduction pipeline for MeerKAT and other radio telescopes"
+  authors:
+    - family-names: Józsa
+      given-names: G. I. G.
+    - family-names: White
+      given-names: S. V.
+    - family-names: Thorat
+      given-names: K.
+    - family-names: Smirnov
+      given-names: O. M.
+    - family-names: Serra
+      given-names: P.
+    - family-names: Ramatsoku
+      given-names: M.
+    - family-names: Ramaila
+      given-names: A. J. T.
+    - family-names: Perkins
+      given-names: S. J.
+    - family-names: Molnár
+      given-names: D. Cs.
+    - family-names: Makhathini
+      given-names: S.
+    - family-names: Maccagni
+      given-names: F. M.
+    - family-names: Kleiner
+      given-names: D.
+    - family-names: Kamphuis
+      given-names: P.
+    - family-names: Hugo
+      given-names: B. V.
+    - family-names: de Blok
+      given-names: W. J. G.
+    - family-names: Andati
+      given-names: L. A. L.
+  collection-title: "ADASS XXIX"
+  collection-type: "ASP Conference Series"
+  volume: 527
+  year: 2020
+  start: 635
+  end: 638

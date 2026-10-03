@@ -1298,6 +1298,22 @@ def worker(pipeline, recipe, config):
             params.append(f"image-clean-cutoff={repr(wsclean['clean_cutoff']).replace(' ', '')}")
             params.append(f"image-cleanmask-thr={repr(wsclean['cleanmask_thr']).replace(' ', '')}")
 
+            mask_methods = wsclean.get("cleanmask_method", [])
+            if isinstance(mask_methods, str):
+                mask_methods = [mask_methods]
+            external_mask = next(
+                (method for method in mask_methods if method not in ("wsclean", "sofia", "breizorro")),
+                None,
+            )
+            if external_mask:
+                mask_path = f"masking/{external_mask}_{field}.fits"
+                if not os.path.isfile(os.path.join(pipeline.output, mask_path)):
+                    raise caracal.ConfigurationError(
+                        f"Clean mask {pipeline.output}/{mask_path} not found. "
+                        "Check the cleanmask_method label and ensure the mask exists."
+                    )
+                params.append(f"image-fits-mask=/stimela_mount/output/{mask_path}")
+
         return params
 
     # decide which tool to use for calibration

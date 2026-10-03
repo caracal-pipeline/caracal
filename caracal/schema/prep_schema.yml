@@ -63,7 +63,7 @@ mapping:
             required: false
             seq:
               - type: str
-            example: ['DATA', 'WEIGHT_SPECTRUM', 'FLAG']
+            example: 'DATA, WEIGHT_SPECTRUM, FLAG'
         
       clearcal:
         desc: Clear out calibrated data and reset the previous predicted model.

@@ -1,0 +1,78 @@
+schema_version: 1.2.0
+
+general:
+  title: Stimela2 selfcalx CI
+  backend: singularity
+  prefix: selfcalx-ci
+  msdir: caracal-ci-msdir
+  rawdatadir: caracal-ci-msdir
+  input: caracal-ci-input
+  output: caracal-ci-output
+  prep_workspace: false
+
+getdata:
+  dataid:
+    - T16R02C02-corr-scan3-chan512-t16-XXYY
+  extension: ms
+
+obsconf:
+  target:
+    - all
+  obsinfo:
+    enable: true
+    listobs: false
+    summary_json: true
+    ensure_valid: false
+
+selfcalx:
+  enable: true
+  label_in: ''
+  calibrate_with: quartical
+  cal_niter: 1
+  start_iter: 1
+  ncpu: 1
+  img_npix: 512
+  img_cell: 2.5
+  img_nchans: 3
+  img_joinchans: true
+  img_niter: 100
+  img_specfit_nrcoeff: 0
+  image:
+    enable: true
+    with: wsclean
+    col:
+      - CORRECTED_DATA
+    clean_cutoff:
+      - 6.0
+    cleanmask_method:
+      - mask
+    cleanmask_thr:
+      - 6.0
+    cleanmask_localrms:
+      - false
+    ncpu_img: 1
+    absmem: 2.0
+    use_wgridder: true
+  calibrate:
+    enable: true
+    model:
+      - '1'
+    output_data:
+      - CORR_DATA
+    gain_matrix_type:
+      - ComplexDiag
+    gsols_timeslots:
+      - 4
+    gsols_chan:
+      - 0
+  cal_quartical:
+    flag_madmax: false
+    model_pa_rotate: false
+    overwrite: false
+  extract_sources:
+    enable: false
+  aimfast:
+    enable: false
+  mosaic:
+    enable: false
+  report: false

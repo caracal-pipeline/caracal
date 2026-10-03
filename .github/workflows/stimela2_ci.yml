@@ -39,6 +39,26 @@ jobs:
           git+https://github.com/caracal-pipeline/cult-cargo.git
         stimela doc cultcargo::wsclean.yml
 
+    - name: Install Caracal runtime
+      run: |
+        uv pip install --system --no-deps .
+        uv pip install --system \
+          'psutil>=5.9.4,<6' \
+          'pykwalify>=1.8.0,<2' \
+          'progressbar2>=4.2.0,<5' \
+          'ruamel.yaml>=0.17.21,<1' \
+          'ruamel.yaml.string>=0.1,<1' \
+          'astropy>=7,<8' \
+          'scipy>=1.10,<2' \
+          'regions>=0.7,<1' \
+          'astroquery>=0.4,<1' \
+          'numpy>=1.23,<3' \
+          'nbconvert>=6,<8' \
+          'radiopadre-client>=1,<2' \
+          'python-casacore>=3,<4' \
+          'matplotlib>=3.7,<4' \
+          'jinja2>=3.1,<4'
+
     - name: Download test MS from Google Drive
       run: |
           gdown https://drive.google.com/uc?id=1Hki6i1Hr7Y2IwppnE1i_URHizqF3gtKM
@@ -55,12 +75,76 @@ jobs:
         stimela run ../caracal/caracal/recipes/caracal.yml caracal-selfcal \
           ms=T16R02C02-corr-scan3-chan512-t16-XXYY.ms \
           image-nchans=3 \
+          image-npix=512 \
           image-cell=2.5 \
+          image-joinchans=true \
+          image-cleanmask-method=breizorro \
+          image-cleanmask-thr='[6.0]' \
           selfcal.mad-flag=true \
+          selfcal.niter=1 \
           ms-base=. \
           dir-out-base=output
-        rm -r T16R02C02-corr-scan3-chan512-t16-XXYY.ms*
-        rm -r quay.io-stimela2*
+
+    - name: Run Caracal selfcalx with the generated mask
+      run: |
+        python - <<'PY'
+        import json
+        import shutil
+        import subprocess
+        from pathlib import Path
+
+        from casacore.tables import table
+        from caracal.dispatch_crew.utils import filter_name
+
+        ms = Path("T16R02C02-corr-scan3-chan512-t16-XXYY.ms").resolve()
+        dataid = ms.stem
+        fields_table = table(str(ms / "FIELD"), ack=False)
+        fields = fields_table.getcol("NAME").tolist()
+        fields_table.close()
+        if not fields:
+            raise RuntimeError(f"No fields found in {ms}")
+
+        mask_candidates = sorted(Path("output").rglob("*-MFS-mask.fits"))
+        if not mask_candidates:
+            raise RuntimeError("Stimela2 selfcal did not produce an MFS FITS mask")
+        source_mask = mask_candidates[-1]
+
+        msdir = Path("caracal-ci-msdir")
+        msdir.mkdir(exist_ok=True)
+        base_link = msdir / ms.name
+        if not base_link.exists():
+            base_link.symlink_to(ms)
+
+        output = Path("caracal-ci-output")
+        mask_dir = output / "masking"
+        mask_dir.mkdir(parents=True, exist_ok=True)
+
+        target = str(fields[0])
+        safe_target = filter_name(target)
+        target_link = msdir / f"{dataid}-{safe_target}.ms"
+        if not target_link.exists():
+            target_link.symlink_to(ms)
+        shutil.copyfile(source_mask, mask_dir / f"mask_{safe_target}.fits")
+
+        subprocess.run([
+            "caracal",
+            "-c", "tests/config_selfcalx_ci.yml",
+            "-sw", "selfcalx",
+            "-ew", "selfcalx",
+            "--general-msdir", str(msdir),
+            "--general-rawdatadir", str(msdir),
+            "--general-output", str(output),
+            "--getdata-dataid", json.dumps([dataid]),
+            "--obsconf-target", json.dumps([target]),
+            "--selfcalx-label_in", "",
+        ], check=True)
+        PY
+
+    - name: Remove test MS and run mosaic
+      run: |
+        rm -rf T16R02C02-corr-scan3-chan512-t16-XXYY.ms*
+        rm -rf caracal-ci-msdir
+        rm -rf quay.io-stimela2*
         stimela run ../caracal/caracal/recipes/caracal.yml mosaic-pointings \
           out-image-num=3 \
           dir-out-base=output
@@ -71,6 +155,7 @@ jobs:
         name: caracal-output
         path: |
           output/
+          caracal-ci-output/
           *log*
         if-no-files-found: warn
         retention-days: 7

@@ -71,20 +71,6 @@ jobs:
     - name: caracal stimela2 selfcal doc
       run: |
         stimela doc ../caracal/caracal/recipes/caracal.yml caracal-selfcal
-    - name: caracal stimela2 run selfcal
-      run: |
-        stimela run ../caracal/caracal/recipes/caracal.yml caracal-selfcal \
-          ms=T16R02C02-corr-scan3-chan512-t16-XXYY.ms \
-          image-nchans=3 \
-          image-npix=512 \
-          image-cell=2.5 \
-          image-joinchans=true \
-          image-cleanmask-method=breizorro \
-          image-cleanmask-thr='[6.0]' \
-          selfcal.mad-flag=true \
-          selfcal.niter=1 \
-          ms-base=. \
-          dir-out-base=output
 
     - name: Run Caracal selfcalx with the generated mask
       run: |
@@ -140,6 +126,21 @@ jobs:
             "--selfcalx-label_in", "",
         ], check=True)
         PY
+
+    - name: caracal stimela2 run selfcal
+      run: |
+        stimela run ../caracal/caracal/recipes/caracal.yml caracal-selfcal \
+          ms=T16R02C02-corr-scan3-chan512-t16-XXYY.ms \
+          image-nchans=3 \
+          image-npix=512 \
+          image-cell=2.5 \
+          image-joinchans=true \
+          image-cleanmask-method=breizorro \
+          image-cleanmask-thr='[6.0]' \
+          selfcal.mad-flag=true \
+          selfcal.niter=1 \
+          ms-base=. \
+          dir-out-base=output
 
     - name: Remove test MS and run mosaic
       run: |

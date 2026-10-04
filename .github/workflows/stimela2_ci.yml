@@ -35,7 +35,7 @@ jobs:
     - name: Install gdown
       run: |
         uv pip install  --system  gdown \
-          stimela==2.2.0rc0 \
+          stimela==2.2.0rc1 \
           cult-cargo==0.3.0rc0
         stimela doc cultcargo::wsclean.yml
 

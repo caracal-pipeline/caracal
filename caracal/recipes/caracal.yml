@@ -5,7 +5,6 @@ _include:
   - caracal-ddcal.yml
   - caracal-test-sets.yml[optional,warn]
   - caracal-observation-sets.yml[optional,warn]
-_include_post:
   - caracal-srun.yml
 
 caracal-pointings:

@@ -35,8 +35,8 @@ jobs:
     - name: Install gdown
       run: |
         uv pip install  --system  gdown \
-          git+https://github.com/caracal-pipeline/stimela.git \
-          git+https://github.com/caracal-pipeline/cult-cargo.git
+          stimela==2.2.0rc0 \
+          cult-cargo==0.3.0rc0 \
         stimela doc cultcargo::wsclean.yml
 
     - name: Install Caracal runtime

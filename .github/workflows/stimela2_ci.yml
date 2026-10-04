@@ -35,6 +35,7 @@ jobs:
     - name: Install gdown
       run: |
         uv pip install  --system  gdown \
+          "scabha<2.2.0rc1" \
           "git+https://github.com/caracal-pipeline/stimela.git@c7629ac" \
           "git+https://github.com/caracal-pipeline/cult-cargo.git@8c0c442"
         stimela doc cultcargo::wsclean.yml

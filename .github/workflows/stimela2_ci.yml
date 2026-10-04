@@ -36,7 +36,7 @@ jobs:
       run: |
         uv pip install  --system  gdown \
           stimela==2.1.4 \
-          cult-cargo<0.3.0
+          cult-cargo
         stimela doc cultcargo::wsclean.yml
 
     - name: Install Caracal runtime

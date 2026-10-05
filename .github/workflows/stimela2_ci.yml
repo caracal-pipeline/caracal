@@ -45,60 +45,17 @@ jobs:
           gdown https://drive.google.com/uc?id=1Hki6i1Hr7Y2IwppnE1i_URHizqF3gtKM
           unzip T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
 
-    - name: Run Caracal selfcalx with the generated mask
+    - name: Run Caracal selfcalx
       run: |
-        python - <<'PY'
-        import json
-        import shutil
-        import subprocess
-        from pathlib import Path
-
-        from casacore.tables import table
-        from caracal.dispatch_crew.utils import filter_name
-
-        ms = Path("T16R02C02-corr-scan3-chan512-t16-XXYY.ms").resolve()
-        dataid = ms.stem
-        fields_table = table(str(ms / "FIELD"), ack=False)
-        fields = fields_table.getcol("NAME").tolist()
-        fields_table.close()
-        if not fields:
-            raise RuntimeError(f"No fields found in {ms}")
-
-        mask_candidates = sorted(Path("output").rglob("*-MFS-mask.fits"))
-        if not mask_candidates:
-            raise RuntimeError("Stimela2 selfcal did not produce an MFS FITS mask")
-        source_mask = mask_candidates[-1]
-
-        msdir = Path("caracal-ci-msdir")
-        msdir.mkdir(exist_ok=True)
-        base_link = msdir / ms.name
-        if not base_link.exists():
-            base_link.symlink_to(ms)
-
-        output = Path("caracal-ci-output")
-        mask_dir = output / "masking"
-        mask_dir.mkdir(parents=True, exist_ok=True)
-
-        target = str(fields[0])
-        safe_target = filter_name(target)
-        target_link = msdir / f"{dataid}-{safe_target}.ms"
-        if not target_link.exists():
-            target_link.symlink_to(ms)
-        shutil.copyfile(source_mask, mask_dir / f"mask_{safe_target}.fits")
-
-        subprocess.run([
-            "caracal",
-            "-c", "tests/config_selfcalx_ci.yml",
-            "-sw", "selfcalx",
-            "-ew", "selfcalx",
-            "--general-msdir", str(msdir),
-            "--general-rawdatadir", str(msdir),
-            "--general-output", str(output),
-            "--getdata-dataid", json.dumps([dataid]),
-            "--obsconf-target", json.dumps([target]),
-            "--selfcalx-label_in", "",
-        ], check=True)
-        PY
+        caracal \
+          -c tests/config_selfcalx_ci.yml \
+          -sw selfcalx \
+          -ew selfcalx \
+          --general-msdir . \
+          --general-rawdatadir . \
+          --general-output caracal-ci-output \
+          --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY"]' \
+          --selfcalx-label_in ""
 
     - name: caracal stimela2 run selfcal
       run: |

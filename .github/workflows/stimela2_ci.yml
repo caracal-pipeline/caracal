@@ -38,23 +38,7 @@ jobs:
 
     - name: Install Caracal runtime
       run: |
-        uv pip install --system --no-deps .
-        uv pip install --system \
-          'psutil>=5.9.4,<6' \
-          'pykwalify>=1.8.0,<2' \
-          'progressbar2>=4.2.0,<5' \
-          'ruamel.yaml>=0.17.21,<1' \
-          'ruamel.yaml.string>=0.1,<1' \
-          'astropy>=7,<8' \
-          'scipy>=1.10,<2' \
-          'regions>=0.7,<1' \
-          'astroquery>=0.4,<1' \
-          'numpy>=1.23,<3' \
-          'nbconvert>=6,<8' \
-          'radiopadre-client>=1,<2' \
-          'python-casacore>=3,<4' \
-          'matplotlib>=3.7,<4' \
-          'jinja2>=3.1,<4'
+        uv pip install --system .
 
     - name: Download test MS from Google Drive
       run: |

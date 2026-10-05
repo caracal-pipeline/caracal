@@ -75,6 +75,18 @@ jobs:
           --general-output caracal-ci-output \
           --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY"]' \
           --selfcalx-label_in ""
+          --selfcalx-start_iter 0 \
+          --selfcalx-cal_niter 0 \
+          --selfcalx-cleanmask_method breizorro
+        caracal \
+          -c tests/config_selfcalx_ci.yml \
+          -sw selfcalx \
+          -ew selfcalx \
+          --general-msdir msdir \
+          --general-rawdatadir msdir \
+          --general-output caracal-ci-output \
+          --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY"]' \
+          --selfcalx-label_in ""
 
     - name: Remove test MS and run mosaic
       run: |

@@ -45,7 +45,7 @@ jobs:
           gdown https://drive.google.com/uc?id=1Hki6i1Hr7Y2IwppnE1i_URHizqF3gtKM
           unzip T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
           mkdir -p msdir
-          mv T16R02C02-corr-scan3-chan512-t16-XXYY.ms msdir/
+          mv T16R02C02-corr-scan3-chan512-t16-XXYY.ms msdir/T16R02C02-corr-scan3-chan512-t16-XXYY-T16R02C02.ms
 
     - name: Run Caracal selfcalx
       run: |
@@ -54,7 +54,7 @@ jobs:
           --general-msdir msdir \
           --general-rawdatadir msdir \
           --general-output caracal-ci-output \
-          --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY"]' \
+          --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY-T16R02C02"]' \
           --obsconf-obsinfo-listobs true \
           -ew obsconf
         caracal \
@@ -64,12 +64,12 @@ jobs:
           --general-msdir msdir \
           --general-rawdatadir msdir \
           --general-output caracal-ci-output \
-          --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY"]' \
+          --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY-T16R02C02"]' \
           --selfcalx-label_in ""
 
     - name: Remove test MS and run mosaic
       run: |
-        rm -rf T16R02C02-corr-scan3-chan512-t16-XXYY.ms*
+        rm -rf msdir/T16R02C02-corr-scan3-chan512-t16-XXYY.ms*
         rm -rf caracal-ci-msdir
         rm -rf quay.io-stimela2*
         stimela run ../caracal/caracal/recipes/caracal.yml mosaic-pointings \

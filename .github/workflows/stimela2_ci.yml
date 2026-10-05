@@ -57,6 +57,7 @@ jobs:
           --general-output caracal-ci-output \
           --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY-T16R02C02"]' \
           --obsconf-obsinfo-listobs true \
+          --general-prep_workspace true \
           -ew obsconf
         caracal \
           -c tests/config_selfcalx_ci.yml \

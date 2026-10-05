@@ -76,7 +76,13 @@ jobs:
           --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY"]' \
           --selfcalx-label_in "" \
           --selfcalx-start_iter 0 \
-          --selfcalx-cal_niter 0
+          --selfcalx-cal_niter 0 \
+          --selfcalx-image-cleanmask_method [breizorro]
+        mkdir -p caracal-ci-output/masking
+        # Find the mask produced by image_0 and copy it to the expected target name
+        MASK_FILE=$(find caracal-ci-output/selfcal -name "*image_0*MFS-mask.fits" -o -name "*0*mask.fits" | head -n 1)
+        echo "Found mask: $MASK_FILE"
+        cp "$MASK_FILE" caracal-ci-output/masking/mask_T16R02C02.fits
         caracal \
           -c tests/config_selfcalx_ci.yml \
           -sw selfcalx \

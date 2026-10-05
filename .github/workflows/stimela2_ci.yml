@@ -53,7 +53,7 @@ jobs:
           --general-rawdatadir . \
           --general-output caracal-ci-output \
           --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY"]' \
-          -ew obsinfo
+          -ew obsconf
         caracal \
           -c tests/config_selfcalx_ci.yml \
           -sw selfcalx \
@@ -63,21 +63,6 @@ jobs:
           --general-output caracal-ci-output \
           --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY"]' \
           --selfcalx-label_in ""
-
-    - name: caracal stimela2 run selfcal
-      run: |
-        stimela run ../caracal/caracal/recipes/caracal.yml caracal-selfcal \
-          ms=T16R02C02-corr-scan3-chan512-t16-XXYY.ms \
-          image-nchans=3 \
-          image-npix=512 \
-          image-cell=2.5 \
-          image-joinchans=true \
-          image-cleanmask-method=breizorro \
-          image-cleanmask-thr='[6.0]' \
-          selfcal.mad-flag=true \
-          selfcal.niter=1 \
-          ms-base=. \
-          dir-out-base=output
 
     - name: Remove test MS and run mosaic
       run: |

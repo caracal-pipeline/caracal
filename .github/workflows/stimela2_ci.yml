@@ -76,8 +76,7 @@ jobs:
           --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY"]' \
           --selfcalx-label_in "" \
           --selfcalx-start_iter 0 \
-          --selfcalx-cal_niter 0 \
-          --selfcalx-cleanmask_method breizorro
+          --selfcalx-cal_niter 0
         caracal \
           -c tests/config_selfcalx_ci.yml \
           -sw selfcalx \

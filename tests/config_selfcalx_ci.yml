@@ -41,7 +41,7 @@ selfcalx:
     enable: true
     with: wsclean
     col:
-      - CORRECTED_DATA
+      - DATA
     clean_cutoff:
       - 3.0
     cleanmask_method:

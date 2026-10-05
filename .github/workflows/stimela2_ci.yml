@@ -49,6 +49,13 @@ jobs:
       run: |
         caracal \
           -c tests/config_selfcalx_ci.yml \
+          --general-msdir . \
+          --general-rawdatadir . \
+          --general-output caracal-ci-output \
+          --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY"]' \
+          -ew obsinfo
+        caracal \
+          -c tests/config_selfcalx_ci.yml \
           -sw selfcalx \
           -ew selfcalx \
           --general-msdir . \

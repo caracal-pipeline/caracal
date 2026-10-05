@@ -43,7 +43,7 @@ selfcalx:
     col:
       - CORRECTED_DATA
     clean_cutoff:
-      - 6.0
+      - 3.0
     cleanmask_method:
       - mask
     cleanmask_thr:

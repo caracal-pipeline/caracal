@@ -42,7 +42,7 @@ jobs:
 
     - name: Download test MS from Google Drive
       run: |
-          gdown --fuzzy https://drive.google.com/uc?id=1Hki6i1Hr7Y2IwppnE1i_URHizqF3gtKM
+          gdown https://drive.google.com/uc?id=1Hki6i1Hr7Y2IwppnE1i_URHizqF3gtKM
           unzip T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
           mkdir -p msdir
           cp -r T16R02C02-corr-scan3-chan512-t16-XXYY.ms msdir/T16R02C02-corr-scan3-chan512-t16-XXYY-T16R02C02.ms

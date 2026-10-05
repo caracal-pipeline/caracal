@@ -55,6 +55,7 @@ jobs:
           --general-rawdatadir msdir \
           --general-output caracal-ci-output \
           --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY"]' \
+          --obsconf-obsinfo-listobs true \
           -ew obsconf
         caracal \
           -c tests/config_selfcalx_ci.yml \

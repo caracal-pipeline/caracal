@@ -75,8 +75,7 @@ jobs:
           --general-output caracal-ci-output \
           --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY"]' \
           --selfcalx-label_in "" \
-          --selfcalx-start_iter 0 \
-          --selfcalx-cal_niter 0 \
+          --selfcalx-cal_niter 1 \
           --selfcalx-image-cleanmask_method [breizorro]
         mkdir -p caracal-ci-output/masking
         # Find the mask produced by image_0 and copy it to the expected target name

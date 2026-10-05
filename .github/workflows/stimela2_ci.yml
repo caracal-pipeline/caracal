@@ -44,13 +44,15 @@ jobs:
       run: |
           gdown https://drive.google.com/uc?id=1Hki6i1Hr7Y2IwppnE1i_URHizqF3gtKM
           unzip T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
+          mkdir -p msdir
+          mv T16R02C02-corr-scan3-chan512-t16-XXYY.ms msdir/
 
     - name: Run Caracal selfcalx
       run: |
         caracal \
           -c tests/config_selfcalx_ci.yml \
-          --general-msdir . \
-          --general-rawdatadir . \
+          --general-msdir msdir \
+          --general-rawdatadir msdir \
           --general-output caracal-ci-output \
           --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY"]' \
           -ew obsconf
@@ -58,8 +60,8 @@ jobs:
           -c tests/config_selfcalx_ci.yml \
           -sw selfcalx \
           -ew selfcalx \
-          --general-msdir . \
-          --general-rawdatadir . \
+          --general-msdir msdir \
+          --general-rawdatadir msdir \
           --general-output caracal-ci-output \
           --getdata-dataid '["T16R02C02-corr-scan3-chan512-t16-XXYY"]' \
           --selfcalx-label_in ""

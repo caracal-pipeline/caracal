@@ -129,6 +129,34 @@ cabs:
     outputs:
       iter-out:
         dtype: int
+  iter_select:
+    name: IterSelect
+    info: Pick per-iteration entries from lists; the last entry repeats (legacy selfcal indexing)
+    flavour:
+      kind: python-code
+      input_vars: true
+    command: |
+      i = max(iter - 1, 0)
+      cutoff = cutoffs[i] if i < len(cutoffs) else cutoffs[-1]
+      method = methods[i] if i < len(methods) else methods[-1]
+      external = method not in ("wsclean", "sofia", "breizorro")
+      next_method = methods[iter] if iter < len(methods) else methods[-1]
+    inputs:
+      iter:
+        dtype: int
+      methods:
+        dtype: List[str]
+      cutoffs:
+        dtype: List[float]
+    outputs:
+      cutoff:
+        dtype: float
+      method:
+        dtype: str
+      external:
+        dtype: bool
+      next-method:
+        dtype: str
   maximum_iter:
     name: IterMax
     info: Maximum number of iterations

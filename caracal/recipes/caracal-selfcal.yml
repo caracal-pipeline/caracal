@@ -65,6 +65,14 @@ caracal-selfcal:
       params:
         iter: =recipe.iter
 
+    iter-select:
+      info: per-iteration clean cutoff and mask method
+      cab: iter_select
+      params:
+        iter: =recipe.iter
+        methods: =recipe.image-cleanmask-method
+        cutoffs: =recipe.image-clean-cutoff
+
     image-pfb:
       info: image and construct initial model image using the DATA/CORRECTED_DATA column
       skip: =CASES(not recipe.image-enable, true,
@@ -95,15 +103,10 @@ caracal-selfcal:
         column: =IF(recipe.iter>1, "CORRECTED_DATA",
                    IF(recipe.selfcal.pa-rotate, steps.pa-correction.out.column, recipe.image-col))
         #niter: 100000 #=IFSET(recipe.image-niter)
-        auto-threshold: =IF(recipe.iter==0, recipe.image-clean-cutoff[0],
-                          IF(VALID(recipe.image-clean-cutoff[steps.previous-image-index.iter-out]), recipe.image-clean-cutoff[steps.previous-image-index.iter-out], recipe.image-clean-cutoff[-1]))
+        auto-threshold: =steps.iter-select.cutoff
         auto-mask: =IF(recipe.iter==0, recipe.image-cleanmask-thr[0], UNSET)
         fits-mask: =IF(recipe.iter==0, UNSET,
-                      IF(IFSET(recipe.image-fits-mask, true, false) and
-                       IF(VALID(recipe.image-cleanmask-method[steps.previous-image-index.iter-out]), recipe.image-cleanmask-method[steps.previous-image-index.iter-out], recipe.image-cleanmask-method[-1]) != "wsclean" and
-                       IF(VALID(recipe.image-cleanmask-method[steps.previous-image-index.iter-out]), recipe.image-cleanmask-method[steps.previous-image-index.iter-out], recipe.image-cleanmask-method[-1]) != "sofia" and
-                       IF(VALID(recipe.image-cleanmask-method[steps.previous-image-index.iter-out]), recipe.image-cleanmask-method[steps.previous-image-index.iter-out], recipe.image-cleanmask-method[-1]) != "breizorro",
-                      recipe.image-fits-mask,
+                      IF(steps.iter-select.external, recipe.image-fits-mask,
                       "{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}-MFS-mask.fits"))
         no-update-model-required: =IF(recipe.iter>0, IF(recipe.image-no-update-model-required, true, false), true)
 
@@ -133,7 +136,7 @@ caracal-selfcal:
       cab: breizorro
       skip_if_outputs: fresh
       skip: =CASES(not recipe.image-enable, true,
-                  not IF(VALID(recipe.image-cleanmask-method[recipe.iter]), recipe.image-cleanmask-method[recipe.iter], recipe.image-cleanmask-method[-1])=="breizorro", true,
+                  not steps.iter-select.next-method=="breizorro", true,
                   recipe.image-algo=="pfb", recipe.iter==0, false)
       params:
         restored-image: =IF(recipe.image-algo=="wsclean", steps.image*.restored.mfs,

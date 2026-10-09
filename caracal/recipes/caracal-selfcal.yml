@@ -105,9 +105,10 @@ caracal-selfcal:
         #niter: 100000 #=IFSET(recipe.image-niter)
         auto-threshold: =steps.iter-select.cutoff
         auto-mask: =IF(recipe.iter==0, recipe.image-cleanmask-thr[0], UNSET)
-        fits-mask: =IF(recipe.iter==0, UNSET,
+        fits-mask: =IF(recipe.iter>0,
                       IF(steps.iter-select.external, recipe.image-fits-mask,
-                      "{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}-MFS-mask.fits"))
+                      "{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}-MFS-mask.fits"),
+                      UNSET)
         no-update-model-required: =IF(recipe.iter>0, IF(recipe.image-no-update-model-required, true, false), true)
 
     generate-beam:

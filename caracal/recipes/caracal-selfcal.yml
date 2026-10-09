@@ -96,13 +96,13 @@ caracal-selfcal:
                    IF(recipe.selfcal.pa-rotate, steps.pa-correction.out.column, recipe.image-col))
         #niter: 100000 #=IFSET(recipe.image-niter)
         auto-threshold: =IF(recipe.iter==0, recipe.image-clean-cutoff[0],
-                          IF(VALID(recipe.image-clean-cutoff[recipe.iter-1]), recipe.image-clean-cutoff[recipe.iter-1], recipe.image-clean-cutoff[-1]))
+                          IF(VALID(recipe.image-clean-cutoff[-1 + recipe.iter]), recipe.image-clean-cutoff[-1 + recipe.iter], recipe.image-clean-cutoff[-1]))
         auto-mask: =IF(recipe.iter==0, recipe.image-cleanmask-thr[0], UNSET)
         fits-mask: =IF(recipe.iter==0, UNSET,
                       IF(IFSET(recipe.image-fits-mask, true, false) and
-                       IF(VALID(recipe.image-cleanmask-method[recipe.iter-1]), recipe.image-cleanmask-method[recipe.iter-1], recipe.image-cleanmask-method[-1]) != "wsclean" and
-                       IF(VALID(recipe.image-cleanmask-method[recipe.iter-1]), recipe.image-cleanmask-method[recipe.iter-1], recipe.image-cleanmask-method[-1]) != "sofia" and
-                       IF(VALID(recipe.image-cleanmask-method[recipe.iter-1]), recipe.image-cleanmask-method[recipe.iter-1], recipe.image-cleanmask-method[-1]) != "breizorro",
+                       IF(VALID(recipe.image-cleanmask-method[-1 + recipe.iter]), recipe.image-cleanmask-method[-1 + recipe.iter], recipe.image-cleanmask-method[-1]) != "wsclean" and
+                       IF(VALID(recipe.image-cleanmask-method[-1 + recipe.iter]), recipe.image-cleanmask-method[-1 + recipe.iter], recipe.image-cleanmask-method[-1]) != "sofia" and
+                       IF(VALID(recipe.image-cleanmask-method[-1 + recipe.iter]), recipe.image-cleanmask-method[-1 + recipe.iter], recipe.image-cleanmask-method[-1]) != "breizorro",
                       recipe.image-fits-mask,
                       "{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}-MFS-mask.fits"))
         no-update-model-required: =IF(recipe.iter>0, IF(recipe.image-no-update-model-required, true, false), true)

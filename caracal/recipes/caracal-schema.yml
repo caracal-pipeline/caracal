@@ -151,9 +151,9 @@ image-multiscale-bais:
 image-fits-mask:
   dtype: File
 image-cleanmask-method:
-  default: breizorro
-  dtype: str
-  choices: [wsclean, sofia, breizorro]
+  info: Per-iteration mask method (wsclean, sofia, breizorro or an external mask label); the last entry repeats.
+  default: [breizorro]
+  dtype: List[str]
 image-aimfast-enable:
   default: false
   dtype: bool

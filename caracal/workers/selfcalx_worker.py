@@ -1301,12 +1301,12 @@ def worker(pipeline, recipe, config):
             mask_methods = wsclean.get("cleanmask_method", [])
             if isinstance(mask_methods, str):
                 mask_methods = [mask_methods]
-            external_mask = next(
-                (method for method in mask_methods if method not in ("wsclean", "sofia", "breizorro")),
-                None,
-            )
-            if external_mask:
-                mask_path = f"masking/{external_mask}_{field}.fits"
+            params.append(f"image-cleanmask-method={repr(list(mask_methods)).replace(' ', '')}")
+            externals = {m for m in mask_methods if m not in ("wsclean", "sofia", "breizorro")}
+            if len(externals) > 1:
+                raise caracal.ConfigurationError("selfcalx supports a single external cleanmask_method label.")
+            if externals:
+                mask_path = f"masking/{externals.pop()}_{field}.fits"
                 if not os.path.isfile(os.path.join(pipeline.output, mask_path)):
                     raise caracal.ConfigurationError(
                         f"Clean mask {pipeline.output}/{mask_path} not found. "

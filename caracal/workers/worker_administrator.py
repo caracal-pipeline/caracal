@@ -361,8 +361,8 @@ class WorkerAdministrator:
                     else:
                         shutil.copy2(src, dest, follow_symlinks=False)
             log.info("Copying recipes directory into input folder")
-            recipes_src_dir = "{0:s}/recipes".format(pckgdir)
-            recipes_dest_dir = os.path.join(self.input, "recipes") # Assuming 'recipes' is the desired destination folder name
+            recipes_src_dir = f"{pckgdir:s}/recipes"
+            recipes_dest_dir = os.path.join(self.input, "recipes")  # Assuming 'recipes' is the desired destination folder name
             if not os.path.exists(recipes_dest_dir):
                 shutil.copytree(recipes_src_dir, recipes_dest_dir)
 

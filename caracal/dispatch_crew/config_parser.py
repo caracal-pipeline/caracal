@@ -157,11 +157,9 @@ class config_parser:
                 schema_fn = os.path.join(caracal.pckgdir, "schema", f"{_worker:s}_schema.yml")
 
                 if _worker == "worker" or not os.path.exists(schema_fn):
-                    errors[worker] = [
-                        "this is not a recognized worker name, or its schema file is missing"
-                    ]
+                    errors[worker] = ["this is not a recognized worker name, or its schema file is missing"]
                     continue
-                
+
                 full_schema = utils.load_yaml(schema_fn)
 
                 schema = full_schema["mapping"][_worker]

@@ -132,7 +132,7 @@ def worker(pipeline, recipe, config):
                 all_fields = msdict["FIELD"]["NAME"]
                 for f_id, f_name in enumerate(all_fields):
                     safe_field = re.sub(r"[^0-9A-Za-z_]+", "_", f_name)
-                    step = "correct-parang-ms{:d}-{}".format(i, safe_field)
+                    step = f"correct-parang-ms{i:d}-{safe_field}"
                     recipe.add(
                         "cab/correct_parang",
                         step,
@@ -153,7 +153,7 @@ def worker(pipeline, recipe, config):
                         },
                         input=pipeline.input,
                         output=pipeline.output,
-                        label="correct_parang:: Correct_PA ms={} field={}".format(msname, f_name),
+                        label=f"correct_parang:: Correct_PA ms={msname} field={f_name}",
                     )
 
             if pipeline.enable_task(config, "manage_flags"):

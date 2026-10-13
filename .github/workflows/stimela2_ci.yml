@@ -83,18 +83,13 @@ jobs:
       run: |
         rm -rf msdir/T16R02C02-corr-scan3-chan512-t16-XXYY.ms*
         rm -rf caracal-ci-msdir
-        rm -rf quay.io-stimela2*
-        stimela run ../caracal/caracal/recipes/caracal.yml mosaic-pointings \
-          out-image-num=3 \
-          dir-out-base=output
+        rm -rf quay.io-stimela*
 
     - name: Upload Caracal outputs
       uses: actions/upload-artifact@v4
       with:
         name: caracal-output
         path: |
-          output/
           caracal-ci-output/
-          *log*
         if-no-files-found: warn
         retention-days: 7

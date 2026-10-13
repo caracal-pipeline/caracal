@@ -72,6 +72,7 @@ caracal-selfcal:
         iter: =recipe.iter
         methods: =recipe.image-cleanmask-method
         cutoffs: =recipe.image-clean-cutoff
+        thresholds: =recipe.image-cleanmask-thr
 
     image-pfb:
       info: image and construct initial model image using the DATA/CORRECTED_DATA column
@@ -95,7 +96,8 @@ caracal-selfcal:
 
     image-wsclean:
       info: image and construct initial model image using the DATA/CORRECTED_DATA column using a mask
-      skip: =IF(recipe.image-enable, IF(recipe.image-algo=="wsclean", false, true), true)
+      skip: =CASES(steps.iter-select.skip-image, true,
+                   recipe.image-enable, not recipe.image-algo=="wsclean", true)
       _use: lib.steps.wsclean.image
       skip_if_outputs: exist
       params:
@@ -104,18 +106,22 @@ caracal-selfcal:
                    IF(recipe.selfcal.pa-rotate, steps.pa-correction.out.column, recipe.image-col))
         #niter: 100000 #=IFSET(recipe.image-niter)
         auto-threshold: =steps.iter-select.cutoff
-        auto-mask: =IF(recipe.iter==0, recipe.image-cleanmask-thr[0], UNSET)
-        fits-mask: =IF(recipe.iter>0,
-                      IF(steps.iter-select.external, IFSET(recipe.image-fits-mask),
-                      "{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}-MFS-mask.fits"),
-                     UNSET)
+        # CASES rather than 3-arg IF(..., UNSET): the latter stays Unresolved inside the for_loop
+        auto-mask: =CASES(recipe.iter==0, steps.iter-select.automask-thr,
+                          steps.iter-select.method=="wsclean", steps.iter-select.automask-thr,
+                          UNSET)
+        fits-mask: =CASES(recipe.iter==0, UNSET,
+                          steps.iter-select.method=="wsclean", UNSET,
+                          steps.iter-select.external, IFSET(recipe.image-fits-mask),
+                          "{recipe.dir-out-base}/image_{steps.previous-image-index.iter-out}/{recipe.image-prefix}_{steps.previous-image-index.iter-out}-MFS-mask.fits")
         no-update-model-required: =IF(recipe.iter>0, IF(recipe.image-no-update-model-required, true, false), true)
 
     generate-beam:
       info: construct mauch beam
       cab: generate_mauch_beam
       skip_if_outputs: exist
-      skip: =IF(recipe.image-enable, IF(recipe.image-algo=="wsclean", false, true), true)
+      skip: =CASES(steps.iter-select.skip-image, true,
+                   recipe.image-enable, not recipe.image-algo=="wsclean", true)
       params:
         image: =IF(recipe.selfcal.pa-rotate, steps.image*.restored.i.mfs, steps.image*.restored.mfs)
         outfile: =IF(recipe.selfcal.pa-rotate, '{steps.image*.prefix}-MFS-I-pb.fits', '{steps.image*.prefix}-MFS-pb.fits')
@@ -124,7 +130,8 @@ caracal-selfcal:
       info: image quality assessment
       cab: aimfast
       skip_if_outputs: fresh
-      skip: =CASES(not recipe.image-enable, true,
+      skip: =CASES(steps.iter-select.skip-image, true,
+                  not recipe.image-enable, true,
                   not recipe.image-aimfast-enable, true,
                   recipe.image-algo=="pfb", recipe.iter==0, false)
       params:
@@ -144,9 +151,7 @@ caracal-selfcal:
           '{steps.image-pfb.base-dir}/{steps.image-pfb.image-name}_I_main_image_time0000_mfs.fits')
         outfile: '{steps.image*.prefix}-MFS-mask.fits'
         outregion: '{steps.image*.prefix}-MFS-mask.rgn'
-        threshold: =IF(VALID(recipe.image-cleanmask-thr[recipe.iter]),
-                     recipe.image-cleanmask-thr[recipe.iter],
-                     recipe.image-cleanmask-thr[-1])
+        threshold: =steps.iter-select.mask-thr
         dilate: =IFSET(recipe.breizorro.dilate)
         fill-holes: =IFSET(recipe.breizorro.fill_holes)
 
@@ -154,7 +159,8 @@ caracal-selfcal:
       info: automatic source finding
       _use: lib.steps.source-finder.bdsf
       skip_if_outputs: exist
-      skip: =CASES(not recipe.extract-sources.sourcefinder=='pybdsf', true,
+      skip: =CASES(steps.iter-select.skip-image, true,
+                   not recipe.extract-sources.sourcefinder=='pybdsf', true,
                    not recipe.image-enable, true,
                    not recipe.extract-sources.enable, true,
                    recipe.image-algo=="pfb", recipe.iter==0, false)
@@ -173,7 +179,8 @@ caracal-selfcal:
       info: convert model to lsm format
       cab: tigger-convert
       skip_if_outputs: exist
-      skip: =CASES(not recipe.extract-sources.sourcefinder=='pybdsf', true,
+      skip: =CASES(steps.iter-select.skip-image, true,
+                   not recipe.extract-sources.sourcefinder=='pybdsf', true,
                    not recipe.image-enable, true,
                    not recipe.extract-sources.enable, true, false)
       params:
@@ -347,6 +354,12 @@ caracal-selfcal:
         G.time_interval: =steps.time-freq-intervals.time_int[-1]
         G.freq_interval: =steps.time-freq-intervals.freq_int[-1]
 
+    prev-k-table:
+      info: check for a K table from the previous iteration
+      cab: file_exists
+      params:
+        path: ="{recipe.dir-out-base}/selfcal_products/" + STRIPEXT(BASENAME(recipe.ms)) + "-K-{steps.previous-image-index.iter-out}.qc/K"
+
     selfcal-chain-delay-gain:
       info: Round of delay and gain selfcal
       _use: lib.steps.quartical.k-g-diag
@@ -362,6 +375,8 @@ caracal-selfcal:
         output.log_directory: ="{recipe.dir-out-base}/selfcal_products/" + STRIPEXT(BASENAME(recipe.ms)) + "-KG-{recipe.iter}.qc/log/"
         K.time_interval: =steps.time-freq-intervals.time_int[0]
         K.freq_interval: =steps.time-freq-intervals.freq_int[0]
-        K.load_from: ="{recipe.dir-out-base}/selfcal_products/" + STRIPEXT(BASENAME(recipe.ms)) + "-K-{steps.previous-image-index.iter-out}.qc/K"
+        # no K from a previous iteration (e.g. ComplexDiag first): solve K jointly with G instead of loading it
+        K.load_from: =IF(steps.prev-k-table.exists, steps.prev-k-table.path, UNSET, UNSET)
+        solver.iter_recipe: =IF(steps.prev-k-table.exists, LIST(0,50,0,50,0,50), LIST(50,50,50,50,50))
         G.time_interval: =steps.time-freq-intervals.time_int[-1]
         G.freq_interval: =steps.time-freq-intervals.freq_int[-1]

@@ -141,6 +141,11 @@ cabs:
       method = methods[i] if i < len(methods) else methods[-1]
       external = method not in ("wsclean", "sofia", "breizorro")
       next_method = methods[iter] if iter < len(methods) else methods[-1]
+      # wsclean auto-mask threshold for this image; breizorro threshold for the mask made from it
+      automask_thr = thresholds[i] if i < len(thresholds) else thresholds[-1]
+      mask_thr = thresholds[iter] if iter < len(thresholds) else thresholds[-1]
+      # like legacy, image_0 only exists to make the first breizorro mask
+      skip_image = iter == 0 and methods[0] != "breizorro"
     inputs:
       iter:
         dtype: int
@@ -148,7 +153,15 @@ cabs:
         dtype: List[str]
       cutoffs:
         dtype: List[float]
+      thresholds:
+        dtype: List[float]
     outputs:
+      automask-thr:
+        dtype: float
+      mask-thr:
+        dtype: float
+      skip-image:
+        dtype: bool
       cutoff:
         dtype: float
       method:
@@ -157,6 +170,21 @@ cabs:
         dtype: bool
       next-method:
         dtype: str
+  file_exists:
+    name: FileExists
+    info: Check whether a path exists
+    flavour:
+      kind: python-code
+      input_vars: true
+    command: |
+      import os
+      exists = os.path.exists(path)
+    inputs:
+      path:
+        dtype: str
+    outputs:
+      exists:
+        dtype: bool
   maximum_iter:
     name: IterMax
     info: Maximum number of iterations

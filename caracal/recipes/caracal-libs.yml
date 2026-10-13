@@ -508,8 +508,9 @@ lib:
           #parallel-deconvolution: 1500
           nmiter: =IFSET(recipe.image-nmiter)
           join-channels: true
-          fit-spectral-pol: =recipe.image-specfit-nrcoeff
-          save-source-list: true
+          # legacy only passes these when > 0; wsclean crashes on 0, and needs spectral fitting to save a source list
+          fit-spectral-pol: =IF(recipe.image-specfit-nrcoeff > 0, recipe.image-specfit-nrcoeff, UNSET, UNSET)
+          save-source-list: =recipe.image-specfit-nrcoeff > 0
 
       image-pol:
         _use: lib.steps.wsclean.image

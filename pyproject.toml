@@ -25,7 +25,7 @@ dependencies = [
     "progressbar2>=4.2.0,<5",
     "ruamel.yaml>=0.17.21,<1",
     "ruamel.yaml.string>=0.1,<1",
-    "astropy==5.3.3; python_version >= '3.9' and python_version < '3.11'",
+    "astropy>=5.3.3,<7.0; python_version >= '3.9' and python_version < '3.11'",
     "astropy>=7.0,<8; python_version >= '3.11' and python_version < '3.13'",
     "scipy>=1.10,<2",
     "regions>=0.7,<1",
@@ -48,19 +48,23 @@ caracal = "caracal.main:driver"
 [dependency-groups]
 dev = [
     "jupyter",
-    "ruff>=0.12.9",
+    "ruff==0.16.6",
     "pre-commit>=4.3.0",
 ]
 tests = [
     "pytest>=7.1.3,<8",
     "flake8>=5.0.0,<6",
-    "ruff>=0.12.9",
+    "ruff==0.16.6",
 ]
 docs = [
-    "Sphinx>=4.0.1,<5",
-    "sphinx-copybutton>=0.5.0,<0.6",
-    "furo>=2022.9.15,<2023",
+    "Sphinx>=9.1.0,<10",
+    "sphinx-copybutton>=0.5.2,<0.6",
+    "sphinx-rtd-theme>=3.1.0,<4",
+    "recommonmark>=0.7.1,<0.8",
 ]
+
+[tool.uv.dependency-groups]
+docs = {requires-python = ">=3.12"}
 
 [tool.hatch.build.targets.sdist]
 include = ["caracal"]

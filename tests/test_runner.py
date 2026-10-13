@@ -17,7 +17,7 @@ def fixture():
 
 
 def test_help():
-    result = subprocess.run(["caracal", "--help"], capture_output=True, text=True)
+    result = subprocess.run(["caracal", "--help"], capture_output=True, text=True, check=True)
     assert result.returncode == 0
     assert "Welcome to CARACal" in result.stdout
 
@@ -25,7 +25,7 @@ def test_help():
 def test_config_setup(fixture):
     config_file = fixture.random_named_file(suffix=".yaml")
     cmdline = shlex.split(f"caracal -gdt meerkat_continuum -gd {config_file}")
-    result = subprocess.run(cmdline, capture_output=True, text=True)
+    result = subprocess.run(cmdline, capture_output=True, text=True, check=True)
 
     assert result.returncode == 0
 
@@ -55,7 +55,7 @@ def test_config_setup(fixture):
         if "__" in worker:
             continue
         cmdline = shlex.split(f"caracal -wh {worker}")
-        result = subprocess.run(cmdline, capture_output=True, text=True)
+        result = subprocess.run(cmdline, capture_output=True, text=True, check=True)
         assert result.returncode == 0
 
         assert f"--{worker}" in result.stdout

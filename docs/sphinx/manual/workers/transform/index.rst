@@ -192,7 +192,7 @@ Split, average and/or calibrate the data.
 
       *{"final", "intermediate", "both"}*, *optional*, *default = final*
 
-      Controls which MSs are produced with polcal in effect. 'final' will have polcal-corrected data in DATA. 'intermediate' will have KGB-corrected data in DATA and polcal-corrected data in CORRECTED_DATA. 'both' will produce both (second one, the 'intermediate', will be labelled 'tmp_'+label_out).
+      Controls which MSs are produced with polcal in effect. 'final' will have polcal-corrected data in DATA. 'intermediate' will have KGB-corrected data in DATA and polcal-corrected data in CORRECTED_DATA. 'both' will produce both (second one, the 'intermediate', will be labelled ``tmp_`` followed by ``label_out``).
 
     **derotate_pa**
 

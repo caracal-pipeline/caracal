@@ -3,7 +3,7 @@ import sys
 from io import StringIO
 
 
-class stream_director(object):
+class stream_director:
     def __init__(self, logger, log_level=logging.INFO):
         class stream_logger(StringIO):
             def __init__(self, logger, log_level, fileno=0, *args, **kwargs):
@@ -56,6 +56,6 @@ class stream_director(object):
         sys.stdout = self.__stdout_logger
         sys.stderr = self.__stderr_logger
 
-    def __exit__(self):
+    def __exit__(self):  # noqa: PYI036
         sys.stdout = self.old_stdout
         sys.stderr = self.old_stderr

@@ -128,7 +128,7 @@ def worker(pipeline, recipe, config):
         pix_x = np.empty([len(tab["RAJ2000"])])
         pix_y = np.empty([len(tab["RAJ2000"])])
 
-        for i in range(0, len(tab["RAJ2000"])):
+        for i in range(len(tab["RAJ2000"])):
             tab["RAJ2000"][i] = tab["RAJ2000"][i].replace(" ", ":")
             ra_deg[i] = ra2deg(tab["RAJ2000"][i])
             tab["DEJ2000"][i] = tab["DEJ2000"][i].replace(" ", ":")
@@ -171,7 +171,7 @@ def worker(pipeline, recipe, config):
         if os.path.exists(mosaic_outdir):
             shutil.rmtree(mosaic_outdir)
 
-        for i in range(0, len(unique)):
+        for i in range(len(unique)):
             summsfield = fields_dir + str(unique[i]) + ".FITS"
             outfield = mosaic_tmpdir + str(unique[i]) + ".FITS"
             shutil.copy(summsfield, outfield)
@@ -182,7 +182,7 @@ def worker(pipeline, recipe, config):
             shutil.rmtree(montage_tmpdir)
 
         casafiles = glob.glob(mask_dir + "/*.image")
-        for i in range(0, len(casafiles)):
+        for i in range(len(casafiles)):
             shutil.rmtree(casafiles[i])
 
     def move_files(catalog_name, mask_dir):
@@ -337,7 +337,7 @@ def worker(pipeline, recipe, config):
         ynum = np.linspace(0, hdr["NAXIS2"], hdr["NAXIS2"])
         x, y = np.meshgrid(xnum, ynum)
 
-        for i in range(0, len(pix_x)):
+        for i in range(len(pix_x)):
             xc = pix_x[i]
             yc = pix_y[i]
 
@@ -378,7 +378,7 @@ def worker(pipeline, recipe, config):
     centre = config["centre_coord"]
 
     flabel = config["label_in"]
-    all_targets, all_msfiles, ms_dict = pipeline.get_target_mss(flabel)
+    all_targets, all_msfiles, ms_dict = pipeline.get_target_mss(flabel)  # noqa: RUF059
     msinfo = pipeline.get_msinfo(all_msfiles[0])
 
     for target in all_targets:
@@ -664,7 +664,7 @@ def worker(pipeline, recipe, config):
                     image_opts,
                     input=pipeline.output,
                     output=pipeline.output + "/masking/",
-                    label="{0:s}:: Make SoFiA mask".format(step),
+                    label=f"{step:s}:: Make SoFiA mask",
                 )
                 recipe.add(
                     change_header,

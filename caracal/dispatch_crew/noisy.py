@@ -6,8 +6,8 @@ import os
 import sys
 
 import numpy as np
-import pyrap.tables as tables
 from matplotlib.pyplot import flag
+from pyrap import tables
 
 import caracal
 
@@ -19,7 +19,7 @@ import caracal
 # Get Tsys/eff (possibly from file)
 def GetTsyseff(tsyseff):
     if os.path.exists(tsyseff):
-        caracal.log.info(" ( Tsys/eff from file {0:s} )".format(tsyseff))
+        caracal.log.info(f" ( Tsys/eff from file {tsyseff:s} )")
         tsyseffFile, tsyseff = tsyseff, np.loadtxt(tsyseff)
     else:
         try:
@@ -27,7 +27,7 @@ def GetTsyseff(tsyseff):
         except ValueError:
             caracal.log.info("")
             caracal.log.info(" CATASTROPHE!")
-            caracal.log.info(" You set Tsys/eff = {0:s}".format(tsyseff))
+            caracal.log.info(f" You set Tsys/eff = {tsyseff:s}")
             caracal.log.info(" This is either a file that cannot be found or a value that cannot be converted to float")
             caracal.log.info(" Correct any mistakes and try again")
             caracal.log.info(" Aborting ...")
@@ -49,7 +49,7 @@ def InterpolateTsyseff(tsyseff, chans):
 
 def ProcessSingleMS(ms, kB, tsyseff, tsyseffFile, Aant, selectFieldName, verbose=0):
     if verbose > 1:
-        caracal.log.info("    Processing MS file {0:s}".format(ms))
+        caracal.log.info(f"    Processing MS file {ms:s}")
     t = tables.table(ms, ack=False)
     fieldIDs = t.getcol("FIELD_ID")
     ant1 = t.getcol("ANTENNA1")
@@ -59,7 +59,7 @@ def ProcessSingleMS(ms, kB, tsyseff, tsyseffFile, Aant, selectFieldName, verbose
     channelWidths = spw.getcol("CHAN_WIDTH")
     channelFreqs = spw.getcol("CHAN_FREQ")
     stokesdef = "Undefined,I,Q,U,V,RR,RL,LR,LL,XX,XY,YX,YY,RX,RY,"
-    "LX,LY,XR,XL,YR,YL,PP,PQ,QP,QQ,RCircular,LCircular,Linear,Ptotal,Plinear,PFtotal,PFlinear,Pangle".split(",")
+    ["LX", "LY", "XR", "XL", "YR", "YL", "PP", "PQ", "QP", "QQ", "RCircular", "LCircular", "Linear", "Ptotal", "Plinear", "PFtotal", "PFlinear", "Pangle"]  # noqa: B018
     corrs = [stokesdef[cc] for cc in tables.table(ms + "/POLARIZATION", ack=False).getcol("CORR_TYPE")[0]]  # taking the correlations of the first SPW
 
     if selectFieldName:
@@ -67,16 +67,16 @@ def ProcessSingleMS(ms, kB, tsyseff, tsyseffFile, Aant, selectFieldName, verbose
             selectFieldID = fieldNames.index(selectFieldName)
         except ValueError:
             caracal.log.info(" CATASTROPHE!")
-            caracal.log.info(" Cannot find the field you want to process, {0:s}".format(selectFieldName))
-            caracal.log.info(" Available fields are {0:}".format(fieldNames))
+            caracal.log.info(f" Cannot find the field you want to process, {selectFieldName:s}")
+            caracal.log.info(f" Available fields are {fieldNames}")
             caracal.log.info(" Aborting ...")
             sys.exit()
         if verbose > 1:
-            caracal.log.info("      Successfully selected Field with name {0:s} (Field ID = {1:d})".format(selectFieldName, selectFieldID))
+            caracal.log.info(f"      Successfully selected Field with name {selectFieldName:s} (Field ID = {selectFieldID:d})")
         selection = fieldIDs == selectFieldID
     else:
         if verbose > 1:
-            caracal.log.info("      Will process all available fields: {0:}".format(fieldNames))
+            caracal.log.info(f"      Will process all available fields: {fieldNames}")
         selection = fieldIDs >= fieldIDs.min()
 
     autoCorr = ant1 == ant2
@@ -89,13 +89,13 @@ def ProcessSingleMS(ms, kB, tsyseff, tsyseffFile, Aant, selectFieldName, verbose
     nrAnt = np.unique(np.concatenate((ant1, ant2))).shape[0]
     nrBaseline = nrAnt * (nrAnt - 1) // 2
     if verbose > 1:
-        caracal.log.info("      Number of antennas  = {0:d}".format(nrAnt))
-        caracal.log.info("      Number of baselines = {0:d}".format(nrBaseline))
-        caracal.log.info("      Frequency coverage  = {0:.5e} Hz - {1:.5e} Hz".format(channelFreqs.min(), channelFreqs.max()))
+        caracal.log.info(f"      Number of antennas  = {nrAnt:d}")
+        caracal.log.info(f"      Number of baselines = {nrBaseline:d}")
+        caracal.log.info(f"      Frequency coverage  = {channelFreqs.min():.5e} Hz - {channelFreqs.max():.5e} Hz")
         if np.unique(channelWidths).shape[0] == 1:
-            caracal.log.info("      Channel width = {0:.5e} Hz".format(np.unique(channelWidths)[0]))
+            caracal.log.info(f"      Channel width = {np.unique(channelWidths)[0]:.5e} Hz")
         else:
-            caracal.log.info("      The channel width takes the following unique values: {0:} Hz".format(np.unique(channelWidths)))
+            caracal.log.info(f"      The channel width takes the following unique values: {np.unique(channelWidths)} Hz")
 
     if verbose > 1:
         caracal.log.info("      Loading flags and intervals ...")
@@ -103,30 +103,30 @@ def ProcessSingleMS(ms, kB, tsyseff, tsyseffFile, Aant, selectFieldName, verbose
     # select Stokes I-related corrs
     cc = 0
     while cc < len(corrs):
-        if corrs[cc] not in "I,RR,LL,XX,YY,".split(","):
+        if corrs[cc] not in ["I", "RR", "LL", "XX", "YY", ""]:
             if verbose > 1:
-                caracal.log.info("      Discarding correlation {0:s} for predicting the Stokes I noise".format(corrs[cc]))
+                caracal.log.info(f"      Discarding correlation {corrs[cc]:s} for predicting the Stokes I noise")
             flag = np.delete(flag, cc, axis=2)
             del corrs[cc]
         else:
             cc += 1
     if verbose > 1:
-        caracal.log.info("      Retained correlations {0:}".format(corrs))
+        caracal.log.info(f"      Retained correlations {corrs}")
     interval = t.getcol("INTERVAL")[selection]
     if verbose > 1:
         if np.unique(interval).shape[0] == 1:
-            caracal.log.info("      Interval = {0:.5e} sec".format(np.unique(interval)[0]))
+            caracal.log.info(f"      Interval = {np.unique(interval)[0]:.5e} sec")
         else:
-            caracal.log.info("      The interval takes the following unique values: {0:} sec".format(np.unique(interval)))
+            caracal.log.info(f"      The interval takes the following unique values: {np.unique(interval)} sec")
     t.close()
 
     if verbose > 1:
-        caracal.log.info("      The *flag* array has shape (Nr_integrations, Nr_channels, Nr_polarisations) = {0:}".format(flag.shape))
-        caracal.log.info("      The *interval* array has shape (Nr_integrations) = {0:}".format(interval.shape))
-        caracal.log.info("      The *channel* width array has shape (-, Nr_channels) = {0:}".format(channelWidths.shape))
+        caracal.log.info(f"      The *flag* array has shape (Nr_integrations, Nr_channels, Nr_polarisations) = {flag.shape}")
+        caracal.log.info(f"      The *interval* array has shape (Nr_integrations) = {interval.shape}")
+        caracal.log.info(f"      The *channel* width array has shape (-, Nr_channels) = {channelWidths.shape}")
 
     if verbose > 1:
-        caracal.log.info("      Total Integration on selected field(s) = {0:.2f} h ({1:d} polarisations)".format(interval.sum() / nrBaseline / 3600, flag.shape[2]))
+        caracal.log.info(f"      Total Integration on selected field(s) = {interval.sum() / nrBaseline / 3600:.2f} h ({flag.shape[2]:d} polarisations)")
     if tsyseffFile is not None:
         rms = np.sqrt(2) * kB * InterpolateTsyseff(tsyseff, channelFreqs) / Aant / np.sqrt(channelWidths * interval.sum() * flag.shape[2])
     else:
@@ -135,7 +135,7 @@ def ProcessSingleMS(ms, kB, tsyseff, tsyseffFile, Aant, selectFieldName, verbose
         rms = rms[0]
 
     if verbose > 1:
-        caracal.log.info("      SINGLE MS median natural noise ignoring flags = {0:.3e} Jy/beam".format(np.nanmedian(rms)))
+        caracal.log.info(f"      SINGLE MS median natural noise ignoring flags = {np.nanmedian(rms):.3e} Jy/beam")
 
     return flag, interval, channelWidths, channelFreqs, rms
 
@@ -164,7 +164,7 @@ def PredictNoise(MS, tsyseff, diam, selectFieldName, verbose=0):
         if channelWidths0.shape != channelWidthsi.shape or (channelWidths0 != channelWidthsi).sum() or (channelFreqs0 != channelFreqsi).sum():
             caracal.log.info("")
             caracal.log.info(" CATASTROPHE!")
-            caracal.log.info(" The input .MS file {0:s} has different channelization than the first input .MS file {1:s}".format(MS[ii], MS[0]))
+            caracal.log.info(f" The input .MS file {MS[ii]:s} has different channelization than the first input .MS file {MS[0]:s}")
             caracal.log.info(" Cannot combine files to estimate their joint theoretical noise")
             caracal.log.info(" Aborting ...")
             sys.exit()
@@ -175,17 +175,17 @@ def PredictNoise(MS, tsyseff, diam, selectFieldName, verbose=0):
 
     # Message concatenated files
     if verbose > 1 and len(MS) > 1:
-        caracal.log.info("    Concatenating all {0:d} MS files ...".format(len(MS)))
+        caracal.log.info(f"    Concatenating all {len(MS):d} MS files ...")
         caracal.log.info(f"      The concatenated *flag* array has shape (Nr_integrations, Nr_channels, Nr_polarisations) = {flag.shape}")
-        caracal.log.info("      The concatenated *interval* array has shape (Nr_integrations) = {0:}".format(interval0.shape))
-        caracal.log.info("      The concatenated *channel* width array has shape (-, Nr_channels) = {0:}".format(channelWidths0.shape))
+        caracal.log.info(f"      The concatenated *interval* array has shape (Nr_integrations) = {interval0.shape}")
+        caracal.log.info(f"      The concatenated *channel* width array has shape (-, Nr_channels) = {channelWidths0.shape}")
 
     # Reshape arrays
     if verbose > 1 and len(MS) > 1:
         caracal.log.info("      Reshaping arrays ...")
     interval0.resize((interval0.shape[0], 1, 1))
-    channelWidths0.resize((channelWidths0.shape[1]))
-    channelFreqs0.resize((channelFreqs0.shape[1]))
+    channelWidths0.resize(channelWidths0.shape[1])
+    channelFreqs0.resize(channelFreqs0.shape[1])
 
     # Interpolate Tsys
     if tsyseffFile is not None:
@@ -199,15 +199,11 @@ def PredictNoise(MS, tsyseff, diam, selectFieldName, verbose=0):
     rmsUnflagged = np.sqrt(2) * kB * tsyseff / Aant / np.sqrt(channelWidths0 * unflaggedIntegration)
 
     if verbose >= 1:
-        caracal.log.info(
-            "    Natural noise ignoring flags: median = {0:.3e} Jy/beam, range = ({1:.3e} - {2:.3e}) Jy/beam".format(np.nanmedian(rmsAll), np.nanmin(rmsAll), np.nanmax(rmsAll))
-        )
+        caracal.log.info(f"    Natural noise ignoring flags: median = {np.nanmedian(rmsAll):.3e} Jy/beam, range = ({np.nanmin(rmsAll):.3e} - {np.nanmax(rmsAll):.3e}) Jy/beam")
         if not (~np.isnan(unflaggedIntegration)).sum():
             caracal.log.info("")
             caracal.log.info("    Natural noise applying flags: N/A, all data are flagged!")
         else:
             caracal.log.info(
-                "    Natural noise applying flags: median = {0:.3e} Jy/beam, range = ({1:.3e} - {2:.3e}) Jy/beam".format(
-                    np.nanmedian(rmsUnflagged), np.nanmin(rmsUnflagged), np.nanmax(rmsUnflagged)
-                )
+                f"    Natural noise applying flags: median = {np.nanmedian(rmsUnflagged):.3e} Jy/beam, range = ({np.nanmin(rmsUnflagged):.3e} - {np.nanmax(rmsUnflagged):.3e}) Jy/beam"  # noqa: E501
             )

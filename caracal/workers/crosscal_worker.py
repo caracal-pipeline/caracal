@@ -8,7 +8,7 @@ import stimela.dismissable as sdm
 from casacore.tables import table
 
 import caracal
-import caracal.dispatch_crew.utils as utils
+from caracal.dispatch_crew import utils
 from caracal.workers.utils import callibs
 from caracal.workers.utils import manage_antennas as manants
 from caracal.workers.utils import manage_flagsets as manflags
@@ -135,7 +135,7 @@ def solve(
     prev_name=None,
     smodel=False,
 ):
-    """ """
+    """ """  # noqa: D419
     gaintables = []
     interps = []
     fields = []
@@ -143,7 +143,7 @@ def solve(
 
     if prev and prev_name:
         for item in config[ftype]["apply"]:
-            gaintables.append("%s_%s.%s%d" % (prefix, prev_name, item, prev["iters"][item]))
+            gaintables.append("%s_%s.%s%d" % (prefix, prev_name, item, prev["iters"][item]))  # noqa: UP031
             ft = RULES[item]["field"]
             fields.append(",".join(getattr(pipeline, ft)[iobs]))
             interps.append(RULES[item]["interp"])
@@ -166,7 +166,7 @@ def solve(
         params["solint"] = first_if_single(config[ftype]["solint"], i)
         params["combine"] = first_if_single(config[ftype]["combine"], i).strip("'")
         params["field"] = ",".join(field)
-        caltable = "%s_%s.%s%d" % (prefix, ftype, term, itern)
+        caltable = "%s_%s.%s%d" % (prefix, ftype, term, itern)  # noqa: UP031
         params["caltable"] = caltable + ":output"
         my_term = term
         did_I = "I" in order[: i + 1]
@@ -192,12 +192,12 @@ def solve(
             my_term = ["F", "G"]
             if term == "F":
                 # Never append to the original. Make a copy for each F that is needed
-                caltable_original = "%s_%s.G%d" % (prefix, prev_name, prev["iters"]["G"])
-                primary_G = "%s_%s_append-%d.G%d" % (prefix, prev_name, itern, prev["iters"]["G"])
+                caltable_original = "%s_%s.G%d" % (prefix, prev_name, prev["iters"]["G"])  # noqa: UP031
+                primary_G = "%s_%s_append-%d.G%d" % (prefix, prev_name, itern, prev["iters"]["G"])  # noqa: UP031
                 caltable_path_original = os.path.join(pipeline.caltables, caltable_original)
                 caltable_path = os.path.join(pipeline.caltables, primary_G)
                 params["append"] = True
-                caltable = "%s_%s.F%d" % (prefix, ftype, itern)
+                caltable = "%s_%s.F%d" % (prefix, ftype, itern)  # noqa: UP031
                 params["caltable"] = primary_G + ":output"
             else:
                 params["scan"] = config[ftype]["scanselection"]
@@ -219,12 +219,12 @@ def solve(
                 can_reuse = True
 
         if can_reuse:
-            caracal.log.info("Reusing existing gain table '%s' as requested" % caltable)
+            caracal.log.info("Reusing existing gain table '%s' as requested" % caltable)  # noqa: UP031
         else:
             if term == "F":
                 if os.path.exists(caltable_path):
                     shutil.rmtree(caltable_path)
-                cpstep = "copy_primary_gains_%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
+                cpstep = "copy_primary_gains_%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)  # noqa: UP031
                 recipe.add(
                     shutil.copytree,
                     cpstep,
@@ -232,7 +232,7 @@ def solve(
                         "src": caltable_path_original,
                         "dst": caltable_path,
                     },
-                    label="{0}:: Copy parimary gains".format(step),
+                    label=f"{step}:: Copy parimary gains",
                 )
             recipe.add(
                 RULES[term]["cab"],
@@ -240,7 +240,7 @@ def solve(
                 copy.deepcopy(params),
                 input=pipeline.input,
                 output=pipeline.caltables,
-                label="%s:: %s calibration" % (step, term),
+                label="%s:: %s calibration" % (step, term),  # noqa: UP031
             )
             if term == "F":
                 transfer_fluxscale(
@@ -258,7 +258,7 @@ def solve(
                     smooth_bandpass,
                     "smooth_bandpass",
                     {
-                        "bptable": "{0:s}/{1:s}".format(pipeline.caltables, caltable),
+                        "bptable": f"{pipeline.caltables:s}/{caltable:s}",
                         "window": config[ftype]["b_smoothwindow"],
                     },
                     input=pipeline.input,
@@ -301,7 +301,7 @@ def solve(
         if term == "A":
             if not set("KGBF").intersection(order[:i]):
                 raise RuntimeError("Have encountered a request to flag the secondary calibrator without any gain, bandpass or delay tables to apply first.")
-            step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
+            step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)  # noqa: UP031
             params["mode"] = RULES[term]["mode"]
             params["field"] = ",".join(field)
             params["datacolumn"] = config[ftype]["flag"]["col"]
@@ -318,19 +318,19 @@ def solve(
                 copy.deepcopy(params),
                 input=pipeline.input,
                 output=pipeline.output,
-                label="%s::" % step,
+                label="%s::" % step,  # noqa: UP031
             )
 
         else:
             for fid in field_id:
-                step = "%s-%s-%d-%d-%s-field%d" % (name, label, itern, iobs, ftype, fid)
-                calimage = "%s-%s-I%d-%d-field%d:output" % (prefix, ftype, itern, iobs, fid)
+                step = "%s-%s-%d-%d-%s-field%d" % (name, label, itern, iobs, ftype, fid)  # noqa: UP031
+                calimage = "%s-%s-I%d-%d-field%d:output" % (prefix, ftype, itern, iobs, fid)  # noqa: UP031
                 cab_params = {
                     "msname": msname,
                     "name": calimage,
                     "size": config[ftype]["image"]["npix"],
                     "scale": config[ftype]["image"]["cell"],
-                    "join-channels": False if config[ftype]["image"]["nchans"] == 1 else True,
+                    "join-channels": False if config[ftype]["image"]["nchans"] == 1 else True,  # noqa: SIM211
                     "fit-spectral-pol": config[ftype]["image"]["fit_spectral_pol"],
                     "channels-out": config[ftype]["image"]["nchans"],
                     "auto-threshold": config[ftype]["image"]["auto_threshold"],
@@ -359,7 +359,7 @@ def solve(
                     cab_params,
                     input=pipeline.input,
                     output=pipeline.crosscal_continuum,
-                    label="%s:: Image %s field" % (step, ftype),
+                    label="%s:: Image %s field" % (step, ftype),  # noqa: UP031
                 )
 
     # terms that need an apply
@@ -378,7 +378,7 @@ def solve(
 
     # no need to apply gains multiple when encountering consecutive terms that need to apply
     applied = False
-    i = -1  #
+    i = -1
     for jj, group in enumerate(groups):
         for g, term in enumerate(group):
             i += 1
@@ -404,7 +404,7 @@ def solve(
             params = {}
             params["vis"] = msname
 
-            step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
+            step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)  # noqa: UP031
 
             if even:
                 do_KGBF(i)
@@ -420,8 +420,8 @@ def solve(
 
 
 def plotgains(recipe, pipeline, field_id, gtab, i, term):
-    step = "plotgains-%s-%d-%s" % (term, i, "".join(map(str, field_id or [])))
-    params = {"table": f"{gtab}:msfile", "corr": "", "htmlname": gtab, "plotname": "{}.png".format(gtab)}
+    step = "plotgains-%s-%d-%s" % (term, i, "".join(map(str, field_id or [])))  # noqa: UP031
+    params = {"table": f"{gtab}:msfile", "corr": "", "htmlname": gtab, "plotname": f"{gtab}.png"}
     if field_id is not None:
         params["field"] = ",".join(map(str, field_id))
     recipe.add(
@@ -431,7 +431,7 @@ def plotgains(recipe, pipeline, field_id, gtab, i, term):
         input=pipeline.input,
         msdir=pipeline.caltables,
         output=os.path.join(pipeline.diagnostic_plots, "crosscal"),
-        label="{0:s}:: Plot gaincal phase".format(step),
+        label=f"{step:s}:: Plot gaincal phase",
     )
 
 
@@ -439,7 +439,7 @@ def transfer_fluxscale(msname, recipe, gaintable, fluxtable, pipeline, i, refere
     """
     Transfer fluxscale
     """
-    step = "transfer_fluxscale-%s-%d" % (label, i)
+    step = "transfer_fluxscale-%s-%d" % (label, i)  # noqa: UP031
     recipe.add(
         "cab/casa_fluxscale",
         step,
@@ -501,7 +501,7 @@ def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipelin
 
     gaintables, interps, fields = get_caltab_final(order, gaintable, interp, gainfield, field)
 
-    step = "apply_gains-%s-%s-%d" % (field, label, i)
+    step = "apply_gains-%s-%s-%d" % (field, label, i)  # noqa: UP031
     recipe.add(
         "cab/casa_applycal",
         step,
@@ -518,14 +518,14 @@ def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipelin
         },
         input=pipeline.input,
         output=pipeline.caltables,
-        label="%s::Apply gain tables" % step,
+        label="%s::Apply gain tables" % step,  # noqa: UP031
     )
 
 
 def smooth_bandpass(bptable, window, filter_type="mean"):
     from scipy import ndimage
 
-    caracal.log.info("Smoothing {0:s} with {2:s} window of width {1:d} channels".format(bptable, window, filter_type))
+    caracal.log.info(f"Smoothing {bptable:s} with {filter_type:s} window of width {window:d} channels")
     bp = table(bptable, ack=False).getcol("CPARAM")
     bp = [np.real(bp), np.imag(bp)]
     if filter_type == "median":
@@ -537,8 +537,8 @@ def smooth_bandpass(bptable, window, filter_type="mean"):
 
 def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
-    flags_before_worker = "{0:s}_{1:s}_before".format(pipeline.prefix, wname)
-    flags_after_worker = "{0:s}_{1:s}_after".format(pipeline.prefix, wname)
+    flags_before_worker = f"{pipeline.prefix:s}_{wname:s}_before"
+    flags_after_worker = f"{pipeline.prefix:s}_{wname:s}_after"
     label = config["label_cal"]
     label_in = config["label_in"]
 
@@ -575,10 +575,10 @@ def worker(pipeline, recipe, config):
                             flags_before_worker,
                             flags_after_worker,
                         )
-                    substep = "version-{0:s}-ms{1:d}".format(version, i)
+                    substep = f"version-{version:s}-ms{i:d}"
                     manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
                     if version != available_flagversions[-1]:
-                        substep = "delete-flag_versions-after-{0:s}-ms{1:d}".format(version, i)
+                        substep = f"delete-flag_versions-after-{version:s}-ms{i:d}"
                         manflags.delete_cflags(
                             pipeline,
                             recipe,
@@ -587,7 +587,7 @@ def worker(pipeline, recipe, config):
                             cab_name=substep,
                         )
                     if version != flags_before_worker:
-                        substep = "save-{0:s}-ms{1:d}".format(flags_before_worker, i)
+                        substep = f"save-{flags_before_worker:s}-ms{i:d}"
                         manflags.add_cflags(
                             pipeline,
                             recipe,
@@ -607,7 +607,7 @@ def worker(pipeline, recipe, config):
                         flags_after_worker,
                     )
                 else:
-                    substep = "save-{0:s}-ms{1:d}".format(flags_before_worker, i)
+                    substep = f"save-{flags_before_worker:s}-ms{i:d}"
                     manflags.add_cflags(
                         pipeline,
                         recipe,
@@ -620,7 +620,7 @@ def worker(pipeline, recipe, config):
                 if flags_before_worker in available_flagversions and not config["overwrite_flagvers"]:
                     manflags.conflict("would_overwrite_bw", pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                 else:
-                    substep = "save-{0:s}-ms{1:d}".format(flags_before_worker, i)
+                    substep = f"save-{flags_before_worker:s}-ms{i:d}"
                     manflags.add_cflags(
                         pipeline,
                         recipe,
@@ -680,7 +680,7 @@ def worker(pipeline, recipe, config):
                         "field": fluxscale_field,
                         "standard": "manual",
                         "fluxdensity": modelpoint["I"],
-                        "reffreq": "{0:f}GHz".format(modelpoint["ref"] / 1e9),
+                        "reffreq": "{0:f}GHz".format(modelpoint["ref"] / 1e9),  # noqa: UP030
                         "spix": [modelpoint[a] for a in "abcd"],
                         "scalebychan": True,
                         "usescratch": True,
@@ -694,8 +694,8 @@ def worker(pipeline, recipe, config):
                         "scalebychan": True,
                     }
                 else:
-                    raise RuntimeError('The flux calibrator field "{}" could not be found in our database or in the CASA NRAO database'.format(fluxscale_field))
-            step = "set_model_cal-{0:d}".format(i)
+                    raise RuntimeError(f'The flux calibrator field "{fluxscale_field}" could not be found in our database or in the CASA NRAO database')
+            step = f"set_model_cal-{i:d}"
             if "skymodel" in opts:
                 cabtouse = "cab/simulator"
             elif "sky-model" in opts:
@@ -708,7 +708,7 @@ def worker(pipeline, recipe, config):
                 opts,
                 input=pipeline.input,
                 output=pipeline.output,
-                label="{0:s}:: Set jansky ms={1:s}".format(step, msname),
+                label=f"{step:s}:: Set jansky ms={msname:s}",
             )
 
         gcal_set = set(pipeline.gcal[i])
@@ -851,7 +851,7 @@ def worker(pipeline, recipe, config):
                 )
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
-            substep = "save-{0:s}-ms{1:d}".format(flags_after_worker, i)
+            substep = f"save-{flags_after_worker:s}-ms{i:d}"
             manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config["overwrite_flagvers"])
 
         applycal_recipes = callibs.new_callib()
@@ -874,19 +874,19 @@ def worker(pipeline, recipe, config):
         pipeline.save_callib(applycal_recipes, prefix_msbase)
 
         if pipeline.enable_task(config, "summary"):
-            step = "summary-{0:s}-{1:d}".format(label, i)
+            step = f"summary-{label:s}-{i:d}"
             recipe.add(
                 "cab/flagstats",
                 step,
                 {
                     "msname": msname,
                     "plot": True,
-                    "outfile": ("{0:s}-{1:s}-crosscal-summary-{2:d}.json").format(prefix_msbase, wname, i),
-                    "htmlfile": ("{0:s}-{1:s}-crosscal-summary-plots-{2:d}.html").format(prefix_msbase, wname, i),
+                    "outfile": (f"{prefix_msbase:s}-{wname:s}-crosscal-summary-{i:d}.json"),
+                    "htmlfile": (f"{prefix_msbase:s}-{wname:s}-crosscal-summary-plots-{i:d}.html"),
                 },
                 input=pipeline.input,
                 output=pipeline.diagnostic_plots,
-                label="{0:s}:: Flagging summary  ms={1:s}".format(step, msname),
+                label=f"{step:s}:: Flagging summary  ms={msname:s}",
             )
             recipe.run()
             # Empty job que after execution

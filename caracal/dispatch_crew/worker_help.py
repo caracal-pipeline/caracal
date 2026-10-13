@@ -1,14 +1,14 @@
 from argparse import ArgumentParser
 
 
-class worker_options(object):
+class worker_options:
     def __init__(self, name, worker_dict, parser=None):
         """
         Prints out help for a worker
         """
         self.worker = name
         self.desc = worker_dict["desc"]
-        self.parser = parser or ArgumentParser("{0:s}: {1:s}".format(self.worker, self.desc))
+        self.parser = parser or ArgumentParser(f"{self.worker:s}: {self.desc:s}")
         self.worker_dict = worker_dict
 
     def traverse_worker(self, section, lineage=None):
@@ -23,7 +23,7 @@ class worker_options(object):
                 if lineage is None:
                     _lineage = name
                 else:
-                    _lineage = "{0:s}-{1:s}".format(lineage, name.replace("-", "_"))
+                    _lineage = "{0:s}-{1:s}".format(lineage, name.replace("-", "_"))  # noqa: UP030
                 # send back if its a mapping
                 if segment.get("type", False) == "map":
                     self.traverse_worker(segment, _lineage)
@@ -43,9 +43,9 @@ class worker_options(object):
                 else:
                     args["action"] = "store_true"
                     ptype = "bool"
-                desc = segment.get("desc", "!!! option %s missing schema description. Please file this bug !!!" % name).replace("%", "%%")
-                desc = desc + " [type: %s]" % ptype
-                self.parser.add_argument("--{0:s}".format(_lineage), help=desc, **args)
+                desc = segment.get("desc", "!!! option %s missing schema description. Please file this bug !!!" % name).replace("%", "%%")  # noqa: UP031
+                desc = desc + " [type: %s]" % ptype  # noqa: UP031
+                self.parser.add_argument(f"--{_lineage:s}", help=desc, **args)
         else:
             return
 

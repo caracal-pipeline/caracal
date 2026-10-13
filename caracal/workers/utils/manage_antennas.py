@@ -7,14 +7,14 @@ def get_refant(pipeline, recipe, prefix, msname, fields, min_baseline, max_dist,
     """Get reference antenna based on max distances to the array centre,
     min baseline length and amount of flagged data."""
     step = "antenna_flag_summary"
-    filename = "{0:s}-flag-{1:s}.json".format(prefix, step)
+    filename = f"{prefix:s}-flag-{step:s}.json"
     recipe.add(
         "cab/flagstats",
         step,
         {"msname": msname, "outfile": filename},
         input=pipeline.input,
         output=pipeline.msdir,
-        label="{0:s}:: Flagging summary  ms={1:s}".format(step, msname),
+        label=f"{step:s}:: Flagging summary  ms={msname:s}",
     )
     recipe.run()
     recipe.jobs = []

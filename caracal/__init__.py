@@ -31,7 +31,7 @@ def report_version():
     path = os.path.dirname(os.path.abspath(__file__))
     try:
         # work round possible unavailability of git -C
-        result = subprocess.check_output("cd %s; git describe --tags" % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()
+        result = subprocess.check_output("cd %s; git describe --tags" % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()  # noqa: UP031
     except subprocess.CalledProcessError:
         result = None
     if result is not None and "fatal" not in result:
@@ -40,7 +40,7 @@ def report_version():
     else:
         # perhaps we are in a github without tags? Cook something up if so
         try:
-            result = subprocess.check_output("cd %s; git rev-parse --short HEAD" % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()
+            result = subprocess.check_output("cd %s; git rev-parse --short HEAD" % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()  # noqa: UP031
         except subprocess.CalledProcessError:
             result = None
         if result is not None and "fatal" not in result:
@@ -58,7 +58,7 @@ PCKGDIR = pckgdir = os.path.dirname(os.path.abspath(__file__))
 CARACAL_LOG = "log-caracal.txt"
 
 DEFAULT_CONFIG = os.path.join(PCKGDIR, "sample_configurations", "minimalConfig.yml")
-SCHEMA = os.path.join(PCKGDIR, "schema", "schema-{0:s}.yml".format(__version__))
+SCHEMA = os.path.join(PCKGDIR, "schema", f"schema-{__version__:s}.yml")
 
 
 SAMPLE_CONFIGS = {
@@ -110,7 +110,7 @@ log_filehandler = log_console_handler = log_console_formatter = None
 
 def create_logger():
     """Creates logger and associated objects. Called upon import"""
-    global log, log_filehandler
+    global log, log_filehandler  # noqa: PLW0602
 
     log.setLevel(logging.DEBUG)
     log.propagate = False
@@ -131,10 +131,10 @@ def create_logger():
 
 def init_console_logging(boring=False, debug=False):
     """Sets up console logging"""
-    global log_console_handler, log_console_formatter, log_filehandler, DEBUG  # noqa: W062
+    global log_console_handler, log_console_formatter, log_filehandler, DEBUG  # noqa: PLW0602, W062
 
     DEBUG = debug
-    log_filehandler.setLevel(logging.DEBUG if debug else logging.INFO)  # noqa
+    log_filehandler.setLevel(logging.DEBUG if debug else logging.INFO)
 
     log_console_formatter = stimela.log_boring_formatter if boring else stimela.log_colourful_formatter
 
@@ -152,9 +152,7 @@ def init_console_logging(boring=False, debug=False):
                 return False
             # for Stimela messages at level <=INFO, only allow through subprocess  output and job state
             if rec.name.startswith(STIMELA_LOGGER_NAME) and rec.levelno <= logging.INFO:
-                if hasattr(rec, "stimela_subprocess_output") and rec.stimela_subprocess_output[1] != "start":
-                    return True
-                elif hasattr(rec, "stimela_job_state"):
+                if hasattr(rec, "stimela_subprocess_output") and rec.stimela_subprocess_output[1] != "start" or hasattr(rec, "stimela_job_state"):  # noqa: SIM103
                     return True
                 return False
             return True

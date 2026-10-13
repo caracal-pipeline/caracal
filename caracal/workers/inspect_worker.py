@@ -8,7 +8,7 @@ from caracal import ConfigurationError, log
 def check_config(config, name):
     shadems_cfg = config["shadems"]
     # dummy-process each plots sequence to catch any config errors
-    basesubst = dict(msbase="", all_fields="", all_corrs="", bpcal="", gcal="", fcal="", xcal="")
+    basesubst = dict(msbase="", all_fields="", all_corrs="", bpcal="", gcal="", fcal="", xcal="")  # noqa: C408
     for plot_cat in "plots", "plot_by_field", "plots_by_corr":
         _process_shadems_plot_list([], basesubst, shadems_cfg.get(plot_cat, []), {}, plot_cat)
 
@@ -352,8 +352,8 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
     fields = shade_cfg["fields"]
 
     # some user facing substitutions for fields, corrs, and base MS name
-    basesubst = dict(msbase=msbase, all_fields=",".join(fields.keys()), all_corrs=shade_cfg["corrs"])
-    for _f in fields.keys():
+    basesubst = dict(msbase=msbase, all_fields=",".join(fields.keys()), all_corrs=shade_cfg["corrs"])  # noqa: C408
+    for _f in fields.keys():  # noqa: SIM118
         for _ft in fields[_f]:
             basesubst[_ft] = _f
 
@@ -391,7 +391,7 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
         recipe.add(
             "cab/shadems_direct",
             step,
-            dict(ms=shade_cfg["ms"], args=plot_args, ignore_errors=shade_cfg["ignore_errors"]),
+            dict(ms=shade_cfg["ms"], args=plot_args, ignore_errors=shade_cfg["ignore_errors"]),  # noqa: C408
             input=pipeline.input,
             output=shade_cfg["output_dir"],
             label=f"{step}:: Plotting",
@@ -451,12 +451,10 @@ def shadems(pipeline, recipe, basic, extras=None):
         iterate = basic["iterate"]
 
         if iterate and (iterate in iter_axes):
-            shadems_keys.update(
-                {
-                    f"iter-{iterate}": True,
-                    "png": f"{basic['output']}-corr-{_corr}{iter_axes[iterate]}.png",
-                }
-            )
+            shadems_keys.update({
+                f"iter-{iterate}": True,
+                "png": f"{basic['output']}-corr-{_corr}{iter_axes[iterate]}.png",
+            })
 
         if shadems_keys["colour-by"] == "baseline":
             shadems_keys["colour-by"] = "UV"
@@ -560,7 +558,7 @@ def worker(pipeline, recipe, config):
 
         for ms in mslist:
             if not ms_exists(pipeline.msdir, ms):
-                raise IOError(f"MS {ms} does not exist. Please check that is where it should be.")
+                raise OSError(f"MS {ms} does not exist. Please check that is where it should be.")
 
             log.info(f"Plotting MS: {ms}")
 
@@ -583,17 +581,15 @@ def worker(pipeline, recipe, config):
             # for the newer plots to shadems
             if pipeline.enable_task(config, "shadems"):
                 shade_cfg = config["shadems"]
-                shade_cfg.update(
-                    {
-                        "ms": ms,
-                        "iobs": iobs,
-                        "label": label,
-                        "corrs": corrs,
-                        "fields": fields,
-                        "ms_base": ms_base,
-                        "output_dir": output_dir,
-                    }
-                )
+                shade_cfg.update({
+                    "ms": ms,
+                    "iobs": iobs,
+                    "label": label,
+                    "corrs": corrs,
+                    "fields": fields,
+                    "ms_base": ms_base,
+                    "output_dir": output_dir,
+                })
                 direct_shadems(pipeline, recipe, shade_cfg)
 
             # the older plots
@@ -607,23 +603,21 @@ def worker(pipeline, recipe, config):
                     plot_args = get_xy(axes)
 
                     for fname, ftype in fields.items():
-                        plot_args.update(
-                            {
-                                "ms": ms,
-                                "data": check_data(plot_axes[axes].get("col")),
-                                "corr": corrs,
-                                "iterate": "corr",
-                                # "colour": "scan",
-                                "num_cores": plotter_params.num_cores,
-                                "mem_limit": plotter_params.mem_limit,
-                                "uvrange": plotter_params.uvrange,
-                                "field": fname,
-                                "output": f"{label}-{ms_base}-{ftype[0]}-{fname}-{axes}",
-                                "output_dir": output_dir,
-                                "step": f"plot-{axes}-{iobs}-{ftype[0]}",
-                                "label": label,
-                                **plot_axes[axes],
-                            }
-                        )
+                        plot_args.update({
+                            "ms": ms,
+                            "data": check_data(plot_axes[axes].get("col")),
+                            "corr": corrs,
+                            "iterate": "corr",
+                            # "colour": "scan",
+                            "num_cores": plotter_params.num_cores,
+                            "mem_limit": plotter_params.mem_limit,
+                            "uvrange": plotter_params.uvrange,
+                            "field": fname,
+                            "output": f"{label}-{ms_base}-{ftype[0]}-{fname}-{axes}",
+                            "output_dir": output_dir,
+                            "step": f"plot-{axes}-{iobs}-{ftype[0]}",
+                            "label": label,
+                            **plot_axes[axes],
+                        })
 
                         globals()[plotter](pipeline, recipe, plot_args, extras=None)

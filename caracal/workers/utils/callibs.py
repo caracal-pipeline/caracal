@@ -3,7 +3,7 @@ from collections.abc import Iterable
 
 import stimela
 
-_MODES = dict(
+_MODES = dict(  # noqa: C408
     K="delay_cal",
     B="bp_cal",
     F="gain_cal",
@@ -21,7 +21,7 @@ _MODES = dict(
 
 
 def new_callib():
-    return dict()
+    return dict()  # noqa: C408
 
 
 def add_callib_recipe(callib, gt, interp, fldmap, field=None, calwt=False):
@@ -36,7 +36,7 @@ def add_callib_recipe(callib, gt, interp, fldmap, field=None, calwt=False):
     ext = ext and ext[1:].rstrip("0123456789")
     mode = _MODES.get(ext, "unknown")
     cal_entries = callib.setdefault(mode, {})
-    entry = dict(caltable=gt, fldmap=fldmap, interp=interp, calwt=bool(calwt))
+    entry = dict(caltable=gt, fldmap=fldmap, interp=interp, calwt=bool(calwt))  # noqa: C408
     # field can be a single entry or a list -- check
     if isinstance(field, str):
         fields = [x.strip() for x in field.split(",")]
@@ -47,7 +47,7 @@ def add_callib_recipe(callib, gt, interp, fldmap, field=None, calwt=False):
     else:
         raise TypeError(f"invalid 'field' argument of type {type(field)}")
     # fields is now a list, so iterate
-    for field in fields:
+    for field in fields:  # noqa: PLR1704
         if field:
             default = cal_entries.get("default")
             if default and all(val == default.get(key) for key, val in entry.items()):
@@ -57,7 +57,7 @@ def add_callib_recipe(callib, gt, interp, fldmap, field=None, calwt=False):
         cal_entries[field] = entry
 
 
-def resolve_calibration_library(pipeline, msprefix, cal_lib, cal_label, output_fields=None, default_interpolation_types={}):
+def resolve_calibration_library(pipeline, msprefix, cal_lib, cal_label, output_fields=None, default_interpolation_types={}):  # noqa: B006
     """
     Reads callib specified by configuration. Figures out how to apply it to the given set of output fields.
     Writes a CASA-compatible callib.txt file describing same.

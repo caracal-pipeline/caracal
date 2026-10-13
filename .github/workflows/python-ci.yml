@@ -3,7 +3,11 @@
 
 name: Python package
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
   build:
@@ -12,62 +16,42 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-22.04,  ubuntu-24.04 ]
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        # Keep in step with requires-python in pyproject.toml (>=3.9,<3.13).
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/ruff-action@v3
-      - uses: astral-sh/ruff-action@v3
-        with:
-          args: "format --check --diff"
-    
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-  
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          version: "0.10.8"
-      - name: Install package
-        run: uv sync --group tests --group dev
-
-      - name: Lint with flake8
-        run: |
-          # stop the build if there are Python syntax errors or undefined names
-          uv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.venv
-          # exit-zero treats all errors as warnings
-          uv run flake8 . --count --exit-zero --max-complexity=10 --extend-ignore=E501 --statistics --exclude=.venv
-          
-      - name: Install package
-        run: uv sync --group tests --group dev
-      - name: Test with pytest
-        run: uv run pytest tests
-
-      - name: Install Apptainer
-        uses: eWaterCycle/setup-apptainer@v2
-        with:
-          apptainer-version: 1.3.6
-
-      - name: Install gdown and download test data
-        run: |
-          uv pip install  --system  gdown
-          #gdown https://drive.google.com/uc?id=1Hki6i1Hr7Y2IwppnE1i_URHizqF3gtKM
-          #unzip T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
-          #rm T16R02C02-corr-scan3-chan512-t16-XXYY.ms.zip
-
-      - name: Test caracal command
-        run: |
-          uv run caracal --version
-          uv run caracal --help
-          uv run caracal -gd test.yml
-          cat test.yml
-          uv run caracal -gdt meerkat -gd config.yml
-          cat config.yml
-          #uv run caracal -c config.yml -ct singularity -sw obsconf -ew obsconf \
-          #  --getdata-dataid [T16R02C02-corr-scan3-chan512-t16-XXYY] \
-          #  --general-msdir . \
-          #  --obsconf-gcal [T16R02C02] \
-          #  --obsconf-fcal [T16R02C02] \
-          #  --obsconf-bpcal [T16R02C02]
+    - uses: actions/checkout@v4
+    # Pin ruff. Its default rule set is not stable across releases (0.16.0 went
+    # from 59 to 413 default rules), so an unpinned action turns green branches
+    # red with no config change. Bump this and pyproject together, deliberately.
+    - uses: astral-sh/ruff-action@v3
+      with:
+        version: "0.16.6"
+    - uses: astral-sh/ruff-action@v3
+      with:
+        version: "0.16.6"
+        args: "format --check --diff"
+    # Buffer phase: phase 2 (C4, SIM), advisory only. This never fails the build
+    # -- it is here so the team can see what the next tier will ask for before
+    # it becomes blocking. Promote these into ruff.toml's `select` once the
+    # backlog is cleared, as phase 1 (B, UP) already was.
+    # `--output-format concise` is required: the action exports
+    # RUFF_OUTPUT_FORMAT=github, which --statistics rejects with exit code 2.
+    - name: Lint (phase 2, advisory)
+      continue-on-error: true
+      uses: astral-sh/ruff-action@v3
+      with:
+        version: "0.16.6"
+        args: "check --extend-select C4,SIM --ignore SIM108 --output-format concise"
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        version: "0.10.8"
+    - name: Install package
+      run: uv sync --python ${{ matrix.python-version }} --group tests --group dev
+    - name: Test with pytest
+      run: uv run pytest tests

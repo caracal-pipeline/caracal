@@ -46,8 +46,10 @@ selfcalx:
       - 3.0
     cleanmask_method:
       - mask
+      - breizorro
     cleanmask_thr:
       - 6.0
+      - 5.0
     cleanmask_localrms:
       - false
     ncpu_img: 1

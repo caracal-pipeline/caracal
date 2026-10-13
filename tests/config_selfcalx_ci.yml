@@ -76,5 +76,6 @@ selfcalx:
   aimfast:
     enable: false
   mosaic:
-    enable: false
+    enable: true
+    out_image_num: 2
   report: false

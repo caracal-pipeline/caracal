@@ -2175,7 +2175,7 @@ def worker(pipeline, recipe, config):
                 label="Plotting source residuals comparisons",
             )
 
-    def  aimfast_compare_online_catalog(field):
+    def aimfast_compare_online_catalog(field):
         """Compare local models to online catalog"""
         model_files = []
         # Get models to compare

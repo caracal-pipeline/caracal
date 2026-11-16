@@ -1852,11 +1852,11 @@ def worker(pipeline, recipe, config):
                     else:
                         mask_from_prefix = "{0:s}/{1:s}_{2:s}.fits".format(pipeline.masking, config["imcontsub"]["mask_image"], field)
                         if len(config["imcontsub"]["mask_image"].strip()) != 0 and os.path.exists(mask_from_prefix):
-                            caracal.log.info("Using mask defined by user {0:s}".format("{0:s}/{1:s}_{2:s}.fits".format(pipeline.masking, config["imcontsub"]["mask_image"], field)))
-                            imcontsub_opts.update({"mask-image": "masking/{0:s}".format(os.path.basename(mask_from_prefix))})
+                            caracal.log.info("Using mask defined by user {}".format("{}/{}_{}.fits".format(, config["imcontsub"]["mask_image"], field)))
+                            imcontsub_opts.update({"mask-image": "masking/{}".format(os.path.basename(mask_from_prefix))})
 
                         else:
-                            caracal.log.info("Mask datacube {0:s} not found".format("{0:s}/{1:s}_{2:s}.fits".format(pipeline.masking, config["imcontsub"]["mask_image"], field)))
+                            caracal.log.info("Mask datacube {0:s} not found".format("{}/{}_{}.fits".format(pipeline.masking, config["imcontsub"]["mask_image"], field)))
                             caracal.log.info("Will proceed with automasking")
 
                     ##the segment size is chosen as the datacube velocity range / spline order

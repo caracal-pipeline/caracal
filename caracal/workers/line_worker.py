@@ -263,7 +263,7 @@ def worker(pipeline, recipe, config):
         chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
         firstchanfreq_all.append(firstchanfreq), chanw_all.append(chanwidth), lastchanfreq_all.append(lastchanfreq)
         caracal.log.info(
-            "  CHAN_FREQ from {} Hz to {} Hz with average channel width of {2:s} Hz".format(
+            "  CHAN_FREQ from {} Hz to {} Hz with average channel width of {} Hz".format(
                 ",".join(map(str, firstchanfreq)), ",".join(map(str, lastchanfreq)), ",".join(map(str, chanwidth))
             )
         )
@@ -1852,8 +1852,8 @@ def worker(pipeline, recipe, config):
                     else:
                         mask_from_prefix = "{}/{}_{}.fits".format(pipeline.masking, config["imcontsub"]["mask_image"], field)
                         if len(config["imcontsub"]["mask_image"].strip()) != 0 and os.path.exists(mask_from_prefix):
-                            caracal.log.info("Using mask defined by user {}".format(mask_from_prefix))
-                            imcontsub_opts.update({"mask-image": "masking/{}".format(os.path.basename(mask_from_prefix))})
+                            caracal.log.info(f"Using mask defined by user {mask_from_prefix}")
+                            imcontsub_opts.update({"mask-image": f"masking/{os.path.basename(mask_from_prefix)}"})
 
                         else:
                             caracal.log.info("Mask datacube {}/{}_{}.fits not found".format(pipeline.masking, config["imcontsub"]["mask_image"], field))

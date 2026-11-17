@@ -174,7 +174,7 @@ def make_pb_cube(filename, apply_corr, typ, dish_size, cutoff):
                     header=headcube,
                     overwrite=True,
                 )  # Applying the primary beam correction
-            caracal.log.info("Created primary beam cube FITS {0:s}".format(filename.replace("image.fits", "pb.fits")))  # noqa: UP030
+            caracal.log.info("Created primary beam cube FITS {}".format(filename.replace("image.fits", "pb.fits")))
 
 
 def calc_rms(filename, linemaskname):
@@ -253,7 +253,7 @@ def worker(pipeline, recipe, config):
         msinfo = pipeline.get_msinfo(msfile)
         spw = msinfo["SPW"]["NUM_CHAN"]
         caracal.log.info(f"MS #{i:d}: {msfile:s}")
-        caracal.log.info("  {0:d} spectral windows, with NCHAN={1:s}".format(len(spw), ",".join(map(str, spw))))  # noqa: UP030
+        caracal.log.info("  {d} spectral windows, with NCHAN={1:s}".format(len(spw), ",".join(map(str, spw))))
 
         # Get first chan, last chan, chan width
         chfr = msinfo["SPW"]["CHAN_FREQ"]
@@ -263,7 +263,7 @@ def worker(pipeline, recipe, config):
         chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
         firstchanfreq_all.append(firstchanfreq), chanw_all.append(chanwidth), lastchanfreq_all.append(lastchanfreq)
         caracal.log.info(
-            "  CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz".format(  # noqa: UP030
+            "  CHAN_FREQ from {} Hz to {} Hz with average channel width of {2:s} Hz".format(
                 ",".join(map(str, firstchanfreq)), ",".join(map(str, lastchanfreq)), ",".join(map(str, chanwidth))
             )
         )
@@ -371,7 +371,7 @@ def worker(pipeline, recipe, config):
     elif pipeline.enable_task(config, "mstransform") and pipeline.enable_task(config["mstransform"], "doppler") and config["mstransform"]["doppler"]["changrid"] != "auto":
         if len(config["mstransform"]["doppler"]["changrid"].split(",")) != 3:
             caracal.log.error("Incorrect format for mstransform:doppler:changrid in the .yml config file.")
-            caracal.log.error('Current setting is mstransform:doppler:changrid:"{0:s}"'.format(config["mstransform"]["doppler"]["changrid"]))  # noqa: UP030
+            caracal.log.error('Current setting is mstransform:doppler:changrid:"{}"'.format(config["mstransform"]["doppler"]["changrid"]))
             caracal.log.error(
                 "Expected 'nchan,chan0,chanw' (note the commas) where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mstransform:mode"
             )
@@ -559,7 +559,7 @@ def worker(pipeline, recipe, config):
                 chanids = np.arange(chanfreqs.shape[0])
                 linechans = chanids < 0  # Array of False's used to build the fitspw settings
                 line_id, line_ra, line_dec, line_vmin, line_vmax, line_flux = np.loadtxt(
-                    "{0:s}/{1:s}".format(pipeline.input, config["mstransform"]["uvlin"]["known_sources_cat"]),  # noqa: UP030
+                    "{}/{}".format(pipeline.input, config["mstransform"]["uvlin"]["known_sources_cat"]),
                     dtype="str",
                     unpack=True,
                 )
@@ -606,7 +606,7 @@ def worker(pipeline, recipe, config):
                     linechans += (chanids >= line_chanmin[ll]) * (chanids <= line_chanmax[ll])
                 autofitchans = ~linechans
                 if config["mstransform"]["uvlin"]["fitspw"]:
-                    caracal.log.info("Combining the above channel intervals with the user input {0:s}".format(config["mstransform"]["uvlin"]["fitspw"]))  # noqa: UP030
+                    caracal.log.info("Combining the above channel intervals with the user input {}".format(config["mstransform"]["uvlin"]["fitspw"]))
                     userfitchans = [qq.split(";") for qq in config["mstransform"]["uvlin"]["fitspw"].split(":")[1::2]]
                     while len(userfitchans) > 1:
                         userfitchans[0] = userfitchans[0] + userfitchans[1]
@@ -662,7 +662,7 @@ def worker(pipeline, recipe, config):
                 label=f"{step:s}:: Doppler tracking corrections",
             )
 
-            substep = "save-{0:s}-ms{1:d}".format("caracal_legacy", i)  # noqa: UP030
+            substep = "save-{}-ms{}".format("caracal_legacy", i)
             manflags.add_cflags(pipeline, recipe, "caracal_legacy", msname_mst, cab_name=substep, overwrite=False)
 
             if config["mstransform"]["obsinfo"]:
@@ -918,15 +918,15 @@ def worker(pipeline, recipe, config):
                 spw = msinfo["SPW"]["NUM_CHAN"]
                 nchans = spw
                 nchans_all.append(nchans)
-                caracal.log.info("MS #{0:d}: {1:s}".format(i, msfile.replace(".ms", "_mst.ms")))  # noqa: UP030
-                caracal.log.info("  {0:d} spectral windows, with NCHAN={1:s}".format(len(spw), ",".join(map(str, spw))))  # noqa: UP030
+                caracal.log.info("MS #{d}: {s}".format(i, msfile.replace(".ms", "_mst.ms")))
+                caracal.log.info("  {d} spectral windows, with NCHAN={1:s}".format(len(spw), ",".join(map(str, spw))))
                 # Get first chan, last chan, chan width
                 chfr = msinfo["SPW"]["CHAN_FREQ"]
                 firstchanfreq = [ss[0] for ss in chfr]
                 lastchanfreq = [ss[-1] for ss in chfr]
                 chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
                 caracal.log.info(
-                    "  CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz".format(  # noqa: UP030
+                    "  CHAN_FREQ from {s} Hz to {1:s} Hz with average channel width of {2:s} Hz".format(
                         ",".join(map(str, firstchanfreq)),
                         ",".join(map(str, lastchanfreq)),
                         ",".join(map(str, chanwidth)),
@@ -944,7 +944,7 @@ def worker(pipeline, recipe, config):
                 nchans = spw
                 nchans_all.append(nchans)
                 caracal.log.info(f"MS #{i:d}: {msfile:s}")
-                caracal.log.info("  {0:d} spectral windows, with NCHAN={1:s}".format(len(spw), ",".join(map(str, spw))))  # noqa: UP030
+                caracal.log.info("  {d} spectral windows, with NCHAN={1:s}".format(len(spw), ",".join(map(str, spw))))
                 specframe = msinfo["SPW"]["MEAS_FREQ_REF"]
                 specframe_all.append(specframe)
                 caracal.log.info(f"  The spectral reference frame is {specframe}")
@@ -967,7 +967,7 @@ def worker(pipeline, recipe, config):
 
         # Construct weight specification
         if config["make_cube"]["weight"] == "briggs":
-            weight = "briggs {0:.3f}".format(config["make_cube"]["robust"])  # noqa: UP030
+            weight = "briggs {.3f}".format(config["make_cube"]["robust"])
         else:
             weight = config["make_cube"]["weight"]
         wscl_niter = max(1, config["make_cube"]["wscl_sofia_niter"])
@@ -1196,11 +1196,11 @@ def worker(pipeline, recipe, config):
                                     pass
                                 hdul.flush()
 
-                            line_image_opts.update({"fitsmask": "{0:s}/{1:s}:output".format(get_relative_path(pipeline.masking, pipeline), postGridMask.split("/")[-1])})  # noqa: UP030
+                            line_image_opts.update({"fitsmask": "{}/{}:output".format(get_relative_path(pipeline.masking, pipeline), postGridMask.split("/")[-1])})
 
                         else:
                             if not doSpec:
-                                line_image_opts.update({"fitsmask": "{0:s}/{1:s}:output".format(get_relative_path(pipeline.masking, pipeline), preGridMask.split("/")[-1])})  # noqa: UP030
+                                line_image_opts.update({"fitsmask": "{s}/{s}:output".format(get_relative_path(pipeline.masking, pipeline), preGridMask.split("/")[-1])})
                             else:
                                 pass
 
@@ -1291,13 +1291,13 @@ def worker(pipeline, recipe, config):
                                 else:
                                     hdul.writeto(f"{pipeline.masking}/{postGridMask}")
 
-                                line_image_opts.update({"fitsmask": "{0:s}/{1:s}:output".format(get_relative_path(pipeline.masking, pipeline), gridMask.split("/")[-1])})  # noqa: UP030
+                                line_image_opts.update({"fitsmask": "{}/{}:output".format(get_relative_path(pipeline.masking, pipeline), gridMask.split("/")[-1])})
                             else:
                                 raise OSError(f"Requested channels are not contained in mask {gridMask}.")
 
                         else:
                             if not doProj:
-                                line_image_opts.update({"fitsmask": "{0:s}/{1:s}:output".format(get_relative_path(pipeline.masking, pipeline), preGridMask.split("/")[-1])})  # noqa: UP030
+                                line_image_opts.update({"fitsmask": "{}/{}:output".format(get_relative_path(pipeline.masking, pipeline), preGridMask.split("/")[-1])})
                             else:
                                 pass
 
@@ -1423,7 +1423,7 @@ def worker(pipeline, recipe, config):
                         if config["make_cube"]["wscl_mgain"] < 1.0:
                             imagetype.append("first-residual")
                     for mm in imagetype:
-                        step = "{0:s}-cubestack-field{1:d}-iter{2:d}".format(mm.replace("-", "_"), tt, jj)  # noqa: UP030
+                        step = "{s}-cubestack-field{d}-iter{d}".format(mm.replace("-", "_"), tt, jj)
                         if not os.path.exists(f"{pipeline.output:s}/{cube_dir:s}/{pipeline.prefix:s}_{field:s}_{line_name:s}_{jj:d}-0000-{mm:s}.fits"):
                             caracal.log.warn(f"Skipping container {step:s}. Single channels do not exist.")
                         else:
@@ -1475,7 +1475,7 @@ def worker(pipeline, recipe, config):
                         cubename = f"{pipeline.output:s}/{cube_dir:s}/{pipeline.prefix:s}_{field:s}_{line_name:s}_{jj:d}.{ss:s}.fits"
                         recipe.add(
                             fix_specsys_ra,
-                            "fixspecsysra-{0:s}-cube-field{1:d}-iter{2:d}".format(ss.replace("_", "-"), tt, jj),  # noqa: UP030
+                            "fixspecsysra-{s}-cube-field{d}-iter{d}".format(ss.replace("_", "-"), tt, jj),
                             {
                                 "filename": cubename,
                                 "specframe": specframe_all,
@@ -1560,7 +1560,7 @@ def worker(pipeline, recipe, config):
                     nchans = spw
                     nchans_all.append(nchans)
                     caracal.log.info(f"MS #{i:d}: {msfile:s}")
-                    caracal.log.info("  {0:d} spectral windows, with NCHAN={1:s}".format(len(spw), ",".join(map(str, spw))))  # noqa: UP030
+                    caracal.log.info("  {d} spectral windows, with NCHAN={s}".format(len(spw), ",".join(map(str, spw))))
 
                     # Get first chan, last chan, chan width
                     chfr = msinfo["SPW"]["CHAN_FREQ"]
@@ -1568,7 +1568,7 @@ def worker(pipeline, recipe, config):
                     lastchanfreq = [ss[-1] for ss in chfr]
                     chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
                     caracal.log.info(
-                        "  CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz".format(  # noqa: UP030
+                        "  CHAN_FREQ from {} Hz to {} Hz with average channel width of {} Hz".format(
                             ",".join(map(str, firstchanfreq)),
                             ",".join(map(str, lastchanfreq)),
                             ",".join(map(str, chanwidth)),
@@ -1589,7 +1589,7 @@ def worker(pipeline, recipe, config):
                 nchans = spw
                 nchans_all.append(nchans)
                 caracal.log.info(f"MS {i:d}: {msfile:s}")
-                caracal.log.info("  {0:d} spectral windows, with NCHAN={1:s}".format(len(spw), ",".join(map(str, spw))))  # noqa: UP030
+                caracal.log.info("  {d} spectral windows, with NCHAN={s}".format(len(spw), ",".join(map(str, spw))))
                 specframe = msinfo["SPW"]["MEAS_FREQ_REF"]
                 specframe_all.append(specframe)
                 caracal.log.info(f"  The spectral reference frame is {specframe}")
@@ -1608,7 +1608,7 @@ def worker(pipeline, recipe, config):
         channelrange = [firstchan, firstchan + nchans * binchans]
         # Construct weight specification
         if config["make_cube"]["weight"] == "briggs":
-            weight = "briggs {0:.3f}".format(config["make_cube"]["robust"])  # noqa: UP030
+            weight = "briggs {.3f}".format(config["make_cube"]["robust"])
         else:
             weight = config["make_cube"]["weight"]
 
@@ -1850,13 +1850,13 @@ def worker(pipeline, recipe, config):
                         else:
                             caracal.log.info("Mask generated by SoFiA not found, using automasking method. Suggest to activate sofia:enable to generate a mask")
                     else:
-                        mask_from_prefix = "{0:s}/{1:s}_{2:s}.fits".format(pipeline.masking, config["imcontsub"]["mask_image"], field)
+                        mask_from_prefix = "{s}/{s}_{s}.fits".format(pipeline.masking, config["imcontsub"]["mask_image"], field)
                         if len(config["imcontsub"]["mask_image"].strip()) != 0 and os.path.exists(mask_from_prefix):
                             caracal.log.info("Using mask defined by user {}".format(mask_from_prefix))
                             imcontsub_opts.update({"mask-image": "masking/{}".format(os.path.basename(mask_from_prefix))})
 
                         else:
-                            caracal.log.info("Mask datacube {0:s} not found".format("{}/{}_{}.fits".format(pipeline.masking, config["imcontsub"]["mask_image"], field)))
+                            caracal.log.info("Mask datacube {}/{}_{}.fits not found".format(pipeline.masking, config["imcontsub"]["mask_image"], field))
                             caracal.log.info("Will proceed with automasking")
 
                     ##the segment size is chosen as the datacube velocity range / spline order
@@ -1904,17 +1904,17 @@ def worker(pipeline, recipe, config):
             # this is the option if the input datacube is provided by the user in the config file
             else:
                 cubepaths_to_check = [
-                    "{0:s}/{1:s}".format(pipeline.output, config["imcontsub"]["input_cube"]),  # noqa: UP030
-                    "{0:s}/cubes/{1:s}".format(pipeline.output, config["imcontsub"]["input_cube"]),  # noqa: UP030
-                    "{0:s}/cubes/cube_{1:d}/{2:s}".format(pipeline.output, maxcube_dir, config["imcontsub"]["input_cube"]),  # noqa: UP030
+                    "{s}/{1:s}".format(pipeline.output, config["imcontsub"]["input_cube"]),
+                    "{s}/cubes/{1:s}".format(pipeline.output, config["imcontsub"]["input_cube"]),
+                    "{s}/cubes/cube_{1:d}/{2:s}".format(pipeline.output, maxcube_dir, config["imcontsub"]["input_cube"]),
                 ]
                 cubepath = next((path for path in cubepaths_to_check if os.path.exists(path)), None)
                 cubepath = cubepath.split(pipeline.output)[-1]
                 cubedirname = os.path.dirname(os.path.abspath(cubepath))
 
                 if cubepath:
-                    caracal.log.info("Continum subtraction in the image plage on datacube {0:s} provided by user ".format(config["imcontsub"]["input_cube"]))  # noqa: UP030
-                    step = "Image-continuum-subtraction-{0:s}".format(config["imcontsub"]["input_cube"])  # noqa: UP030
+                    caracal.log.info("Continum subtraction in the image plage on datacube {s} provided by user ".format(config["imcontsub"]["input_cube"]))
+                    step = "Image-continuum-subtraction-{s}".format(config["imcontsub"]["input_cube"])
                     imcontsub_opts["infits"] = f"{cubepath}:input"
 
                     ##the segment size is chosen as the datacube velocity range / spline order
@@ -1938,7 +1938,7 @@ def worker(pipeline, recipe, config):
 
                 else:
                     caracal.log.error(
-                        "Input datacube {0:1} not found in output/ or output/cubes or output/cubes/cube_{1:d} please check your configuration file.".format(  # noqa: UP030
+                        "Input datacube {} not found in output/ or output/cubes or output/cubes/cube_{} please check your configuration file.".format(
                             config["imcontsub"]["input_cube"], maxcube_dir
                         )
                     )
@@ -1946,10 +1946,10 @@ def worker(pipeline, recipe, config):
 
                 if config["imcontsub"]["mask_image"].split(".fits")[-1] != (None and "sofia"):  # noqa: SIM223
                     caracal.log.info("Mask provided by user, continuum subtraction will exclude the masked pixels from fitting.")
-                    path_mask = "{0:s}/{1:s}".format(pipeline.masking, config["imcontsub"]["mask_image"])  # noqa: UP030
+                    path_mask = "{}/{}".format(pipeline.masking, config["imcontsub"]["mask_image"])
 
                     if os.path.exists(path_mask):
-                        imcontsub_opts.update({"mask-image": "masking/{0:s}".format(config["imcontsub"]["mask_image"])})  # noqa: UP030
+                        imcontsub_opts.update({"mask-image": "masking/{}".format(config["imcontsub"]["mask_image"])})
                     else:
                         caracal.log.info(f"Mask datacube {path_mask:s} not found")
                         caracal.log.info("Will proceed with automasking")
@@ -1968,7 +1968,7 @@ def worker(pipeline, recipe, config):
                 recipe.run()
                 recipe.jobs = []
 
-                caracal.log.info("Subtracted continuum in the image domain for datacube {0:s} provided by user ".format(config["imcontsub"]["input_cube"]))  # noqa: UP030
+                caracal.log.info("Subtracted continuum in the image domain for datacube {} provided by user ".format(config["imcontsub"]["input_cube"]))
 
                 if len(config["imcontsub"]["input_cube"]) < tt:
                     break
@@ -1985,7 +1985,7 @@ def worker(pipeline, recipe, config):
                     "enable_source_finder": False,
                     "cubename": final_image_cube_list[uu] + ":output",
                     "channels_per_plot": config["sharpener"]["chans_per_plot"],
-                    "workdir": "{0:s}/".format(stimela.recipe.CONT_IO["output"]),  # noqa: UP030
+                    "workdir": "{}/".format(stimela.recipe.CONT_IO["output"]),
                     "label": config["sharpener"]["label"],
                 }
 
@@ -2040,8 +2040,8 @@ def worker(pipeline, recipe, config):
 
                 # Move the sharpener output to diagnostic_plots
                 if runsharp:
-                    sharpOut = "{0:s}/{1:s}".format(pipeline.output, "sharpOut")  # noqa: UP030
-                    finalsharpOut = "{0:s}/{1:s}_{2:s}_{3:s}".format(pipeline.diagnostic_plots, pipeline.prefix, field, "sharpOut")  # noqa: UP030
+                    sharpOut = "{}/{}".format(pipeline.output, "sharpOut")
+                    finalsharpOut = "{}/{}_{}_{}".format(pipeline.diagnostic_plots, pipeline.prefix, field, "sharpOut")
                     if os.path.exists(finalsharpOut):
                         shutil.rmtree(finalsharpOut)
                     shutil.move(sharpOut, finalsharpOut)

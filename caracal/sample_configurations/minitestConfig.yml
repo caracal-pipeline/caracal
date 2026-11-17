@@ -102,7 +102,7 @@ selfcal:
     plot: true
     convergence_criteria: [] # specify convergence criteria to stop based on stats quantity e.g [DR]
     online_catalog:
-      enable: true
+      enable: false
       catalog_type: nvss
   calibrate:
     enable: true

@@ -2373,7 +2373,7 @@ def worker(pipeline, recipe, config):
                 # Empty job que after execution
                 recipe.jobs = []
 
-            if config["aimfast"]["online_catalog"]:
+            if config["aimfast"]["online_catalog"] and config["aimfast"]["online_catalog"].get("enable", False):
                 aimfast_compare_online_catalog(field)
                 recipe.run()
                 # Empty job que after execution

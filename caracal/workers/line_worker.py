@@ -1852,7 +1852,7 @@ def worker(pipeline, recipe, config):
                     else:
                         mask_from_prefix = "{0:s}/{1:s}_{2:s}.fits".format(pipeline.masking, config["imcontsub"]["mask_image"], field)
                         if len(config["imcontsub"]["mask_image"].strip()) != 0 and os.path.exists(mask_from_prefix):
-                            caracal.log.info("Using mask defined by user {}".format("{}/{}_{}.fits".format(, config["imcontsub"]["mask_image"], field)))
+                            caracal.log.info("Using mask defined by user {}".format(mask_from_prefix))
                             imcontsub_opts.update({"mask-image": "masking/{}".format(os.path.basename(mask_from_prefix))})
 
                         else:

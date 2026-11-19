@@ -6,7 +6,6 @@ import os
 import sys
 
 import numpy as np
-from matplotlib.pyplot import flag
 from pyrap import tables
 
 import caracal

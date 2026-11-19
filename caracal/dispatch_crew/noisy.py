@@ -58,8 +58,12 @@ def ProcessSingleMS(ms, kB, tsyseff, tsyseffFile, Aant, selectFieldName, verbose
     spw = tables.table(ms + "/SPECTRAL_WINDOW", ack=False)
     channelWidths = spw.getcol("CHAN_WIDTH")
     channelFreqs = spw.getcol("CHAN_FREQ")
-    stokesdef = "Undefined,I,Q,U,V,RR,RL,LR,LL,XX,XY,YX,YY,RX,RY,"
-    ["LX", "LY", "XR", "XL", "YR", "YL", "PP", "PQ", "QP", "QQ", "RCircular", "LCircular", "Linear", "Ptotal", "Plinear", "PFtotal", "PFlinear", "Pangle"]  # noqa: B018
+    stokesdef = [
+    "Undefined", "I", "Q", "U", "V", "RR", "RL", "LR", "LL",
+    "XX", "XY", "YX", "YY", "RX", "RY", "LX", "LY", "XR", "XL",
+    "YR", "YL", "PP", "PQ", "QP", "QQ", "RCircular", "LCircular",
+    "Linear", "Ptotal", "Plinear", "PFtotal", "PFlinear", "Pangle",
+    ]
     corrs = [stokesdef[cc] for cc in tables.table(ms + "/POLARIZATION", ack=False).getcol("CORR_TYPE")[0]]  # taking the correlations of the first SPW
 
     if selectFieldName:
@@ -176,7 +180,7 @@ def PredictNoise(MS, tsyseff, diam, selectFieldName, verbose=0):
     # Message concatenated files
     if verbose > 1 and len(MS) > 1:
         caracal.log.info(f"    Concatenating all {len(MS):d} MS files ...")
-        caracal.log.info(f"      The concatenated *flag* array has shape (Nr_integrations, Nr_channels, Nr_polarisations) = {flag.shape}")
+        caracal.log.info(f"      The concatenated *flag* array has shape (Nr_integrations, Nr_channels, Nr_polarisations) = {flag0.shape}")
         caracal.log.info(f"      The concatenated *interval* array has shape (Nr_integrations) = {interval0.shape}")
         caracal.log.info(f"      The concatenated *channel* width array has shape (-, Nr_channels) = {channelWidths0.shape}")
 

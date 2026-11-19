@@ -123,4 +123,6 @@ line:
     doppler:
       enable: true
       telescope: meerkat
+  predict_noise:
+    enable: true
   report: true

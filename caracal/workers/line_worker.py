@@ -967,7 +967,7 @@ def worker(pipeline, recipe, config):
 
         # Construct weight specification
         if config["make_cube"]["weight"] == "briggs":
-            weight = "briggs {.3f}".format(config["make_cube"]["robust"])
+            weight = f"briggs {config['make_cube']['robust']:.3f}"
         else:
             weight = config["make_cube"]["weight"]
         wscl_niter = max(1, config["make_cube"]["wscl_sofia_niter"])

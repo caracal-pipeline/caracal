@@ -54,7 +54,7 @@ def worker(pipeline, recipe, config):
         prefix_msbase = pipeline.prefix_msbases[i]
         mslist = pipeline.get_mslist(i, label, target=(field_name == "target"))
 
-        for msname in mslist:
+        for ms_index, msname in enumerate(mslist):
             if not os.path.exists(os.path.join(msdir, msname)):
                 caracal.log.error(f"MS file {msdir}/{msname} does not exist. Please check that is where it should be.")
                 raise OSError
@@ -124,6 +124,21 @@ def worker(pipeline, recipe, config):
                     input=pipeline.input,
                     output=pipeline.output,
                     label=f"{step:s}:: Fix UVW coordinates ms={msname:s}",
+                )
+
+            if pipeline.enable_task(config, "feed_flip"):
+                feed_flip_config = config["feed_flip"]
+                params = {"ms_path": msname}
+                if "columns" in feed_flip_config:
+                    params["columns"] = feed_flip_config["columns"]
+                step = f"feed-flip-ms{i:d}-{ms_index:d}"
+                recipe.add(
+                    "cab/prepkat",
+                    step,
+                    params,
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label=f"prepkat:: Flip feed correlations ms={msname:s}",
                 )
 
             if pipeline.enable_task(config, "manage_flags"):

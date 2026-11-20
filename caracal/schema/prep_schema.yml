@@ -48,6 +48,22 @@ mapping:
             type: bool
             required: false
             example: 'False'
+
+      feed_flip:
+        desc: Flip feed correlations using PrepKAT.
+        type: map
+        mapping:
+          enable:
+            desc: Enable the PrepKAT feed-flip segment.
+            type: bool
+            required: false
+            example: 'False'
+          columns:
+            desc: Measurement Set columns to process. Omit to use PrepKAT defaults.
+            required: false
+            seq:
+              - type: str
+            example: 'DATA, WEIGHT_SPECTRUM, FLAG'
         
       clearcal:
         desc: Clear out calibrated data and reset the previous predicted model.

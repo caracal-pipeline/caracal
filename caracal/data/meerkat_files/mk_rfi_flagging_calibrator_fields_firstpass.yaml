@@ -99,7 +99,7 @@ strategies:
             windows_freq: [1, 2, 4, 8]
             background_reject: 2.0
             background_iterations: 5
-            spike_width_time: 2
+            spike_width_time: 2.0
             spike_width_freq: 10.0
             time_extend: 3
             freq_extend: 3

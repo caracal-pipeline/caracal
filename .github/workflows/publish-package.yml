@@ -8,48 +8,34 @@ on:
   release:
     types: [published]
 
-env:
-  POETRY_VERSION: 2.1.4
-
 jobs:
   deploy:
-
     runs-on: ubuntu-24.04
-
+    permissions:
+      id-token: write
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-    - name: Cache Installations
-      id: cache-installs
-      uses: actions/cache@v3
-      with:
-        path: ~/.local
-        key: install-${{ env.INSTALL_CACHE_HASH }}-2
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-    - name: Install Poetry
-      if: steps.cache-installs.outputs.cache-hit != 'true'
-      run: |
-        curl -sSL https://install.python-poetry.org | python3 - --version ${{ env.POETRY_VERSION }}
-    - name: Test poetry
-      run: poetry --version
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.10.8"
 
-    - name: Checkout source
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 1
+      - name: Install dependencies and run tests
+        run: |
+          uv sync --group tests --group dev
+          uv run pytest tests
 
-    - name: Install caracal
-      run: poetry install
+      - name: Build distribution
+        run: uv build
 
-    - name: Build distribution
-      run: poetry build
-
-    - name: Publish distribution 📦 to PyPI
-      uses: pypa/gh-action-pypi-publish@master
-      with:
-        user: ${{ secrets.pypi_user }}
-        password: ${{ secrets.pypi_token }}
+      - name: Publish distribution to PyPI
+        run: uv publish

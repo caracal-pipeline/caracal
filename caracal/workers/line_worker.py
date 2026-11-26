@@ -1623,9 +1623,10 @@ def worker(pipeline, recipe, config):
             image_opts = {
                 "msname": mslist,
                 "prefix": f"{cube_dir:s}/{pipeline.prefix:s}_{field:s}_{line_name:s}",
-                "mode": "channel",
+                "mode": "cube",
                 "nchan": nchans,
                 "start": config["make_cube"]["firstchan"],
+                "width": config["make_cube"]["binchans"],
                 "interpolation": "nearest",
                 "niter": config["make_cube"]["niter"],
                 "gain": config["make_cube"]["gain"],
@@ -1642,10 +1643,11 @@ def worker(pipeline, recipe, config):
             if config["make_cube"]["taper"] != "":
                 image_opts.update({
                     "uvtaper": True,
-                    "outertaper": config["make_cube"]["taper"],
+                    "outertaper":  f'{config["make_cube"]["taper"]}arcsec',
                 })
+            
             recipe.add(
-                "cab/casa_clean",
+                "cab/casa_tclean",
                 step,
                 image_opts,
                 input=pipeline.input,

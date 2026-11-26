@@ -114,7 +114,7 @@ line:
   restfreq: '1.420405752GHz'
   make_cube:
     enable: true
-    image_with: ['casa']
+    image_with: casa
     npix: [1800]
     cell: 2
     nchans: 20

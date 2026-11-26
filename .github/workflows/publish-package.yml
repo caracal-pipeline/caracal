@@ -1,7 +1,6 @@
 # This workflows will upload a Python Package using Twine when a release is created
 # For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
 
-
 name: Upload Python Package
 
 on:
@@ -13,43 +12,40 @@ env:
 
 jobs:
   deploy:
-
     runs-on: ubuntu-24.04
-
+    permissions:
+      id-token: write
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-    - name: Cache Installations
-      id: cache-installs
-      uses: actions/cache@v3
-      with:
-        path: ~/.local
-        key: install-${{ env.INSTALL_CACHE_HASH }}-2
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
 
-    - name: Install Poetry
-      if: steps.cache-installs.outputs.cache-hit != 'true'
-      run: |
-        curl -sSL https://install.python-poetry.org | python3 - --version ${{ env.POETRY_VERSION }}
-    - name: Test poetry
-      run: poetry --version
+      - name: Cache Installations
+        id: cache-installs
+        uses: actions/cache@v4
+        with:
+          path: ~/.local
+          key: install-${{ runner.os }}-${{ env.POETRY_VERSION }}-2
 
-    - name: Checkout source
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 1
+      - name: Install Poetry
+        if: steps.cache-installs.outputs.cache-hit != 'true'
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 - --version ${{ env.POETRY_VERSION }}
 
-    - name: Install caracal
-      run: poetry install
+      - name: Test poetry
+        run: poetry --version
 
-    - name: Build distribution
-      run: poetry build
+      - name: Install caracal
+        run: poetry install
 
-    - name: Publish distribution 📦 to PyPI
-      uses: pypa/gh-action-pypi-publish@master
-      with:
-        user: ${{ secrets.pypi_user }}
-        password: ${{ secrets.pypi_token }}
+      - name: Build distribution
+        run: poetry build
+
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

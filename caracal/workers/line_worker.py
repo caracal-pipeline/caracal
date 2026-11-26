@@ -1643,7 +1643,7 @@ def worker(pipeline, recipe, config):
             if config["make_cube"]["taper"] != "":
                 image_opts.update({
                     "uvtaper": True,
-                    "outertaper":  f"{config['make_cube']['taper']}arcsec",
+                    "outertaper": f"{config['make_cube']['taper']}arcsec",
                 })
 
             recipe.add(

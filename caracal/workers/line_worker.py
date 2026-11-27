@@ -1554,34 +1554,32 @@ def worker(pipeline, recipe, config):
         caracal.log.info("Collecting spectral info on MS files being imaged")
         if config["make_cube"]["use_mstransform"]:
             for i, msfile in enumerate(all_msfiles):
-                if not pipeline.enable_task(config, "mstransform"):
-                    msinfo = pipeline.get_msinfo(msfile)
-                    spw = msinfo["SPW"]["NUM_CHAN"]
-                    nchans = spw
-                    nchans_all.append(nchans)
-                    caracal.log.info(f"MS #{i:d}: {msfile:s}")
-                    caracal.log.info("  {} spectral windows, with NCHAN={}".format(len(spw), ",".join(map(str, spw))))
+                # Get channelisation of _mst.ms file (the one actually imaged)
+                msfile_mst = add_ms_label(msfile, "mst")
+                msinfo = pipeline.get_msinfo(msfile_mst)
+                spw = msinfo["SPW"]["NUM_CHAN"]
+                nchans = spw
+                nchans_all.append(nchans)
+                caracal.log.info(f"MS #{i:d}: {msfile_mst:s}")
+                caracal.log.info("  {} spectral windows, with NCHAN={}".format(len(spw), ",".join(map(str, spw))))
 
-                    # Get first chan, last chan, chan width
-                    chfr = msinfo["SPW"]["CHAN_FREQ"]
-                    firstchanfreq = [ss[0] for ss in chfr]
-                    lastchanfreq = [ss[-1] for ss in chfr]
-                    chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
-                    caracal.log.info(
-                        "  CHAN_FREQ from {} Hz to {} Hz with average channel width of {} Hz".format(
-                            ",".join(map(str, firstchanfreq)),
-                            ",".join(map(str, lastchanfreq)),
-                            ",".join(map(str, chanwidth)),
-                        )
+                # Get first chan, last chan, chan width
+                chfr = msinfo["SPW"]["CHAN_FREQ"]
+                firstchanfreq = [ss[0] for ss in chfr]
+                lastchanfreq = [ss[-1] for ss in chfr]
+                chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
+                caracal.log.info(
+                    "  CHAN_FREQ from {} Hz to {} Hz with average channel width of {} Hz".format(
+                        ",".join(map(str, firstchanfreq)),
+                        ",".join(map(str, lastchanfreq)),
+                        ",".join(map(str, chanwidth)),
                     )
+                )
 
-                    specframe = msinfo["SPW"]["MEAS_FREQ_REF"]
-                    specframe_all.append(specframe)
-                    caracal.log.info(f"  The spectral reference frame is {specframe}")
-
-                elif pipeline.enable_task(config["mstransform"], "doppler"):
-                    nchans_all[i] = [nchan_dopp for kk in chanw_all[i]]
-                    specframe_all.append([{"lsrd": 0, "lsrk": 1, "galacto": 2, "bary": 3, "geo": 4, "topo": 5}[config["mstransform"]["doppler"]["frame"]] for kk in chanw_all[i]])
+                # Get spectral reference frame
+                specframe = msinfo["SPW"]["MEAS_FREQ_REF"]
+                specframe_all.append(specframe)
+                caracal.log.info(f"  The spectral reference frame is {specframe}")
         else:
             for i, msfile in enumerate(all_msfiles):
                 msinfo = pipeline.get_msinfo(msfile)
@@ -1623,9 +1621,10 @@ def worker(pipeline, recipe, config):
             image_opts = {
                 "msname": mslist,
                 "prefix": f"{cube_dir:s}/{pipeline.prefix:s}_{field:s}_{line_name:s}",
-                "mode": "channel",
+                "mode": "cube",
                 "nchan": nchans,
                 "start": config["make_cube"]["firstchan"],
+                "width": config["make_cube"]["binchans"],
                 "interpolation": "nearest",
                 "niter": config["make_cube"]["niter"],
                 "gain": config["make_cube"]["gain"],
@@ -1642,10 +1641,11 @@ def worker(pipeline, recipe, config):
             if config["make_cube"]["taper"] != "":
                 image_opts.update({
                     "uvtaper": True,
-                    "outertaper": config["make_cube"]["taper"],
+                    "outertaper": f"{config['make_cube']['taper']}arcsec",
                 })
+
             recipe.add(
-                "cab/casa_clean",
+                "cab/casa_tclean",
                 step,
                 image_opts,
                 input=pipeline.input,
